@@ -1,0 +1,6 @@
+/target
+/.vscode
+/.VSCodeCounter
+/*code-workspace
+/.cargo
+*.bak
