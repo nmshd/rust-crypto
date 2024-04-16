@@ -9,11 +9,13 @@ The Crypto Layer is a comprehensive and flexible cryptographic library designed 
 ## Features
 
 - **Encryption Algorithms**: Supports a variety of encryption algorithms, including:
+
   - Asymmetric Encryption: RSA, ECC (Elliptic Curve Cryptography) with various curve types (P-256, P-384, P-521, secp256k1, Brainpool curves, Curve25519, Curve448, FRP256v1)
   - Symmetric Block Ciphers: AES (with multiple modes like GCM, CCM, ECB, CBC, CFB, OFB, CTR), Triple DES (two-key and three-key configurations), DES, RC2, Camellia
   - Stream Ciphers: RC4, ChaCha20
 
 - **Hashing Algorithms**: Supports a wide range of hashing algorithms, including:
+
   - SHA-1, SHA-2 (SHA-224, SHA-256, SHA-384, SHA-512, SHA-512/224, SHA-512/256)
   - SHA-3 (SHA3-224, SHA3-256, SHA3-384, SHA3-512)
   - MD2, MD4, MD5, RIPEMD-160
