@@ -1,6 +1,9 @@
-use crate::common::crypto::algorithms::{
-    encryption::{AsymmetricEncryption, BlockCiphers, EccSchemeAlgorithm},
-    hashes::{Hash, Sha2Bits},
+use crate::common::crypto::{
+    algorithms::{
+        encryption::{AsymmetricEncryption, BlockCiphers, EccSchemeAlgorithm},
+        hashes::{Hash, Sha2Bits},
+    },
+    KeyUsage,
 };
 use tracing::instrument;
 use windows::{
@@ -31,8 +34,10 @@ pub struct TpmProvider {
     key_id: String,
     pub(super) key_handle: Option<NCRYPT_KEY_HANDLE>,
     pub(super) handle: Option<NCRYPT_PROV_HANDLE>,
+    pub(super) key_algo: Option<AsymmetricEncryption>,
     pub(super) sym_algo: Option<BlockCiphers>,
     pub(super) hash: Option<Hash>,
+    pub(super) key_usages: Option<Vec<KeyUsage>>,
 }
 
 impl TpmProvider {
@@ -51,8 +56,10 @@ impl TpmProvider {
             key_id,
             handle: None,
             key_handle: None,
+            key_algo: None,
             sym_algo: None,
             hash: None,
+            key_usages: None,
         }
     }
 }

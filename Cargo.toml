@@ -3,6 +3,7 @@ name = "crypto-layer"
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
+crate-type = ["staticlib"]
 
 [profile.dev]
 debug-assertions = true
@@ -42,3 +43,6 @@ tracing = { version = "0.1.40", features = ["std", "log"] }
 tracing-subscriber = "0.3.18"
 tracing-appender = "0.2.3"
 yubikey = { version = "0.8.0", optional = true }
+
+[dev-dependencies]
+test-case = "*"
