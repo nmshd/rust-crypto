@@ -1,9 +1,12 @@
-use crate::common::crypto::algorithms::{
-    encryption::{
-        AsymmetricEncryption, BlockCiphers, EccCurves, EccSchemeAlgorithm, SymmetricMode,
+use crate::common::crypto::{
+    algorithms::{
+        encryption::{
+            AsymmetricEncryption, BlockCiphers, EccCurves, EccSchemeAlgorithm, SymmetricMode,
+        },
+        hashes::{Hash, Sha2Bits, Sha3Bits},
+        KeyBits,
     },
-    hashes::{Hash, Sha2Bits, Sha3Bits},
-    KeyBits,
+    KeyUsage,
 };
 use std::sync::{Arc, Mutex};
 use tss_esapi::{
@@ -36,6 +39,7 @@ pub struct TpmProvider {
     pub(super) key_algorithm: Option<AsymmetricEncryption>,
     pub(super) sym_algorithm: Option<BlockCiphers>,
     pub(super) hash: Option<Hash>,
+    pub(super) key_usages: Option<Vec<KeyUsage>>,
 }
 
 impl TpmProvider {
@@ -52,6 +56,7 @@ impl TpmProvider {
             key_algorithm: None,
             sym_algorithm: None,
             hash: None,
+            key_usages: None,
         }
     }
 }

@@ -34,14 +34,7 @@ pub trait Provider: Send + Sync + KeyHandle {
     ///
     /// A `Result` that, on success, contains `Ok(())`, indicating that the key was created successfully.
     /// On failure, it returns a `SecurityModuleError`.
-    fn create_key(
-        &mut self,
-        key_id: &str,
-        key_algorithm: AsymmetricEncryption,
-        sym_algorithm: Option<BlockCiphers>,
-        hash: Option<Hash>,
-        key_usages: Vec<KeyUsage>,
-    ) -> Result<(), SecurityModuleError>;
+    fn create_key(&mut self, key_id: &str) -> Result<(), SecurityModuleError>;
 
     /// Loads an existing cryptographic key identified by `key_id`.
     ///
@@ -57,14 +50,7 @@ pub trait Provider: Send + Sync + KeyHandle {
     ///
     /// A `Result` that, on success, contains `Ok(())`, indicating that the key was loaded successfully.
     /// On failure, it returns a `SecurityModuleError`.
-    fn load_key(
-        &mut self,
-        key_id: &str,
-        key_algorithm: AsymmetricEncryption,
-        sym_algorithm: Option<BlockCiphers>,
-        hash: Option<Hash>,
-        key_usages: Vec<KeyUsage>,
-    ) -> Result<(), SecurityModuleError>;
+    fn load_key(&mut self, key_id: &str) -> Result<(), SecurityModuleError>;
 
     /// Initializes the security module and returns a handle for further operations.
     ///
@@ -75,5 +61,11 @@ pub trait Provider: Send + Sync + KeyHandle {
     ///
     /// A `Result` that, on success, contains `Ok(())`, indicating that the module was initialized successfully.
     /// On failure, it returns a `SecurityModuleError`.
-    fn initialize_module(&mut self) -> Result<(), SecurityModuleError>;
+    fn initialize_module(
+        &mut self,
+        key_algorithm: AsymmetricEncryption,
+        sym_algorithm: Option<BlockCiphers>,
+        hash: Option<Hash>,
+        key_usages: Vec<KeyUsage>,
+    ) -> Result<(), SecurityModuleError>;
 }

@@ -51,20 +51,11 @@ impl Provider for TpmProvider {
     /// A `Result` that, on success, contains `Ok(())`, indicating that the key was created successfully.
     /// On failure, it returns a `SecurityModuleError`.
     #[instrument]
-    fn create_key(
-        &mut self,
-        key_id: &str,
-        key_algorithm: AsymmetricEncryption,
-        sym_algorithm: Option<BlockCiphers>,
-        hash: Option<Hash>,
-        key_usages: Vec<KeyUsage>,
-    ) -> Result<(), SecurityModuleError> {
-        self.sym_algo = sym_algorithm;
-        self.hash = hash;
+    fn create_key(&mut self, key_id: &str) -> Result<(), SecurityModuleError> {
         let mut key_handle = NCRYPT_KEY_HANDLE::default();
-        let alg_id: PCWSTR = match key_algorithm.clone() {
+        let alg_id: PCWSTR = match self.key_algo.as_ref().unwrap() {
             AsymmetricEncryption::Rsa(key_bits) => {
-                let key_bits_u32: u32 = key_bits.into();
+                let key_bits_u32: u32 = key_bits.clone().into();
                 let rsa_alg_id: String = format!("RSA{}", key_bits_u32);
                 PCWSTR(rsa_alg_id.as_ptr() as *const u16)
             }
@@ -92,9 +83,9 @@ impl Provider for TpmProvider {
             return Err(TpmError::Win(windows::core::Error::from_win32()).into());
         }
 
-        if let AsymmetricEncryption::Rsa(key_bits) = key_algorithm {
+        if let AsymmetricEncryption::Rsa(key_bits) = self.key_algo.as_ref().unwrap() {
             // Set the key length for RSA keys
-            let key_length: u32 = key_bits.into();
+            let key_length: u32 = key_bits.clone().into();
             let key_length_bytes = key_length.to_le_bytes(); // Convert the key length to bytes
             if unsafe {
                 NCryptSetProperty(
@@ -115,7 +106,7 @@ impl Provider for TpmProvider {
             return Err(TpmError::Win(windows::core::Error::from_win32()).into());
         }
 
-        for usage in key_usages {
+        for usage in self.key_usages.as_ref().unwrap() {
             match usage {
                 KeyUsage::ClientAuth => {
                     if unsafe {
@@ -199,16 +190,7 @@ impl Provider for TpmProvider {
     /// A `Result` that, on success, contains `Ok(())`, indicating that the key was loaded successfully.
     /// On failure, it returns a `SecurityModuleError`.
     #[instrument]
-    fn load_key(
-        &mut self,
-        key_id: &str,
-        key_algorithm: AsymmetricEncryption,
-        sym_algorithm: Option<BlockCiphers>,
-        hash: Option<Hash>,
-        key_usages: Vec<KeyUsage>,
-    ) -> Result<(), SecurityModuleError> {
-        self.sym_algo = sym_algorithm;
-        self.hash = hash;
+    fn load_key(&mut self, key_id: &str) -> Result<(), SecurityModuleError> {
         let mut key_handle = NCRYPT_KEY_HANDLE::default();
         let key_cu16 = PCWSTR(key_id.as_ptr() as *const u16);
 
@@ -227,7 +209,7 @@ impl Provider for TpmProvider {
         }
 
         // Set key usages
-        for usage in key_usages {
+        for usage in self.key_usages.as_ref().unwrap() {
             match usage {
                 KeyUsage::ClientAuth => {
                     if unsafe {
@@ -303,7 +285,13 @@ impl Provider for TpmProvider {
     /// A `Result` that, on success, contains `Ok(())`, indicating that the module was initialized successfully.
     /// On failure, it returns a `SecurityModuleError`.
     #[instrument]
-    fn initialize_module(&mut self) -> Result<(), SecurityModuleError> {
+    fn initialize_module(
+        &mut self,
+        key_algorithm: AsymmetricEncryption,
+        sym_algorithm: Option<BlockCiphers>,
+        hash: Option<Hash>,
+        key_usages: Vec<KeyUsage>,
+    ) -> Result<(), SecurityModuleError> {
         let mut handle = NCRYPT_PROV_HANDLE::default();
 
         if unsafe { NCryptOpenStorageProvider(&mut handle, MS_PLATFORM_CRYPTO_PROVIDER, 0) }
@@ -313,6 +301,10 @@ impl Provider for TpmProvider {
         }
 
         self.handle = Some(handle);
+        self.key_algo = Some(key_algorithm);
+        self.sym_algo = sym_algorithm;
+        self.hash = hash;
+        self.key_usages = Some(key_usages);
 
         Ok(())
     }

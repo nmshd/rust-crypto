@@ -1,8 +1,8 @@
 use super::traits::module_provider::Provider;
-#[cfg(feature = "tpm")]
-use crate::tpm::core::instance::{TpmInstance, TpmType};
 #[cfg(feature = "hsm")]
 use crate::hsm::core::instance::{HsmInstance, HsmType};
+#[cfg(feature = "tpm")]
+use crate::tpm::core::instance::{TpmInstance, TpmType};
 use once_cell::sync::Lazy;
 use std::{
     collections::HashMap,
@@ -76,7 +76,7 @@ impl SecModules {
     ///
     /// An `Option` containing an `Arc<Mutex<dyn Provider>>` to the requested module instance,
     /// or `None` if the module type is not supported or an error occurs during instance creation.
-    pub fn get_instances(
+    pub fn get_instance(
         key_id: String,
         module: SecurityModule,
     ) -> Option<Arc<Mutex<dyn Provider>>> {
@@ -144,6 +144,7 @@ impl SecModule {
             SecurityModule::Hsm(hsm_type) => Some(HsmInstance::create_instance(key_id, hsm_type)),
             #[cfg(feature = "tpm")]
             SecurityModule::Tpm(tpm_type) => Some(TpmInstance::create_instance(key_id, tpm_type)),
+            // _ => unimplemented!(),
         }
     }
 }

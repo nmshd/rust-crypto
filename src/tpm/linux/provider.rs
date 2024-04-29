@@ -10,10 +10,7 @@ use crate::common::{
     error::SecurityModuleError,
     traits::module_provider::Provider,
 };
-use std::{
-    borrow::Borrow,
-    sync::{Arc, Mutex},
-};
+use std::sync::{Arc, Mutex};
 use tracing::instrument;
 use tss_esapi::{
     attributes::{ObjectAttributesBuilder, SessionAttributesBuilder},
@@ -53,33 +50,33 @@ impl Provider for TpmProvider {
     /// A `Result` that, on success, contains `Ok(())`, indicating that the key was created successfully.
     /// On failure, it returns a `SecurityModuleError`.
     #[instrument]
-    fn create_key(
-        &mut self,
-        key_id: &str,
-        key_algorithm: AsymmetricEncryption,
-        sym_algorithm: Option<BlockCiphers>,
-        hash: Option<Hash>,
-        key_usages: Vec<KeyUsage>,
-    ) -> Result<(), SecurityModuleError> {
-        let primary_pub = match key_algorithm.borrow() {
+    fn create_key(&mut self, key_id: &str) -> Result<(), SecurityModuleError> {
+        let primary_pub = match self.key_algorithm.as_ref().unwrap() {
             AsymmetricEncryption::Rsa(key_bits) => PublicBuilder::new()
-                .with_public_algorithm(key_algorithm.clone().into())
-                .with_name_hashing_algorithm(hash.unwrap().into())
+                .with_public_algorithm(self.key_algorithm.as_ref().unwrap().clone().into())
+                .with_name_hashing_algorithm(self.hash.as_ref().unwrap().clone().into())
                 .with_rsa_parameters(PublicRsaParameters::new(
-                    sym_algorithm.unwrap().into(),
+                    self.sym_algorithm.clone().unwrap().into(),
                     RsaScheme::Null,
                     key_bits.clone().into(),
                     RsaExponent::default(),
                 ))
                 .with_rsa_unique_identifier(PublicKeyRsa::default()),
             AsymmetricEncryption::Ecc(ecc_scheme) => PublicBuilder::new()
-                .with_public_algorithm(key_algorithm.clone().into())
-                .with_name_hashing_algorithm(hash.clone().unwrap().into())
+                .with_public_algorithm(self.key_algorithm.as_ref().unwrap().clone().into())
+                .with_name_hashing_algorithm(self.hash.as_ref().unwrap().clone().into())
                 .with_ecc_parameters(PublicEccParameters::new(
-                    sym_algorithm.unwrap().into(),
+                    self.sym_algorithm.clone().unwrap().into(),
                     (*ecc_scheme).into(),
-                    key_algorithm.ecc_curve().unwrap().into(),
-                    KeyDerivationFunctionScheme::Kdf2(HashScheme::new(hash.unwrap().into())),
+                    self.key_algorithm
+                        .as_ref()
+                        .unwrap()
+                        .ecc_curve()
+                        .unwrap()
+                        .into(),
+                    KeyDerivationFunctionScheme::Kdf2(HashScheme::new(
+                        self.hash.as_ref().unwrap().clone().into(),
+                    )),
                 ))
                 .with_ecc_unique_identifier(EccPoint::default()),
         };
@@ -101,13 +98,33 @@ impl Provider for TpmProvider {
                     // This key requires "authentication" to the TPM to access - this can be
                     // an HMAC or password session. HMAC sessions are used by default with
                     // the "execute_with_nullauth_session" function.
-                    .with_user_with_auth(key_usages.contains(&KeyUsage::ClientAuth))
+                    .with_user_with_auth(
+                        self.key_usages
+                            .as_ref()
+                            .unwrap()
+                            .contains(&KeyUsage::ClientAuth),
+                    )
                     // This key has the ability to decrypt
-                    .with_decrypt(key_usages.contains(&KeyUsage::Decrypt))
+                    .with_decrypt(
+                        self.key_usages
+                            .as_ref()
+                            .unwrap()
+                            .contains(&KeyUsage::Decrypt),
+                    )
                     // This key has the ability to sign
-                    .with_sign_encrypt(key_usages.contains(&KeyUsage::SignEncrypt))
+                    .with_sign_encrypt(
+                        self.key_usages
+                            .as_ref()
+                            .unwrap()
+                            .contains(&KeyUsage::SignEncrypt),
+                    )
                     // Create self-signed certificates
-                    .with_x509_sign(key_usages.contains(&KeyUsage::CreateX509))
+                    .with_x509_sign(
+                        self.key_usages
+                            .as_ref()
+                            .unwrap()
+                            .contains(&KeyUsage::CreateX509),
+                    )
                     // This key may only be used to encrypt or sign objects that are within
                     // the TPM - it can not encrypt or sign external data.
                     .with_restricted(false)
@@ -168,14 +185,7 @@ impl Provider for TpmProvider {
     /// A `Result` that, on success, contains `Ok(())`, indicating that the key was loaded successfully.
     /// On failure, it returns a `SecurityModuleError`.
     #[instrument]
-    fn load_key(
-        &mut self,
-        key_id: &str,
-        key_algorithm: AsymmetricEncryption,
-        sym_algorithm: Option<BlockCiphers>,
-        hash: Option<Hash>,
-        key_usages: Vec<KeyUsage>,
-    ) -> Result<(), SecurityModuleError> {
+    fn load_key(&mut self, key_id: &str) -> Result<(), SecurityModuleError> {
         // Start an authorization session
         let session = self
             .handle
@@ -209,13 +219,20 @@ impl Provider for TpmProvider {
             .tr_sess_set_attributes(session.unwrap(), session_attr.0, session_attr.1)
             .unwrap();
 
-        let primary_pub = match key_algorithm.borrow() {
+        let primary_pub = match self.key_algorithm.as_ref().unwrap() {
             AsymmetricEncryption::Rsa(_) => todo!(),
             AsymmetricEncryption::Ecc(ecc_scheme) => PublicEccParameters::new(
-                sym_algorithm.clone().unwrap().into(),
+                self.sym_algorithm.clone().unwrap().into(),
                 (*ecc_scheme).into(),
-                key_algorithm.ecc_curve().unwrap().into(),
-                KeyDerivationFunctionScheme::Kdf2(HashScheme::new(hash.clone().unwrap().into())),
+                self.key_algorithm
+                    .as_ref()
+                    .unwrap()
+                    .ecc_curve()
+                    .unwrap()
+                    .into(),
+                KeyDerivationFunctionScheme::Kdf2(HashScheme::new(
+                    self.hash.clone().unwrap().into(),
+                )),
             ),
         };
 
@@ -233,13 +250,33 @@ impl Provider for TpmProvider {
             // This key requires "authentication" to the TPM to access - this can be
             // an HMAC or password session. HMAC sessions are used by default with
             // the "execute_with_nullauth_session" function.
-            .with_user_with_auth(key_usages.contains(&KeyUsage::ClientAuth))
+            .with_user_with_auth(
+                self.key_usages
+                    .as_ref()
+                    .unwrap()
+                    .contains(&KeyUsage::ClientAuth),
+            )
             // This key has the ability to decrypt
-            .with_decrypt(key_usages.contains(&KeyUsage::Decrypt))
+            .with_decrypt(
+                self.key_usages
+                    .as_ref()
+                    .unwrap()
+                    .contains(&KeyUsage::Decrypt),
+            )
             // This key has the ability to sign
-            .with_sign_encrypt(key_usages.contains(&KeyUsage::SignEncrypt))
+            .with_sign_encrypt(
+                self.key_usages
+                    .as_ref()
+                    .unwrap()
+                    .contains(&KeyUsage::SignEncrypt),
+            )
             // Create self-signed certificates
-            .with_x509_sign(key_usages.contains(&KeyUsage::CreateX509))
+            .with_x509_sign(
+                self.key_usages
+                    .as_ref()
+                    .unwrap()
+                    .contains(&KeyUsage::CreateX509),
+            )
             // This key may only be used to encrypt or sign objects that are within
             // the TPM - it can not encrypt or sign external data.
             .with_restricted(false)
@@ -249,7 +286,7 @@ impl Provider for TpmProvider {
         let private = Private::default();
         let public = tss_esapi::structures::Public::Ecc {
             object_attributes: obj_attributes,
-            name_hashing_algorithm: hash.clone().unwrap().into(),
+            name_hashing_algorithm: self.hash.clone().unwrap().into(),
             auth_policy: Digest::default(),
             parameters: primary_pub,
             unique: EccPoint::default(),
@@ -266,8 +303,6 @@ impl Provider for TpmProvider {
 
         self.key_handle = Some(Arc::new(Mutex::new(key_handle)));
         self.key_id = key_id.to_string();
-        self.sym_algorithm = sym_algorithm;
-        self.hash = hash;
 
         Ok(())
     }
@@ -282,7 +317,18 @@ impl Provider for TpmProvider {
     /// A `Result` that, on success, contains `Ok(())`, indicating that the module was initialized successfully.
     /// On failure, it returns a `SecurityModuleError`.
     #[instrument]
-    fn initialize_module(&mut self) -> Result<(), SecurityModuleError> {
+    fn initialize_module(
+        &mut self,
+        key_algorithm: AsymmetricEncryption,
+        sym_algorithm: Option<BlockCiphers>,
+        hash: Option<Hash>,
+        key_usages: Vec<KeyUsage>,
+    ) -> Result<(), SecurityModuleError> {
+        self.key_algorithm = Some(key_algorithm);
+        self.sym_algorithm = sym_algorithm;
+        self.hash = hash;
+        self.key_usages = Some(key_usages);
+
         let tcti = TctiNameConf::from_environment_variable().unwrap();
 
         let context = Context::new(tcti)
