@@ -4,7 +4,7 @@ use crate::{
         crypto::{
             algorithms::{
                 encryption::{AsymmetricEncryption, BlockCiphers},
-                hashes::Hash,
+                hashes::Hash, KeyBits,
             },
             KeyUsage,
         },
@@ -23,7 +23,7 @@ use test_case::test_matrix;
 fn test_create_rsa_key(module: SecurityModule) {
     let mut provider = setup_security_module(module);
 
-    let key_algorithm = AsymmetricEncryption::Rsa(2048.into());
+    let key_algorithm = AsymmetricEncryption::Rsa(KeyBits::Bits2048);
     let sym_algorithm = Some(BlockCiphers::Aes(Default::default(), 256.into()));
     let hash = Some(Hash::Sha2(256.into()));
     let key_usages = vec![

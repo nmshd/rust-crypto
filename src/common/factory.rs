@@ -96,7 +96,7 @@ impl SecModules {
     }
 
     /// Initial logging setup
-    fn setup_logging() {
+    pub fn setup_logging() {
         let file_appender = rolling::daily("./logs", "output.log");
         let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
         let subscriber = FmtSubscriber::builder()
