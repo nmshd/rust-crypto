@@ -83,26 +83,26 @@ fn test_encrypt_and_decrypt_rsa() {
 }
 
 #[test]
-fn test_encrypt_and_decrypt_ecdh() {
-    let mut provider = TpmProvider::new("test_ecdh_key".to_string());
+    fn test_encrypt_and_decrypt_ecdh() {
+        let mut provider = TpmProvider::new("test_ecdh_key".to_string());
 
-    let key_algorithm = AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::Curve25519));
-    let sym_algorithm = Some(BlockCiphers::Aes(Default::default(), 256.into()));
-    let hash = Some(Hash::Sha2(384.into()));
-    let key_usages = vec![KeyUsage::Decrypt];
+        let key_algorithm = AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::Curve25519));
+        let sym_algorithm = Some(BlockCiphers::Aes(Default::default(), 256.into()));
+        let hash = Some(Hash::Sha2(384.into()));
+        let key_usages = vec![KeyUsage::Decrypt];
 
-    provider
-        .initialize_module(key_algorithm, sym_algorithm, hash, key_usages)
-        .expect("Failed to initialize module");
-    provider
-        .create_key("test_ecdh_key")
-        .expect("Failed to create ECDH key");
+        provider
+            .initialize_module(key_algorithm, sym_algorithm, hash, key_usages)
+            .expect("Failed to initialize module");
+        provider
+            .create_key("test_ecdh_key")
+            .expect("Failed to create ECDH key");
 
-    let data = b"Hello, World!";
-    let encrypted_data = provider.encrypt_data(data).expect("Failed to encrypt data");
-    let decrypted_data = provider
-        .decrypt_data(&encrypted_data)
-        .expect("Failed to decrypt data");
+        let data = b"Hello, World!";
+        let encrypted_data = provider.encrypt_data(data).expect("Failed to encrypt data");
+        let decrypted_data = provider
+            .decrypt_data(&encrypted_data)
+            .expect("Failed to decrypt data");
 
-    assert_eq!(data, decrypted_data.as_slice());
-}
+        assert_eq!(data, decrypted_data.as_slice());
+    }
