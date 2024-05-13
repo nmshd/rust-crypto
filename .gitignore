@@ -9,3 +9,4 @@
 /.idea/rust-crypto.iml
 /.idea/vcs.xml
 /.idea/.gitignore
+/.idea/*
