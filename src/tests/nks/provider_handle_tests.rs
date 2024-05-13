@@ -8,14 +8,15 @@ use crate::{
             },
             KeyUsage,
         },
+        error::SecurityModuleError,
         traits::module_provider::Provider,
     },
-    tpm::linux::TpmProvider,
+    nks::NksProvider,
 };
 
 #[test]
 fn test_create_rsa_key() {
-    let mut provider = TpmProvider::new("test_key".to_string());
+    let mut provider = NksProvider::new("test_key".to_string());
 
     let key_algorithm = AsymmetricEncryption::Rsa(2048.into());
     let sym_algorithm = Some(BlockCiphers::Aes(Default::default(), 256.into()));
@@ -28,16 +29,16 @@ fn test_create_rsa_key() {
     ];
 
     provider
-        .initialize_module(key_algorithm, sym_algorithm, hash, key_usages)
+        .initialize_module(key_algorithm, sym_algorithm, hash.clone(), key_usages.clone())
         .expect("Failed to initialize module");
     provider
-        .create_key("test_rsa_key")
+        .create_key("test_rsa_key", key_algorithm, sym_algorithm, hash, key_usages)
         .expect("Failed to create RSA key");
 }
 
 #[test]
 fn test_create_ecdsa_key() {
-    let mut provider = TpmProvider::new("test_key".to_string());
+    let mut provider = NksProvider::new("test_key".to_string());
 
     let key_algorithm = AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::Curve25519));
     let sym_algorithm = None;
@@ -45,16 +46,16 @@ fn test_create_ecdsa_key() {
     let key_usages = vec![KeyUsage::ClientAuth, KeyUsage::SignEncrypt];
 
     provider
-        .initialize_module(key_algorithm, sym_algorithm, hash, key_usages)
+        .initialize_module(key_algorithm, sym_algorithm, hash.clone(), key_usages.clone())
         .expect("Failed to initialize module");
     provider
-        .create_key("test_ecdsa_key")
+        .create_key("test_ecdsa_key", key_algorithm, sym_algorithm, hash, key_usages)
         .expect("Failed to create ECDSA key");
 }
 
 #[test]
 fn test_create_ecdh_key() {
-    let mut provider = TpmProvider::new("test_key".to_string());
+    let mut provider = NksProvider::new("test_key".to_string());
 
     let key_algorithm = AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::Curve25519));
     let sym_algorithm = Some(BlockCiphers::Aes(Default::default(), 256.into()));
@@ -62,16 +63,16 @@ fn test_create_ecdh_key() {
     let key_usages = vec![KeyUsage::Decrypt];
 
     provider
-        .initialize_module(key_algorithm, sym_algorithm, hash, key_usages)
+        .initialize_module(key_algorithm, sym_algorithm, hash.clone(), key_usages.clone())
         .expect("Failed to initialize module");
     provider
-        .create_key("test_ecdh_key")
+        .create_key("test_ecdh_key", key_algorithm, sym_algorithm, hash, key_usages)
         .expect("Failed to create ECDH key");
 }
 
 #[test]
 fn test_load_rsa_key() {
-    let mut provider = TpmProvider::new("test_key".to_string());
+    let mut provider = NksProvider::new("test_key".to_string());
 
     let key_algorithm = AsymmetricEncryption::Rsa(2048.into());
     let sym_algorithm = Some(BlockCiphers::Aes(Default::default(), 256.into()));
@@ -84,7 +85,7 @@ fn test_load_rsa_key() {
     ];
 
     provider
-        .initialize_module(key_algorithm, sym_algorithm, hash, key_usages)
+        .initialize_module(key_algorithm, sym_algorithm, hash.clone(), key_usages.clone())
         .expect("Failed to initialize module");
 
     provider
@@ -94,7 +95,7 @@ fn test_load_rsa_key() {
 
 #[test]
 fn test_load_ecdsa_key() {
-    let mut provider = TpmProvider::new("test_key".to_string());
+    let mut provider = NksProvider::new("test_key".to_string());
 
     let key_algorithm = AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::Curve25519));
     let sym_algorithm = None;
@@ -102,7 +103,7 @@ fn test_load_ecdsa_key() {
     let key_usages = vec![KeyUsage::ClientAuth, KeyUsage::SignEncrypt];
 
     provider
-        .initialize_module(key_algorithm, sym_algorithm, hash, key_usages)
+        .initialize_module(key_algorithm, sym_algorithm, hash.clone(), key_usages.clone())
         .expect("Failed to initialize module");
 
     provider
@@ -112,7 +113,7 @@ fn test_load_ecdsa_key() {
 
 #[test]
 fn test_load_ecdh_key() {
-    let mut provider = TpmProvider::new("test_key".to_string());
+    let mut provider = NksProvider::new("test_key".to_string());
 
     let key_algorithm = AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::Curve25519));
     let sym_algorithm = Some(BlockCiphers::Aes(Default::default(), 256.into()));
@@ -120,7 +121,7 @@ fn test_load_ecdh_key() {
     let key_usages = vec![KeyUsage::Decrypt];
 
     provider
-        .initialize_module(key_algorithm, sym_algorithm, hash, key_usages)
+        .initialize_module(key_algorithm, sym_algorithm, hash.clone(), key_usages.clone())
         .expect("Failed to initialize module");
     provider
         .load_key("test_ecdh_key")
