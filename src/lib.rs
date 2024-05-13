@@ -7,6 +7,7 @@ pub mod hsm;
 mod tests;
 #[cfg(feature = "tpm")]
 pub mod tpm;
+mod nks;
 
 pub use common::{error::SecurityModuleError, factory::SecModules};
 #[cfg(feature = "ffi")]

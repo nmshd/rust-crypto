@@ -3,3 +3,9 @@
 /*code-workspace
 /.cargo
 *.bak
+/.idea/codeStyles/codeStyleConfig.xml
+/.idea/modules.xml
+/.idea/codeStyles/Project.xml
+/.idea/rust-crypto.iml
+/.idea/vcs.xml
+/.idea/.gitignore
