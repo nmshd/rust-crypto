@@ -80,6 +80,32 @@ impl NksProvider {
     fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, SecurityModuleError> {}
 
 
+    fn rsa_encrypt(data: &[u8], rsa: &Rsa<Public>) -> Vec<u8> {
+        let mut encrypted_data = vec![0; rsa.size() as usize];
+        rsa.public_encrypt(data, &mut encrypted_data, Padding::PKCS1)
+            .expect("failed to encrypt data");
+        encrypted_data
+    }
+
+    fn rsa_decrypt(encrypted_data: &[u8], rsa: &Rsa<Private>) -> Vec<u8> {
+        let mut decrypted_data = vec![0; rsa.size() as usize];
+        rsa.private_decrypt(encrypted_data, &mut decrypted_data, Padding::PKCS1)
+            .expect("failed to decrypt data");
+        decrypted_data
+    }
+
+    fn rsa_sign(data: &[u8], pkey: &PKey<Private>) -> Vec<u8> {
+        let mut signer = Signer::new(MessageDigest::sha256(), pkey).expect("failed to create signer");
+        signer.update(data).expect("failed to update signer");
+        signer.sign_to_vec().expect("failed to sign data")
+    }
+
+    fn rsa_verify_signature(data: &[u8], signature: &[u8], pkey: &PKey<Public>) -> bool {
+        let mut verifier = Verifier::new(MessageDigest::sha256(), pkey).expect("failed to create verifier");
+        verifier.update(data).expect("failed to update verifier");
+        verifier.verify(signature).expect("failed to verify signature")
+    }
+
 
     pub(crate) async fn get_token(&self, benchmark: bool) -> anyhow::Result<String, Box<dyn std::error::Error>> {
         let response: Value = reqwest::Client::new()
