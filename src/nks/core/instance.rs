@@ -3,6 +3,7 @@
 #[cfg(feature = "hcvault")]
 use crate::nks::hcvault::NksProvider;
 use std::sync::{Arc, Mutex};
+use crate::common::traits::module_provider::Provider;
 
 /// Represents the different environments where a Network Key Storage (nks) can operate.
 ///

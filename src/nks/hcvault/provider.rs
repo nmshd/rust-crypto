@@ -41,10 +41,14 @@ impl NksProvider {
     /// On failure, it returns a `SecurityModuleError`.
 
     //TODO implement create_key
+    #[instrument]
+    fn create_key(&mut self, key_id: &str, key_algorithm: AsymmetricEncryption,
+                  sym_algorithm: Option<BlockCiphers>,
+                  hash: Option<Hash>,
+                  key_usages: Vec<KeyUsage>, ) -> Result<(), SecurityModuleError> {
 
-    // #[instrument]
-    // fn create_key(&mut self, key_id: &str) -> Result<(), SecurityModuleError> {
-    // }
+
+    }
 
     /// Loads an existing cryptographic key identified by `key_id`.
     ///
@@ -66,10 +70,8 @@ impl NksProvider {
     /// On failure, it returns a `SecurityModuleError`.
 
     //TODO implement load_key
-
-    // #[instrument]
-    // fn load_key(&mut self, key_id: &str) -> Result<(), SecurityModuleError> {
-    // }
+    #[instrument]
+    fn load_key(&mut self, key_id: &str) -> Result<(), SecurityModuleError> {}
 
     /// Initializes the nks module and returns a handle for further operations.
     ///
@@ -88,18 +90,15 @@ impl NksProvider {
     //neues token updaten
     //algorithmus checken
     //TODO implement initialize_module
-
-     #[instrument]
-     fn initialize_module(
-         &mut self,
-         adress: adress,
-         key_algorithm: AsymmetricEncryption,
-         sym_algorithm: Option<BlockCiphers>,
-         hash: Option<Hash>,
-         key_usages: Vec<KeyUsage>,
-     ) -> Result<(), SecurityModuleError>{
-
-
-         Ok(())
-     }
+    #[instrument]
+    fn initialize_module(
+        &mut self,
+        address: address,
+        key_algorithm: AsymmetricEncryption,
+        sym_algorithm: Option<BlockCiphers>,
+        hash: Option<Hash>,
+        key_usages: Vec<KeyUsage>,
+    ) -> Result<(), SecurityModuleError> {
+        Ok(())
+    }
 }

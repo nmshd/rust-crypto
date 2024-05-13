@@ -40,6 +40,7 @@ impl NksError {
     /// This implementation ensures that errors can be easily logged or displayed to the user,
     /// with a clear indication of the error's nature and origin.
     //TODO implement nks error
+
     /*
     pub fn description(&self) -> String {
         match self {

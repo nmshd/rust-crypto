@@ -24,7 +24,7 @@ pub mod provider;
 #[repr(C)]
 pub struct NksProvider {
     //TODO implement NksProvider struct
-    /*
+
     /// A unique identifier for the cryptographic key managed by this provider.
     key_id: String,
     pub(super) key_handle: Option<Arc<Mutex<TssKeyHandle>>>,
@@ -33,8 +33,8 @@ pub struct NksProvider {
     pub(super) sym_algorithm: Option<BlockCiphers>,
     pub(super) hash: Option<Hash>,
     pub(super) key_usages: Option<Vec<KeyUsage>>,
+    pub(super) nks_address: Option<str>,
 
-     */
 }
 
 impl NksProvider {
