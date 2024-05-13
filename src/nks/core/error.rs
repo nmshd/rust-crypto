@@ -1,4 +1,5 @@
 use std::fmt;
+use std::fmt::{Display, Formatter};
 
 /// Represents errors that can occur when interacting with a Network Key Storage (nks).
 ///
@@ -39,29 +40,35 @@ impl NksError {
     ///
     /// This implementation ensures that errors can be easily logged or displayed to the user,
     /// with a clear indication of the error's nature and origin.
-    //TODO implement nks error
-
-    /*
-    pub fn description(&self) -> String {
+    pub fn description(&self) -> &str {
         match self {
-            NksError::Io(err) => format!("IO error: {}", err),
-            #[cfg(feature = "win")]
-            NksError::Win(err) => format!("Windows error: {}", err),
-            NksError::InitializationError(msg) => format!("Initialization error: {}", msg),
-            NksError::UnsupportedOperation(msg) => format!("Unsupported operation: {}", msg),
+            NksError::ApiError(api_err) => api_err.description(),
+            NksError::IoError(io_err) => io_err.description(),
+            NksError::ParseError(parse_err) => parse_err.description(),
+            // Add more error variants as needed
         }
     }
+}
 
-     */
+impl Display for NksError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        todo!()
+    }
 }
 
 /// Enables `NksError` to be treated as a trait object for any error (`dyn std::error::Error`).
 ///
 /// This implementation allows for compatibility with Rust's standard error handling mechanisms,
 /// facilitating the propagation and inspection of errors through the `source` method.
+impl std::error::Error for NksError {}
+/*
+/// Enables `NksError` to be treated as a trait object for any error (`dyn std::error::Error`).
+///
+/// This implementation allows for compatibility with Rust's standard error handling mechanisms,
+/// facilitating the propagation and inspection of errors through the `source` method.
 
 //TODO implement std::error::Error for NksError
-/*
+
 impl std::error::Error for NksError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
