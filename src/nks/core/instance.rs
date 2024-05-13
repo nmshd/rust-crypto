@@ -4,24 +4,24 @@
 use crate::nks::hcvault::NksProvider;
 use std::sync::{Arc, Mutex};
 
-/// Represents the different environments where a Network Key Storage (NKS) can operate.
+/// Represents the different environments where a Network Key Storage (nks) can operate.
 ///
 /// This enum is designed to distinguish between various Network Key Storages, like HashiCorp Vault.
-/// It provides a unified way to handle NKS operations across different platforms.
+/// It provides a unified way to handle nks operations across different platforms.
 #[repr(C)]
 #[derive(Eq, Hash, PartialEq, Clone, Debug)]
 pub enum NksType {
-    /// Represents the NKS environment on HashiCorp Vault platforms.
+    /// Represents the nks environment on HashiCorp Vault platforms.
     #[cfg(feature = "hcvault")]
     HCVault,
-    /// Represents an unsupported or unknown NKS environment.
+    /// Represents an unsupported or unknown nks environment.
     None,
 }
 
 /// Provides a default `NksType` based on the compile-time target operating system.
 ///
-/// This implementation enables automatic selection of the NKS type most appropriate
-/// for the current target Network Key Storage, facilitating platform-agnostic NKS handling.
+/// This implementation enables automatic selection of the nks type most appropriate
+/// for the current target Network Key Storage, facilitating platform-agnostic nks handling.
 impl Default for NksType {
     #[allow(unreachable_code)]
     fn default() -> Self {
@@ -35,7 +35,7 @@ impl Default for NksType {
 
 /// Enables conversion from a string slice to a `NksType`.
 ///
-/// This implementation allows for dynamic NKS type determination based on string values,
+/// This implementation allows for dynamic nks type determination based on string values,
 /// useful for configuration or runtime environment specification.
 impl From<&str> for NksType {
     fn from(s: &str) -> Self {
@@ -47,10 +47,10 @@ impl From<&str> for NksType {
     }
 }
 
-/// Manages instances of NKS providers based on the specified `NksType`.
+/// Manages instances of nks providers based on the specified `NksType`.
 ///
-/// This structure is responsible for creating and encapsulating a NKS provider instance,
-/// allowing for NKS operations such as key management and cryptographic functions
+/// This structure is responsible for creating and encapsulating a nks provider instance,
+/// allowing for nks operations such as key management and cryptographic functions
 /// to be performed in a platform-specific manner.
 #[repr(C)]
 pub struct NksInstance {
@@ -58,19 +58,19 @@ pub struct NksInstance {
     instance: Box<dyn Provider>,
 }
 
-/// Facilitates the creation and management of NKS provider instances.
+/// Facilitates the creation and management of nks provider instances.
 impl NksInstance {
-    /// Creates a new NKS provider instance based on the specified `NksType`.
+    /// Creates a new nks provider instance based on the specified `NksType`.
     ///
-    /// This method abstracts over the differences between NKS implementations across
-    /// various platforms, providing a unified interface for NKS operations.
+    /// This method abstracts over the differences between nks implementations across
+    /// various platforms, providing a unified interface for nks operations.
     ///
     /// # Arguments
-    /// * `key_id` - A unique identifier for the NKS key.
-    /// * `nks_type` - A reference to the `NksType` indicating the environment of the NKS.
+    /// * `key_id` - A unique identifier for the nks key.
+    /// * `nks_type` - A reference to the `NksType` indicating the environment of the nks.
     ///
     /// # Returns
-    /// An `Arc<dyn Provider>` encapsulating the created NKS provider instance.
+    /// An `Arc<dyn Provider>` encapsulating the created nks provider instance.
     pub fn create_instance(key_id: String, tpm_type: &NksType) -> Arc<Mutex<dyn Provider>> {
         match tpm_type {
             #[cfg(feature = "hcvault")]

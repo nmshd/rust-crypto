@@ -10,7 +10,7 @@ use crate::common::{
 
 //impl KeyHandle for NksProvider {
 impl NksProvider {
-    /// Signs the given data using the cryptographic key managed by the NKS provider.
+    /// Signs the given data using the cryptographic key managed by the nks provider.
     ///
     /// # Arguments
     ///
@@ -28,7 +28,7 @@ impl NksProvider {
 
      */
 
-    /// Decrypts the given encrypted data using the cryptographic key managed by the NKS provider.
+    /// Decrypts the given encrypted data using the cryptographic key managed by the nks provider.
     ///
     /// # Arguments
     ///
@@ -46,7 +46,7 @@ impl NksProvider {
 
      */
 
-    /// Encrypts the given data using the cryptographic key managed by the NKS provider.
+    /// Encrypts the given data using the cryptographic key managed by the nks provider.
     ///
     /// # Arguments
     ///
@@ -64,7 +64,7 @@ impl NksProvider {
 
      */
 
-    /// Verifies the signature of the given data using the cryptographic key managed by the NKS provider.
+    /// Verifies the signature of the given data using the cryptographic key managed by the nks provider.
     ///
     /// # Arguments
     ///

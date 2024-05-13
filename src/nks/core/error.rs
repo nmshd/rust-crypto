@@ -1,8 +1,8 @@
 use std::fmt;
 
-/// Represents errors that can occur when interacting with a Network Key Storage (NKS).
+/// Represents errors that can occur when interacting with a Network Key Storage (nks).
 ///
-/// This enum encapsulates different types of errors that may arise during NKS operations,
+/// This enum encapsulates different types of errors that may arise during nks operations,
 /// including I/O errors, HashiCorp Vault API errors, initialization errors, and unsupported operations.
 /// It is designed to provide a clear and descriptive representation of the error, facilitating
 /// error handling and logging.
@@ -14,11 +14,11 @@ pub enum NksError {
     //TODO implement hcvault errors
     /*
     /// Error originating from HashiCorp Vault API calls, wrapping a `hcvault::core::Error`.
-    /// This variant is only available with HaschiCorp Vault NKS.
+    /// This variant is only available with HaschiCorp Vault nks.
     #[cfg(feature = "hcvault")]
     Hcv(hcvault::core::Error),
      */
-    /// Error occurring during NKS initialization, containing an error message.
+    /// Error occurring during nks initialization, containing an error message.
     InitializationError(String),
     /// Error indicating that an attempted operation is unsupported, containing a description.
     UnsupportedOperation(String),
@@ -35,7 +35,7 @@ impl fmt::Display for NksError {
  */
 
 impl NksError {
-    /// Provides a human-readable description of the NKS error.
+    /// Provides a human-readable description of the nks error.
     ///
     /// This implementation ensures that errors can be easily logged or displayed to the user,
     /// with a clear indication of the error's nature and origin.

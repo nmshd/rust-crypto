@@ -14,10 +14,10 @@ use std::sync::{Arc, Mutex};
 pub mod key_handle;
 pub mod provider;
 
-/// A NKS-based cryptographic provider for managing cryptographic keys and performing
+/// A nks-based cryptographic provider for managing cryptographic keys and performing
 /// cryptographic operations.
 ///
-/// This provider leverages the Network Key Storage (NKS) to interact with a network
+/// This provider leverages the Network Key Storage (nks) to interact with a network
 /// module for operations like signing, encryption, and decryption. It provides a secure and
 /// network-backed implementation of cryptographic operations.
 #[derive(Clone, Debug)]

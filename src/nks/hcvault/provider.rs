@@ -16,14 +16,14 @@ use crate::common::{
 };
 
 
-/// Implements the `Provider` trait, providing cryptographic operations utilizing a NKS.
+/// Implements the `Provider` trait, providing cryptographic operations utilizing a nks.
 
 
 //impl Provider for NksProvider {
 impl NksProvider {
     /// Creates a new cryptographic key identified by `key_id`.
     ///
-    /// This method generates a new cryptographic key within the NKS, using the specified
+    /// This method generates a new cryptographic key within the nks, using the specified
     /// algorithm, symmetric algorithm, hash algorithm, and key usages. The key is made persistent
     /// and associated with the provided `key_id`.
     ///
@@ -48,7 +48,7 @@ impl NksProvider {
 
     /// Loads an existing cryptographic key identified by `key_id`.
     ///
-    /// This method loads an existing cryptographic key from the NKS, using the specified
+    /// This method loads an existing cryptographic key from the nks, using the specified
     /// algorithm, symmetric algorithm, hash algorithm, and key usages. The loaded key is
     /// associated with the provided `key_id`.
     ///
@@ -71,10 +71,10 @@ impl NksProvider {
     // fn load_key(&mut self, key_id: &str) -> Result<(), SecurityModuleError> {
     // }
 
-    /// Initializes the NKS module and returns a handle for further operations.
+    /// Initializes the nks module and returns a handle for further operations.
     ///
-    /// This method initializes the NKS context and prepares it for use. It should be called
-    /// before performing any other operations with the NKS.
+    /// This method initializes the nks context and prepares it for use. It should be called
+    /// before performing any other operations with the nks.
     ///
     /// # Returns
     ///
@@ -82,7 +82,7 @@ impl NksProvider {
     /// On failure, it returns a `SecurityModuleError`.
 
 
-    //adresse des NKS
+    //adresse des nks
     //getsecret
     //json lokal speichern
     //neues token updaten
@@ -98,6 +98,7 @@ impl NksProvider {
          hash: Option<Hash>,
          key_usages: Vec<KeyUsage>,
      ) -> Result<(), SecurityModuleError>{
+
 
          Ok(())
      }
