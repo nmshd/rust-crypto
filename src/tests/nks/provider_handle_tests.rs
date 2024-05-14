@@ -9,9 +9,9 @@ use crate::{
             KeyUsage,
         },
         error::SecurityModuleError,
-        traits::module_provider::Provider,
+        traits::{key_handle::KeyHandle, module_provider::Provider}
     },
-    nks::NksProvider,
+    nks::hcvault::NksProvider,
 };
 
 #[test]

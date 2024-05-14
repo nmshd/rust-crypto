@@ -48,7 +48,7 @@ impl NksProvider {
     pub fn new(key_id: String) -> Self {
         Self {
             //TODO implement NksProvider constructor
-            /*
+
             key_id,
             key_handle: None,
             handle: None,
@@ -57,7 +57,7 @@ impl NksProvider {
             hash: None,
             key_usages: None,
 
-             */
+
         }
     }
 }
