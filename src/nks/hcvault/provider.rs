@@ -1,6 +1,7 @@
 use std::sync::{Arc, Mutex};
-use super::NksProvider;
+use super::{api, NksProvider};
 use tracing::instrument;
+use tokio::runtime::Runtime;
 
 //TODO use CAL once it can compile
 use crate::common::{
@@ -46,8 +47,16 @@ impl NksProvider {
                              sym_algorithm: Option<BlockCiphers>,
                              hash: Option<Hash>,
                              key_usages: Vec<KeyUsage>, ) -> Result<(), SecurityModuleError> {
+        // Rufen Sie die API auf, um das Token zu erhalten
+        let token = Runtime::new().unwrap().block_on(api::get_token(false)).unwrap();
 
+        // Rufen Sie die API auf, um den Schlüssel zu generieren und zu speichern
+        let _ = Runtime::new().unwrap().block_on(api::get_and_save_key_pair(&token, key_id, "RSA"));
 
+        // Führen Sie den Rest der Logik aus, um den Schlüssel zu erstellen
+        // ...
+
+        Ok(()) // Rückgabe Ok, wenn alles erfolgreich war
     }
 
     /// Loads an existing cryptographic key identified by `key_id`.
@@ -71,7 +80,31 @@ impl NksProvider {
 
     //TODO implement load_key
     #[instrument]
-    pub(crate) fn load_key(&mut self, key_id: &str) -> Result<(), SecurityModuleError> {}
+    pub(crate) fn load_key(&mut self, key_id: &str) -> Result<(), SecurityModuleError> {
+        // Rufen Sie die API auf, um das Token zu erhalten
+        let token = Runtime::new().unwrap().block_on(api::get_token(false)).unwrap();
+
+        // Führen Sie die Suche nach dem Schlüssel in der API durch und erhalten Sie das Ergebnis
+        let key_info = Runtime::new().unwrap().block_on(api::search_key_from_api(&token, key_id)).unwrap();
+
+        // Verarbeiten Sie das Ergebnis und geben Sie es aus
+        match key_info {
+            Some((public_key, private_key, key_type, length, curve)) => {
+                println!("Public Key for key '{}': {}", key_id, public_key);
+                println!("Private Key for key '{}': {}", key_id, private_key);
+                println!("Type for key '{}': {}", key_id, key_type);
+                println!("Length for key '{}': {}", key_id, length);
+                match curve {
+                    Some(curve) => println!("Curve for key '{}': {}", key_id, curve),
+                    None => println!("Curve for key '{}': None", key_id),
+                }
+            }
+            None => println!("Key '{}' not found in API", key_id),
+        }
+
+        Ok(()) // Rückgabe Ok, wenn alles erfolgreich war
+    }
+}
 
     /// Initializes the nks module and returns a handle for further operations.
     ///

@@ -48,7 +48,8 @@ tracing-subscriber = "0.3.18"
 tracing-appender = "0.2.3"
 yubikey = { version = "0.8.0", optional = true }
 anyhow = "1.0.83"
-reqwest = "0.12.4"
+reqwest = { version = "0.12.4", features = ["json"] }
+tokio = "1.37.0"
 
 [dev-dependencies]
 test-case = "*"
