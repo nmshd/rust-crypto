@@ -42,10 +42,10 @@ impl NksProvider {
 
     //TODO implement create_key
     #[instrument]
-    fn create_key(&mut self, key_id: &str, key_algorithm: AsymmetricEncryption,
-                  sym_algorithm: Option<BlockCiphers>,
-                  hash: Option<Hash>,
-                  key_usages: Vec<KeyUsage>, ) -> Result<(), SecurityModuleError> {
+    pub(crate) fn create_key(&mut self, key_id: &str, key_algorithm: AsymmetricEncryption,
+                             sym_algorithm: Option<BlockCiphers>,
+                             hash: Option<Hash>,
+                             key_usages: Vec<KeyUsage>, ) -> Result<(), SecurityModuleError> {
 
 
     }
@@ -71,7 +71,7 @@ impl NksProvider {
 
     //TODO implement load_key
     #[instrument]
-    fn load_key(&mut self, key_id: &str) -> Result<(), SecurityModuleError> {}
+    pub(crate) fn load_key(&mut self, key_id: &str) -> Result<(), SecurityModuleError> {}
 
     /// Initializes the nks module and returns a handle for further operations.
     ///
@@ -91,7 +91,7 @@ impl NksProvider {
     //algorithmus checken
     //TODO implement initialize_module
     #[instrument]
-    fn initialize_module(
+    pub(crate) fn initialize_module(
         &mut self,
         nks_address: nks_address,
         nks_token: nks_token,

@@ -28,11 +28,15 @@ fn test_create_rsa_key() {
         KeyUsage::CreateX509,
     ];
 
+    // let key_algo_clone = key_algorithm.clone(); // Klone von key_algorithm erstellen
+    // let sym_algo_clone = sym_algorithm.clone(); // Klone von sym_algorithm erstellen
+
     provider
-        .initialize_module(key_algorithm, sym_algorithm, hash.clone(), key_usages.clone())
+        // ToDo die 999999 mit den echten werten ersetzen
+        .initialize_module(999999,999999, key_algorithm.clone(), sym_algorithm.clone(), hash.clone(), key_usages.clone())
         .expect("Failed to initialize module");
     provider
-        .create_key("test_rsa_key", key_algorithm, sym_algorithm, hash, key_usages)
+        .create_key("test_rsa_key", key_algorithm.clone(), sym_algorithm.clone(), hash, key_usages)
         .expect("Failed to create RSA key");
 }
 
@@ -46,10 +50,10 @@ fn test_create_ecdsa_key() {
     let key_usages = vec![KeyUsage::ClientAuth, KeyUsage::SignEncrypt];
 
     provider
-        .initialize_module(key_algorithm, sym_algorithm, hash.clone(), key_usages.clone())
+        .initialize_module(999999,999999,key_algorithm.clone(), sym_algorithm.clone(), hash.clone(), key_usages.clone())
         .expect("Failed to initialize module");
     provider
-        .create_key("test_ecdsa_key", key_algorithm, sym_algorithm, hash, key_usages)
+        .create_key("test_ecdsa_key", key_algorithm.clone(), sym_algorithm.clone(), hash, key_usages)
         .expect("Failed to create ECDSA key");
 }
 
@@ -63,10 +67,10 @@ fn test_create_ecdh_key() {
     let key_usages = vec![KeyUsage::Decrypt];
 
     provider
-        .initialize_module(key_algorithm, sym_algorithm, hash.clone(), key_usages.clone())
+        .initialize_module(999999,999999, key_algorithm.clone(), sym_algorithm.clone(), hash.clone(), key_usages.clone())
         .expect("Failed to initialize module");
     provider
-        .create_key("test_ecdh_key", key_algorithm, sym_algorithm, hash, key_usages)
+        .create_key("test_ecdh_key", key_algorithm.clone(), sym_algorithm.clone(), hash, key_usages)
         .expect("Failed to create ECDH key");
 }
 
@@ -85,7 +89,7 @@ fn test_load_rsa_key() {
     ];
 
     provider
-        .initialize_module(key_algorithm, sym_algorithm, hash.clone(), key_usages.clone())
+        .initialize_module(999999,999999, key_algorithm.clone(), sym_algorithm.clone(), hash.clone(), key_usages.clone())
         .expect("Failed to initialize module");
 
     provider
@@ -103,7 +107,7 @@ fn test_load_ecdsa_key() {
     let key_usages = vec![KeyUsage::ClientAuth, KeyUsage::SignEncrypt];
 
     provider
-        .initialize_module(key_algorithm, sym_algorithm, hash.clone(), key_usages.clone())
+        .initialize_module(999999,999999, key_algorithm.clone(), sym_algorithm.clone(), hash.clone(), key_usages.clone())
         .expect("Failed to initialize module");
 
     provider
@@ -121,7 +125,7 @@ fn test_load_ecdh_key() {
     let key_usages = vec![KeyUsage::Decrypt];
 
     provider
-        .initialize_module(key_algorithm, sym_algorithm, hash.clone(), key_usages.clone())
+        .initialize_module(999999,999999, key_algorithm.clone(), sym_algorithm.clone(), hash.clone(), key_usages.clone())
         .expect("Failed to initialize module");
     provider
         .load_key("test_ecdh_key")

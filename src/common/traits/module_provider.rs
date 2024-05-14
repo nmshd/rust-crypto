@@ -68,4 +68,17 @@ pub trait Provider: Send + Sync + KeyHandle {
         hash: Option<Hash>,
         key_usages: Vec<KeyUsage>,
     ) -> Result<(), SecurityModuleError>;
+
+    /*
+    fn initialize_module_nks(
+        &mut self,
+        nks_address: nks_address,
+        nks_token: nks_token,
+        key_algorithm: AsymmetricEncryption,
+        sym_algorithm: Option<BlockCiphers>,
+        hash: Option<Hash>,
+        key_usages: Vec<KeyUsage>,
+    ) -> Result<(), SecurityModuleError>;
+    
+     */
 }
