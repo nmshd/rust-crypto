@@ -1,3 +1,4 @@
+use base64::Engine;
 use super::NksProvider;
 use tracing::instrument;
 
@@ -6,6 +7,15 @@ use crate::common::{
     crypto::algorithms::encryption::AsymmetricEncryption, error::SecurityModuleError,
     traits::key_handle::KeyHandle,
 };
+
+use openssl::hash::MessageDigest;
+use openssl::pkey::PKey;
+use openssl::rsa::{Rsa};
+use openssl::sign::{Signer as RSASigner, Verifier as RSAVerifier};
+use base64::prelude::BASE64_STANDARD;
+use x25519_dalek::{PublicKey as X25519PublicKey, PublicKey, StaticSecret as X25519StaticSecret, StaticSecret};
+use ed25519_dalek::{Verifier, SigningKey, VerifyingKey, Signature, Signer};
+use arrayref::array_ref;
 
 
 //impl KeyHandle for NksProvider {
@@ -21,12 +31,38 @@ impl NksProvider {
     /// A `Result` containing the signature as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
 
     //TODO implement sign_data
-    /*
     #[instrument]
-    fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
+    //fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
+    pub fn sign_data(data: &[u8], private_key :&str) -> Vec<u8> {
+        //TODO add error to result
+        //TODO add matching instead of if else
+        //TODO get key and algo from self not hardcoded or parameter
+        let key_algorithm = "rsa"; //either ecc or rsa
+
+        let mut signature :Vec<u8> = vec![];
+        if("rsa".eq(key_algorithm)){
+            //TODO ad support for encoded string, currently only works with decoded pem string
+            //let private_key_bytes = BASE64_STANDARD.decode(private_key.as_bytes()).expect("Invalid private key base64");
+            //let rsa = Rsa::private_key_from_pem(&private_key_bytes.as_slice()).expect("failed to create RSA object");
+            let rsa = Rsa::private_key_from_pem(private_key.as_bytes()).expect("failed to create RSA object");
+            let pkey = PKey::from_rsa(rsa).expect("failed to create PKey");
+            let mut signer = RSASigner::new(MessageDigest::sha256(), &*pkey).expect("failed to create signer");
+            signer.update(data).expect("failed to update signer");
+            signature = signer.sign_to_vec().expect("failed to sign data");
+        }
+        else if ("ecc".eq(key_algorithm)) {
+            let static_secret = decode_base64_private_key(private_key);
+            let signing_key = SigningKey::from_bytes(&static_secret.to_bytes());
+            let signature_sig = signing_key.sign(data);
+            signature = signature_sig.to_vec();
+        }
+        else {
+            todo!()
+        }
+        return signature;
     }
 
-     */
+
 
     /// Decrypts the given encrypted data using the cryptographic key managed by the nks provider.
     ///
@@ -75,9 +111,42 @@ impl NksProvider {
     /// A `Result` containing a boolean indicating whether the signature is valid (`true`) or not (`false`),
     /// or a `SecurityModuleError` on failure.
 
-    //TODO implement verify_signature
     #[instrument]
-    fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, SecurityModuleError> {}
+    //fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, SecurityModuleError> {
+    pub fn verify_signature(data: &[u8], signature: &[u8], public_key: &str) -> bool {
+        //TODO add error to result
+        //TODO get key and algo from self not hardcoded or parameter
+        let key_algorithm = "rsa"; //either ecc or rsa
+
+        let verification_result = match key_algorithm{
+            "ecc" => {
+                let signature_sig = Signature::from_slice(signature).expect("Invalid signature byte slice");
+                let public_key_bytes = BASE64_STANDARD.decode(public_key.as_bytes()).expect("Invalid public key base64");
+                let verifying_result = VerifyingKey::from_bytes(<&[u8; 32]>::try_from(public_key_bytes.as_slice()).unwrap());
+                match verifying_result {
+                    Ok(verifying_key) => {
+                        verifying_key.verify(data, &signature_sig).is_ok()
+                    }
+                    Err(err) => {
+                        println!("{}", err);
+                        false
+                    }
+                }
+            }
+            "rsa" => {
+                //TODO ad support for encoded string, currently only works with decoded pem string
+                //let public_key_bytes = BASE64_STANDARD.decode(public_key.as_bytes()).expect("Invalid public key base64");
+                // let rsa = Rsa::public_key_from_pem(&public_key_bytes.as_slice()).expect("failed to create RSA object");
+                let rsa = Rsa::public_key_from_pem(public_key.as_bytes()).expect("failed to create RSA object");
+                let pkey = PKey::from_rsa(rsa).expect("failed to create PKey");
+                let mut verifier = RSAVerifier::new(MessageDigest::sha256(), &*pkey).expect("failed to create verifier");
+                verifier.update(data).expect("failed to update verifier");
+                verifier.verify(signature).expect("failed to verify signature")
+            }
+            _ => {false}
+        };
+        return verification_result;
+    }
 
 
     fn rsa_encrypt(data: &[u8], rsa: &Rsa<Public>) -> Vec<u8> {
@@ -289,4 +358,12 @@ impl NksProvider {
         Ok(pretty_response)
     }
 
+}
+
+pub fn decode_base64_private_key(private_key_base64: &str ) -> StaticSecret {
+    //TODO find decoding solution without x25529 Static Secret
+    let private_key_base64 = private_key_base64; // example private key
+    let private_key_bytes = BASE64_STANDARD.decode(private_key_base64.as_bytes()).expect("Invalid private key base64");
+    let x25519_private_key = X25519StaticSecret::from(*array_ref![private_key_bytes, 0, 32]);
+    return x25519_private_key;
 }
