@@ -10,12 +10,13 @@ use crate::{
         },
         traits::{key_handle::KeyHandle, module_provider::Provider},
     },
-    tpm::linux::TpmProvider,
+   // tpm::linux::TpmProvider,
 };
+use crate::nks::hcvault::NksProvider;
 
 #[test]
 fn test_sign_and_verify_rsa() {
-    let mut provider = TpmProvider::new("test_rsa_key".to_string());
+    let mut provider = NksProvider::new("test_rsa_key".to_string());
 
     let key_algorithm = AsymmetricEncryption::Rsa(2048.into());
     let sym_algorithm = None;
@@ -23,10 +24,10 @@ fn test_sign_and_verify_rsa() {
     let key_usages = vec![KeyUsage::ClientAuth, KeyUsage::SignEncrypt];
 
     provider
-        .initialize_module(key_algorithm, sym_algorithm, hash, key_usages)
+        .initialize_module(999999,999999, key_algorithm.clone(), sym_algorithm.clone(), hash.clone(), key_usages.clone())
         .expect("Failed to initialize module");
     provider
-        .create_key("test_rsa_key")
+        .create_key("test_rsa_key", key_algorithm.clone(), sym_algorithm.clone(), hash, key_usages)
         .expect("Failed to create RSA key");
 
     let data = b"Hello, World!";
@@ -37,7 +38,7 @@ fn test_sign_and_verify_rsa() {
 
 #[test]
 fn test_sign_and_verify_ecdsa() {
-    let mut provider = TpmProvider::new("test_ecdsa_key".to_string());
+    let mut provider = NksProvider::new("test_ecdsa_key".to_string());
 
     let key_algorithm = AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::Curve25519));
     let sym_algorithm = None;
@@ -45,10 +46,10 @@ fn test_sign_and_verify_ecdsa() {
     let key_usages = vec![KeyUsage::ClientAuth, KeyUsage::SignEncrypt];
 
     provider
-        .initialize_module(key_algorithm, sym_algorithm, hash, key_usages)
+        .initialize_module(999999,999999, key_algorithm.clone(), sym_algorithm.clone(), hash.clone(), key_usages.clone())
         .expect("Failed to initialize module");
     provider
-        .create_key("test_ecdsa_key")
+        .create_key("test_rsa_key", key_algorithm.clone(), sym_algorithm.clone(), hash, key_usages)
         .expect("Failed to create ECDSA key");
 
     let data = b"Hello, World!";
@@ -59,7 +60,7 @@ fn test_sign_and_verify_ecdsa() {
 
 #[test]
 fn test_encrypt_and_decrypt_rsa() {
-    let mut provider = TpmProvider::new("test_rsa_key".to_string());
+    let mut provider = NksProvider::new("test_rsa_key".to_string());
 
     let key_algorithm = AsymmetricEncryption::Rsa(2048.into());
     let sym_algorithm = None;
@@ -67,10 +68,10 @@ fn test_encrypt_and_decrypt_rsa() {
     let key_usages = vec![KeyUsage::Decrypt, KeyUsage::SignEncrypt];
 
     provider
-        .initialize_module(key_algorithm, sym_algorithm, hash, key_usages)
+        .initialize_module(999999,999999, key_algorithm.clone(), sym_algorithm.clone(), hash.clone(), key_usages.clone())
         .expect("Failed to initialize module");
     provider
-        .create_key("test_rsa_key")
+        .create_key("test_rsa_key", key_algorithm.clone(), sym_algorithm.clone(), hash, key_usages)
         .expect("Failed to create RSA key");
 
     let data = b"Hello, World!";
@@ -84,7 +85,7 @@ fn test_encrypt_and_decrypt_rsa() {
 
 #[test]
 fn test_encrypt_and_decrypt_ecdh() {
-    let mut provider = TpmProvider::new("test_ecdh_key".to_string());
+    let mut provider = NksProvider::new("test_ecdh_key".to_string());
 
     let key_algorithm = AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::Curve25519));
     let sym_algorithm = Some(BlockCiphers::Aes(Default::default(), 256.into()));
@@ -92,10 +93,10 @@ fn test_encrypt_and_decrypt_ecdh() {
     let key_usages = vec![KeyUsage::Decrypt];
 
     provider
-        .initialize_module(key_algorithm, sym_algorithm, hash, key_usages)
+        .initialize_module(999999,999999, key_algorithm.clone(), sym_algorithm.clone(), hash.clone(), key_usages.clone())
         .expect("Failed to initialize module");
     provider
-        .create_key("test_ecdh_key")
+        .create_key("test_rsa_key", key_algorithm.clone(), sym_algorithm.clone(), hash, key_usages)
         .expect("Failed to create ECDH key");
 
     let data = b"Hello, World!";

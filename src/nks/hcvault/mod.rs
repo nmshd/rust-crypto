@@ -13,6 +13,7 @@ use std::sync::{Arc, Mutex};
 
 pub mod key_handle;
 pub mod provider;
+mod api;
 
 /// A nks-based cryptographic provider for managing cryptographic keys and performing
 /// cryptographic operations.

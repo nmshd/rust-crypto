@@ -18,6 +18,7 @@ fn setup_security_module(module: SecurityModule) -> Box<dyn Provider> {
             TpmType::Linux => Box::new(TpmProvider::new("test_key".to_string())),
             TpmType::Windows => Box::new(WindowsTpmProvider::new("test_key".to_string())),
             TpmType::None => unimplemented!(),
+            _ => unimplemented!()
         },
         // _ => unimplemented!(),
     }
