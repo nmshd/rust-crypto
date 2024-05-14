@@ -58,7 +58,7 @@ impl NksProvider {
 
     //TODO implement encrypt_data
     #[instrument]
-    fn encrypt_data(&self, data: &[u8], ) -> Result<Vec<u8>, SecurityModuleError> {
+    pub(crate) fn encrypt_data(&self, data: &[u8], ) -> Result<Vec<u8>, SecurityModuleError> {
 
     }
 
@@ -77,7 +77,7 @@ impl NksProvider {
 
     //TODO implement verify_signature
     #[instrument]
-    fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, SecurityModuleError> {}
+    pub(crate) fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, SecurityModuleError> {}
 
 
     fn rsa_encrypt(data: &[u8], rsa: &Rsa<Public>) -> Vec<u8> {
