@@ -1,6 +1,11 @@
+use std::error::Error;
+use std::fs;
+use std::fs::File;
+use std::io::Read;
 use super::NksProvider;
 use base64::Engine;
 use tracing::instrument;
+
 
 //TODO use CAL once it can compile
 use crate::common::{
@@ -13,8 +18,11 @@ use base64::prelude::BASE64_STANDARD;
 use ed25519_dalek::{Signature, Signer, SigningKey, Verifier, VerifyingKey};
 use openssl::hash::MessageDigest;
 use openssl::pkey::PKey;
-use openssl::rsa::Rsa;
+use openssl::rsa::{Padding, Rsa};
 use openssl::sign::{Signer as RSASigner, Verifier as RSAVerifier};
+use openssl::pkey::{ Public, Private};
+use serde_json::{json, Value};
+
 use x25519_dalek::{
     PublicKey as X25519PublicKey, PublicKey, StaticSecret as X25519StaticSecret, StaticSecret,
 };
@@ -92,8 +100,10 @@ impl NksProvider {
     /// A `Result` containing the encrypted data as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
 
     //TODO implement encrypt_data
-    #[instrument]
-    pub(crate) fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {}
+    /*#[instrument]
+    pub(crate) fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
+
+    }*/
 
     /// Verifies the signature of the given data using the cryptographic key managed by the nks provider.
     ///
@@ -186,7 +196,7 @@ impl NksProvider {
         benchmark: bool,
     ) -> anyhow::Result<String, Box<dyn std::error::Error>> {
         let response: Value = reqwest::Client::new()
-            .get(self.nks_address)
+            .get(&self.nks_address)
             .header("accept", "*/*")
             .send()
             .await?
@@ -218,7 +228,7 @@ impl NksProvider {
         });
 
         let response: Value = client
-            .post(self.nks_address)
+            .post(&self.nks_address)
             .header("accept", "*/*")
             .header("Content-Type", "application/json-patch+json")
             .json(&body)
@@ -261,7 +271,7 @@ impl NksProvider {
         });
 
         let response: Value = client
-            .post(self.nks_address)
+            .post(&self.nks_address)
             .header("accept", "*/*")
             .header("Content-Type", "application/json-patch+json")
             .json(&body)
@@ -287,14 +297,14 @@ impl NksProvider {
         Ok((pretty_response))
     }
 
-    pub(crate) async fn delete_secrets(&self, token: &str) -> anyhow::Result<(), Error> {
+    pub(crate) async fn delete_secrets(&self, token: &str) -> anyhow::Result<(), dyn Error> {
         let client = reqwest::Client::new();
         let body = json!({
             "token": token
         });
 
         let response: Value = client
-            .delete(self.nks_address)
+            .delete(&self.nks_address)
             .header("accept", "*/*")
             .header("Content-Type", "application/json-patch+json")
             .json(&body)
@@ -352,7 +362,7 @@ impl NksProvider {
         println!("body: {}", request_body);
 
         let response = client
-            .post(self.nks_address)
+            .post(&self.nks_address)
             .header("accept", "*/*")
             .header("Content-Type", "application/json-patch+json")
             .json(&request_body)
