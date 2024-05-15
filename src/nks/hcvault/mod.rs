@@ -13,7 +13,7 @@ use std::sync::{Arc, Mutex};
 
 pub mod key_handle;
 pub mod provider;
-mod api;
+
 use tss_esapi::handles::KeyHandle as TssKeyHandle;
 use yubikey::Context;
 use crate::common::crypto::algorithms::encryption::{AsymmetricEncryption, BlockCiphers};
@@ -39,9 +39,11 @@ pub struct NksProvider {
     pub(super) sym_algorithm: Option<BlockCiphers>,
     pub(super) hash: Option<Hash>,
     pub(super) key_usages: Option<Vec<KeyUsage>>,
-    pub(super) nks_address: String,
-    pub(super) nks_token: String,
-
+    pub(super) nks_address: Option<String>,
+    pub(super) nks_token: Option<String>,
+    pub(super) nonce: Option<[u8]>,
+    pub(super) public_key: Option<String>,
+    pub(super) priv_key: Option<String>,
 
 }
 
@@ -51,21 +53,22 @@ impl NksProvider {
     /// # Arguments
     ///
     /// * `key_id` - A string identifier for the cryptographic key to be managed by this provider.
-    pub fn new(key_id: String, nks_address: String, nks_token: String) -> Self {
+    pub fn new(key_id: String) -> Self {
         Self {
             //TODO implement NksProvider constructor
 
             key_id,
-            nks_address,
+            nks_address: None,
             nks_token,
+            nonce: None,
+            public_key: None,
             key_handle: None,
             handle: None,
             key_algorithm: None,
             sym_algorithm: None,
             hash: None,
-            key_usages: None
-
-
+            key_usages: None,
+            priv_key: None,
         }
     }
 }

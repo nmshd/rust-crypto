@@ -11,6 +11,7 @@ use std::{
 use tracing::Level;
 use tracing_appender::rolling;
 use tracing_subscriber::FmtSubscriber;
+use crate::nks::hcvault::NksProvider;
 
 type ProviderArc = Arc<Mutex<dyn Provider>>;
 type SecurityModuleMap = HashMap<SecurityModule, ProviderArc>;
@@ -27,6 +28,9 @@ pub enum SecurityModule {
     Hsm(HsmType),
     #[cfg(feature = "tpm")]
     Tpm(TpmType),
+    #[cfg(feature = "nks")]
+    Nks,
+
 }
 
 /// Provides conversion from a string slice to a `SecurityModule` variant.
@@ -145,6 +149,8 @@ impl SecModule {
             #[cfg(feature = "tpm")]
             SecurityModule::Tpm(tpm_type) => Some(TpmInstance::create_instance(key_id, tpm_type)),
             // _ => unimplemented!(),
+            #[cfg(feature = "nks")]
+            SecurityModule::Nks => Some(Arc::new(Mutex::new(NksProvider::new(key_id)))),
         }
     }
 }

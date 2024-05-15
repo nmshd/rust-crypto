@@ -14,9 +14,10 @@ use crate::{
     nks::hcvault::NksProvider,
 };
 
-#[test]
-fn test_create_rsa_key() {
+#[tokio::test]
+async fn test_create_rsa_key() {
     let mut provider = NksProvider::new("test_key".to_string());
+    let token = provider.get_token(false).await.expect("Failed to get token");
 
     let key_algorithm = AsymmetricEncryption::Rsa(2048.into());
     let sym_algorithm = Some(BlockCiphers::Aes(Default::default(), 256.into()));
@@ -28,18 +29,13 @@ fn test_create_rsa_key() {
         KeyUsage::CreateX509,
     ];
 
-    // let key_algo_clone = key_algorithm.clone(); // Klone von key_algorithm erstellen
-    // let sym_algo_clone = sym_algorithm.clone(); // Klone von sym_algorithm erstellen
-
     provider
-        // ToDo die 999999 mit den echten werten ersetzen
         .initialize_module(999999,999999, key_algorithm.clone(), sym_algorithm.clone(), hash.clone(), key_usages.clone())
         .expect("Failed to initialize module");
     provider
         .create_key("test_rsa_key", key_algorithm.clone(), sym_algorithm.clone(), hash, key_usages)
         .expect("Failed to create RSA key");
 }
-
 #[test]
 fn test_create_ecdsa_key() {
     let mut provider = NksProvider::new("test_key".to_string());

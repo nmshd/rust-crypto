@@ -22,6 +22,8 @@ use openssl::rsa::{Padding, Rsa};
 use openssl::sign::{Signer as RSASigner, Verifier as RSAVerifier};
 use openssl::pkey::{ Public, Private};
 use serde_json::{json, Value};
+use sodiumoxide::crypto::box_;
+use sodiumoxide::crypto::sign;
 
 use x25519_dalek::{
     PublicKey as X25519PublicKey, PublicKey, StaticSecret as X25519StaticSecret, StaticSecret,
@@ -100,10 +102,25 @@ impl NksProvider {
     /// A `Result` containing the encrypted data as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
 
     //TODO implement encrypt_data
-    /*#[instrument]
+    #[instrument]
     pub(crate) fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
-
-    }*/
+        match &self.key_algorithm {
+            AsymmetricEncryption::Rsa(_) => {
+                let rsa = Rsa::public_key_from_pem(&self.public_key.as_bytes())
+                    .map_err(|_| SecurityModuleError::KeyError)?;
+                Ok(rsa_encrypt(data, &rsa))
+            }
+            AsymmetricEncryption::Ecc(_) => {
+                let public_key = box_::PublicKey::from_slice(&self.public_key.as_bytes())
+                    .ok_or(SecurityModuleError::KeyError)?;
+                let private_key = box_::SecretKey::from_slice(&self.priv_key.as_bytes())
+                    .ok_or(SecurityModuleError::KeyError)?;
+                encrypt_curve25519(data, &public_key, &private_key)
+                    .map_err(|_| SecurityModuleError::EncryptionError)
+            }
+            _ => Err(SecurityModuleError::UnsupportedAlgorithm),
+        }
+    }
 
     /// Verifies the signature of the given data using the cryptographic key managed by the nks provider.
     ///
@@ -118,78 +135,32 @@ impl NksProvider {
     /// or a `SecurityModuleError` on failure.
 
     #[instrument]
-    //fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, SecurityModuleError> {
-    pub fn verify_signature(data: &[u8], signature: &[u8], public_key: &str) -> bool {
-        //TODO add error to result
-        //TODO get key and algo from self not hardcoded or parameter
-        let key_algorithm = "rsa"; //either ecc or rsa
+    pub fn verify_signature(&self, data: &[u8], signature: &[u8], public_key: &str) -> Result<bool, SecurityModuleError> {
+        // Determine the key algorithm based on the public key or some other means
+        let key_algorithm = self.determine_key_algorithm(public_key)?;
 
-        let verification_result = match key_algorithm {
+        match key_algorithm {
             "ecc" => {
-                let signature_sig =
-                    Signature::from_slice(signature).expect("Invalid signature byte slice");
-                let public_key_bytes = BASE64_STANDARD
-                    .decode(public_key.as_bytes())
-                    .expect("Invalid public key base64");
-                let verifying_result = VerifyingKey::from_bytes(
-                    <&[u8; 32]>::try_from(public_key_bytes.as_slice()).unwrap(),
-                );
+                let signature_sig = Signature::from_slice(signature).map_err(|_| SecurityModuleError::InvalidSignature)?;
+                let public_key_bytes = BASE64_STANDARD.decode(public_key.as_bytes()).map_err(|_| SecurityModuleError::InvalidPublicKey)?;
+                let verifying_result = VerifyingKey::from_bytes(<&[u8; 32]>::try_from(public_key_bytes.as_slice()).map_err(|_| SecurityModuleError::InvalidPublicKey)?);
                 match verifying_result {
-                    Ok(verifying_key) => verifying_key.verify(data, &signature_sig).is_ok(),
-                    Err(err) => {
-                        println!("{}", err);
-                        false
-                    }
+                    Ok(verifying_key) => Ok(verifying_key.verify(data, &signature_sig).is_ok()),
+                    Err(_) => Err(SecurityModuleError::VerificationFailed),
                 }
             }
             "rsa" => {
-                //TODO ad support for encoded string, currently only works with decoded pem string
-                //let public_key_bytes = BASE64_STANDARD.decode(public_key.as_bytes()).expect("Invalid public key base64");
-                // let rsa = Rsa::public_key_from_pem(&public_key_bytes.as_slice()).expect("failed to create RSA object");
-                let rsa = Rsa::public_key_from_pem(public_key.as_bytes())
-                    .expect("failed to create RSA object");
-                let pkey = PKey::from_rsa(rsa).expect("failed to create PKey");
-                let mut verifier = RSAVerifier::new(MessageDigest::sha256(), &*pkey)
-                    .expect("failed to create verifier");
-                verifier.update(data).expect("failed to update verifier");
-                verifier
-                    .verify(signature)
-                    .expect("failed to verify signature")
+                let rsa = Rsa::public_key_from_pem(public_key.as_bytes()).map_err(|_| SecurityModuleError::InvalidPublicKey)?;
+                let pkey = PKey::from_rsa(rsa).map_err(|_| SecurityModuleError::KeyError)?;
+                let mut verifier = RSAVerifier::new(MessageDigest::sha256(), &*pkey).map_err(|_| SecurityModuleError::VerificationFailed)?;
+                verifier.update(data).map_err(|_| SecurityModuleError::VerificationFailed)?;
+                verifier.verify(signature).map_err(|_| SecurityModuleError::VerificationFailed)
             }
-            _ => false,
-        };
-        return verification_result;
+            _ => Err(SecurityModuleError::UnsupportedAlgorithm),
+        }
     }
 
-    fn rsa_encrypt(data: &[u8], rsa: &Rsa<Public>) -> Vec<u8> {
-        let mut encrypted_data = vec![0; rsa.size() as usize];
-        rsa.public_encrypt(data, &mut encrypted_data, Padding::PKCS1)
-            .expect("failed to encrypt data");
-        encrypted_data
-    }
 
-    fn rsa_decrypt(encrypted_data: &[u8], rsa: &Rsa<Private>) -> Vec<u8> {
-        let mut decrypted_data = vec![0; rsa.size() as usize];
-        rsa.private_decrypt(encrypted_data, &mut decrypted_data, Padding::PKCS1)
-            .expect("failed to decrypt data");
-        decrypted_data
-    }
-
-    fn rsa_sign(data: &[u8], pkey: &PKey<Private>) -> Vec<u8> {
-        let mut signer =
-            Signer::new(MessageDigest::sha256(), pkey).expect("failed to create signer");
-        signer.update(data).expect("failed to update signer");
-        signer.sign_to_vec().expect("failed to sign data")
-    }
-
-    fn rsa_verify_signature(data: &[u8], signature: &[u8], pkey: &PKey<Public>) -> bool {
-        let mut verifier =
-            Verifier::new(MessageDigest::sha256(), pkey).expect("failed to create verifier");
-        verifier.update(data).expect("failed to update verifier");
-        verifier
-            .verify(signature)
-            .expect("failed to verify signature")
-    }
 
     pub(crate) async fn get_token(
         &self,
@@ -394,6 +365,46 @@ impl NksProvider {
     }
 }
 
+fn rsa_encrypt(data: &[u8], rsa: &Rsa<Public>) -> Vec<u8> {
+    let mut encrypted_data = vec![0; rsa.size() as usize];
+    rsa.public_encrypt(data, &mut encrypted_data, Padding::PKCS1)
+        .expect("failed to encrypt data");
+    encrypted_data
+}
+
+fn rsa_decrypt(encrypted_data: &[u8], rsa: &Rsa<Private>) -> Vec<u8> {
+    let mut decrypted_data = vec![0; rsa.size() as usize];
+    rsa.private_decrypt(encrypted_data, &mut decrypted_data, Padding::PKCS1)
+        .expect("failed to decrypt data");
+    decrypted_data
+}
+
+fn rsa_sign(data: &[u8], pkey: &PKey<Private>) -> Vec<u8> {
+    let mut signer =
+        Signer::new(MessageDigest::sha256(), pkey).expect("failed to create signer");
+    signer.update(data).expect("failed to update signer");
+    signer.sign_to_vec().expect("failed to sign data")
+}
+
+fn rsa_verify_signature(data: &[u8], signature: &[u8], pkey: &PKey<Public>) -> bool {
+    let mut verifier =
+        Verifier::new(MessageDigest::sha256(), pkey).expect("failed to create verifier");
+    verifier.update(data).expect("failed to update verifier");
+    verifier
+        .verify(signature)
+        .expect("failed to verify signature")
+}
+
+fn encrypt_curve25519(message: &[u8], public_key: &box_::PublicKey, private_key: &box_::SecretKey) -> Result<(Vec<u8>, box_::Nonce), ()> {
+    let nonce = box_::gen_nonce();
+    let encrypted_message = box_::seal(message, &nonce, public_key, private_key);
+    Ok((encrypted_message, nonce))
+}
+fn decrypt_cruve25519(encrypted_message: &[u8], nonce: &box_::Nonce, public_key: &box_::PublicKey, private_key: &box_::SecretKey) -> Result<Vec<u8>, ()> {
+    let decrypted_message = box_::open(encrypted_message, nonce, public_key, private_key).map_err(|_| ())?;
+    Ok(decrypted_message)
+}
+
 pub fn decode_base64_private_key(private_key_base64: &str) -> StaticSecret {
     //TODO find decoding solution without x25529 Static Secret
     let private_key_base64 = private_key_base64; // example private key
@@ -402,4 +413,16 @@ pub fn decode_base64_private_key(private_key_base64: &str) -> StaticSecret {
         .expect("Invalid private key base64");
     let x25519_private_key = X25519StaticSecret::from(*array_ref![private_key_bytes, 0, 32]);
     return x25519_private_key;
+}
+fn decode_base64(_public_key_base64: &str, _private_key_base64: &str ) -> (box_::PublicKey, box_::SecretKey) {
+    let public_key_base64 = _public_key_base64;
+    let private_key_base64 = _private_key_base64;
+
+    let public_key_bytes = BASE64_STANDARD.decode(public_key_base64.as_bytes()).expect("Invalid public key base64");
+    let private_key_bytes = BASE64_STANDARD.decode(private_key_base64.as_bytes()).expect("Invalid private key base64");
+
+    let public_key = box_::PublicKey::from_slice(&public_key_bytes).unwrap();
+    let private_key = box_::SecretKey::from_slice(&private_key_bytes).unwrap();
+
+    return(public_key, private_key);
 }

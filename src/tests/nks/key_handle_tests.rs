@@ -33,7 +33,7 @@ fn test_sign_and_verify_rsa() {
     let data = b"Hello, World!";
     let signature = provider.sign_data(data).expect("Failed to sign data");
 
-    assert!(provider.verify_signature(data, &signature).unwrap());
+    assert!(provider.verify_signature(data, &signature, "").unwrap());
 }
 
 #[test]
@@ -55,7 +55,7 @@ fn test_sign_and_verify_ecdsa() {
     let data = b"Hello, World!";
     let signature = provider.sign_data(data).expect("Failed to sign data");
 
-    assert!(provider.verify_signature(data, &signature).unwrap());
+    assert!(provider.verify_signature(data, &signature, "").unwrap());
 }
 
 #[test]
