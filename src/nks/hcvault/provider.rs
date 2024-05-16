@@ -61,7 +61,7 @@ impl Provider for NksProvider {
         hash: Option<Hash>,
         key_usages: Vec<KeyUsage>,
     ) -> Result<(), SecurityModuleError> {
-        self.nks_address = Url::from_str("http://localhost:5272/apidemo/").unwrap(); //TODO: find solution with nks_address not hardcoded
+        self.nks_address = Some(Url::from_str("http://localhost:5272/apidemo/").unwrap()); //TODO: find solution with nks_address not hardcoded
         self.nks_root_token = Some("put_root_token_here".parse().unwrap()); //TODO: find solution with nks_token not hardcoded
         self.key_algorithm = Some(key_algorithm);
         self.sym_algorithm = sym_algorithm;
@@ -69,15 +69,17 @@ impl Provider for NksProvider {
         self.key_usages = Some(key_usages);
         // Check if token file exists
         let tokens_file_path = Box::new(Path::new("token.json")); // Adjust the path as needed
-        if Path::new(&tokens_file_path).exists() {
+        if Path::new(&*tokens_file_path).exists() {
             println!("Tokens file exists.");
             self.nks_token = get_usertoken_from_file();
         } else {
             println!("Tokens file does not exist. Generating tokens...");
             // Token file does not exist, generate token using API
-            match get_token(self.nks_address.clone(), tokens_file_path){
+            let runtime = tokio::runtime::Runtime::new().unwrap();
+            let nks_address = self.nks_address.clone().ok_or(SecurityModuleError::NksError)?;
+            match runtime.block_on(get_token(self.nks_address.clone().unwrap(), tokens_file_path)){
                 Ok(token) => {
-                    self.nks_token = token;
+                    self.nks_token = Option::from(token);
                 }
                 Err(err) => {
                     println!("Failed to get tokens from API: {}", err);
@@ -262,7 +264,7 @@ async fn get_token(nks_address: Url, token_path: Box<&Path>) -> anyhow::Result<S
             let token_data = json!({
                 "usertoken": user_token_str
             });
-            fs::write(token_path, token_data.to_string())?;
+            fs::write(token_path.as_ref(), token_data.to_string().as_bytes())?;
             return Ok(user_token_str.to_string());
         }
     }

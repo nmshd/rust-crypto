@@ -386,64 +386,64 @@ impl KeyHandle for NksProvider {
 //     }
 }
 
-fn rsa_encrypt(data: &[u8], rsa: &Rsa<Public>) -> Vec<u8> {
-    let mut encrypted_data = vec![0; rsa.size() as usize];
-    rsa.public_encrypt(data, &mut encrypted_data, Padding::PKCS1)
-        .expect("failed to encrypt data");
-    encrypted_data
-}
-
-fn rsa_decrypt(encrypted_data: &[u8], rsa: &Rsa<Private>) -> Vec<u8> {
-    let mut decrypted_data = vec![0; rsa.size() as usize];
-    rsa.private_decrypt(encrypted_data, &mut decrypted_data, Padding::PKCS1)
-        .expect("failed to decrypt data");
-    decrypted_data
-}
-
-fn rsa_sign(data: &[u8], pkey: &PKey<Private>) -> Vec<u8> {
-    let mut signer =
-        Signer::new(MessageDigest::sha256(), pkey).expect("failed to create signer");
-    signer.update(data).expect("failed to update signer");
-    signer.sign_to_vec().expect("failed to sign data")
-}
-
-fn rsa_verify_signature(data: &[u8], signature: &[u8], pkey: &PKey<Public>) -> bool {
-    let mut verifier =
-        Verifier::new(MessageDigest::sha256(), pkey).expect("failed to create verifier");
-    verifier.update(data).expect("failed to update verifier");
-    verifier
-        .verify(signature)
-        .expect("failed to verify signature")
-}
-
-fn encrypt_curve25519(message: &[u8], public_key: &box_::PublicKey, private_key: &box_::SecretKey) -> Result<(Vec<u8>, box_::Nonce), ()> {
-    let nonce = box_::gen_nonce();
-    let encrypted_message = box_::seal(message, &nonce, public_key, private_key);
-    Ok((encrypted_message, nonce))
-}
-fn decrypt_cruve25519(encrypted_message: &[u8], nonce: &box_::Nonce, public_key: &box_::PublicKey, private_key: &box_::SecretKey) -> Result<Vec<u8>, ()> {
-    let decrypted_message = box_::open(encrypted_message, nonce, public_key, private_key).map_err(|_| ())?;
-    Ok(decrypted_message)
-}
-
-pub fn decode_base64_private_key(private_key_base64: &str) -> StaticSecret {
-    //TODO find decoding solution without x25529 Static Secret
-    let private_key_base64 = private_key_base64; // example private key
-    let private_key_bytes = BASE64_STANDARD
-        .decode(private_key_base64.as_bytes())
-        .expect("Invalid private key base64");
-    let x25519_private_key = X25519StaticSecret::from(*array_ref![private_key_bytes, 0, 32]);
-    return x25519_private_key;
-}
-fn decode_base64(_public_key_base64: &str, _private_key_base64: &str ) -> (box_::PublicKey, box_::SecretKey) {
-    let public_key_base64 = _public_key_base64;
-    let private_key_base64 = _private_key_base64;
-
-    let public_key_bytes = BASE64_STANDARD.decode(public_key_base64.as_bytes()).expect("Invalid public key base64");
-    let private_key_bytes = BASE64_STANDARD.decode(private_key_base64.as_bytes()).expect("Invalid private key base64");
-
-    let public_key = box_::PublicKey::from_slice(&public_key_bytes).unwrap();
-    let private_key = box_::SecretKey::from_slice(&private_key_bytes).unwrap();
-
-    return(public_key, private_key);
-}
+// fn rsa_encrypt(data: &[u8], rsa: &Rsa<Public>) -> Vec<u8> {
+//     let mut encrypted_data = vec![0; rsa.size() as usize];
+//     rsa.public_encrypt(data, &mut encrypted_data, Padding::PKCS1)
+//         .expect("failed to encrypt data");
+//     encrypted_data
+// }
+//
+// fn rsa_decrypt(encrypted_data: &[u8], rsa: &Rsa<Private>) -> Vec<u8> {
+//     let mut decrypted_data = vec![0; rsa.size() as usize];
+//     rsa.private_decrypt(encrypted_data, &mut decrypted_data, Padding::PKCS1)
+//         .expect("failed to decrypt data");
+//     decrypted_data
+// }
+//
+// fn rsa_sign(data: &[u8], pkey: &PKey<Private>) -> Vec<u8> {
+//     let mut signer =
+//         Signer::new(MessageDigest::sha256(), pkey).expect("failed to create signer");
+//     signer.update(data).expect("failed to update signer");
+//     signer.sign_to_vec().expect("failed to sign data")
+// }
+//
+// fn rsa_verify_signature(data: &[u8], signature: &[u8], pkey: &PKey<Public>) -> bool {
+//     let mut verifier =
+//         Verifier::new(MessageDigest::sha256(), pkey).expect("failed to create verifier");
+//     verifier.update(data).expect("failed to update verifier");
+//     verifier
+//         .verify(signature)
+//         .expect("failed to verify signature")
+// }
+//
+// fn encrypt_curve25519(message: &[u8], public_key: &box_::PublicKey, private_key: &box_::SecretKey) -> Result<(Vec<u8>, box_::Nonce), ()> {
+//     let nonce = box_::gen_nonce();
+//     let encrypted_message = box_::seal(message, &nonce, public_key, private_key);
+//     Ok((encrypted_message, nonce))
+// }
+// fn decrypt_cruve25519(encrypted_message: &[u8], nonce: &box_::Nonce, public_key: &box_::PublicKey, private_key: &box_::SecretKey) -> Result<Vec<u8>, ()> {
+//     let decrypted_message = box_::open(encrypted_message, nonce, public_key, private_key).map_err(|_| ())?;
+//     Ok(decrypted_message)
+// }
+//
+// pub fn decode_base64_private_key(private_key_base64: &str) -> StaticSecret {
+//     //TODO find decoding solution without x25529 Static Secret
+//     let private_key_base64 = private_key_base64; // example private key
+//     let private_key_bytes = BASE64_STANDARD
+//         .decode(private_key_base64.as_bytes())
+//         .expect("Invalid private key base64");
+//     let x25519_private_key = X25519StaticSecret::from(*array_ref![private_key_bytes, 0, 32]);
+//     return x25519_private_key;
+// }
+// fn decode_base64(_public_key_base64: &str, _private_key_base64: &str ) -> (box_::PublicKey, box_::SecretKey) {
+//     let public_key_base64 = _public_key_base64;
+//     let private_key_base64 = _private_key_base64;
+//
+//     let public_key_bytes = BASE64_STANDARD.decode(public_key_base64.as_bytes()).expect("Invalid public key base64");
+//     let private_key_bytes = BASE64_STANDARD.decode(private_key_base64.as_bytes()).expect("Invalid private key base64");
+//
+//     let public_key = box_::PublicKey::from_slice(&public_key_bytes).unwrap();
+//     let private_key = box_::SecretKey::from_slice(&private_key_bytes).unwrap();
+//
+//     return(public_key, private_key);
+// }
