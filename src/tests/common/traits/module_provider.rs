@@ -10,10 +10,13 @@ use crate::{
         },
         factory::SecurityModule,
     },
-    hsm::core::instance::HsmType,
-    tpm::core::instance::TpmType,
 };
 use test_case::test_matrix;
+
+#[cfg(feature = "hsm")]
+use crate::hsm::core::instance::HsmType;
+#[cfg(feature = "tpm")]
+use crate::tpm::core::instance::TpmType;
 
 #[test_matrix(
     [SecurityModule::Tpm(TpmType::Linux),
