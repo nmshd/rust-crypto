@@ -1,5 +1,5 @@
 use std::sync::{Arc, Mutex};
-use super::{api, NksProvider};
+use super::{NksProvider};
 use tracing::instrument;
 use tokio::runtime::Runtime;
 
@@ -22,6 +22,7 @@ use crate::common::{
 
 //impl Provider for NksProvider {
 impl NksProvider {
+    /*TODO
     /// Creates a new cryptographic key identified by `key_id`.
     ///
     /// This method generates a new cryptographic key within the nks, using the specified
@@ -48,7 +49,7 @@ impl NksProvider {
                              hash: Option<Hash>,
                              key_usages: Vec<KeyUsage>, ) -> Result<(), SecurityModuleError> {
         // Rufen Sie die API auf, um das Token zu erhalten
-        let token = Runtime::new().unwrap().block_on(api::get_token(false)).unwrap();
+        let token = Runtime::new().unwrap().block_on((false)).unwrap();
 
         // Rufen Sie die API auf, um den Schlüssel zu generieren und zu speichern
         let _ = Runtime::new().unwrap().block_on(api::get_and_save_key_pair(&token, key_id, "RSA"));
@@ -162,5 +163,5 @@ impl NksProvider {
             }
         }
         Ok(())
-    }
+    }*/
 }
