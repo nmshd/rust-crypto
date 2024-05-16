@@ -5,6 +5,7 @@ use std::path::Path;
 use std::str::FromStr;
 use std::sync::{Arc, Mutex};
 use reqwest::Url;
+use serde::Deserialize;
 use serde_json::{json, Value};
 use super::{NksProvider};
 use tracing::instrument;
@@ -28,8 +29,49 @@ use crate::common::{
 
 
 impl Provider for NksProvider {
+    /// Creates a new cryptographic key identified by `key_id`.
+    ///
+    /// This method generates a new cryptographic key within the nks, using the specified
+    /// algorithm, symmetric algorithm, hash algorithm, and key usages. The key is made persistent
+    /// and associated with the provided `key_id`.
+    ///
+    /// # Arguments
+    ///
+    /// * `key_id` - A string slice that uniquely identifies the key to be created.
+    /// * `key_algorithm` - The asymmetric encryption algorithm to be used for the key.
+    /// * `sym_algorithm` - An optional symmetric encryption algorithm to be used with the key.
+    /// * `hash` - An optional hash algorithm to be used with the key.
+    /// * `key_usages` - A vector of `AppKeyUsage` values specifying the intended usages for the key.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` that, on success, contains `Ok(())`, indicating that the key was created successfully.
+    /// On failure, it returns a `SecurityModuleError`.
+
+        #[instrument]
     fn create_key(&mut self, key_id: &str) -> Result<(), SecurityModuleError> {
-        todo!()
+        let runtime = Runtime::new().unwrap();
+        let get_and_save_keypair_result = runtime.block_on(get_and_save_key_pair(
+            &*self.nks_token.clone().unwrap(),
+            key_id,
+            match self.key_algorithm.clone().unwrap() {
+                AsymmetricEncryption::Rsa(_) => "rsa",
+                AsymmetricEncryption::Ecc(_) => "ecdsa",
+            },
+            self.nks_address.clone().unwrap()
+        ));
+        match get_and_save_keypair_result {
+            Ok(result_string) => {
+                let response: Response = serde_json::from_str(&result_string).unwrap();
+                let key_id = response.data.keys[0].id.clone();
+                self.key_id = key_id;
+                Ok(())
+            }
+            Err(err) => {
+                println!("Failed to generate and save key pair: {}", err);
+                Err(SecurityModuleError::NksError)
+            }
+        }
     }
 
     fn load_key(&mut self, key_id: &str) -> Result<(), SecurityModuleError> {
@@ -234,6 +276,29 @@ impl Provider for NksProvider {
     }*/
 }
 
+#[derive(Deserialize)]
+struct Key {
+    id: String,
+    #[serde(rename = "type")]
+    key_type: String,
+    publicKey: String,
+    privateKey: String,
+    length: String,
+    curve: String,
+}
+
+#[derive(Deserialize)]
+struct Data {
+    keys: Vec<Key>,
+    signatures: Vec<Value>,
+}
+
+#[derive(Deserialize)]
+struct Response {
+    data: Data,
+    newToken: String,
+}
+
 fn get_usertoken_from_file() -> Option<String> {
     let mut file = File::open("token.json").ok()?;
     let mut contents = String::new();
@@ -270,4 +335,52 @@ async fn get_token(nks_address: Url, token_path: Box<&Path>) -> anyhow::Result<S
     }
     println!("The response does not contain a 'token' field");
     Ok(String::new())
+}
+
+async fn get_and_save_key_pair(
+    token: &str,
+    key_name: &str,
+    key_type: &str,
+    nks_address: Url,
+) -> std::result::Result<String, Box<dyn std::error::Error>> {
+    let client = reqwest::Client::new();
+    let request_body = json!(
+            {
+            "token": token,
+            "name": key_name,
+            "type": key_type
+            }
+        );
+    println!("body: {}", request_body);
+    let api_url = nks_address.join("generateAndSaveKeyPair");
+    let response = client
+        .post(api_url.unwrap())
+        .header("accept", "*/*")
+        .header("Content-Type", "application/json-patch+json")
+        .json(&request_body)
+        .send()
+        .await?;
+
+    let status = response.status(); // Clone the status here
+    let response_text = response.text().await?;
+    if !status.is_success() {
+        println!("Error response:\n{}", response_text);
+        return Err(format!("Server returned status code: {}", status).into());
+    }
+
+    println!("Success response:\n{}", response_text);
+    let response_json: Value = serde_json::from_str(&response_text)?;
+
+    if let Some(user_token) = response_json.get("newToken") {
+        if let Some(user_token_str) = user_token.as_str() {
+            let token_data = json!({
+                    "usertoken": user_token_str
+                });
+            fs::write("token.json", token_data.to_string())?;
+        }
+    }
+    let pretty_response = serde_json::to_string_pretty(&response_json)
+        .unwrap_or_else(|_| String::from("Error formatting JSON"));
+
+    Ok(pretty_response)
 }

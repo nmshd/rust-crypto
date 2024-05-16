@@ -19,6 +19,26 @@ fn do_nothing() {
     assert_eq!(1, 1);
 }
 
+#[test]
+fn test_initialize_module() {
+    let mut provider = NksProvider::new("test_key".to_string());
+
+    let key_algorithm = AsymmetricEncryption::Rsa(2048.into());
+    let sym_algorithm = Some(BlockCiphers::Aes(Default::default(), 256.into()));
+    let hash = Some(Hash::Sha2(256.into()));
+    let key_usages = vec![
+        KeyUsage::ClientAuth,
+        KeyUsage::Decrypt,
+        KeyUsage::SignEncrypt,
+        KeyUsage::CreateX509,
+    ];
+
+    provider
+        .initialize_module(key_algorithm.clone(), sym_algorithm.clone(), hash.clone(), key_usages.clone())
+        .expect("Failed to initialize module");
+    println!("{:?}", provider);
+}
+
 // #[tokio::test]
 // async fn test_create_rsa_key() {
 //     let mut provider = NksProvider::new("test_key".to_string());
@@ -41,22 +61,22 @@ fn do_nothing() {
 //         .create_key("test_rsa_key", key_algorithm.clone(), sym_algorithm.clone(), hash, key_usages)
 //         .expect("Failed to create RSA key");
 // }
-// #[test]
-// fn test_create_ecdsa_key() {
-//     let mut provider = NksProvider::new("test_key".to_string());
-//
-//     let key_algorithm = AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::Curve25519));
-//     let sym_algorithm = None;
-//     let hash = Some(Hash::Sha2(256.into()));
-//     let key_usages = vec![KeyUsage::ClientAuth, KeyUsage::SignEncrypt];
-//
-//     provider
-//         .initialize_module(999999,999999,key_algorithm.clone(), sym_algorithm.clone(), hash.clone(), key_usages.clone())
-//         .expect("Failed to initialize module");
-//     provider
-//         .create_key("test_ecdsa_key", key_algorithm.clone(), sym_algorithm.clone(), hash, key_usages)
-//         .expect("Failed to create ECDSA key");
-// }
+#[test]
+fn test_create_ecdsa_key() {
+    let mut provider = NksProvider::new("test_key".to_string());
+
+    let key_algorithm = AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::Curve25519));
+    let sym_algorithm = None;
+    let hash = Some(Hash::Sha2(256.into()));
+    let key_usages = vec![KeyUsage::ClientAuth, KeyUsage::SignEncrypt];
+
+    provider
+        .initialize_module(key_algorithm.clone(), sym_algorithm.clone(), hash.clone(), key_usages.clone())
+        .expect("Failed to initialize module");
+    provider
+        .create_key("test_ecdsa_key")
+        .expect("Failed to create ECDSA key");
+}
 //
 // #[test]
 // fn test_create_ecdh_key() {
