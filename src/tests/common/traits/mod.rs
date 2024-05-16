@@ -3,7 +3,9 @@ use crate::{
     // tpm::{core::instance::TpmType, linux::TpmProvider, win::TpmProvider as WindowsTpmProvider},
 };
 use crate::nks::hcvault::NksProvider;
+#[cfg(feature = "tpm")]
 use crate::tpm::core::instance::TpmType;
+#[cfg(feature = "tpm")]
 use crate::tpm::linux::TpmProvider;
 
 pub mod key_handle;
