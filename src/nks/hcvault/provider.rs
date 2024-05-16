@@ -20,8 +20,19 @@ use crate::common::{
 /// Implements the `Provider` trait, providing cryptographic operations utilizing a nks.
 
 
-//impl Provider for NksProvider {
-impl NksProvider {
+impl Provider for NksProvider {
+    fn create_key(&mut self, key_id: &str) -> Result<(), SecurityModuleError> {
+        todo!()
+    }
+
+    fn load_key(&mut self, key_id: &str) -> Result<(), SecurityModuleError> {
+        todo!()
+    }
+
+    fn initialize_module(&mut self, key_algorithm: AsymmetricEncryption, sym_algorithm: Option<BlockCiphers>, hash: Option<Hash>, key_usages: Vec<KeyUsage>) -> Result<(), SecurityModuleError> {
+        todo!()
+    }
+// impl NksProvider {
     /*TODO
     /// Creates a new cryptographic key identified by `key_id`.
     ///
