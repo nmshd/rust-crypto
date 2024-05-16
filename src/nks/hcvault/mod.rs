@@ -14,8 +14,6 @@ use std::sync::{Arc, Mutex};
 pub mod key_handle;
 pub mod provider;
 
-use tss_esapi::handles::KeyHandle as TssKeyHandle;
-use yubikey::Context;
 use crate::common::crypto::algorithms::encryption::{AsymmetricEncryption, BlockCiphers};
 use crate::common::crypto::algorithms::hashes::Hash;
 use crate::common::crypto::KeyUsage;

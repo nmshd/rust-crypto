@@ -104,7 +104,6 @@ impl NksProvider {
 
         Ok(()) // Rückgabe Ok, wenn alles erfolgreich war
     }
-}
 
     /// Initializes the nks module and returns a handle for further operations.
     ///
