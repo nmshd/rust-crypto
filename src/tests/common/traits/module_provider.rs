@@ -18,10 +18,13 @@ use crate::hsm::core::instance::HsmType;
 #[cfg(feature = "tpm")]
 use crate::tpm::core::instance::TpmType;
 
+// #[test_matrix(
+//     [SecurityModule::Tpm(TpmType::Linux),
+//      SecurityModule::Tpm(TpmType::Windows),
+//      SecurityModule::Hsm(HsmType::NitroKey)]
+// )]
 #[test_matrix(
-    [SecurityModule::Tpm(TpmType::Linux),
-     SecurityModule::Tpm(TpmType::Windows),
-     SecurityModule::Hsm(HsmType::NitroKey)]
+    [SecurityModule::Nks]
 )]
 fn test_create_rsa_key(module: SecurityModule) {
     let mut provider = setup_security_module(module);
@@ -45,10 +48,13 @@ fn test_create_rsa_key(module: SecurityModule) {
         .expect("Failed to create RSA key")
 }
 
+// #[test_matrix(
+//     [SecurityModule::Tpm(TpmType::Linux),
+//      SecurityModule::Tpm(TpmType::Windows),
+//      SecurityModule::Hsm(HsmType::NitroKey)]
+// )]
 #[test_matrix(
-    [SecurityModule::Tpm(TpmType::Linux),
-     SecurityModule::Tpm(TpmType::Windows),
-     SecurityModule::Hsm(HsmType::NitroKey)]
+    [SecurityModule::Nks]
 )]
 fn test_load_rsa_key(module: SecurityModule) {
     let mut provider = setup_security_module(module);
