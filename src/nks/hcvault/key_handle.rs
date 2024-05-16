@@ -333,7 +333,7 @@ impl NksProvider {
         println!("body: {}", request_body);
 
         let response = client
-            .post(&self.nks_address)
+            .post(self.nks_address.clone())
             .header("accept", "*/*")
             .header("Content-Type", "application/json-patch+json")
             .json(&request_body)
