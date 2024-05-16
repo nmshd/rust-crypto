@@ -268,38 +268,38 @@ impl NksProvider {
         Ok((pretty_response))
     }
 
-    pub(crate) async fn delete_secrets(&self, token: &str) -> anyhow::Result<(), dyn Error> {
-        let client = reqwest::Client::new();
-        let body = json!({
-            "token": token
-        });
-
-        let response: Value = client
-            .delete(self.nks_address.clone())
-            .header("accept", "*/*")
-            .header("Content-Type", "application/json-patch+json")
-            .json(&body)
-            .send()
-            .await?
-            .json()
-            .await?;
-
-        //save new token
-        if let Some(user_token) = response.get("newToken") {
-            if let Some(user_token_str) = user_token.as_str() {
-                let token_data = json!({
-                    "usertoken": user_token_str
-                });
-                fs::write("token.json", token_data.to_string());
-            }
-        }
-
-        let pretty_response = serde_json::to_string_pretty(&response)
-            .unwrap_or_else(|_| String::from("Error formatting JSON"));
-        println!("{}", pretty_response);
-
-        Ok(())
-    }
+    // pub(crate) async fn delete_secrets(&self, token: &str) -> anyhow::Result<(), dyn Error> {
+    //     let client = reqwest::Client::new();
+    //     let body = json!({
+    //         "token": token
+    //     });
+    //
+    //     let response: Value = client
+    //         .delete(self.nks_address.clone())
+    //         .header("accept", "*/*")
+    //         .header("Content-Type", "application/json-patch+json")
+    //         .json(&body)
+    //         .send()
+    //         .await?
+    //         .json()
+    //         .await?;
+    //
+    //     //save new token
+    //     if let Some(user_token) = response.get("newToken") {
+    //         if let Some(user_token_str) = user_token.as_str() {
+    //             let token_data = json!({
+    //                 "usertoken": user_token_str
+    //             });
+    //             fs::write("token.json", token_data.to_string());
+    //         }
+    //     }
+    //
+    //     let pretty_response = serde_json::to_string_pretty(&response)
+    //         .unwrap_or_else(|_| String::from("Error formatting JSON"));
+    //     println!("{}", pretty_response);
+    //
+    //     Ok(())
+    // }
 
     pub(crate) fn get_usertoken_from_file() -> Option<String> {
         let mut file = File::open("token.json").ok()?;
