@@ -24,7 +24,7 @@ fn test_sign_and_verify_rsa() {
     let key_usages = vec![KeyUsage::ClientAuth, KeyUsage::SignEncrypt];
 
     provider
-        .initialize_module(999999,999999, key_algorithm.clone(), sym_algorithm.clone(), hash.clone(), key_usages.clone())
+        .initialize_module(key_algorithm.clone(), sym_algorithm.clone(), hash.clone(), key_usages.clone())
         .expect("Failed to initialize module");
     provider
         .create_key("test_rsa_key", key_algorithm.clone(), sym_algorithm.clone(), hash, key_usages)

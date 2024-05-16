@@ -1,4 +1,11 @@
+use std::fs;
+use std::fs::File;
+use std::io::Read;
+use std::path::Path;
+use std::str::FromStr;
 use std::sync::{Arc, Mutex};
+use reqwest::Url;
+use serde_json::{json, Value};
 use super::{NksProvider};
 use tracing::instrument;
 use tokio::runtime::Runtime;
@@ -29,8 +36,56 @@ impl Provider for NksProvider {
         todo!()
     }
 
-    fn initialize_module(&mut self, key_algorithm: AsymmetricEncryption, sym_algorithm: Option<BlockCiphers>, hash: Option<Hash>, key_usages: Vec<KeyUsage>) -> Result<(), SecurityModuleError> {
-        todo!()
+    /// Initializes the nks module and returns a handle for further operations.
+    ///
+    /// This method initializes the nks context and prepares it for use. It should be called
+    /// before performing any other operations with the nks.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` that, on success, contains `Ok(())`, indicating that the module was initialized successfully.
+    /// On failure, it returns a `SecurityModuleError`.
+
+
+    //adresse des nks
+    //getsecret
+    //json lokal speichern
+    //neues token updaten
+    //algorithmus checken
+    //TODO implement initialize_module
+    #[instrument]
+    fn initialize_module(
+        &mut self,
+        key_algorithm: AsymmetricEncryption,
+        sym_algorithm: Option<BlockCiphers>,
+        hash: Option<Hash>,
+        key_usages: Vec<KeyUsage>,
+    ) -> Result<(), SecurityModuleError> {
+        self.nks_address = Url::from_str("http://localhost:5272/apidemo/").unwrap(); //TODO: find solution with nks_address not hardcoded
+        self.nks_root_token = Some("put_root_token_here".parse().unwrap()); //TODO: find solution with nks_token not hardcoded
+        self.key_algorithm = Some(key_algorithm);
+        self.sym_algorithm = sym_algorithm;
+        self.hash = hash;
+        self.key_usages = Some(key_usages);
+        // Check if token file exists
+        let tokens_file_path = Box::new(Path::new("token.json")); // Adjust the path as needed
+        if Path::new(&tokens_file_path).exists() {
+            println!("Tokens file exists.");
+            self.nks_token = get_usertoken_from_file();
+        } else {
+            println!("Tokens file does not exist. Generating tokens...");
+            // Token file does not exist, generate token using API
+            match get_token(self.nks_address.clone(), tokens_file_path){
+                Ok(token) => {
+                    self.nks_token = token;
+                }
+                Err(err) => {
+                    println!("Failed to get tokens from API: {}", err);
+                    return Err(SecurityModuleError::NksError);
+                }
+            }
+        }
+        Ok(())
     }
 // impl NksProvider {
     /*TODO
@@ -175,4 +230,42 @@ impl Provider for NksProvider {
         }
         Ok(())
     }*/
+}
+
+fn get_usertoken_from_file() -> Option<String> {
+    let mut file = File::open("token.json").ok()?;
+    let mut contents = String::new();
+    file.read_to_string(&mut contents).ok()?;
+
+    let json: Value = serde_json::from_str(&contents).ok()?;
+
+    if let Some(usertoken) = json["usertoken"].as_str() {
+        return Some(usertoken.to_string());
+    } else {
+        println!("usertoken not found or invalid format.");
+        return None;
+    }
+}
+
+async fn get_token(nks_address: Url, token_path: Box<&Path>) -> anyhow::Result<String, Box<dyn std::error::Error>> {
+    let api_url = nks_address.join("getToken");
+    let response: Value = reqwest::Client::new()
+        .get(api_url.unwrap())
+        .header("accept", "*/*")
+        .send()
+        .await?
+        .json()
+        .await?;
+
+    if let Some(user_token) = response.get("token") {
+        if let Some(user_token_str) = user_token.as_str() {
+            let token_data = json!({
+                "usertoken": user_token_str
+            });
+            fs::write(token_path, token_data.to_string())?;
+            return Ok(user_token_str.to_string());
+        }
+    }
+    println!("The response does not contain a 'token' field");
+    Ok(String::new())
 }

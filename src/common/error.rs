@@ -20,6 +20,9 @@ pub enum SecurityModuleError {
     #[cfg(feature = "tpm")]
     /// Error originating from a Trusted Platform Module (TPM).
     Tpm(TpmError),
+    #[cfg(feature = "nks")]
+    /// Error originating from a Network Key Storage (NKS).
+    NksError,
     /// Error that occurred during the signing operation.
     ///
     /// This variant contains a descriptive error message.
@@ -82,6 +85,8 @@ impl fmt::Display for SecurityModuleError {
             SecurityModuleError::VerificationFailed => write!(f, "Verification failed"),
             SecurityModuleError::InvalidSignature => write!(f, "Invalid signature"),
             SecurityModuleError::InvalidPublicKey => write!(f, "Invalid public key"),
+            #[cfg(feature = "nks")]
+            SecurityModuleError::NksError => write!(f, "Key error"),
         }
     }
 }
@@ -111,6 +116,7 @@ impl std::error::Error for SecurityModuleError {
             SecurityModuleError::VerificationFailed => None,
             SecurityModuleError::InvalidSignature => None,
             SecurityModuleError::InvalidPublicKey => None,
+            SecurityModuleError::NksError => None,
         }
     }
 }
