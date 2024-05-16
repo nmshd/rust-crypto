@@ -31,15 +31,15 @@ pub struct NksProvider {
 
     /// A unique identifier for the cryptographic key managed by this provider.
     key_id: String,
-    pub(super) key_handle: Option<Arc<Mutex<TssKeyHandle>>>,
-    pub(super) handle: Option<Arc<Mutex<Context>>>,
+    // pub(super) key_handle: Option<Arc<Mutex<TssKeyHandle>>>,
+    // pub(super) handle: Option<Arc<Mutex<Context>>>,
     pub(super) key_algorithm: Option<AsymmetricEncryption>,
     pub(super) sym_algorithm: Option<BlockCiphers>,
     pub(super) hash: Option<Hash>,
     pub(super) key_usages: Option<Vec<KeyUsage>>,
     pub(super) nks_address: Option<String>,
     pub(super) nks_token: Option<String>,
-    pub(super) nonce: Option<[u8]>,
+    pub(super) nonce: Option<Vec<u8>>,
     pub(super) public_key: Option<String>,
     pub(super) priv_key: Option<String>,
 
@@ -57,11 +57,11 @@ impl NksProvider {
 
             key_id,
             nks_address: None,
-            nks_token,
+            nks_token: None,
             nonce: None,
             public_key: None,
-            key_handle: None,
-            handle: None,
+            // key_handle: None,
+            // handle: None,
             key_algorithm: None,
             sym_algorithm: None,
             hash: None,
