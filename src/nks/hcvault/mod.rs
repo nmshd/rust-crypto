@@ -10,6 +10,7 @@
 //     KeyUsage,
 // };
 use std::sync::{Arc, Mutex};
+use reqwest::Url;
 
 pub mod key_handle;
 pub mod provider;
@@ -37,7 +38,7 @@ pub struct NksProvider {
     pub(super) sym_algorithm: Option<BlockCiphers>,
     pub(super) hash: Option<Hash>,
     pub(super) key_usages: Option<Vec<KeyUsage>>,
-    pub(super) nks_address: Option<String>,
+    pub(super) nks_address: Url,
     pub(super) nks_token: Option<String>,
     pub(super) nonce: Option<Vec<u8>>,
     pub(super) public_key: Option<String>,

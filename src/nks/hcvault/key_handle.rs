@@ -167,7 +167,7 @@ impl NksProvider {
         benchmark: bool,
     ) -> anyhow::Result<String, Box<dyn std::error::Error>> {
         let response: Value = reqwest::Client::new()
-            .get(&self.nks_address)
+            .get(self.nks_address.clone())
             .header("accept", "*/*")
             .send()
             .await?
@@ -199,7 +199,7 @@ impl NksProvider {
         });
 
         let response: Value = client
-            .post(&self.nks_address)
+            .post(self.nks_address.clone())
             .header("accept", "*/*")
             .header("Content-Type", "application/json-patch+json")
             .json(&body)
@@ -242,7 +242,7 @@ impl NksProvider {
         });
 
         let response: Value = client
-            .post(&self.nks_address)
+            .post(self.nks_address.clone())
             .header("accept", "*/*")
             .header("Content-Type", "application/json-patch+json")
             .json(&body)
@@ -275,7 +275,7 @@ impl NksProvider {
         });
 
         let response: Value = client
-            .delete(&self.nks_address)
+            .delete(self.nks_address.clone())
             .header("accept", "*/*")
             .header("Content-Type", "application/json-patch+json")
             .json(&body)
