@@ -39,7 +39,6 @@ pub struct NksProvider {
     pub(super) hash: Option<Hash>,
     pub(super) key_usages: Option<Vec<KeyUsage>>,
     pub(super) nks_address: Option<Url>,
-    pub(super) nks_root_token: Option<String>,
     pub(super) nks_token: Option<String>,
     pub(super) nonce: Option<Vec<u8>>,
     pub(super) public_key: Option<String>,
@@ -59,7 +58,6 @@ impl NksProvider {
 
             key_id,
             nks_address: None,
-            nks_root_token: None,
             nks_token: None,
             nonce: None,
             public_key: None,

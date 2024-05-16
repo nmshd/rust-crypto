@@ -104,7 +104,6 @@ impl Provider for NksProvider {
         key_usages: Vec<KeyUsage>,
     ) -> Result<(), SecurityModuleError> {
         self.nks_address = Some(Url::from_str("http://localhost:5272/apidemo/").unwrap()); //TODO: find solution with nks_address not hardcoded
-        self.nks_root_token = Some("put_root_token_here".parse().unwrap()); //TODO: find solution with nks_token not hardcoded
         self.key_algorithm = Some(key_algorithm);
         self.sym_algorithm = sym_algorithm;
         self.hash = hash;
