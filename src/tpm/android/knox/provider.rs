@@ -94,10 +94,40 @@ impl Provider for TpmProvider {
     /// `WindowsProviderHandle`. This handle is used for subsequent cryptographic operations
     /// with the TPM.
     ///
+    /// # Parameters
+    ///
+    /// - `key_algorithm`: Specifies the asymmetric encryption algorithm to use. Supported algorithms include:
+    ///     - `AsymmetricEncryption::Rsa`: RSA with key lengths specified by `KeyBits`.
+    /// - `sym_algorithm`: An optional parameter specifying the block cipher algorithm to use. Supported algorithms include:
+    ///     - `BlockCiphers::Aes`: AES with key lengths specified by `KeyBits` and modes like GCM, ECB, CBC, CTR.
+    /// - `hash`: An optional parameter specifying the hash algorithm to use.
+    /// - `key_usages`: A vector specifying the purposes for which the key can be used (e.g., encrypt, decrypt, sign, verify).
+    ///
     /// # Returns
     ///
     /// A `Result` that, on success, contains `Ok(())`, indicating that the module was initialized successfully.
     /// On failure, it returns a `SecurityModuleError`.
+    ///
+    /// # Errors
+    ///
+    /// This function returns a `SecurityModuleError` in the following cases:
+    /// - If an unsupported asymmetric encryption algorithm is specified.
+    /// - If an unsupported symmetric encryption algorithm is specified.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// let result = module.initialize_module(
+    ///     AsymmetricEncryption::Rsa(KeyBits::Bits2048),
+    ///     Some(BlockCiphers::Aes(KeyBits::Bits256)),
+    ///     Some(Hash::Sha256),
+    ///     vec![KeyUsage::Encrypt, KeyUsage::Decrypt],
+    /// );
+    ///
+    /// match result {
+    ///     Ok(()) =&gt; println!("Module initialized successfully"),
+    ///     Err(e) =&gt; println!("Failed to initialize module: {:?}", e),
+    /// }
 
 
 
@@ -113,18 +143,28 @@ impl Provider for TpmProvider {
         match key_algorithm {
             AsymmetricEncryption::Rsa(bitslength) => {
                 match bitslength {
-                    KeyBits::Bits128 => {asymString = String::from("RSA;128;HmacSHA1;PKCS1")}
-                    KeyBits::Bits192 => {asymString = String::from("RSA;192;HmacSHA224;PKCS1")}
-                    KeyBits::Bits256 => {asymString = String::from("RSA;256;HmacSHA384;PKCS1")}
-                    KeyBits::Bits512 => {asymString = String::from("RSA;512;HmacSHA512;PKCS1")}
-                    KeyBits::Bits1024 => {asymString = String::from("RSA;1024;HmacSHA512;PKCS1")}
-                    KeyBits::Bits2048 => {asymString = String::from("RSA;2048;HmacSHA512;PKCS1")}
-                    KeyBits::Bits3072 => {asymString = String::from("RSA;3072;HmacSHA512;PKCS1")}
-                    KeyBits::Bits4096 => {asymString = String::from("RSA;4096;HmacSHA512;PKCS1")}
-                    KeyBits::Bits8192 => {asymString = String::from("RSA;8192;HmacSHA512;PKCS1")}
+                    KeyBits::Bits128 => {asymString = String::from("RSA;128;HmacSHA-1;PKCS1")},
+                    KeyBits::Bits192 => {asymString = String::from("RSA;192;HmacSHA-224;PKCS1")},
+                    KeyBits::Bits256 => {asymString = String::from("RSA;256;HmacSHA-384;PKCS1")},
+                    KeyBits::Bits512 => {asymString = String::from("RSA;512;HmacSHA-512;PKCS1")},
+                    KeyBits::Bits1024 => {asymString = String::from("RSA;1024;HmacSHA-512;PKCS1")},
+                    KeyBits::Bits2048 => {asymString = String::from("RSA;2048;HmacSHA-512;PKCS1")},
+                    KeyBits::Bits3072 => {asymString = String::from("RSA;3072;HmacSHA-512;PKCS1")},
+                    KeyBits::Bits4096 => {asymString = String::from("RSA;4096;HmacSHA-512;PKCS1")},
+                    KeyBits::Bits8192 => {asymString = String::from("RSA;8192;HmacSHA-512;PKCS1")},
                 }
             }
             _ => {return Err(SecurityModuleError::UnsupportedAlgorithm(format!("Unsupported asymmetric encryption algorithm:")))}
+        }
+        let symString;
+        match sym_algorithm {
+            Option::DESede(bitslength) => {
+                match bitslength {
+                    KeyBits::Bits128 => {symString = String::from("DESede;CBC;PKCS7,PKCS5Padding")},
+                    KeyBits::Bits128 => {symString = String::from("DESede;ECB;PKCS7,NoPadding")},
+                }
+            }
+            _ => {return Err(SecurityModuleError::UnsupportedAlgorithm(format!("Unsupported symmetric encryption algorithm:")))}
         }
 
         let symString;
