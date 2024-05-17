@@ -141,7 +141,7 @@ impl Provider for TpmProvider {
                     KeyBits::Bits192 => {symString = String::from("AES;192;CTR;PKCS7")},
                     KeyBits::Bits256 => {symString = String::from("AES;256;GCM;NoPadding")},
                     KeyBits::Bits256 => {symString = String::from("AES;256;ECB;PKCS7")},
-                   KeyBits::Bits256 => {symString = String::from("AES;256;CBC;PKCS7")},
+                    KeyBits::Bits256 => {symString = String::from("AES;256;CBC;PKCS7")},
                     KeyBits::Bits256 => {symString = String::from("AES;256;CTR;PKCS7")},
 
                 }
