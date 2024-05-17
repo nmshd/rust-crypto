@@ -334,7 +334,18 @@ impl Provider for TpmProvider {
     /// A `Result` that, on success, contains `Ok(())`, indicating that the module was initialized successfully.
     /// On failure, it returns a `SecurityModuleError`.
     #[instrument]
-    fn initialize_module(&mut self) -> Result<(), SecurityModuleError> {
+    fn initialize_module(
+        &mut self,
+        key_algorithm: AsymmetricEncryption,
+        sym_algorithm: Option<BlockCiphers>,
+        hash: Option<Hash>,
+        key_usages: Vec<KeyUsage>,
+    ) -> Result<(), SecurityModuleError> {
+        self.key_algorithm = Some(key_algorithm);
+        self.sym_algorithm = sym_algorithm;
+        self.hash = hash;
+        self.key_usages = Some(key_usages);
+
         let tcti = TctiNameConf::from_environment_variable().unwrap();
 
         let context = Context::new(tcti)

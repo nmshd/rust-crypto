@@ -36,7 +36,7 @@ fn test_create_rsa_key(module: SecurityModule) {
         ],
     );
 
-    provider
+    providerw
         .lock()
         .unwrap()
         .initialize_module()

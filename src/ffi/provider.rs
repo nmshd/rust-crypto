@@ -46,6 +46,7 @@ pub unsafe extern "C" fn initialize_module(provider_ffi: *mut ProviderFFI) -> i3
     }
 }
 
+
 #[no_mangle]
 pub extern "C" fn config_new() -> *mut c_void {
     let config: Box<dyn ProviderConfig> = Box::new(TpmConfig::default());

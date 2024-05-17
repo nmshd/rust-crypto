@@ -3,6 +3,7 @@ name = "crypto-layer"
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
+crate-type = ["staticlib"]
 
 [lib]
 crate-type = ["cdylib"]
