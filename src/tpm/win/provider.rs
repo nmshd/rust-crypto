@@ -2,16 +2,13 @@ use super::TpmProvider;
 use crate::{
     common::{
         crypto::{
-            algorithms::{
-                encryption::{AsymmetricEncryption, BlockCiphers, EccSchemeAlgorithm},
-                hashes::Hash,
-            },
+            algorithms::encryption::{AsymmetricEncryption, EccSchemeAlgorithm},
             KeyUsage,
         },
         error::SecurityModuleError,
-        traits::module_provider::Provider,
+        traits::{module_provider::Provider, module_provider_config::ProviderConfig},
     },
-    tpm::core::error::TpmError,
+    tpm::{core::error::TpmError, TpmConfig},
 };
 use tracing::instrument;
 use windows::{
@@ -51,11 +48,22 @@ impl Provider for TpmProvider {
     /// A `Result` that, on success, contains `Ok(())`, indicating that the key was created successfully.
     /// On failure, it returns a `SecurityModuleError`.
     #[instrument]
-    fn create_key(&mut self, key_id: &str) -> Result<(), SecurityModuleError> {
+    fn create_key(
+        &mut self,
+        key_id: &str,
+        config: Box<dyn ProviderConfig>,
+    ) -> Result<(), SecurityModuleError> {
+        let config = config.as_any().downcast_ref::<TpmConfig>().unwrap();
+
+        self.key_algo = Some(config.key_algorithm);
+        self.sym_algo = Some(config.sym_algorithm);
+        self.hash = Some(config.hash);
+        self.key_usages = Some(config.key_usages.clone());
+
         let mut key_handle = NCRYPT_KEY_HANDLE::default();
         let alg_id: PCWSTR = match self.key_algo.as_ref().unwrap() {
             AsymmetricEncryption::Rsa(key_bits) => {
-                let key_bits_u32: u32 = key_bits.clone().into();
+                let key_bits_u32: u32 = (*key_bits).into();
                 let rsa_alg_id: String = format!("RSA{}", key_bits_u32);
                 PCWSTR(rsa_alg_id.as_ptr() as *const u16)
             }
@@ -85,7 +93,7 @@ impl Provider for TpmProvider {
 
         if let AsymmetricEncryption::Rsa(key_bits) = self.key_algo.as_ref().unwrap() {
             // Set the key length for RSA keys
-            let key_length: u32 = key_bits.clone().into();
+            let key_length: u32 = (*key_bits).into();
             let key_length_bytes = key_length.to_le_bytes(); // Convert the key length to bytes
             if unsafe {
                 NCryptSetProperty(
@@ -190,7 +198,18 @@ impl Provider for TpmProvider {
     /// A `Result` that, on success, contains `Ok(())`, indicating that the key was loaded successfully.
     /// On failure, it returns a `SecurityModuleError`.
     #[instrument]
-    fn load_key(&mut self, key_id: &str) -> Result<(), SecurityModuleError> {
+    fn load_key(
+        &mut self,
+        key_id: &str,
+        config: Box<dyn ProviderConfig>,
+    ) -> Result<(), SecurityModuleError> {
+        let config = config.as_any().downcast_ref::<TpmConfig>().unwrap();
+
+        self.key_algo = Some(config.key_algorithm);
+        self.sym_algo = Some(config.sym_algorithm);
+        self.hash = Some(config.hash);
+        self.key_usages = Some(config.key_usages.clone());
+
         let mut key_handle = NCRYPT_KEY_HANDLE::default();
         let key_cu16 = PCWSTR(key_id.as_ptr() as *const u16);
 
@@ -285,13 +304,7 @@ impl Provider for TpmProvider {
     /// A `Result` that, on success, contains `Ok(())`, indicating that the module was initialized successfully.
     /// On failure, it returns a `SecurityModuleError`.
     #[instrument]
-    fn initialize_module(
-        &mut self,
-        key_algorithm: AsymmetricEncryption,
-        sym_algorithm: Option<BlockCiphers>,
-        hash: Option<Hash>,
-        key_usages: Vec<KeyUsage>,
-    ) -> Result<(), SecurityModuleError> {
+    fn initialize_module(&mut self) -> Result<(), SecurityModuleError> {
         let mut handle = NCRYPT_PROV_HANDLE::default();
 
         if unsafe { NCryptOpenStorageProvider(&mut handle, MS_PLATFORM_CRYPTO_PROVIDER, 0) }
@@ -301,10 +314,6 @@ impl Provider for TpmProvider {
         }
 
         self.handle = Some(handle);
-        self.key_algo = Some(key_algorithm);
-        self.sym_algo = sym_algorithm;
-        self.hash = hash;
-        self.key_usages = Some(key_usages);
 
         Ok(())
     }

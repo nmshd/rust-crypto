@@ -1,14 +1,11 @@
 use super::TpmProvider;
-use crate::common::{
-    crypto::{
-        algorithms::{
-            encryption::{AsymmetricEncryption, BlockCiphers},
-            hashes::Hash,
-        },
-        KeyUsage,
+use crate::{
+    common::{
+        crypto::{algorithms::encryption::AsymmetricEncryption, KeyUsage},
+        error::SecurityModuleError,
+        traits::{module_provider::Provider, module_provider_config::ProviderConfig},
     },
-    error::SecurityModuleError,
-    traits::module_provider::Provider,
+    tpm::TpmConfig,
 };
 use std::sync::{Arc, Mutex};
 use tracing::instrument;
@@ -50,23 +47,34 @@ impl Provider for TpmProvider {
     /// A `Result` that, on success, contains `Ok(())`, indicating that the key was created successfully.
     /// On failure, it returns a `SecurityModuleError`.
     #[instrument]
-    fn create_key(&mut self, key_id: &str) -> Result<(), SecurityModuleError> {
+    fn create_key(
+        &mut self,
+        key_id: &str,
+        config: Box<dyn ProviderConfig>,
+    ) -> Result<(), SecurityModuleError> {
+        let config = config.as_any().downcast_ref::<TpmConfig>().unwrap();
+
+        self.key_algorithm = Some(config.key_algorithm);
+        self.sym_algorithm = Some(config.sym_algorithm);
+        self.hash = Some(config.hash);
+        self.key_usages = Some(config.key_usages.clone());
+
         let primary_pub = match self.key_algorithm.as_ref().unwrap() {
             AsymmetricEncryption::Rsa(key_bits) => PublicBuilder::new()
-                .with_public_algorithm(self.key_algorithm.as_ref().unwrap().clone().into())
-                .with_name_hashing_algorithm(self.hash.as_ref().unwrap().clone().into())
+                .with_public_algorithm((*self.key_algorithm.as_ref().unwrap()).into())
+                .with_name_hashing_algorithm((*self.hash.as_ref().unwrap()).into())
                 .with_rsa_parameters(PublicRsaParameters::new(
-                    self.sym_algorithm.clone().unwrap().into(),
+                    self.sym_algorithm.unwrap().into(),
                     RsaScheme::Null,
-                    key_bits.clone().into(),
+                    (*key_bits).into(),
                     RsaExponent::default(),
                 ))
                 .with_rsa_unique_identifier(PublicKeyRsa::default()),
             AsymmetricEncryption::Ecc(ecc_scheme) => PublicBuilder::new()
-                .with_public_algorithm(self.key_algorithm.as_ref().unwrap().clone().into())
-                .with_name_hashing_algorithm(self.hash.as_ref().unwrap().clone().into())
+                .with_public_algorithm((*self.key_algorithm.as_ref().unwrap()).into())
+                .with_name_hashing_algorithm((*self.hash.as_ref().unwrap()).into())
                 .with_ecc_parameters(PublicEccParameters::new(
-                    self.sym_algorithm.clone().unwrap().into(),
+                    self.sym_algorithm.unwrap().into(),
                     (*ecc_scheme).into(),
                     self.key_algorithm
                         .as_ref()
@@ -75,7 +83,7 @@ impl Provider for TpmProvider {
                         .unwrap()
                         .into(),
                     KeyDerivationFunctionScheme::Kdf2(HashScheme::new(
-                        self.hash.as_ref().unwrap().clone().into(),
+                        (*self.hash.as_ref().unwrap()).into(),
                     )),
                 ))
                 .with_ecc_unique_identifier(EccPoint::default()),
@@ -185,7 +193,18 @@ impl Provider for TpmProvider {
     /// A `Result` that, on success, contains `Ok(())`, indicating that the key was loaded successfully.
     /// On failure, it returns a `SecurityModuleError`.
     #[instrument]
-    fn load_key(&mut self, key_id: &str) -> Result<(), SecurityModuleError> {
+    fn load_key(
+        &mut self,
+        key_id: &str,
+        config: Box<dyn ProviderConfig>,
+    ) -> Result<(), SecurityModuleError> {
+        let config = config.as_any().downcast_ref::<TpmConfig>().unwrap();
+
+        self.key_algorithm = Some(config.key_algorithm);
+        self.sym_algorithm = Some(config.sym_algorithm);
+        self.hash = Some(config.hash);
+        self.key_usages = Some(config.key_usages.clone());
+
         // Start an authorization session
         let session = self
             .handle
@@ -222,7 +241,7 @@ impl Provider for TpmProvider {
         let primary_pub = match self.key_algorithm.as_ref().unwrap() {
             AsymmetricEncryption::Rsa(_) => todo!(),
             AsymmetricEncryption::Ecc(ecc_scheme) => PublicEccParameters::new(
-                self.sym_algorithm.clone().unwrap().into(),
+                self.sym_algorithm.unwrap().into(),
                 (*ecc_scheme).into(),
                 self.key_algorithm
                     .as_ref()
@@ -230,9 +249,7 @@ impl Provider for TpmProvider {
                     .ecc_curve()
                     .unwrap()
                     .into(),
-                KeyDerivationFunctionScheme::Kdf2(HashScheme::new(
-                    self.hash.clone().unwrap().into(),
-                )),
+                KeyDerivationFunctionScheme::Kdf2(HashScheme::new(self.hash.unwrap().into())),
             ),
         };
 
@@ -286,7 +303,7 @@ impl Provider for TpmProvider {
         let private = Private::default();
         let public = tss_esapi::structures::Public::Ecc {
             object_attributes: obj_attributes,
-            name_hashing_algorithm: self.hash.clone().unwrap().into(),
+            name_hashing_algorithm: self.hash.unwrap().into(),
             auth_policy: Digest::default(),
             parameters: primary_pub,
             unique: EccPoint::default(),
@@ -317,18 +334,7 @@ impl Provider for TpmProvider {
     /// A `Result` that, on success, contains `Ok(())`, indicating that the module was initialized successfully.
     /// On failure, it returns a `SecurityModuleError`.
     #[instrument]
-    fn initialize_module(
-        &mut self,
-        key_algorithm: AsymmetricEncryption,
-        sym_algorithm: Option<BlockCiphers>,
-        hash: Option<Hash>,
-        key_usages: Vec<KeyUsage>,
-    ) -> Result<(), SecurityModuleError> {
-        self.key_algorithm = Some(key_algorithm);
-        self.sym_algorithm = sym_algorithm;
-        self.hash = hash;
-        self.key_usages = Some(key_usages);
-
+    fn initialize_module(&mut self) -> Result<(), SecurityModuleError> {
         let tcti = TctiNameConf::from_environment_variable().unwrap();
 
         let context = Context::new(tcti)

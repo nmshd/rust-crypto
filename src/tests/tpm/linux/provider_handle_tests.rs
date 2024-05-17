@@ -1,3 +1,7 @@
+use crate::{
+    common::crypto::algorithms::{encryption::SymmetricMode, hashes::Sha2Bits, KeyBits},
+    tpm::TpmConfig,
+};
 #[allow(unused_imports)]
 use crate::{
     common::{
@@ -17,21 +21,23 @@ use crate::{
 fn test_create_rsa_key() {
     let mut provider = TpmProvider::new("test_key".to_string());
 
-    let key_algorithm = AsymmetricEncryption::Rsa(2048.into());
-    let sym_algorithm = Some(BlockCiphers::Aes(Default::default(), 256.into()));
-    let hash = Some(Hash::Sha2(256.into()));
-    let key_usages = vec![
-        KeyUsage::ClientAuth,
-        KeyUsage::Decrypt,
-        KeyUsage::SignEncrypt,
-        KeyUsage::CreateX509,
-    ];
+    let config = TpmConfig::new(
+        AsymmetricEncryption::Rsa(KeyBits::Bits4096),
+        BlockCiphers::Aes(SymmetricMode::Gcm, KeyBits::Bits512),
+        Hash::Sha2(Sha2Bits::Sha256),
+        vec![
+            KeyUsage::SignEncrypt,
+            KeyUsage::ClientAuth,
+            KeyUsage::Decrypt,
+            KeyUsage::CreateX509,
+        ],
+    );
 
     provider
-        .initialize_module(key_algorithm, sym_algorithm, hash, key_usages)
+        .initialize_module()
         .expect("Failed to initialize module");
     provider
-        .create_key("test_rsa_key")
+        .create_key("test_rsa_key", config)
         .expect("Failed to create RSA key");
 }
 
@@ -39,16 +45,18 @@ fn test_create_rsa_key() {
 fn test_create_ecdsa_key() {
     let mut provider = TpmProvider::new("test_key".to_string());
 
-    let key_algorithm = AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::Curve25519));
-    let sym_algorithm = None;
-    let hash = Some(Hash::Sha2(256.into()));
-    let key_usages = vec![KeyUsage::ClientAuth, KeyUsage::SignEncrypt];
+    let config = TpmConfig::new(
+        AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::Curve25519)),
+        BlockCiphers::Aes(SymmetricMode::Gcm, KeyBits::Bits512),
+        Hash::Sha2(Sha2Bits::Sha256),
+        vec![KeyUsage::SignEncrypt, KeyUsage::ClientAuth],
+    );
 
     provider
-        .initialize_module(key_algorithm, sym_algorithm, hash, key_usages)
+        .initialize_module()
         .expect("Failed to initialize module");
     provider
-        .create_key("test_ecdsa_key")
+        .create_key("test_ecdsa_key", config)
         .expect("Failed to create ECDSA key");
 }
 
@@ -56,16 +64,22 @@ fn test_create_ecdsa_key() {
 fn test_create_ecdh_key() {
     let mut provider = TpmProvider::new("test_key".to_string());
 
-    let key_algorithm = AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::Curve25519));
-    let sym_algorithm = Some(BlockCiphers::Aes(Default::default(), 256.into()));
-    let hash = Some(Hash::Sha2(384.into()));
-    let key_usages = vec![KeyUsage::Decrypt];
+    let config = TpmConfig::new(
+        AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::Curve25519)),
+        BlockCiphers::Aes(SymmetricMode::Gcm, KeyBits::Bits512),
+        Hash::Sha2(Sha2Bits::Sha256),
+        vec![
+            KeyUsage::SignEncrypt,
+            KeyUsage::ClientAuth,
+            KeyUsage::Decrypt,
+        ],
+    );
 
     provider
-        .initialize_module(key_algorithm, sym_algorithm, hash, key_usages)
+        .initialize_module()
         .expect("Failed to initialize module");
     provider
-        .create_key("test_ecdh_key")
+        .create_key("test_ecdh_key", config)
         .expect("Failed to create ECDH key");
 }
 
@@ -73,22 +87,24 @@ fn test_create_ecdh_key() {
 fn test_load_rsa_key() {
     let mut provider = TpmProvider::new("test_key".to_string());
 
-    let key_algorithm = AsymmetricEncryption::Rsa(2048.into());
-    let sym_algorithm = Some(BlockCiphers::Aes(Default::default(), 256.into()));
-    let hash = Some(Hash::Sha2(256.into()));
-    let key_usages = vec![
-        KeyUsage::ClientAuth,
-        KeyUsage::Decrypt,
-        KeyUsage::SignEncrypt,
-        KeyUsage::CreateX509,
-    ];
+    let config = TpmConfig::new(
+        AsymmetricEncryption::Rsa(KeyBits::Bits4096),
+        BlockCiphers::Aes(SymmetricMode::Gcm, KeyBits::Bits512),
+        Hash::Sha2(Sha2Bits::Sha256),
+        vec![
+            KeyUsage::SignEncrypt,
+            KeyUsage::ClientAuth,
+            KeyUsage::Decrypt,
+            KeyUsage::CreateX509,
+        ],
+    );
 
     provider
-        .initialize_module(key_algorithm, sym_algorithm, hash, key_usages)
+        .initialize_module()
         .expect("Failed to initialize module");
 
     provider
-        .load_key("test_rsa_key")
+        .load_key("test_rsa_key", config)
         .expect("Failed to load RSA key");
 }
 
@@ -96,17 +112,19 @@ fn test_load_rsa_key() {
 fn test_load_ecdsa_key() {
     let mut provider = TpmProvider::new("test_key".to_string());
 
-    let key_algorithm = AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::Curve25519));
-    let sym_algorithm = None;
-    let hash = Some(Hash::Sha2(256.into()));
-    let key_usages = vec![KeyUsage::ClientAuth, KeyUsage::SignEncrypt];
+    let config = TpmConfig::new(
+        AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::Curve25519)),
+        BlockCiphers::Aes(SymmetricMode::Gcm, KeyBits::Bits512),
+        Hash::Sha2(Sha2Bits::Sha256),
+        vec![KeyUsage::SignEncrypt, KeyUsage::ClientAuth],
+    );
 
     provider
-        .initialize_module(key_algorithm, sym_algorithm, hash, key_usages)
+        .initialize_module()
         .expect("Failed to initialize module");
 
     provider
-        .load_key("test_ecdsa_key")
+        .load_key("test_ecdsa_key", config)
         .expect("Failed to load ECDSA key");
 }
 
@@ -114,15 +132,21 @@ fn test_load_ecdsa_key() {
 fn test_load_ecdh_key() {
     let mut provider = TpmProvider::new("test_key".to_string());
 
-    let key_algorithm = AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::Curve25519));
-    let sym_algorithm = Some(BlockCiphers::Aes(Default::default(), 256.into()));
-    let hash = Some(Hash::Sha2(384.into()));
-    let key_usages = vec![KeyUsage::Decrypt];
+    let config = TpmConfig::new(
+        AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::Curve25519)),
+        BlockCiphers::Aes(SymmetricMode::Gcm, KeyBits::Bits512),
+        Hash::Sha2(Sha2Bits::Sha256),
+        vec![
+            KeyUsage::SignEncrypt,
+            KeyUsage::ClientAuth,
+            KeyUsage::Decrypt,
+        ],
+    );
 
     provider
-        .initialize_module(key_algorithm, sym_algorithm, hash, key_usages)
+        .initialize_module()
         .expect("Failed to initialize module");
     provider
-        .load_key("test_ecdh_key")
+        .load_key("test_ecdh_key", config)
         .expect("Failed to load ECDH key");
 }

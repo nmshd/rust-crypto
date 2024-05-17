@@ -3,15 +3,16 @@ use crate::{
     common::{
         crypto::{
             algorithms::{
-                encryption::{AsymmetricEncryption, BlockCiphers},
-                hashes::Hash, KeyBits,
+                encryption::{AsymmetricEncryption, BlockCiphers, SymmetricMode},
+                hashes::{Hash, Sha2Bits},
+                KeyBits,
             },
             KeyUsage,
         },
         factory::SecurityModule,
     },
     hsm::core::instance::HsmType,
-    tpm::core::instance::TpmType,
+    tpm::{core::instance::TpmType, TpmConfig},
 };
 use test_case::test_matrix;
 
@@ -21,24 +22,31 @@ use test_case::test_matrix;
      SecurityModule::Hsm(HsmType::NitroKey)]
 )]
 fn test_create_rsa_key(module: SecurityModule) {
-    let mut provider = setup_security_module(module);
+    let provider = setup_security_module(module);
 
-    let key_algorithm = AsymmetricEncryption::Rsa(KeyBits::Bits2048);
-    let sym_algorithm = Some(BlockCiphers::Aes(Default::default(), 256.into()));
-    let hash = Some(Hash::Sha2(256.into()));
-    let key_usages = vec![
-        KeyUsage::ClientAuth,
-        KeyUsage::Decrypt,
-        KeyUsage::SignEncrypt,
-        KeyUsage::CreateX509,
-    ];
+    let config = TpmConfig::new(
+        AsymmetricEncryption::Rsa(KeyBits::Bits4096),
+        BlockCiphers::Aes(SymmetricMode::Gcm, KeyBits::Bits512),
+        Hash::Sha2(Sha2Bits::Sha256),
+        vec![
+            KeyUsage::SignEncrypt,
+            KeyUsage::ClientAuth,
+            KeyUsage::SignEncrypt,
+            KeyUsage::CreateX509,
+        ],
+    );
 
     provider
-        .initialize_module(key_algorithm, sym_algorithm, hash, key_usages)
+        .lock()
+        .unwrap()
+        .initialize_module()
         .expect("Failed to initialize module");
+
     provider
-        .create_key("test_rsa_key")
-        .expect("Failed to create RSA key")
+        .lock()
+        .unwrap()
+        .create_key("test_rsa_key", config)
+        .expect("Failed to create RSA key");
 }
 
 #[test_matrix(
@@ -47,22 +55,29 @@ fn test_create_rsa_key(module: SecurityModule) {
      SecurityModule::Hsm(HsmType::NitroKey)]
 )]
 fn test_load_rsa_key(module: SecurityModule) {
-    let mut provider = setup_security_module(module);
+    let provider = setup_security_module(module);
 
-    let key_algorithm = AsymmetricEncryption::Rsa(2048.into());
-    let sym_algorithm = Some(BlockCiphers::Aes(Default::default(), 256.into()));
-    let hash = Some(Hash::Sha2(256.into()));
-    let key_usages = vec![
-        KeyUsage::ClientAuth,
-        KeyUsage::Decrypt,
-        KeyUsage::SignEncrypt,
-        KeyUsage::CreateX509,
-    ];
+    let config = TpmConfig::new(
+        AsymmetricEncryption::Rsa(KeyBits::Bits4096),
+        BlockCiphers::Aes(SymmetricMode::Gcm, KeyBits::Bits512),
+        Hash::Sha2(Sha2Bits::Sha256),
+        vec![
+            KeyUsage::SignEncrypt,
+            KeyUsage::ClientAuth,
+            KeyUsage::SignEncrypt,
+            KeyUsage::CreateX509,
+        ],
+    );
+
     provider
-        .initialize_module(key_algorithm, sym_algorithm, hash, key_usages)
+        .lock()
+        .unwrap()
+        .initialize_module()
         .expect("Failed to initialize module");
 
     provider
-        .load_key("test_rsa_key")
+        .lock()
+        .unwrap()
+        .load_key("test_rsa_key", config)
         .expect("Failed to load RSA key");
 }
