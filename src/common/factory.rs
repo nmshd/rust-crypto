@@ -1,4 +1,4 @@
-use super::traits::module_provider::Provider;
+use super::traits::{log_config::LogConfig, module_provider::Provider};
 #[cfg(feature = "hsm")]
 use crate::hsm::core::instance::{HsmInstance, HsmType};
 #[cfg(feature = "tpm")]
@@ -8,9 +8,6 @@ use std::{
     collections::HashMap,
     sync::{Arc, Mutex},
 };
-use tracing::Level;
-use tracing_appender::rolling;
-use tracing_subscriber::FmtSubscriber;
 
 type ProviderArc = Arc<Mutex<dyn Provider>>;
 type SecurityModuleMap = HashMap<SecurityModule, ProviderArc>;
@@ -51,7 +48,7 @@ impl From<&str> for SecurityModule {
 /// variants to their corresponding provider instances. It ensures that module instances
 /// are unique and accessible across the application.
 static INSTANCES: SecurityModuleInstances = Lazy::new(|| Mutex::new(HashMap::new()));
-static LOGGING: Mutex<bool> = Mutex::new(false);
+static LOGGING_INITIALIZED: Mutex<bool> = Mutex::new(false);
 
 /// A container struct for security module-related functionality.
 ///
@@ -79,10 +76,14 @@ impl SecModules {
     pub fn get_instance(
         key_id: String,
         module: SecurityModule,
+        log: Option<Box<dyn LogConfig>>,
     ) -> Option<Arc<Mutex<dyn Provider>>> {
         // Initialize logging once
-        if !*LOGGING.lock().unwrap() {
-            SecModules::setup_logging();
+        if !*LOGGING_INITIALIZED.lock().unwrap() {
+            if let Some(log_inst) = log {
+                log_inst.setup_logging();
+            }
+            *LOGGING_INITIALIZED.lock().unwrap() = true;
         }
 
         // Check if requested instance is in cache. If not, create a new instance
@@ -93,19 +94,6 @@ impl SecModules {
         }
 
         instances.get(&module).cloned()
-    }
-
-    /// Initial logging setup
-    pub fn setup_logging() {
-        let file_appender = rolling::daily("./logs", "output.log");
-        let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
-        let subscriber = FmtSubscriber::builder()
-            .with_max_level(Level::TRACE)
-            .with_writer(non_blocking)
-            .finish();
-        tracing::subscriber::set_global_default(subscriber)
-            .expect("setting default subscriber failed");
-        *LOGGING.lock().unwrap() = true;
     }
 }
 

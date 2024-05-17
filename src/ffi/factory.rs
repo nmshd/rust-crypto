@@ -41,8 +41,8 @@ pub unsafe extern "C" fn secmodules_get_instance(
     };
 
     let module = SecurityModule::from(module_type_str);
-
-    match SecModules::get_instance(key_id_str.to_string(), module) {
+  
+    match SecModules::get_instance(key_id_str.to_string(), module, None) {
         Some(provider) => ProviderFFI::new(provider),
         None => ptr::null_mut(),
     }
@@ -70,13 +70,4 @@ pub unsafe extern "C" fn secmodules_free_instance(ptr: *mut ProviderFFI) {
             drop(provider);
         }
     }
-}
-
-/// Sets up logging for the security modules.
-///
-/// This function is considered safe as it does not interact with any raw pointers
-/// or perform any unsafe operations directly.
-#[no_mangle]
-pub extern "C" fn secmodules_setup_logging() {
-    SecModules::setup_logging();
 }

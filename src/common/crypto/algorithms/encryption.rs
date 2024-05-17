@@ -32,7 +32,7 @@ use serde::{Deserialize, Serialize};
 /// facilitating interfacing with C code or when ABI compatibility is required.
 
 #[repr(C)]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Copy)]
 pub enum AsymmetricEncryption {
     /// RSA encryption with selectable key sizes.
     ///
@@ -51,6 +51,12 @@ pub enum AsymmetricEncryption {
     Ecc(EccSchemeAlgorithm),
 }
 
+impl Default for AsymmetricEncryption {
+    fn default() -> Self {
+        Self::Ecc(Default::default())
+    }
+}
+
 impl AsymmetricEncryption {
     /// Retrieves the RSA key size if the asymmetric encryption method is RSA.
     ///
@@ -60,7 +66,7 @@ impl AsymmetricEncryption {
     /// if the encryption method is not RSA.
     pub fn rsa_key_bits(&self) -> Option<KeyBits> {
         match self {
-            AsymmetricEncryption::Rsa(key_bits) => Some(key_bits.clone()),
+            AsymmetricEncryption::Rsa(key_bits) => Some(*key_bits),
             _ => None,
         }
     }
@@ -140,6 +146,12 @@ pub enum EccSchemeAlgorithm {
     Null,
 }
 
+impl Default for EccSchemeAlgorithm {
+    fn default() -> Self {
+        Self::EcDsa(EccCurves::Curve25519)
+    }
+}
+
 /// Specifies the curve types for Elliptic Curve Digital Signature Algorithm (ECDSA).
 ///
 /// Lists the supported elliptic curve specifications for ECDSA, affecting security and performance.
@@ -159,7 +171,7 @@ pub enum EccSchemeAlgorithm {
 ///
 /// Uses `#[repr(C)]` for C language compatibility.
 #[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
 pub enum EccCurves {
     /// NIST P-256 curve.
     P256,
@@ -178,6 +190,7 @@ pub enum EccCurves {
     /// Brainpool P638 curve.
     BrainpoolP638,
     /// Curve25519, popular for its security and performance.
+    #[default]
     Curve25519,
     /// Curve448, known for high security and efficiency.
     Curve448,
@@ -214,7 +227,7 @@ pub enum EccCurves {
 /// Marked with `#[repr(C)]` to ensure it has the same memory layout as a C enum,
 /// facilitating ABI compatibility and interfacing with C code.
 #[repr(C)]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Copy)]
 pub enum BlockCiphers {
     /// AES (Advanced Encryption Standard) block cipher with selectable key sizes and modes.
     Aes(SymmetricMode, KeyBits),
@@ -226,6 +239,12 @@ pub enum BlockCiphers {
     Rc2(Rc2KeyBits),
     /// Camellia block cipher with selectable key sizes.
     Camellia(SymmetricMode, KeyBits),
+}
+
+impl Default for BlockCiphers {
+    fn default() -> Self {
+        Self::Aes(SymmetricMode::Gcm, KeyBits::Bits4096)
+    }
 }
 
 /// Specifies the modes of operation for symmetric block ciphers.
@@ -247,7 +266,7 @@ pub enum BlockCiphers {
 ///
 /// `#[repr(C)]` attribute is used for C compatibility.
 #[repr(C)]
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Copy)]
 pub enum SymmetricMode {
     /// AES in Galois/Counter Mode (GCM) with selectable key sizes.
     /// GCM is preferred for its performance and security, providing both encryption and authentication.
@@ -298,7 +317,7 @@ pub enum SymmetricMode {
 ///
 /// Uses `#[repr(C)]` for C language compatibility.
 #[repr(C)]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Copy)]
 pub enum TripleDesNumKeys {
     /// Two-key Triple DES, using two different keys for encryption.
     Tdes2,
@@ -325,7 +344,7 @@ pub enum TripleDesNumKeys {
 ///
 /// Marked with `#[repr(C)]` to ensure compatibility with C-based environments.
 #[repr(C)]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Copy)]
 pub enum Rc2KeyBits {
     /// RC2 with a 40-bit key.
     Rc2_40,
