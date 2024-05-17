@@ -1,14 +1,6 @@
-use super::key_handle::KeyHandle;
-use crate::common::{
-    crypto::{
-        algorithms::{
-            encryption::{AsymmetricEncryption, BlockCiphers},
-            hashes::Hash,
-        },
-        KeyUsage,
-    },
-    error::SecurityModuleError,
-};
+use super::{key_handle::KeyHandle, module_provider_config::ProviderConfig};
+use crate::common::error::SecurityModuleError;
+use std::fmt::Debug;
 
 /// Defines the interface for a security module provider.
 ///
@@ -19,7 +11,7 @@ use crate::common::{
 ///
 /// Implementors of this trait must also implement the `KeyHandle` trait to provide
 /// cryptographic key operations.
-pub trait Provider: Send + Sync + KeyHandle {
+pub trait Provider: Send + Sync + KeyHandle + Debug {
     /// Creates a new cryptographic key identified by `key_id`.
     ///
     /// # Arguments
@@ -34,7 +26,11 @@ pub trait Provider: Send + Sync + KeyHandle {
     ///
     /// A `Result` that, on success, contains `Ok(())`, indicating that the key was created successfully.
     /// On failure, it returns a `SecurityModuleError`.
-    fn create_key(&mut self, key_id: &str) -> Result<(), SecurityModuleError>;
+    fn create_key(
+        &mut self,
+        key_id: &str,
+        config: Box<dyn ProviderConfig>,
+    ) -> Result<(), SecurityModuleError>;
 
     /// Loads an existing cryptographic key identified by `key_id`.
     ///
@@ -50,7 +46,11 @@ pub trait Provider: Send + Sync + KeyHandle {
     ///
     /// A `Result` that, on success, contains `Ok(())`, indicating that the key was loaded successfully.
     /// On failure, it returns a `SecurityModuleError`.
-    fn load_key(&mut self, key_id: &str) -> Result<(), SecurityModuleError>;
+    fn load_key(
+        &mut self,
+        key_id: &str,
+        config: Box<dyn ProviderConfig>,
+    ) -> Result<(), SecurityModuleError>;
 
     /// Initializes the security module and returns a handle for further operations.
     ///
@@ -61,11 +61,5 @@ pub trait Provider: Send + Sync + KeyHandle {
     ///
     /// A `Result` that, on success, contains `Ok(())`, indicating that the module was initialized successfully.
     /// On failure, it returns a `SecurityModuleError`.
-    fn initialize_module(
-        &mut self,
-        key_algorithm: AsymmetricEncryption,
-        sym_algorithm: Option<BlockCiphers>,
-        hash: Option<Hash>,
-        key_usages: Vec<KeyUsage>,
-    ) -> Result<(), SecurityModuleError>;
+    fn initialize_module(&mut self) -> Result<(), SecurityModuleError>;
 }
