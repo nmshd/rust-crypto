@@ -33,8 +33,8 @@ impl KeyHandle for TpmProvider {
     #[instrument]
     fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         // Open an algorithm provider for SHA-512
-        let mut alg_handle: BCRYPT_ALG_HANDLE = self.hash.clone().unwrap().into();
-        let hash_algo: PCWSTR = self.hash.clone().unwrap().into();
+        let mut alg_handle: BCRYPT_ALG_HANDLE = self.hash.unwrap().into();
+        let hash_algo: PCWSTR = self.hash.unwrap().into();
 
         if unsafe {
             BCryptOpenAlgorithmProvider(
@@ -272,7 +272,7 @@ impl KeyHandle for TpmProvider {
     fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, SecurityModuleError> {
         // Open an algorithm provider for SHA-256, just like in sign_data
         let mut alg_handle = BCRYPT_ALG_HANDLE::default();
-        let alg_id: PCWSTR = self.hash.clone().unwrap().into();
+        let alg_id: PCWSTR = self.hash.unwrap().into();
 
         if unsafe {
             BCryptOpenAlgorithmProvider(
