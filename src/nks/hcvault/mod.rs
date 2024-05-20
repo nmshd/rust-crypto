@@ -35,7 +35,7 @@ pub struct NksProvider {
 
     /// A unique identifier for the cryptographic key managed by this provider.
     key_id: String,
-    pub(super) config: Option<NksConfig>,
+    pub(crate) config: Option<NksConfig>,
     pub(super) secrets_json: Option<serde_json::Value>,
 }
 

@@ -28,6 +28,8 @@ impl ProviderConfig for crate::nks::NksConfig {
 impl crate::nks::NksConfig {
     #[allow(clippy::new_ret_no_self)]
     pub fn new(
+        nks_token: String,
+        nks_address: String,
         key_algorithm: AsymmetricEncryption,
         hash: Hash,
         key_usages: Vec<KeyUsage>,

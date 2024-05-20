@@ -12,11 +12,30 @@ use crate::{
     },
    // tpm::linux::TpmProvider,
 };
+use crate::common::crypto::algorithms::encryption::SymmetricMode;
+use crate::common::crypto::algorithms::hashes::Sha2Bits;
+use crate::common::crypto::algorithms::KeyBits;
 use crate::nks::hcvault::NksProvider;
+use crate::nks::NksConfig;
 
 #[test]
 fn do_nothing() {
-    assert_eq!(1, 1);
+    let mut provider = NksProvider::new("test_rsa_key".to_string());
+
+    let config = NksConfig::new(
+        "test_token".to_string(),
+        "test_address".to_string(),
+        AsymmetricEncryption::Rsa(KeyBits::Bits4096),
+        Hash::Sha2(Sha2Bits::Sha256),
+        vec![KeyUsage::SignEncrypt, KeyUsage::ClientAuth],
+    );
+    provider.config = config.clone().into();
+    if let Some(nks_config) = config.as_any().downcast_ref::<NksConfig>() {
+        println!("NKS Token: {}", nks_config.nks_token);
+        println!("NKS Address: {}", nks_config.nks_address);
+    } else {
+        println!("Failed to downcast to NksConfig");
+    }    assert_eq!(1, 1);
 }
 
 // #[test]
