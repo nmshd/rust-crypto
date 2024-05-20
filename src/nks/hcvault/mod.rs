@@ -11,6 +11,7 @@
 // };
 use std::sync::{Arc, Mutex};
 use reqwest::Url;
+use serde_json::json;
 
 pub mod key_handle;
 pub mod provider;
@@ -18,6 +19,8 @@ pub mod provider;
 use crate::common::crypto::algorithms::encryption::{AsymmetricEncryption, BlockCiphers};
 use crate::common::crypto::algorithms::hashes::Hash;
 use crate::common::crypto::KeyUsage;
+use crate::common::traits::module_provider_config::ProviderConfig;
+use crate::nks::NksConfig;
 
 /// A nks-based cryptographic provider for managing cryptographic keys and performing
 /// cryptographic operations.
@@ -32,18 +35,8 @@ pub struct NksProvider {
 
     /// A unique identifier for the cryptographic key managed by this provider.
     key_id: String,
-    // pub(super) key_handle: Option<Arc<Mutex<TssKeyHandle>>>,
-    // pub(super) handle: Option<Arc<Mutex<Context>>>,
-    pub(super) key_algorithm: Option<AsymmetricEncryption>,
-    pub(super) sym_algorithm: Option<BlockCiphers>,
-    pub(super) hash: Option<Hash>,
-    pub(super) key_usages: Option<Vec<KeyUsage>>,
-    pub(super) nks_address: Option<Url>,
-    pub(super) nks_token: Option<String>,
-    pub(super) nonce: Option<Vec<u8>>,
-    pub(super) public_key: Option<String>,
-    pub(super) priv_key: Option<String>,
-    pub(super) secrets_json: Option<String>,
+    pub(super) config: Option<NksConfig>,
+    pub(super) secrets_json: Option<serde_json::Value>,
 }
 
 impl NksProvider {
@@ -55,19 +48,8 @@ impl NksProvider {
     pub fn new(key_id: String) -> Self {
         Self {
             //TODO implement NksProvider constructor
-
             key_id,
-            nks_address: None,
-            nks_token: None,
-            nonce: None,
-            public_key: None,
-            // key_handle: None,
-            // handle: None,
-            key_algorithm: None,
-            sym_algorithm: None,
-            hash: None,
-            key_usages: None,
-            priv_key: None,
+            config: None,
             secrets_json: None,
         }
     }
