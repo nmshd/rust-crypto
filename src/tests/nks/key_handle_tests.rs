@@ -1,3 +1,4 @@
+use std::sync::Arc;
 #[allow(unused_imports)]
 use crate::{
     common::{
@@ -15,6 +16,7 @@ use crate::{
 use crate::common::crypto::algorithms::encryption::SymmetricMode;
 use crate::common::crypto::algorithms::hashes::Sha2Bits;
 use crate::common::crypto::algorithms::KeyBits;
+use crate::common::traits::module_provider_config::ProviderConfig;
 use crate::nks::hcvault::NksProvider;
 use crate::nks::NksConfig;
 
@@ -29,13 +31,14 @@ fn do_nothing() {
         Hash::Sha2(Sha2Bits::Sha256),
         vec![KeyUsage::SignEncrypt, KeyUsage::ClientAuth],
     );
-    provider.config = config.clone().into();
-    if let Some(nks_config) = config.as_any().downcast_ref::<NksConfig>() {
+    provider.config = Some(config);
+    if let Some(nks_config) = provider.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>() {
         println!("NKS Token: {}", nks_config.nks_token);
         println!("NKS Address: {}", nks_config.nks_address);
     } else {
         println!("Failed to downcast to NksConfig");
-    }    assert_eq!(1, 1);
+    }
+    assert_eq!(1, 1);
 }
 
 // #[test]

@@ -35,7 +35,7 @@ pub struct NksProvider {
 
     /// A unique identifier for the cryptographic key managed by this provider.
     key_id: String,
-    pub(crate) config: Option<NksConfig>,
+    pub(crate) config: Option<Arc<dyn ProviderConfig + Sync + Send>>,
     pub(super) secrets_json: Option<serde_json::Value>,
 }
 
@@ -45,9 +45,9 @@ impl NksProvider {
     /// # Arguments
     ///
     /// * `key_id` - A string identifier for the cryptographic key to be managed by this provider.
+    /// * `config` - The configuration for the NksProvider.
     pub fn new(key_id: String) -> Self {
         Self {
-            //TODO implement NksProvider constructor
             key_id,
             config: None,
             secrets_json: None,

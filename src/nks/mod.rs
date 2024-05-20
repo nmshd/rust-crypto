@@ -1,4 +1,5 @@
 use std::any::Any;
+use std::sync::Arc;
 use crate::common::crypto::algorithms::encryption::{AsymmetricEncryption, BlockCiphers};
 use crate::common::crypto::algorithms::hashes::Hash;
 use crate::common::crypto::KeyUsage;
@@ -33,8 +34,8 @@ impl crate::nks::NksConfig {
         key_algorithm: AsymmetricEncryption,
         hash: Hash,
         key_usages: Vec<KeyUsage>,
-    ) -> Box<dyn ProviderConfig> {
-        Box::new(Self {
+    ) -> Arc<dyn ProviderConfig + Send + Sync> {
+        Arc::new(Self {
             nks_token,
             nks_address,
             key_algorithm,
