@@ -96,13 +96,7 @@ impl Provider for NksProvider {
     //algorithmus checken
     //TODO implement initialize_module
     #[instrument]
-    fn initialize_module(
-        &mut self,
-        key_algorithm: AsymmetricEncryption,
-        sym_algorithm: Option<BlockCiphers>,
-        hash: Option<Hash>,
-        key_usages: Vec<KeyUsage>,
-    ) -> Result<(), SecurityModuleError> {
+    fn initialize_module(&mut self) -> Result<(), SecurityModuleError> {
         self.nks_address = Some(Url::from_str("http://localhost:5272/apidemo/").unwrap()); //TODO: find solution with nks_address not hardcoded
         self.key_algorithm = Some(key_algorithm);
         self.sym_algorithm = sym_algorithm;
@@ -128,6 +122,19 @@ impl Provider for NksProvider {
                 }
             }
         }
+        //store current secrets
+        let runtime = tokio::runtime::Runtime::new().unwrap();
+        match runtime.block_on(get_secrets(&self.nks_token.clone().unwrap())) {
+            Ok(secrets_json) => {
+                self.secrets_json = Some(secrets_json);
+            }
+            Err(err) => {
+                println!("Failed to get secrets: {}", err);
+                return Err(SecurityModuleError::NksError);
+            }
+        }
+        println!("Nks initialized successfully.");
+        println!("Secrets: {:?}", self.secrets_json);
         Ok(())
     }
 // impl NksProvider {
@@ -382,4 +389,42 @@ async fn get_and_save_key_pair(
         .unwrap_or_else(|_| String::from("Error formatting JSON"));
 
     Ok(pretty_response)
+}
+
+async fn get_secrets(token: &str) -> anyhow::Result<String, Box<dyn std::error::Error>> {
+    let client = reqwest::Client::new();
+    let body = json!({
+        "token": token
+    });
+
+    let response: Value = client.post("http://localhost:5272/apidemo/getSecrets")
+        .header("accept", "*/*")
+        .header("Content-Type", "application/json-patch+json")
+        .json(&body)
+        .send()
+        .await?
+        .json()
+        .await?;
+
+    //let response_json = response.json().await?;
+
+    let response_text = response.to_string();
+
+    //save new token
+    if let Some(user_token) = response.get("newToken") {
+        if let Some(user_token_str) = user_token.as_str() {
+            let token_data = json!({
+                "usertoken": user_token_str
+            });
+            fs::write("token.json", token_data.to_string())?;
+        }
+    }
+
+    // Extract the data field from the response
+    let data = response.get("data").ok_or_else(|| "Data field not found in the response")?;
+
+    // Convert the data field back to a string
+    let data_str = serde_json::to_string_pretty(data)?;
+
+    Ok(data_str)
 }
