@@ -8,7 +8,7 @@
 /// purposes due to practical collision attacks and should be avoided for new applications.
 /// Prefer using more secure algorithms like SHA-2 or SHA-3 for cryptographic purposes.
 #[repr(C)]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Copy)]
 pub enum Hash {
     /// SHA-1 hashing algorithm.
     ///
@@ -41,6 +41,12 @@ pub enum Hash {
     Ripemd160,
 }
 
+impl Default for Hash {
+    fn default() -> Self {
+        Self::Sha2(Sha2Bits::Sha512)
+    }
+}
+
 /// Specifies the digest sizes for the SHA-2 family of hashing algorithms.
 ///
 /// This enum lists the supported digest sizes for SHA-2, providing a range of options
@@ -63,7 +69,7 @@ pub enum Hash {
 ///
 /// `#[repr(C)]` attribute is used for C compatibility, facilitating interoperability with C-based systems.
 #[repr(C)]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Copy)]
 pub enum Sha2Bits {
     /// 224-bit digest size.
     Sha224,
@@ -135,7 +141,7 @@ impl From<Sha2Bits> for u32 {
 ///
 /// Uses `#[repr(C)]` for C language compatibility, important for interoperability with C-based systems.
 #[repr(C)]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Copy)]
 pub enum Sha3Bits {
     /// 224-bit digest size for SHA-3.
     Sha3_224,

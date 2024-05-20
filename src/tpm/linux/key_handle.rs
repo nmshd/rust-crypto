@@ -34,7 +34,7 @@ impl KeyHandle for TpmProvider {
             .unwrap()
             .hash(
                 MaxBuffer::try_from(data).unwrap(),
-                self.hash.clone().unwrap().into(),
+                self.hash.unwrap().into(),
                 Hierarchy::Null,
             )
             .map_err(|e| SecurityModuleError::SigningError(e.to_string()))?;
@@ -50,7 +50,7 @@ impl KeyHandle for TpmProvider {
                     key_handle,
                     ticket.0,
                     SignatureScheme::RsaSsa {
-                        hash_scheme: HashScheme::new(self.hash.clone().unwrap().into()),
+                        hash_scheme: HashScheme::new(self.hash.unwrap().into()),
                     },
                     ticket.1,
                 )
@@ -88,7 +88,7 @@ impl KeyHandle for TpmProvider {
         match self.key_algorithm.as_ref().unwrap() {
             AsymmetricEncryption::Rsa(_) => {
                 let scheme =
-                    RsaDecryptionScheme::Oaep(HashScheme::new(self.hash.clone().unwrap().into()));
+                    RsaDecryptionScheme::Oaep(HashScheme::new(self.hash.unwrap().into()));
                 let pub_key = PublicKeyRsa::try_from(encrypted_data)
                     .map_err(|e| SecurityModuleError::DecryptionError(e.to_string()))?;
                 let decryption_result = self
@@ -146,7 +146,7 @@ impl KeyHandle for TpmProvider {
         match self.key_algorithm.as_ref().unwrap() {
             AsymmetricEncryption::Rsa(_) => {
                 let scheme =
-                    RsaDecryptionScheme::Oaep(HashScheme::new(self.hash.clone().unwrap().into()));
+                    RsaDecryptionScheme::Oaep(HashScheme::new(self.hash.unwrap().into()));
                 let message = PublicKeyRsa::try_from(data)
                     .map_err(|e| SecurityModuleError::EncryptionError(e.to_string()))?;
                 let encryption_result = self
@@ -210,7 +210,7 @@ impl KeyHandle for TpmProvider {
             .unwrap()
             .hash(
                 MaxBuffer::try_from(data).unwrap(),
-                self.hash.clone().unwrap().into(),
+                self.hash.unwrap().into(),
                 Hierarchy::Null,
             )
             .map_err(|e| SecurityModuleError::SignatureVerificationError(e.to_string()))?
@@ -221,7 +221,7 @@ impl KeyHandle for TpmProvider {
                 let signature = PublicKeyRsa::try_from(signature)
                     .map_err(|e| SecurityModuleError::SignatureVerificationError(e.to_string()))?;
                 let rsa_signature =
-                    RsaSignature::create(self.hash.clone().unwrap().into(), signature).map_err(
+                    RsaSignature::create(self.hash.unwrap().into(), signature).map_err(
                         |e| SecurityModuleError::SignatureVerificationError(e.to_string()),
                     )?;
                 self.handle
@@ -250,7 +250,7 @@ impl KeyHandle for TpmProvider {
                     ),
                 };
                 let ecc_signature = EccSignature::create(
-                    self.hash.clone().unwrap().into(),
+                    self.hash.unwrap().into(),
                     signature_r,
                     signature_s,
                 )

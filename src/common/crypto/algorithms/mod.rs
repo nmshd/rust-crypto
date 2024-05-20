@@ -20,7 +20,7 @@ pub mod hashes;
 ///
 /// This enum can be converted to and from `u32` values using the `From` trait implementations.
 #[repr(C)]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Copy)]
 pub enum KeyBits {
     Bits128,
     Bits192,

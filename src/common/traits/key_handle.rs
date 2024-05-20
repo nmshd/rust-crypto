@@ -1,12 +1,10 @@
 use crate::common::error::SecurityModuleError;
-#[cfg(feature = "tpm")]
-use crate::tpm::core::error::TpmError;
+use crate::SecurityModuleError::InitializationError;
 use std::fmt::Debug;
 #[cfg(feature = "linux")]
 use tss_esapi::handles::KeyHandle as TssKeyHandle;
 #[cfg(feature = "win")]
 use windows::Win32::Security::Cryptography::NCRYPT_KEY_HANDLE;
-use crate::SecurityModuleError::InitializationError;
 
 /// An enum representing a generic key handle that can be used on different platforms.
 ///
@@ -43,8 +41,9 @@ pub trait KeyHandle: Send + Sync + Debug {
     /// A `Result` containing the signature as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
     #[tracing::instrument]
     fn sign_data(&self, _data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
-        Err(InitializationError("Method not implemented".to_owned()).into())
-        //Err(TpmError::InitializationError("Method not implemented".to_owned()).into())
+        Err(SecurityModuleError::InitializationError(
+            "Method not implemented".to_owned(),
+        ))
     }
     /// Decrypts the given encrypted data using the cryptographic key.
     ///
@@ -55,8 +54,9 @@ pub trait KeyHandle: Send + Sync + Debug {
     /// A `Result` containing the decrypted data as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
     #[tracing::instrument]
     fn decrypt_data(&self, _encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
-        Err(InitializationError("Method not implemented".to_owned()).into())
-        //Err(TpmError::InitializationError("Method not implemented".to_owned()).into())
+        Err(SecurityModuleError::InitializationError(
+            "Method not implemented".to_owned(),
+        ))
     }
     /// Encrypts the given data using the cryptographic key.
     ///
@@ -67,8 +67,9 @@ pub trait KeyHandle: Send + Sync + Debug {
     /// A `Result` containing the encrypted data as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
     #[tracing::instrument]
     fn encrypt_data(&self, _data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
-        Err(InitializationError("Method not implemented".to_owned()).into())
-        //Err(TpmError::InitializationError("Method not implemented".to_owned()).into())
+        Err(SecurityModuleError::InitializationError(
+            "Method not implemented".to_owned(),
+        ))
     }
     /// Verifies the signature of the given data using the cryptographic key.
     ///
@@ -85,7 +86,8 @@ pub trait KeyHandle: Send + Sync + Debug {
         _data: &[u8],
         _signature: &[u8],
     ) -> Result<bool, SecurityModuleError> {
-        Err(InitializationError("Method not implemented".to_owned()).into())
-        //Err(TpmError::InitializationError("Method not implemented".to_owned()).into())
+        Err(SecurityModuleError::InitializationError(
+            "Method not implemented".to_owned(),
+        ))
     }
 }

@@ -1,9 +1,17 @@
+#[cfg(feature = "hsm")]
+use crate::hsm::core::instance::HsmType;
+#[cfg(feature = "tpm")]
+use crate::tpm::core::instance::TpmType;
 use crate::{
     common::{
         crypto::{
             algorithms::{
-                encryption::{AsymmetricEncryption, BlockCiphers, EccCurves, EccSchemeAlgorithm},
-                hashes::Hash,
+                encryption::{
+                    AsymmetricEncryption, BlockCiphers, EccCurves, EccSchemeAlgorithm,
+                    SymmetricMode,
+                },
+                hashes::{Hash, Sha2Bits},
+                KeyBits,
             },
             KeyUsage,
         },
@@ -12,10 +20,6 @@ use crate::{
     tests::common::traits::setup_security_module,
 };
 use test_case::test_matrix;
-#[cfg(feature = "hsm")]
-use crate::hsm::core::instance::HsmType;
-#[cfg(feature = "tpm")]
-use crate::tpm::core::instance::TpmType;
 
 // #[test_matrix(
 //     [SecurityModule::Tpm(TpmType::Linux),
@@ -26,24 +30,38 @@ use crate::tpm::core::instance::TpmType;
     [SecurityModule::Nks]
 )]
 fn test_sign_and_verify_rsa(module: SecurityModule) {
-    let mut provider = setup_security_module(module);
+    let provider = setup_security_module(module);
 
-    let key_algorithm = AsymmetricEncryption::Rsa(2048.into());
-    let sym_algorithm = None;
-    let hash = Some(Hash::Sha2(256.into()));
-    let key_usages = vec![KeyUsage::ClientAuth, KeyUsage::SignEncrypt];
+    let config = TpmConfig::new(
+        AsymmetricEncryption::Rsa(KeyBits::Bits4096),
+        BlockCiphers::Aes(SymmetricMode::Gcm, KeyBits::Bits512),
+        Hash::Sha2(Sha2Bits::Sha256),
+        vec![KeyUsage::SignEncrypt, KeyUsage::ClientAuth],
+    );
 
     provider
-        .initialize_module(key_algorithm, sym_algorithm, hash, key_usages)
+        .lock()
+        .unwrap()
+        .initialize_module()
         .expect("Failed to initialize module");
     provider
-        .create_key("test_rsa_key")
+        .lock()
+        .unwrap()
+        .create_key("test_rsa_key", config)
         .expect("Failed to create RSA key");
 
     let data = b"Hello, World!";
-    let signature = provider.sign_data(data).expect("Failed to sign data");
+    let signature = provider
+        .lock()
+        .unwrap()
+        .sign_data(data)
+        .expect("Failed to sign data");
 
-    assert!(provider.verify_signature(data, &signature).unwrap());
+    assert!(provider
+        .lock()
+        .unwrap()
+        .verify_signature(data, &signature)
+        .unwrap());
 }
 
 // #[test_matrix(
@@ -55,24 +73,38 @@ fn test_sign_and_verify_rsa(module: SecurityModule) {
     [SecurityModule::Nks]
 )]
 fn test_sign_and_verify_ecdsa(module: SecurityModule) {
-    let mut provider = setup_security_module(module);
+    let provider = setup_security_module(module);
 
-    let key_algorithm = AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::Curve25519));
-    let sym_algorithm = None;
-    let hash = Some(Hash::Sha2(256.into()));
-    let key_usages = vec![KeyUsage::ClientAuth, KeyUsage::SignEncrypt];
+    let config = TpmConfig::new(
+        AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::Curve25519)),
+        BlockCiphers::Aes(SymmetricMode::Gcm, KeyBits::Bits512),
+        Hash::Sha2(Sha2Bits::Sha256),
+        vec![KeyUsage::SignEncrypt, KeyUsage::ClientAuth],
+    );
 
     provider
-        .initialize_module(key_algorithm, sym_algorithm, hash, key_usages)
+        .lock()
+        .unwrap()
+        .initialize_module()
         .expect("Failed to initialize module");
     provider
-        .create_key("test_ecdsa_key")
+        .lock()
+        .unwrap()
+        .create_key("test_ecdsa_key", config)
         .expect("Failed to create ECDSA key");
 
     let data = b"Hello, World!";
-    let signature = provider.sign_data(data).expect("Failed to sign data");
+    let signature = provider
+        .lock()
+        .unwrap()
+        .sign_data(data)
+        .expect("Failed to sign data");
 
-    assert!(provider.verify_signature(data, &signature).unwrap());
+    assert!(provider
+        .lock()
+        .unwrap()
+        .verify_signature(data, &signature)
+        .unwrap());
 }
 
 // #[test_matrix(
@@ -84,23 +116,35 @@ fn test_sign_and_verify_ecdsa(module: SecurityModule) {
     [SecurityModule::Nks]
 )]
 fn test_encrypt_and_decrypt_rsa(module: SecurityModule) {
-    let mut provider = setup_security_module(module);
+    let provider = setup_security_module(module);
 
-    let key_algorithm = AsymmetricEncryption::Rsa(2048.into());
-    let sym_algorithm = None;
-    let hash = Some(Hash::Sha2(256.into()));
-    let key_usages = vec![KeyUsage::Decrypt, KeyUsage::SignEncrypt];
+    let config = TpmConfig::new(
+        AsymmetricEncryption::Rsa(KeyBits::Bits4096),
+        BlockCiphers::Aes(SymmetricMode::Gcm, KeyBits::Bits512),
+        Hash::Sha2(Sha2Bits::Sha256),
+        vec![KeyUsage::Decrypt, KeyUsage::SignEncrypt],
+    );
 
     provider
-        .initialize_module(key_algorithm, sym_algorithm, hash, key_usages)
+        .lock()
+        .unwrap()
+        .initialize_module()
         .expect("Failed to initialize module");
     provider
-        .create_key("test_rsa_key")
+        .lock()
+        .unwrap()
+        .create_key("test_rsa_key", config)
         .expect("Failed to create RSA key");
 
     let data = b"Hello, World!";
-    let encrypted_data = provider.encrypt_data(data).expect("Failed to encrypt data");
+    let encrypted_data = provider
+        .lock()
+        .unwrap()
+        .encrypt_data(data)
+        .expect("Failed to encrypt data");
     let decrypted_data = provider
+        .lock()
+        .unwrap()
         .decrypt_data(&encrypted_data)
         .expect("Failed to decrypt data");
 
@@ -116,23 +160,35 @@ fn test_encrypt_and_decrypt_rsa(module: SecurityModule) {
     [SecurityModule::Nks]
 )]
 fn test_encrypt_and_decrypt_ecdh(module: SecurityModule) {
-    let mut provider = setup_security_module(module);
+    let provider = setup_security_module(module);
 
-    let key_algorithm = AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::Curve25519));
-    let sym_algorithm = Some(BlockCiphers::Aes(Default::default(), 256.into()));
-    let hash = Some(Hash::Sha2(384.into()));
-    let key_usages = vec![KeyUsage::Decrypt];
+    let config = TpmConfig::new(
+        AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::Curve25519)),
+        BlockCiphers::Aes(SymmetricMode::Gcm, KeyBits::Bits512),
+        Hash::Sha2(Sha2Bits::Sha256),
+        vec![KeyUsage::SignEncrypt, KeyUsage::Decrypt],
+    );
 
     provider
-        .initialize_module(key_algorithm, sym_algorithm, hash, key_usages)
+        .lock()
+        .unwrap()
+        .initialize_module()
         .expect("Failed to initialize module");
     provider
-        .create_key("test_ecdh_key")
+        .lock()
+        .unwrap()
+        .create_key("test_ecdh_key", config)
         .expect("Failed to create ECDH key");
 
     let data = b"Hello, World!";
-    let encrypted_data = provider.encrypt_data(data).expect("Failed to encrypt data");
+    let encrypted_data = provider
+        .lock()
+        .unwrap()
+        .encrypt_data(data)
+        .expect("Failed to encrypt data");
     let decrypted_data = provider
+        .lock()
+        .unwrap()
         .decrypt_data(&encrypted_data)
         .expect("Failed to decrypt data");
 

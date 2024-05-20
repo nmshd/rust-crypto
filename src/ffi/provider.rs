@@ -1,15 +1,11 @@
-use crate::common::{
-    crypto::{
-        algorithms::{
-            encryption::{AsymmetricEncryption, BlockCiphers},
-            hashes::Hash,
-        },
-        KeyUsage,
+use crate::{
+    common::traits::{
+        key_handle::KeyHandle, module_provider::Provider, module_provider_config::ProviderConfig,
     },
-    traits::{key_handle::KeyHandle, module_provider::Provider},
+    tpm::TpmConfig,
 };
 use std::{
-    ffi::CStr,
+    ffi::{c_void, CStr},
     os::raw::c_char,
     sync::{Arc, Mutex},
 };
@@ -41,29 +37,32 @@ impl ProviderFFI {
 /// It is unsafe because it involves raw pointer dereferencing and assumes the provided
 /// array is valid for the given length.
 #[no_mangle]
-pub unsafe extern "C" fn initialize_module(
-    provider_ffi: *mut ProviderFFI,
-    key_algorithm: AsymmetricEncryption,
-    sym_algorithm: BlockCiphers,
-    hash: Hash,
-    key_usages: *const KeyUsage,
-    key_usages_len: usize,
-) -> i32 {
-    if provider_ffi.is_null() || key_usages.is_null() {
-        return -1; // Error handling for null pointer
-    }
-
+pub unsafe extern "C" fn initialize_module(provider_ffi: *mut ProviderFFI) -> i32 {
     let provider_ffi = &mut *provider_ffi;
-    let key_usages_slice = std::slice::from_raw_parts(key_usages, key_usages_len);
 
-    match (*provider_ffi.provider).initialize_module(
-        key_algorithm,
-        Some(sym_algorithm),
-        Some(hash),
-        key_usages_slice.to_vec(),
-    ) {
+    match (*provider_ffi.provider).initialize_module() {
         Ok(_) => 0,
         Err(_) => 1,
+    }
+}
+
+
+#[no_mangle]
+pub extern "C" fn config_new() -> *mut c_void {
+    let config: Box<dyn ProviderConfig> = Box::new(TpmConfig::default());
+    let ptr: *mut dyn ProviderConfig = Box::into_raw(config);
+    ptr as *mut c_void
+}
+
+#[no_mangle]
+pub extern "C" fn config_free(config: *mut c_void) {
+    assert!(!config.is_null());
+    unsafe {
+        // Cast the void pointer back to the original Box<dyn Config>
+        let config: *mut Box<dyn ProviderConfig> = config as *mut Box<dyn ProviderConfig>;
+        // Convert it back to a Box to properly drop it
+        let _owned: Box<dyn ProviderConfig> = *Box::from_raw(config);
+        // The Box<_owned> is dropped here, properly deallocating the memory.
     }
 }
 
@@ -71,9 +70,13 @@ pub unsafe extern "C" fn initialize_module(
 /// # Safety
 /// The function assumes that the key_id pointer is valid and points to a valid C string.
 #[no_mangle]
-pub unsafe extern "C" fn create_key(provider_ffi: *mut ProviderFFI, key_id: *const c_char) -> i32 {
-    if provider_ffi.is_null() || key_id.is_null() {
-        return -1; // Error handling for null pointer
+pub unsafe extern "C" fn create_key(
+    provider_ffi: *mut ProviderFFI,
+    key_id: *const c_char,
+    config: *mut c_void,
+) -> i32 {
+    if provider_ffi.is_null() || key_id.is_null() || config.is_null() {
+        return -1; // Return error if any pointer is null
     }
 
     let provider = &mut *provider_ffi;
@@ -84,7 +87,15 @@ pub unsafe extern "C" fn create_key(provider_ffi: *mut ProviderFFI, key_id: *con
         Err(_) => return -1, // Error handling for invalid UTF-8
     };
 
-    match (*provider.provider).create_key(key_id_str) {
+    // Cast the void pointer back to Box<dyn Config>
+    let config: Box<dyn ProviderConfig> = {
+        // Convert it back to a Box to properly handle the ownership
+        let boxed_config: Box<Box<dyn ProviderConfig>> =
+            Box::from_raw(config as *mut Box<dyn ProviderConfig>);
+        *boxed_config
+    };
+
+    match (*provider.provider).create_key(key_id_str, config) {
         Ok(_) => 0,
         Err(_) => 1,
     }
@@ -94,9 +105,13 @@ pub unsafe extern "C" fn create_key(provider_ffi: *mut ProviderFFI, key_id: *con
 /// # Safety
 /// The function assumes that the key_id pointer is valid and points to a valid C string.
 #[no_mangle]
-pub unsafe extern "C" fn load_key(provider_ffi: *mut ProviderFFI, key_id: *const c_char) -> i32 {
-    if provider_ffi.is_null() || key_id.is_null() {
-        return -1; // Error handling for null pointer
+pub unsafe extern "C" fn load_key(
+    provider_ffi: *mut ProviderFFI,
+    key_id: *const c_char,
+    config: *mut c_void,
+) -> i32 {
+    if provider_ffi.is_null() || key_id.is_null() || config.is_null() {
+        return -1; // Return error if any pointer is null
     }
 
     let provider = &mut *provider_ffi;
@@ -107,7 +122,15 @@ pub unsafe extern "C" fn load_key(provider_ffi: *mut ProviderFFI, key_id: *const
         Err(_) => return -1, // Error handling for invalid UTF-8
     };
 
-    match (*provider.provider).load_key(key_id_str) {
+    // Cast the void pointer back to Box<dyn Config>
+    let config: Box<dyn ProviderConfig> = {
+        // Convert it back to a Box to properly handle the ownership
+        let boxed_config: Box<Box<dyn ProviderConfig>> =
+            Box::from_raw(config as *mut Box<dyn ProviderConfig>);
+        *boxed_config
+    };
+
+    match (*provider.provider).load_key(key_id_str, config) {
         Ok(_) => 0,
         Err(_) => 1,
     }
