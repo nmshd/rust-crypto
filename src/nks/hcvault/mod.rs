@@ -43,7 +43,7 @@ pub struct NksProvider {
     pub(super) nonce: Option<Vec<u8>>,
     pub(super) public_key: Option<String>,
     pub(super) priv_key: Option<String>,
-
+    pub(super) secrets_json: Option<String>,
 }
 
 impl NksProvider {
@@ -68,6 +68,7 @@ impl NksProvider {
             hash: None,
             key_usages: None,
             priv_key: None,
+            secrets_json: None,
         }
     }
 }
