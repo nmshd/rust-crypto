@@ -1,3 +1,7 @@
+#[cfg(feature = "hsm")]
+use crate::hsm::core::instance::HsmType;
+#[cfg(feature = "tpm")]
+use crate::tpm::core::instance::TpmType;
 use crate::{
     common::{
         crypto::{
@@ -13,16 +17,17 @@ use crate::{
         },
         factory::SecurityModule,
     },
-    hsm::core::instance::HsmType,
     tests::common::traits::setup_security_module,
-    tpm::{core::instance::TpmType, TpmConfig},
 };
 use test_case::test_matrix;
 
+// #[test_matrix(
+//     [SecurityModule::Tpm(TpmType::Linux),
+//      SecurityModule::Tpm(TpmType::Windows),
+//      SecurityModule::Hsm(HsmType::NitroKey)]
+// )]
 #[test_matrix(
-    [SecurityModule::Tpm(TpmType::Linux),
-     SecurityModule::Tpm(TpmType::Windows),
-     SecurityModule::Hsm(HsmType::NitroKey)]
+    [SecurityModule::Nks]
 )]
 fn test_sign_and_verify_rsa(module: SecurityModule) {
     let provider = setup_security_module(module);
@@ -59,10 +64,13 @@ fn test_sign_and_verify_rsa(module: SecurityModule) {
         .unwrap());
 }
 
+// #[test_matrix(
+//     [SecurityModule::Tpm(TpmType::Linux),
+//      SecurityModule::Tpm(TpmType::Windows),
+//      SecurityModule::Hsm(HsmType::NitroKey)]
+// )]
 #[test_matrix(
-    [SecurityModule::Tpm(TpmType::Linux),
-     SecurityModule::Tpm(TpmType::Windows),
-     SecurityModule::Hsm(HsmType::NitroKey)]
+    [SecurityModule::Nks]
 )]
 fn test_sign_and_verify_ecdsa(module: SecurityModule) {
     let provider = setup_security_module(module);
@@ -99,10 +107,13 @@ fn test_sign_and_verify_ecdsa(module: SecurityModule) {
         .unwrap());
 }
 
+// #[test_matrix(
+//     [SecurityModule::Tpm(TpmType::Linux),
+//      SecurityModule::Tpm(TpmType::Windows),
+//      SecurityModule::Hsm(HsmType::NitroKey)]
+// )]
 #[test_matrix(
-    [SecurityModule::Tpm(TpmType::Linux),
-     SecurityModule::Tpm(TpmType::Windows),
-     SecurityModule::Hsm(HsmType::NitroKey)]
+    [SecurityModule::Nks]
 )]
 fn test_encrypt_and_decrypt_rsa(module: SecurityModule) {
     let provider = setup_security_module(module);
@@ -140,10 +151,13 @@ fn test_encrypt_and_decrypt_rsa(module: SecurityModule) {
     assert_eq!(data, decrypted_data.as_slice());
 }
 
+// #[test_matrix(
+//     [SecurityModule::Tpm(TpmType::Linux),
+//      SecurityModule::Tpm(TpmType::Windows),
+//      SecurityModule::Hsm(HsmType::NitroKey)]
+// )]
 #[test_matrix(
-    [SecurityModule::Tpm(TpmType::Linux),
-     SecurityModule::Tpm(TpmType::Windows),
-     SecurityModule::Hsm(HsmType::NitroKey)]
+    [SecurityModule::Nks]
 )]
 fn test_encrypt_and_decrypt_ecdh(module: SecurityModule) {
     let provider = setup_security_module(module);

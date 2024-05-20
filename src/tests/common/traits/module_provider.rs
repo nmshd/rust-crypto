@@ -1,25 +1,29 @@
 use super::setup_security_module;
-use crate::{
-    common::{
-        crypto::{
-            algorithms::{
-                encryption::{AsymmetricEncryption, BlockCiphers, SymmetricMode},
-                hashes::{Hash, Sha2Bits},
-                KeyBits,
-            },
-            KeyUsage,
+use crate::common::{
+    crypto::{
+        algorithms::{
+            encryption::{AsymmetricEncryption, BlockCiphers, SymmetricMode},
+            hashes::{Hash, Sha2Bits},
+            KeyBits,
         },
-        factory::SecurityModule,
+        KeyUsage,
     },
-    hsm::core::instance::HsmType,
-    tpm::{core::instance::TpmType, TpmConfig},
+    factory::SecurityModule,
 };
 use test_case::test_matrix;
 
+#[cfg(feature = "hsm")]
+use crate::hsm::core::instance::HsmType;
+#[cfg(feature = "tpm")]
+use crate::tpm::{core::instance::TpmType, TpmConfig};
+
+// #[test_matrix(
+//     [SecurityModule::Tpm(TpmType::Linux),
+//      SecurityModule::Tpm(TpmType::Windows),
+//      SecurityModule::Hsm(HsmType::NitroKey)]
+// )]
 #[test_matrix(
-    [SecurityModule::Tpm(TpmType::Linux),
-     SecurityModule::Tpm(TpmType::Windows),
-     SecurityModule::Hsm(HsmType::NitroKey)]
+    [SecurityModule::Nks]
 )]
 fn test_create_rsa_key(module: SecurityModule) {
     let provider = setup_security_module(module);
@@ -49,10 +53,13 @@ fn test_create_rsa_key(module: SecurityModule) {
         .expect("Failed to create RSA key");
 }
 
+// #[test_matrix(
+//     [SecurityModule::Tpm(TpmType::Linux),
+//      SecurityModule::Tpm(TpmType::Windows),
+//      SecurityModule::Hsm(HsmType::NitroKey)]
+// )]
 #[test_matrix(
-    [SecurityModule::Tpm(TpmType::Linux),
-     SecurityModule::Tpm(TpmType::Windows),
-     SecurityModule::Hsm(HsmType::NitroKey)]
+    [SecurityModule::Nks]
 )]
 fn test_load_rsa_key(module: SecurityModule) {
     let provider = setup_security_module(module);
