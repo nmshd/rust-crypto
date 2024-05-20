@@ -23,6 +23,7 @@ use crate::common::{
     error::SecurityModuleError,
     traits::module_provider::Provider,
 };
+use crate::common::traits::module_provider_config::ProviderConfig;
 
 
 /// Implements the `Provider` trait, providing cryptographic operations utilizing a nks.
@@ -49,7 +50,10 @@ impl Provider for NksProvider {
     /// On failure, it returns a `SecurityModuleError`.
 
         #[instrument]
-    fn create_key(&mut self, key_id: &str) -> Result<(), SecurityModuleError> {
+    fn create_key(&mut self,
+                  key_id: &str,
+                  config: Box<dyn ProviderConfig>)
+        -> Result<(), SecurityModuleError> {
         let runtime = Runtime::new().unwrap();
         let get_and_save_keypair_result = runtime.block_on(get_and_save_key_pair(
             &*self.nks_token.clone().unwrap(),
@@ -74,7 +78,11 @@ impl Provider for NksProvider {
         }
     }
 
-    fn load_key(&mut self, key_id: &str) -> Result<(), SecurityModuleError> {
+    fn load_key(
+        &mut self,
+        key_id: &str,
+        config: Box<dyn ProviderConfig>,
+    ) -> Result<(), SecurityModuleError>{
         todo!()
     }
 
@@ -96,13 +104,7 @@ impl Provider for NksProvider {
     //algorithmus checken
     //TODO implement initialize_module
     #[instrument]
-    fn initialize_module(
-        &mut self,
-        key_algorithm: AsymmetricEncryption,
-        sym_algorithm: Option<BlockCiphers>,
-        hash: Option<Hash>,
-        key_usages: Vec<KeyUsage>,
-    ) -> Result<(), SecurityModuleError> {
+    fn initialize_module(&mut self) -> Result<(), SecurityModuleError> {
         self.nks_address = Some(Url::from_str("http://localhost:5272/apidemo/").unwrap()); //TODO: find solution with nks_address not hardcoded
         self.key_algorithm = Some(key_algorithm);
         self.sym_algorithm = sym_algorithm;
