@@ -106,10 +106,6 @@ impl Provider for NksProvider {
     #[instrument]
     fn initialize_module(&mut self) -> Result<(), SecurityModuleError> {
         self.nks_address = Some(Url::from_str("http://localhost:5272/apidemo/").unwrap()); //TODO: find solution with nks_address not hardcoded
-        self.key_algorithm = Some(key_algorithm);
-        self.sym_algorithm = sym_algorithm;
-        self.hash = hash;
-        self.key_usages = Some(key_usages);
         // Check if token file exists
         let tokens_file_path = Box::new(Path::new("token.json")); // Adjust the path as needed
         if Path::new(&*tokens_file_path).exists() {

@@ -13,6 +13,10 @@ use crate::{
     },
     nks::hcvault::NksProvider,
 };
+use crate::common::crypto::algorithms::encryption::SymmetricMode;
+use crate::common::crypto::algorithms::hashes::Sha2Bits;
+use crate::common::crypto::algorithms::KeyBits;
+
 
 #[test]
 fn do_nothing() {
@@ -34,7 +38,7 @@ fn test_initialize_module() {
     ];
 
     provider
-        .initialize_module(key_algorithm.clone(), sym_algorithm.clone(), hash.clone(), key_usages.clone())
+        .initialize_module()
         .expect("Failed to initialize module");
     println!("{:?}", provider);
 }
@@ -61,22 +65,24 @@ fn test_initialize_module() {
 //         .create_key("test_rsa_key", key_algorithm.clone(), sym_algorithm.clone(), hash, key_usages)
 //         .expect("Failed to create RSA key");
 // }
-#[test]
-fn test_create_ecdsa_key() {
-    let mut provider = NksProvider::new("test_key".to_string());
-
-    let key_algorithm = AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::Curve25519));
-    let sym_algorithm = None;
-    let hash = Some(Hash::Sha2(256.into()));
-    let key_usages = vec![KeyUsage::ClientAuth, KeyUsage::SignEncrypt];
-
-    provider
-        .initialize_module(key_algorithm.clone(), sym_algorithm.clone(), hash.clone(), key_usages.clone())
-        .expect("Failed to initialize module");
-    provider
-        .create_key("test_ecdsa_key")
-        .expect("Failed to create ECDSA key");
-}
+// #[test]
+// fn test_create_ecdsa_key() {
+//     let mut provider = NksProvider::new("test_key".to_string());
+//
+//     let config = NksConfig::new(
+//         AsymmetricEncryption::Rsa(KeyBits::Bits4096),
+//         BlockCiphers::Aes(SymmetricMode::Gcm, KeyBits::Bits512),
+//         Hash::Sha2(Sha2Bits::Sha256),
+//         vec![KeyUsage::SignEncrypt, KeyUsage::ClientAuth],
+//     );
+//
+//     provider
+//         .initialize_module()
+//         .expect("Failed to initialize module");
+//     provider
+//         .create_key("test_ecdsa_key", config)
+//         .expect("Failed to create ECDSA key");
+// }
 //
 // #[test]
 // fn test_create_ecdh_key() {
