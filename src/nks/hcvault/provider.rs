@@ -50,6 +50,7 @@ impl Provider for NksProvider {
     /// A `Result` that, on success, contains `Ok(())`, indicating that the key was created successfully.
     /// On failure, it returns a `SecurityModuleError`.
     #[instrument]
+    //TODO: implement error handling for when key_id already exists
     fn create_key(&mut self, key_id: &str, config: Box<dyn ProviderConfig>) -> Result<(), SecurityModuleError> {
         if let Some(nks_config) = config.as_any().downcast_ref::<NksConfig>() {
             let runtime = Runtime::new().unwrap();
@@ -60,10 +61,11 @@ impl Provider for NksProvider {
                     AsymmetricEncryption::Rsa(_) => "rsa",
                     AsymmetricEncryption::Ecc(_) => "ecdsa",
                 },
-            Url::parse(&nks_config.nks_address).unwrap()
+                Url::parse(&nks_config.nks_address).unwrap()
             ));
             match get_and_save_keypair_result {
                 Ok(result_string) => {
+                    println!("Key pair generated and saved successfully: {}", result_string);
                     let response: Response = serde_json::from_str(&result_string).unwrap();
                     let key_id = response.data.keys[0].id.clone();
                     self.key_id = key_id;
@@ -95,17 +97,11 @@ impl Provider for NksProvider {
     /// A `Result` that, on success, contains `Ok(())`, indicating that the module was initialized successfully.
     /// On failure, it returns a `SecurityModuleError`.
 
-
-    //adresse des nks
-    //getsecret
-    //json lokal speichern
-    //neues token updaten
-    //algorithmus checken
-    //TODO implement initialize_module
     #[instrument]
     fn initialize_module(&mut self) -> Result<(), SecurityModuleError> {
         //TODO: find solution with nks_address not hardcoded
-        let nks_address = Some(Url::from_str("http://localhost:5272/apidemo/").unwrap());
+        let nks_address_str = "http://localhost:5272/apidemo/";
+        let nks_address = Some(Url::from_str(nks_address_str).unwrap());
         //TODO: find solution with access to config
         let mut nks_token = None;
         // Check if token file exists
@@ -139,6 +135,19 @@ impl Provider for NksProvider {
                 return Err(SecurityModuleError::NksError);
             }
         }
+        //safe address and token to config
+        let config = NksConfig::new(
+            get_usertoken_from_file().unwrap(),
+            nks_address_str.parse().unwrap(),
+            //rest ist just dummy data to fulfill the function signature
+            AsymmetricEncryption::Rsa(2048.into()),
+            Hash::Sha2(256.into()),
+            vec![
+                KeyUsage::ClientAuth,
+            ]
+        );
+        self.config = Some(config);
+
         println!("Nks initialized successfully.");
         println!("Secrets: {:?}", self.secrets_json);
         Ok(())
@@ -296,7 +305,7 @@ struct Key {
     publicKey: String,
     privateKey: String,
     length: String,
-    curve: String,
+    curve: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -383,6 +392,7 @@ async fn get_and_save_key_pair(
     println!("Success response:\n{}", response_text);
     let response_json: Value = serde_json::from_str(&response_text)?;
 
+    //save new token
     if let Some(user_token) = response_json.get("newToken") {
         if let Some(user_token_str) = user_token.as_str() {
             let token_data = json!({
@@ -391,10 +401,10 @@ async fn get_and_save_key_pair(
             fs::write("token.json", token_data.to_string())?;
         }
     }
-    let pretty_response = serde_json::to_string_pretty(&response_json)
-        .unwrap_or_else(|_| String::from("Error formatting JSON"));
+    // let pretty_response = serde_json::to_string_pretty(&response_json)
+    //     .unwrap_or_else(|_| String::from("Error formatting JSON"));
 
-    Ok(pretty_response)
+    Ok(response_text)
 }
 
 async fn get_secrets(token: &str) -> anyhow::Result<String, Box<dyn std::error::Error>> {
