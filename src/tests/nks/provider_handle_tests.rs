@@ -33,15 +33,20 @@ fn do_nothing() {
 fn test_initialize_module() {
     let mut provider = NksProvider::new("test_key".to_string());
 
-    let key_algorithm = AsymmetricEncryption::Rsa(2048.into());
-    let sym_algorithm = Some(BlockCiphers::Aes(Default::default(), 256.into()));
-    let hash = Some(Hash::Sha2(256.into()));
-    let key_usages = vec![
-        KeyUsage::ClientAuth,
-        KeyUsage::Decrypt,
-        KeyUsage::SignEncrypt,
-        KeyUsage::CreateX509,
-    ];
+    //set config
+    let config= NksConfig::new(
+        "".to_string(),
+        "http://localhost:5272/apidemo/".to_string(),
+        AsymmetricEncryption::Rsa(2048.into()),
+        Hash::Sha2(256.into()),
+        vec![
+            KeyUsage::ClientAuth,
+            KeyUsage::Decrypt,
+            KeyUsage::SignEncrypt,
+            KeyUsage::CreateX509,
+        ]
+    );
+    provider.config = Some(config);
 
     provider
         .initialize_module()

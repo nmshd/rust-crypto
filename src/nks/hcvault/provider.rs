@@ -3,10 +3,12 @@ use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 use std::str::FromStr;
+use std::string::String;
 use std::sync::{Arc, Mutex};
 use reqwest::Url;
 use serde::Deserialize;
 use serde_json::{json, Value};
+use serde_json::Value::String as JsonString;
 use super::{NksProvider};
 use tracing::instrument;
 use tokio::runtime::Runtime;
@@ -99,58 +101,57 @@ impl Provider for NksProvider {
 
     #[instrument]
     fn initialize_module(&mut self) -> Result<(), SecurityModuleError> {
-        //TODO: find solution with nks_address not hardcoded
-        let nks_address_str = "http://localhost:5272/apidemo/";
-        let nks_address = Some(Url::from_str(nks_address_str).unwrap());
-        //TODO: find solution with access to config
-        let mut nks_token = None;
-        // Check if token file exists
-        let tokens_file_path = Box::new(Path::new("token.json")); // Adjust the path as needed
-        if Path::new(&*tokens_file_path).exists() {
-            println!("Tokens file exists.");
-            nks_token = get_usertoken_from_file();
-        } else {
-            println!("Tokens file does not exist. Generating tokens...");
-            // Token file does not exist, generate token using API
+        //get address and token from config
+        if let Some(nks_config) = self.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>() {
+            let nks_address_str = nks_config.nks_address.clone();
+            let nks_address = Some(Url::from_str(nks_address_str.as_str()).unwrap());
+            let mut nks_token = nks_config.nks_token.clone();
+            if nks_token.is_empty() {
+                println!("Token field in config is empty. Generating token...");
+                // Token field empty, generate token using API
+                let runtime = Runtime::new().unwrap();
+                let nks_address = nks_address.clone().ok_or(SecurityModuleError::NksError)?;
+                match runtime.block_on(get_token(nks_address.clone())) {
+                    Ok(token) => {
+                        nks_token = token;
+                    }
+                    Err(err) => {
+                        println!("Failed to get tokens from API: {}", err);
+                        return Err(SecurityModuleError::NksError);
+                    }
+                }
+            }
+            //store current secrets
             let runtime = tokio::runtime::Runtime::new().unwrap();
-            let nks_address = nks_address.clone().ok_or(SecurityModuleError::NksError)?;
-            match runtime.block_on(get_token(nks_address.clone(), tokens_file_path)) {
-                Ok(token) => {
-                    nks_token = Option::from(token);
+            match runtime.block_on(get_secrets(&nks_token.as_str(), &nks_address_str)) {
+                Ok((secrets_json, newToken)) => {
+                    self.secrets_json = Some(secrets_json.parse().unwrap());
+                    nks_token = newToken;
                 }
                 Err(err) => {
-                    println!("Failed to get tokens from API: {}", err);
+                    println!("Failed to get secrets: {}", err);
                     return Err(SecurityModuleError::NksError);
                 }
             }
-        }
-        //store current secrets
-        let runtime = tokio::runtime::Runtime::new().unwrap();
-        match runtime.block_on(get_secrets(&nks_token.clone().unwrap())) {
-            Ok(secrets_json) => {
-                self.secrets_json = Some(secrets_json.parse().unwrap());
-            }
-            Err(err) => {
-                println!("Failed to get secrets: {}", err);
-                return Err(SecurityModuleError::NksError);
-            }
-        }
-        //safe address and token to config
-        let config = NksConfig::new(
-            get_usertoken_from_file().unwrap(),
-            nks_address_str.parse().unwrap(),
-            //rest ist just dummy data to fulfill the function signature
-            AsymmetricEncryption::Rsa(2048.into()),
-            Hash::Sha2(256.into()),
-            vec![
-                KeyUsage::ClientAuth,
-            ]
-        );
-        self.config = Some(config);
+            //safe address and token to config
+            let config = NksConfig::new(
+                nks_token.clone(),
+                nks_config.nks_address.clone(),
+                nks_config.key_algorithm.clone(),
+                nks_config.hash.clone(),
+                nks_config.key_usages.clone(),
+            );
+            self.config = Some(config);
 
-        println!("Nks initialized successfully.");
-        println!("Secrets: {:?}", self.secrets_json);
-        Ok(())
+            println!("Nks initialized successfully.");
+            println!("Secrets: {:?}", self.secrets_json);
+            Ok(())
+        } else {
+            println!("Failed to downcast to NksConfig");
+            Err(SecurityModuleError::NksError)
+        }
+
+
     }
 // impl NksProvider {
     /*TODO
@@ -320,22 +321,22 @@ struct Response {
     newToken: String,
 }
 
-fn get_usertoken_from_file() -> Option<String> {
-    let mut file = File::open("token.json").ok()?;
-    let mut contents = String::new();
-    file.read_to_string(&mut contents).ok()?;
+// fn get_usertoken_from_file() -> Option<String> {
+//     let mut file = File::open("token.json").ok()?;
+//     let mut contents = String::new();
+//     file.read_to_string(&mut contents).ok()?;
+//
+//     let json: Value = serde_json::from_str(&contents).ok()?;
+//
+//     if let Some(usertoken) = json["usertoken"].as_str() {
+//         return Some(usertoken.to_string());
+//     } else {
+//         println!("usertoken not found or invalid format.");
+//         return None;
+//     }
+// }
 
-    let json: Value = serde_json::from_str(&contents).ok()?;
-
-    if let Some(usertoken) = json["usertoken"].as_str() {
-        return Some(usertoken.to_string());
-    } else {
-        println!("usertoken not found or invalid format.");
-        return None;
-    }
-}
-
-async fn get_token(nks_address: Url, token_path: Box<&Path>) -> anyhow::Result<String, Box<dyn std::error::Error>> {
+async fn get_token(nks_address: Url) -> anyhow::Result<String, Box<dyn std::error::Error>> {
     let api_url = nks_address.join("getToken");
     let response: Value = reqwest::Client::new()
         .get(api_url.unwrap())
@@ -350,7 +351,6 @@ async fn get_token(nks_address: Url, token_path: Box<&Path>) -> anyhow::Result<S
             let token_data = json!({
                 "usertoken": user_token_str
             });
-            fs::write(token_path.as_ref(), token_data.to_string().as_bytes())?;
             return Ok(user_token_str.to_string());
         }
     }
@@ -407,13 +407,13 @@ async fn get_and_save_key_pair(
     Ok(response_text)
 }
 
-async fn get_secrets(token: &str) -> anyhow::Result<String, Box<dyn std::error::Error>> {
+async fn get_secrets(token: &str, nks_address_str: &str) -> anyhow::Result<(String, String), Box<dyn std::error::Error>> {
     let client = reqwest::Client::new();
     let body = json!({
         "token": token
     });
 
-    let response: Value = client.post("http://localhost:5272/apidemo/getSecrets")
+    let response: Value = client.post(format!("{}getSecrets", nks_address_str))
         .header("accept", "*/*")
         .header("Content-Type", "application/json-patch+json")
         .json(&body)
@@ -422,19 +422,10 @@ async fn get_secrets(token: &str) -> anyhow::Result<String, Box<dyn std::error::
         .json()
         .await?;
 
-    //let response_json = response.json().await?;
-
     let response_text = response.to_string();
 
     //save new token
-    if let Some(user_token) = response.get("newToken") {
-        if let Some(user_token_str) = user_token.as_str() {
-            let token_data = json!({
-                "usertoken": user_token_str
-            });
-            fs::write("token.json", token_data.to_string())?;
-        }
-    }
+    let user_token = response.get("newToken").unwrap().as_str().unwrap().to_string();
 
     // Extract the data field from the response
     let data = response.get("data").ok_or_else(|| "Data field not found in the response")?;
@@ -442,5 +433,5 @@ async fn get_secrets(token: &str) -> anyhow::Result<String, Box<dyn std::error::
     // Convert the data field back to a string
     let data_str = serde_json::to_string_pretty(data)?;
 
-    Ok(data_str)
+    Ok((data_str, user_token))
 }
