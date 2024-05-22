@@ -68,9 +68,6 @@ impl Provider for NksProvider {
             match get_and_save_keypair_result {
                 Ok((result_string, new_token)) => {
                     println!("Key pair generated and saved successfully: {}", result_string);
-                    let response: Response = serde_json::from_str(&result_string).unwrap();
-                    let key_id = response.data.keys[0].id.clone();
-                    self.key_id = key_id;
                     self.secrets_json = Some(result_string.parse().unwrap());
                     //safe token to config
                     let config = NksConfig::new(
@@ -83,6 +80,7 @@ impl Provider for NksProvider {
                     self.config = Some(config);
 
                     println!("Secrets: {:?}", self.secrets_json);
+                    println!("Token: {}", new_token);
                     Ok(())
                 }
                 Err(err) => {
@@ -97,8 +95,31 @@ impl Provider for NksProvider {
 
     }
 
-    fn load_key(&mut self, key_id: &str, config: Box<dyn ProviderConfig>) -> Result<(), SecurityModuleError> {
-        todo!()
+    fn load_key(&mut self, key_id: &str, _config: Box<dyn ProviderConfig>) -> Result<(), SecurityModuleError> {
+        // Check if secrets_json is None
+        if let Some(secrets_json) = &self.secrets_json {
+            // Iterate over the secrets_json object
+            if let Some(keys) = secrets_json.get("keys") {
+                for key in keys.as_array().unwrap() {
+                    // Check if the key_id matches
+                    if key.get("id").unwrap().as_str().unwrap() == key_id {
+                        // Set the public_key and private_key
+                        self.public_key = key.get("publicKey").unwrap().as_str().unwrap().to_string();
+                        self.private_key = key.get("privateKey").unwrap().as_str().unwrap().to_string();
+                        println!("Public Key: {}", self.public_key);
+                        println!("Private Key: {}", self.private_key);
+                        return Ok(());
+                    }
+                }
+            }
+        } else {
+            println!("Secrets JSON is empty");
+            return Err(SecurityModuleError::NksError);
+        }
+
+        // If no matching key is found, return an error
+        println!("Key '{}' not found in secrets_json", key_id);
+        Err(SecurityModuleError::NksError)
     }
 
     /// Initializes the nks module and returns a handle for further operations.
@@ -404,10 +425,16 @@ async fn get_and_save_key_pair(
     println!("Success response:\n{}", response_text);
     let response_json: Value = serde_json::from_str(&response_text)?;
 
+    // Extract the data field from the response
+    let data = response_json.get("data").ok_or_else(|| "Data field not found in the response")?;
+
+    // Convert the data field back to a string
+    let data_str = serde_json::to_string_pretty(data)?;
+
     //save new token
     let user_token = response_json.get("newToken").unwrap().as_str().unwrap().to_string();
 
-    Ok((response_text, user_token))
+    Ok((data_str, user_token))
 }
 
 async fn get_secrets(token: &str, nks_address_str: &str) -> anyhow::Result<(String, String), Box<dyn std::error::Error>> {

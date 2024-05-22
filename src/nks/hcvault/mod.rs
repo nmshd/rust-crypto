@@ -37,6 +37,8 @@ pub struct NksProvider {
     key_id: String,
     pub(crate) config: Option<Arc<dyn ProviderConfig + Sync + Send>>,
     pub(super) secrets_json: Option<serde_json::Value>,
+    public_key: String,
+    private_key: String,
 }
 
 impl NksProvider {
@@ -51,6 +53,8 @@ impl NksProvider {
             key_id,
             config: None,
             secrets_json: None,
+            public_key: String::new(),
+            private_key: String::new(),
         }
     }
 }
