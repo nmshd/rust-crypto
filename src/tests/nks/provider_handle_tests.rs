@@ -59,26 +59,10 @@ fn test_initialize_module() {
 fn test_create_rsa_key() {
     let mut provider = NksProvider::new("test_key".to_string());
 
-    provider
-        .initialize_module()
-        .expect("Failed to initialize module");
-
-    //get token and address from config
-    let mut token = "";
-    let mut nks_address = "";
-    if let Some(nks_config) = provider.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>() {
-        println!("NKS Token: {}", nks_config.nks_token);
-        token = &nks_config.nks_token;
-        println!("NKS Address: {}", nks_config.nks_address);
-        nks_address = &nks_config.nks_address;
-    } else {
-        println!("Failed to downcast to NksConfig");
-    }
-
-    //put token and address in new config
+    //set config
     let config= NksConfig::new(
-        token.to_string(),
-        nks_address.to_string(),
+        "".to_string(),
+        "http://localhost:5272/apidemo/".to_string(),
         AsymmetricEncryption::Rsa(2048.into()),
         Hash::Sha2(256.into()),
         vec![
@@ -89,6 +73,10 @@ fn test_create_rsa_key() {
         ]
     );
     provider.config = Some(config);
+
+    provider
+        .initialize_module()
+        .expect("Failed to initialize module");
 
     if let Some(nks_config) = provider.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>() {
         provider

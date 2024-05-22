@@ -66,11 +66,20 @@ impl Provider for NksProvider {
                 Url::parse(&nks_config.nks_address).unwrap()
             ));
             match get_and_save_keypair_result {
-                Ok(result_string) => {
+                Ok((result_string, new_token)) => {
                     println!("Key pair generated and saved successfully: {}", result_string);
                     let response: Response = serde_json::from_str(&result_string).unwrap();
                     let key_id = response.data.keys[0].id.clone();
                     self.key_id = key_id;
+                    //safe token to config
+                    let config = NksConfig::new(
+                        new_token.clone(),
+                        nks_config.nks_address.clone(),
+                        nks_config.key_algorithm.clone(),
+                        nks_config.hash.clone(),
+                        nks_config.key_usages.clone(),
+                    );
+                    self.config = Some(config);
                     Ok(())
                 }
                 Err(err) => {
@@ -101,8 +110,8 @@ impl Provider for NksProvider {
 
     #[instrument]
     fn initialize_module(&mut self) -> Result<(), SecurityModuleError> {
-        //get address and token from config
         if let Some(nks_config) = self.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>() {
+            //get address and token from config
             let nks_address_str = nks_config.nks_address.clone();
             let nks_address = Some(Url::from_str(nks_address_str.as_str()).unwrap());
             let mut nks_token = nks_config.nks_token.clone();
@@ -133,7 +142,7 @@ impl Provider for NksProvider {
                     return Err(SecurityModuleError::NksError);
                 }
             }
-            //safe address and token to config
+            //safe token to config
             let config = NksConfig::new(
                 nks_token.clone(),
                 nks_config.nks_address.clone(),
@@ -363,7 +372,7 @@ async fn get_and_save_key_pair(
     key_name: &str,
     key_type: &str,
     nks_address: Url,
-) -> std::result::Result<String, Box<dyn std::error::Error>> {
+    ) -> Result<(String, String), Box<dyn std::error::Error>> {
     let client = reqwest::Client::new();
     let request_body = json!(
             {
@@ -393,18 +402,9 @@ async fn get_and_save_key_pair(
     let response_json: Value = serde_json::from_str(&response_text)?;
 
     //save new token
-    if let Some(user_token) = response_json.get("newToken") {
-        if let Some(user_token_str) = user_token.as_str() {
-            let token_data = json!({
-                    "usertoken": user_token_str
-                });
-            fs::write("token.json", token_data.to_string())?;
-        }
-    }
-    // let pretty_response = serde_json::to_string_pretty(&response_json)
-    //     .unwrap_or_else(|_| String::from("Error formatting JSON"));
+    let user_token = response_json.get("newToken").unwrap().as_str().unwrap().to_string();
 
-    Ok(response_text)
+    Ok((response_text, user_token))
 }
 
 async fn get_secrets(token: &str, nks_address_str: &str) -> anyhow::Result<(String, String), Box<dyn std::error::Error>> {
