@@ -87,42 +87,61 @@ fn test_create_rsa_key() {
     }
 
 }
-// #[test]
-// fn test_create_ecdsa_key() {
-//     let mut provider = NksProvider::new("test_key".to_string());
-//
-//     let config = NksConfig::new(
-//         AsymmetricEncryption::Rsa(KeyBits::Bits4096),
-//         BlockCiphers::Aes(SymmetricMode::Gcm, KeyBits::Bits512),
-//         Hash::Sha2(Sha2Bits::Sha256),
-//         vec![KeyUsage::SignEncrypt, KeyUsage::ClientAuth],
-//     );
-//
-//     provider
-//         .initialize_module()
-//         .expect("Failed to initialize module");
-//     provider
-//         .create_key("test_ecdsa_key", config)
-//         .expect("Failed to create ECDSA key");
-// }
-//
-// #[test]
-// fn test_create_ecdh_key() {
-//     let mut provider = NksProvider::new("test_key".to_string());
-//
-//     let key_algorithm = AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::Curve25519));
-//     let sym_algorithm = Some(BlockCiphers::Aes(Default::default(), 256.into()));
-//     let hash = Some(Hash::Sha2(384.into()));
-//     let key_usages = vec![KeyUsage::Decrypt];
-//
-//     provider
-//         .initialize_module(999999,999999, key_algorithm.clone(), sym_algorithm.clone(), hash.clone(), key_usages.clone())
-//         .expect("Failed to initialize module");
-//     provider
-//         .create_key("test_ecdh_key", key_algorithm.clone(), sym_algorithm.clone(), hash, key_usages)
-//         .expect("Failed to create ECDH key");
-// }
-//
+#[test]
+fn test_create_ecdsa_key() {
+    let mut provider = NksProvider::new("test_key".to_string());
+
+    //set config
+    let config= NksConfig::new(
+        "".to_string(),
+        "http://localhost:5272/apidemo/".to_string(),
+        AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::Curve25519)),
+        Hash::Sha2(Sha2Bits::Sha256),
+        vec![KeyUsage::SignEncrypt, KeyUsage::ClientAuth],
+    );
+    provider.config = Some(config);
+
+    provider
+        .initialize_module()
+        .expect("Failed to initialize module");
+
+    if let Some(nks_config) = provider.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>() {
+        provider
+            .create_key("test_ecdsa_key", Box::new(nks_config.clone()))
+            .expect("Failed to create ECDSA key");
+    } else {
+        println!("Failed to downcast to NksConfig");
+    }
+
+}
+
+#[test]
+fn test_create_ecdh_key() {
+    let mut provider = NksProvider::new("test_key".to_string());
+
+    //set config
+    let config= NksConfig::new(
+        "".to_string(),
+        "http://localhost:5272/apidemo/".to_string(),
+        AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::Curve25519)),
+        Hash::Sha2(384.into()),
+        vec![KeyUsage::Decrypt],
+    );
+    provider.config = Some(config);
+
+    provider
+        .initialize_module()
+        .expect("Failed to initialize module");
+
+    if let Some(nks_config) = provider.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>() {
+        provider
+            .create_key("test_ecdh_key", Box::new(nks_config.clone()))
+            .expect("Failed to create ECDH key");
+    } else {
+        println!("Failed to downcast to NksConfig");
+    }
+}
+
 // #[test]
 // fn test_load_rsa_key() {
 //     let mut provider = NksProvider::new("test_key".to_string());

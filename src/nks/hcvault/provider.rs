@@ -71,6 +71,7 @@ impl Provider for NksProvider {
                     let response: Response = serde_json::from_str(&result_string).unwrap();
                     let key_id = response.data.keys[0].id.clone();
                     self.key_id = key_id;
+                    self.secrets_json = Some(result_string.parse().unwrap());
                     //safe token to config
                     let config = NksConfig::new(
                         new_token.clone(),
@@ -80,6 +81,8 @@ impl Provider for NksProvider {
                         nks_config.key_usages.clone(),
                     );
                     self.config = Some(config);
+
+                    println!("Secrets: {:?}", self.secrets_json);
                     Ok(())
                 }
                 Err(err) => {
