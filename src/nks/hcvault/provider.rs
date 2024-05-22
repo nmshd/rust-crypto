@@ -78,6 +78,11 @@ impl Provider for NksProvider {
                         nks_config.key_usages.clone(),
                     );
                     self.config = Some(config);
+                    //save token in token.json for persistence
+                    let token_data = json!({
+                     "usertoken": new_token.clone()
+                     });
+                    fs::write("token.json", token_data.to_string()).expect("Error writing to token.json");
 
                     println!("Secrets: {:?}", self.secrets_json);
                     println!("Token: {}", new_token);
@@ -140,17 +145,25 @@ impl Provider for NksProvider {
             let nks_address = Some(Url::from_str(nks_address_str.as_str()).unwrap());
             let mut nks_token = nks_config.nks_token.clone();
             if nks_token.is_empty() {
-                println!("Token field in config is empty. Generating token...");
-                // Token field empty, generate token using API
-                let runtime = Runtime::new().unwrap();
-                let nks_address = nks_address.clone().ok_or(SecurityModuleError::NksError)?;
-                match runtime.block_on(get_token(nks_address.clone())) {
-                    Ok(token) => {
-                        nks_token = token;
-                    }
-                    Err(err) => {
-                        println!("Failed to get tokens from API: {}", err);
-                        return Err(SecurityModuleError::NksError);
+                println!("Token field in config is empty. checking for token.json...");
+                // Check if token file exists
+                let tokens_file_path = Box::new(Path::new("token.json")); // Adjust the path as needed
+                if Path::new(&*tokens_file_path).exists() {
+                    println!("Tokens file exists.");
+                    nks_token = get_usertoken_from_file().unwrap();
+                } else {
+                    println!("Token file does not exist. Generating token...");
+                    // Token field empty and no token in token.json, generate token using API
+                    let runtime = Runtime::new().unwrap();
+                    let nks_address = nks_address.clone().ok_or(SecurityModuleError::NksError)?;
+                    match runtime.block_on(get_token(nks_address.clone())) {
+                        Ok(token) => {
+                            nks_token = token;
+                        }
+                        Err(err) => {
+                            println!("Failed to get tokens from API: {}", err);
+                            return Err(SecurityModuleError::NksError);
+                        }
                     }
                 }
             }
@@ -175,7 +188,11 @@ impl Provider for NksProvider {
                 nks_config.key_usages.clone(),
             );
             self.config = Some(config);
-
+            //save token in token.json for persistence
+            let token_data = json!({
+                "usertoken": nks_token.clone()
+            });
+            fs::write("token.json", token_data.to_string()).expect("Error writing to token.json");
             println!("Nks initialized successfully.");
             println!("Secrets: {:?}", self.secrets_json);
             Ok(())
@@ -354,20 +371,20 @@ struct Response {
     newToken: String,
 }
 
-// fn get_usertoken_from_file() -> Option<String> {
-//     let mut file = File::open("token.json").ok()?;
-//     let mut contents = String::new();
-//     file.read_to_string(&mut contents).ok()?;
-//
-//     let json: Value = serde_json::from_str(&contents).ok()?;
-//
-//     if let Some(usertoken) = json["usertoken"].as_str() {
-//         return Some(usertoken.to_string());
-//     } else {
-//         println!("usertoken not found or invalid format.");
-//         return None;
-//     }
-// }
+fn get_usertoken_from_file() -> Option<String> {
+    let mut file = File::open("token.json").ok()?;
+    let mut contents = String::new();
+    file.read_to_string(&mut contents).ok()?;
+
+    let json: Value = serde_json::from_str(&contents).ok()?;
+
+    if let Some(usertoken) = json["usertoken"].as_str() {
+        return Some(usertoken.to_string());
+    } else {
+        println!("usertoken not found or invalid format.");
+        return Some("no valid token".to_string());
+    }
+}
 
 async fn get_token(nks_address: Url) -> anyhow::Result<String, Box<dyn std::error::Error>> {
     let api_url = nks_address.join("getToken");
