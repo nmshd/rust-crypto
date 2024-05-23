@@ -41,27 +41,23 @@ fn do_nothing() {
     assert_eq!(1, 1);
 }
 
-// #[test]
-// fn test_sign_and_verify_rsa() {
-//     let mut provider = NksProvider::new("test_rsa_key".to_string());
-//
-//     let key_algorithm = AsymmetricEncryption::Rsa(2048.into());
-//     let sym_algorithm = None;
-//     let hash = Some(Hash::Sha2(256.into()));
-//     let key_usages = vec![KeyUsage::ClientAuth, KeyUsage::SignEncrypt];
-//
-//     provider
-//         .initialize_module(key_algorithm.clone(), sym_algorithm.clone(), hash.clone(), key_usages.clone())
-//         .expect("Failed to initialize module");
-//     provider
-//         .create_key("test_rsa_key", key_algorithm.clone(), sym_algorithm.clone(), hash, key_usages)
-//         .expect("Failed to create RSA key");
-//
-//     let data = b"Hello, World!";
-//     let signature = provider.sign_data(data).expect("Failed to sign data");
-//
-//     assert!(provider.verify_signature(data, &signature, "").unwrap());
-// }
+ #[test]
+ fn test_sign_and_verify_rsa() {
+     let mut provider = NksProvider::new("test_rsa_key".to_string());
+
+     let config = NksConfig::new(
+         "test_token".to_string(),
+         "test_address".to_string(),
+         AsymmetricEncryption::Rsa(KeyBits::Bits4096),
+         Hash::Sha2(Sha2Bits::Sha256),
+         vec![KeyUsage::SignEncrypt, KeyUsage::ClientAuth],
+     );
+     let config_boxed: Box<dyn ProviderConfig> = Box::new(config);
+     provider.create_key("test_key1", config_boxed);
+     let data = b"Hello, World!";
+     let signature = provider.sign_data(data).expect("Failed to sign data");
+     assert!(provider.verify_signature(data, &signature,).unwrap());
+ }
 //
 // #[test]
 // fn test_sign_and_verify_ecdsa() {
