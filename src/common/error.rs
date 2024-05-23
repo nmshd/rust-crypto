@@ -119,6 +119,7 @@ impl std::error::Error for SecurityModuleError {
             SecurityModuleError::InvalidSignature => None,
             SecurityModuleError::InvalidPublicKey => None,
             SecurityModuleError::NksError => None,
+            SecurityModuleError::SigningFailed => None,
         }
     }
 }
