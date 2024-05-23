@@ -4,10 +4,8 @@ use std::io::Read;
 use std::path::Path;
 use std::str::FromStr;
 use std::string::String;
-use std::sync::{Arc, Mutex};
 use reqwest::Url;
 use serde::Deserialize;
-use serde_json::Value::String as JsonString;
 use serde_json::{json, Value};
 use super::{NksProvider};
 use tracing::instrument;
@@ -16,10 +14,8 @@ use tokio::runtime::Runtime;
 use crate::common::{
     crypto::{
         algorithms::{
-            encryption::{AsymmetricEncryption, BlockCiphers},
-            hashes::Hash,
+            encryption::AsymmetricEncryption,
         },
-        KeyUsage,
     },
     error::SecurityModuleError,
     traits::module_provider::Provider,
@@ -198,9 +194,9 @@ impl Provider for NksProvider {
             //store current secrets
             let runtime = Runtime::new().unwrap();
             match runtime.block_on(get_secrets(&nks_token.as_str(), &nks_address_str)) {
-                Ok((secrets_json, newToken)) => {
+                Ok((secrets_json, new_token)) => {
                     self.secrets_json = Some(secrets_json.parse().unwrap());
-                    nks_token = newToken;
+                    nks_token = new_token;
                 }
                 Err(err) => {
                     println!("Failed to get secrets: {}", err);
@@ -229,64 +225,6 @@ impl Provider for NksProvider {
             Err(SecurityModuleError::NksError)
         }
     }
-}
-
-/// Represents a cryptographic key in the NksProvider.
-///
-/// This struct is used to deserialize the JSON response from the NksProvider when generating and saving a key pair.
-/// It contains the key's unique identifier, type, public key, private key, length, and optional curve (for ECC keys).
-///
-/// # Fields
-///
-/// * `id` - A string that uniquely identifies the key.
-/// * `key_type` - A string that specifies the type of the key. The accepted values are "rsa", "ecdsa" and "ecdh".
-/// * `publicKey` - A string that contains the public part of the key.
-/// * `privateKey` - A string that contains the private part of the key.
-/// * `length` - A string that specifies the length of the key.
-/// * `curve` - An optional string that specifies the curve used for ECC keys.
-
-#[derive(Deserialize)]
-struct Key {
-    id: String,
-    #[serde(rename = "type")]
-    key_type: String,
-    #[serde(rename = "publicKey")]
-    public_key: String,
-    #[serde(rename = "privateKey")]
-    private_key: String,
-    length: String,
-    curve: Option<String>,
-}
-
-/// Represents the data returned from the NksProvider.
-///
-/// This struct is used to deserialize the JSON response from the NksProvider when retrieving secrets.
-/// It contains a vector of `Key` objects and a vector of `Value` objects representing signatures.
-///
-/// # Fields
-///
-/// * `keys` - A vector of `Key` objects, each representing a cryptographic key.
-/// * `signatures` - A vector of `Value` objects, each representing a signature.
-#[derive(Deserialize)]
-struct Data {
-    keys: Vec<Key>,
-    signatures: Vec<Value>,
-}
-
-/// Represents the response returned from the NksProvider.
-///
-/// This struct is used to deserialize the JSON response from the NksProvider when generating and saving a key pair or retrieving secrets.
-/// It contains a `Data` object representing the returned data and a `newToken` string representing the updated token.
-///
-/// # Fields
-///
-/// * `data` - A `Data` object that contains a vector of `Key` objects and a vector of `Value` objects representing signatures.
-/// * `newToken` - A string that represents the updated token after the operation.
-#[derive(Deserialize)]
-struct Response {
-    data: Data,
-    #[serde(rename = "newToken")]
-    new_token: String,
 }
 
 /// Retrieves the user token from the `token.json` file.
@@ -359,10 +297,7 @@ async fn get_token(nks_address: Url) -> anyhow::Result<String, Box<dyn std::erro
 
     if let Some(user_token) = response.get("token") {
         if let Some(user_token_str) = user_token.as_str() {
-            let token_data = json!({
-                "user_token": user_token_str
-            });
-            return Ok(user_token_str.to_string());
+            return Ok(user_token_str.to_string())
         }
     }
     println!("The response does not contain a 'token' field");
@@ -498,8 +433,6 @@ async fn get_secrets(token: &str, nks_address_str: &str) -> anyhow::Result<(Stri
         .await?
         .json()
         .await?;
-
-    let response_text = response.to_string();
 
     //save new token
     let user_token = response.get("newToken").unwrap().as_str().unwrap().to_string();
