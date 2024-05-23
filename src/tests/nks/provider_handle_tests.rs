@@ -31,7 +31,7 @@ fn test_initialize_module() {
     provider
         .initialize_module()
         .expect("Failed to initialize module");
-    println!("{:?}", provider);
+    println!("Provider: {:?}", provider);
 }
 
 #[test]

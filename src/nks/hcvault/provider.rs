@@ -66,7 +66,7 @@ impl Provider for NksProvider {
             ));
             match get_and_save_keypair_result {
                 Ok((result_string, new_token)) => {
-                    println!("Key pair generated and saved successfully: {}", result_string);
+                    println!("Key pair generated and saved successfully.");
                     self.secrets_json = Some(result_string.parse().unwrap());
                     //safe token to config
                     let config = NksConfig::new(
@@ -82,9 +82,6 @@ impl Provider for NksProvider {
                      "user_token": new_token.clone()
                      });
                     fs::write("token.json", token_data.to_string()).expect("Error writing to token.json");
-
-                    println!("Secrets: {:?}", self.secrets_json);
-                    println!("Token: {}", new_token);
                     Ok(())
                 }
                 Err(err) => {
@@ -219,7 +216,6 @@ impl Provider for NksProvider {
             });
             fs::write("token.json", token_data.to_string()).expect("Error writing to token.json");
             println!("Nks initialized successfully.");
-            println!("Secrets: {:?}", self.secrets_json);
             Ok(())
         } else {
             println!("Failed to downcast to NksConfig");
@@ -349,7 +345,6 @@ async fn get_and_save_key_pair(
             "type": key_type
             }
         );
-    println!("body: {}", request_body);
     let api_url = nks_address.join("generateAndSaveKeyPair");
     let response = client
         .post(api_url.unwrap())
@@ -377,7 +372,6 @@ async fn get_and_save_key_pair(
         }
     }
 
-    println!("Success response:\n{}", response_text);
     let response_json: Value = serde_json::from_str(&response_text)?;
 
     // Extract the data field from the response
