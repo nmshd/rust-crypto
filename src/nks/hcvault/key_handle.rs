@@ -32,16 +32,115 @@ use crate::SecurityModuleError::InitializationError;
 
 impl KeyHandle for NksProvider {
     #[tracing::instrument]
-    fn sign_data(&self, _data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
-        todo!()
+    fn sign_data(&self,
+                 _data: &[u8],
+                ) -> Result<Vec<u8>, SecurityModuleError> {
+
+        // Determine the key algorithm based on the key or some other means
+        let key_algorithm = self.config.as_ref().unwrap().get_key_algorithm();
+        let data = _data;
+
+        if(self.private_key.is_empty() || data.is_empty()){
+            return Err(InitializationError("Private key is empty".to_string()));
+        }
+        else {
+            match key_algorithm {
+                "rsa" => {
+                    // RSA signing method
+                    let rsa = Rsa::private_key_from_pem(&self.private_key.as_bytes())
+                        .map_err(|_| SecurityModuleError::KeyError)?;
+                    let pkey = PKey::from_rsa(rsa).map_err(|_| SecurityModuleError::KeyError)?;
+                    let mut signer = RSASigner::new(MessageDigest::sha256(), &pkey)
+                        .map_err(|_| SecurityModuleError::SigningFailed)?;
+                    signer.update(data).map_err(|_| SecurityModuleError::SigningFailed)?;
+                    signer.sign_to_vec().map_err(|_| SecurityModuleError::SigningFailed)
+                }
+                "ecc" => {
+                    // ECC signing method
+                    let static_secret = X25519StaticSecret::from(self.private_key.as_bytes());
+                    let signing_key = SigningKey::from_bytes(&static_secret.to_bytes());
+                    let signature = signing_key.sign(data);
+                    Ok(signature.to_bytes().to_vec())
+                }
+                _ => Err(SecurityModuleError::UnsupportedAlgorithm),
+            }
+        }
     }
+
     #[tracing::instrument]
-    fn decrypt_data(&self, _encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
-        todo!()
+    fn decrypt_data(&self,
+                    _encrypted_data: &[u8],
+                    ) -> Result<Vec<u8>, SecurityModuleError> {
+        // Determine the key algorithm based on the key or some other means
+        let key_algorithm = self.config.as_ref().unwrap().get_key_algorithm();
+        let encrypted_data = _encrypted_data;
+
+        if self.private_key.is_empty() || encrypted_data.is_empty() {
+            return Err(InitializationError("Private key or encrypted data is empty".to_string()));
+        } else {
+            match key_algorithm {
+                "rsa" => {
+                    // RSA decryption method
+                    let rsa = Rsa::private_key_from_pem(&self.private_key.as_bytes())
+                        .map_err(|_| SecurityModuleError::KeyError)?;
+                    let mut decrypted_data = vec![0; rsa.size() as usize];
+                    rsa.private_decrypt(encrypted_data, &mut decrypted_data, Padding::PKCS1)
+                        .map_err(|_| SecurityModuleError::DecryptionError("RSA decryption failed".to_string()))?;
+                    Ok(decrypted_data)
+                }
+                "ecc" => {
+                    // ECC decryption method
+                    // ECC decryption is not straightforward as RSA, it usually involves a shared secret
+                    // Here we assume you have a shared secret method implemented
+                    let static_secret = X25519StaticSecret::from(self.private_key.as_bytes());
+                    let public_key = X25519PublicKey::from(static_secret.to_bytes());
+                    let shared_secret = static_secret.diffie_hellman(&public_key);
+                    // Use the shared secret to decrypt the data
+                    // This is a placeholder, replace with your actual decryption method
+                    Ok(vec![]) // replace with actual decryption
+                    ///todo: implement decryption ecc
+                }
+                _ => Err(SecurityModuleError::UnsupportedAlgorithm),
+            }
+        }
     }
+
     #[tracing::instrument]
-    fn encrypt_data(&self, _data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
-        todo!()
+    fn encrypt_data(&self,
+                    _data: &[u8],
+                    ) -> Result<Vec<u8>, SecurityModuleError> {
+        // Determine the key algorithm based on the key or some other means
+        let key_algorithm = self.config.as_ref().unwrap().get_key_algorithm();
+        let data = _data;
+
+        if self.private_key.is_empty() || data.is_empty() {
+            return Err(InitializationError("Private key or data is empty".to_string()));
+        } else {
+            match key_algorithm {
+                "rsa" => {
+                    // RSA encryption method
+                    let rsa = Rsa::public_key_from_pem(&self.public_key.as_bytes())
+                        .map_err(|_| SecurityModuleError::KeyError)?;
+                    let mut encrypted_data = vec![0; rsa.size() as usize];
+                    rsa.public_encrypt(data, &mut encrypted_data, Padding::PKCS1)
+                        .map_err(|_| SecurityModuleError::EncryptionError("RSA encryption failed".to_string()))?;
+                    Ok(encrypted_data)
+                }
+                "ecc" => {
+                    // ECC encryption method
+                    // ECC encryption is not straightforward as RSA, it usually involves a shared secret
+                    // Here we assume you have a shared secret method implemented
+                    let static_secret = X25519StaticSecret::from(self.private_key.as_bytes());
+                    let public_key = X25519PublicKey::from(static_secret.to_bytes());
+                    let shared_secret = static_secret.diffie_hellman(&public_key);
+                    // Use the shared secret to encrypt the data
+                    // This is a placeholder, replace with your actual encryption method
+                    Ok(vec![]) // replace with actual encryption
+                    ///todd: implement encryption ecc
+                }
+                _ => Err(SecurityModuleError::UnsupportedAlgorithm),
+            }
+        }
     }
     #[tracing::instrument]
     fn verify_signature(
@@ -49,8 +148,45 @@ impl KeyHandle for NksProvider {
         _data: &[u8],
         _signature: &[u8],
     ) -> Result<bool, SecurityModuleError> {
-        todo!()
+        // Determine the key algorithm based on the key or some other means
+        let key_algorithm = self.config.as_ref().unwrap().get_key_algorithm();
+        let data = _data;
+        let signature = _signature;
+
+        if self.public_key.is_empty() || data.is_empty() || signature.is_empty() {
+            return Err(InitializationError("Public key, data or signature is empty".to_string()));
+        } else {
+            match key_algorithm {
+                "rsa" => {
+                    // RSA signature verification method
+                    let rsa = Rsa::public_key_from_pem(&self.public_key.as_bytes())
+                        .map_err(|_| SecurityModuleError::KeyError)?;
+                    let pkey = PKey::from_rsa(rsa).map_err(|_| SecurityModuleError::KeyError)?;
+                    let mut verifier = RSAVerifier::new(MessageDigest::sha256(), &pkey)
+                        .map_err(|_| SecurityModuleError::VerificationFailed)?;
+                    verifier.update(data).map_err(|_| SecurityModuleError::VerificationFailed)?;
+                    Ok(verifier.verify(signature).map_err(|_| SecurityModuleError::VerificationFailed)?)
+                }
+                "ecc" => {
+                    // ECC signature verification method
+                    let public_key = X25519PublicKey::from(self.public_key.as_bytes());
+                    let verifying_key = VerifyingKey::from_bytes(&public_key.to_bytes())
+                        .map_err(|_| SecurityModuleError::InvalidPublicKey)?;
+                    let signature = Signature::from_slice(signature)
+                        .map_err(|_| SecurityModuleError::InvalidSignature)?;
+                    Ok(verifying_key.verify(data, &signature).is_ok())
+                }
+                _ => Err(SecurityModuleError::UnsupportedAlgorithm),
+            }
+        }
     }
+}
+
+
+
+
+
+
 //impl NksProvider {
 //     /// Signs the given data using the cryptographic key managed by the nks provider.
 //     ///
