@@ -7,13 +7,12 @@ use std::string::String;
 use std::sync::{Arc, Mutex};
 use reqwest::Url;
 use serde::Deserialize;
-use serde_json::{json, Value};
 use serde_json::Value::String as JsonString;
+use serde_json::{json, Value};
 use super::{NksProvider};
 use tracing::instrument;
 use tokio::runtime::Runtime;
 
-//TODO use CAL once it can compile
 use crate::common::{
     crypto::{
         algorithms::{
@@ -52,7 +51,6 @@ impl Provider for NksProvider {
     /// A `Result` that, on success, contains `Ok(())`, indicating that the key was created successfully.
     /// On failure, it returns a `SecurityModuleError`.
     #[instrument]
-    //TODO: implement error handling for when key_id already exists
     fn create_key(&mut self, key_id: &str, config: Box<dyn ProviderConfig>) -> Result<(), SecurityModuleError> {
         if let Some(nks_config) = config.as_any().downcast_ref::<NksConfig>() {
             let runtime = Runtime::new().unwrap();
@@ -435,8 +433,19 @@ async fn get_and_save_key_pair(
     let status = response.status(); // Clone the status here
     let response_text = response.text().await?;
     if !status.is_success() {
-        println!("Error response:\n{}", response_text);
-        return Err(format!("Server returned status code: {}", status).into());
+        let response_json: Value = serde_json::from_str(&response_text)?;
+        if let Some(message) = response_json.get("message") {
+            if let Some(new_token) = response_json.get("newToken") {
+                let token_data = json!({
+                    "usertoken": new_token.as_str().unwrap()
+                });
+                fs::write("token.json", token_data.to_string()).expect("Error writing to token.json");
+                return Err(format!("Server returned status code: {}. Message: {}", status, message.as_str().unwrap()).into());
+            }
+        }
+        else {
+            return Err(format!("Server returned status code: {}", status).into());
+        }
     }
 
     println!("Success response:\n{}", response_text);
