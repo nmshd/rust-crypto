@@ -3,13 +3,12 @@ use crate::{
     common::{
         crypto::{
             algorithms::{
-                encryption::{AsymmetricEncryption, BlockCiphers, EccCurves, EccSchemeAlgorithm},
+                encryption::{AsymmetricEncryption, EccCurves, EccSchemeAlgorithm},
                 hashes::Hash,
             },
             KeyUsage,
         },
-        error::SecurityModuleError,
-        traits::{key_handle::KeyHandle, module_provider::Provider}
+        traits::module_provider::Provider
     },
     nks::hcvault::NksProvider,
 };

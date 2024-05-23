@@ -82,7 +82,7 @@ impl Provider for NksProvider {
                     self.config = Some(config);
                     //save token in token.json for persistence
                     let token_data = json!({
-                     "usertoken": new_token.clone()
+                     "user_token": new_token.clone()
                      });
                     fs::write("token.json", token_data.to_string()).expect("Error writing to token.json");
 
@@ -178,7 +178,7 @@ impl Provider for NksProvider {
                 let tokens_file_path = Box::new(Path::new("token.json")); // Adjust the path as needed
                 if Path::new(&*tokens_file_path).exists() {
                     println!("Tokens file exists.");
-                    nks_token = get_usertoken_from_file().unwrap();
+                    nks_token = get_user_token_from_file().unwrap();
                 } else {
                     println!("Token file does not exist. Generating token...");
                     // Token field empty and no token in token.json, generate token using API
@@ -196,7 +196,7 @@ impl Provider for NksProvider {
                 }
             }
             //store current secrets
-            let runtime = tokio::runtime::Runtime::new().unwrap();
+            let runtime = Runtime::new().unwrap();
             match runtime.block_on(get_secrets(&nks_token.as_str(), &nks_address_str)) {
                 Ok((secrets_json, newToken)) => {
                     self.secrets_json = Some(secrets_json.parse().unwrap());
@@ -218,7 +218,7 @@ impl Provider for NksProvider {
             self.config = Some(config);
             //save token in token.json for persistence
             let token_data = json!({
-                "usertoken": nks_token.clone()
+                "user_token": nks_token.clone()
             });
             fs::write("token.json", token_data.to_string()).expect("Error writing to token.json");
             println!("Nks initialized successfully.");
@@ -250,8 +250,10 @@ struct Key {
     id: String,
     #[serde(rename = "type")]
     key_type: String,
-    publicKey: String,
-    privateKey: String,
+    #[serde(rename = "publicKey")]
+    public_key: String,
+    #[serde(rename = "privateKey")]
+    private_key: String,
     length: String,
     curve: Option<String>,
 }
@@ -283,40 +285,41 @@ struct Data {
 #[derive(Deserialize)]
 struct Response {
     data: Data,
-    newToken: String,
+    #[serde(rename = "newToken")]
+    new_token: String,
 }
 
 /// Retrieves the user token from the `token.json` file.
 ///
-/// This function opens the `token.json` file and reads its contents. It then parses the contents as JSON and retrieves the `usertoken` field.
+/// This function opens the `token.json` file and reads its contents. It then parses the contents as JSON and retrieves the `user_token` field.
 ///
 /// # Returns
 ///
-/// An `Option<String>` that, if the file exists and the `usertoken` field is found, contains the user token as a `String`.
-/// If the file does not exist, or the `usertoken` field is not found, it returns `None`.
+/// An `Option<String>` that, if the file exists and the `user_token` field is found, contains the user token as a `String`.
+/// If the file does not exist, or the `user_token` field is not found, it returns `None`.
 ///
 /// # Example
 ///
 /// ```
-/// let user_token = get_usertoken_from_file();
+/// let user_token = get_user_token_from_file();
 /// if let Some(token) = user_token {
 ///     println!("User token: {}", token);
 /// } else {
 ///     println!("User token not found");
 /// }
 /// ```
-fn get_usertoken_from_file() -> Option<String> {
+fn get_user_token_from_file() -> Option<String> {
     let mut file = File::open("token.json").ok()?;
     let mut contents = String::new();
     file.read_to_string(&mut contents).ok()?;
 
     let json: Value = serde_json::from_str(&contents).ok()?;
 
-    if let Some(usertoken) = json["usertoken"].as_str() {
-        return Some(usertoken.to_string());
+    if let Some(user_token) = json["user_token"].as_str() {
+        Some(user_token.to_string())
     } else {
-        println!("usertoken not found or invalid format.");
-        return Some("no valid token".to_string());
+        println!("user_token not found or invalid format.");
+        Some("no valid token".to_string())
     }
 }
 
@@ -357,7 +360,7 @@ async fn get_token(nks_address: Url) -> anyhow::Result<String, Box<dyn std::erro
     if let Some(user_token) = response.get("token") {
         if let Some(user_token_str) = user_token.as_str() {
             let token_data = json!({
-                "usertoken": user_token_str
+                "user_token": user_token_str
             });
             return Ok(user_token_str.to_string());
         }
@@ -427,7 +430,7 @@ async fn get_and_save_key_pair(
         if let Some(message) = response_json.get("message") {
             if let Some(new_token) = response_json.get("newToken") {
                 let token_data = json!({
-                    "usertoken": new_token.as_str().unwrap()
+                    "user_token": new_token.as_str().unwrap()
                 });
                 fs::write("token.json", token_data.to_string()).expect("Error writing to token.json");
                 return Err(format!("Server returned status code: {}. Message: {}", status, message.as_str().unwrap()).into());
