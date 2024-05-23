@@ -32,24 +32,27 @@ use crate::nks::NksConfig;
 
 
 impl Provider for NksProvider {
-    /// Creates a new cryptographic key identified by `key_id`.
+    /// Creates a new cryptographic key identified by `key_id` within the NksProvider.
     ///
-    /// This method generates a new cryptographic key within the nks, using the specified
-    /// algorithm, symmetric algorithm, hash algorithm, and key usages. The key is made persistent
-    /// and associated with the provided `key_id`.
+    /// This function generates a new cryptographic key within the NksProvider, using the settings
+    /// specified in the `config` parameter. The key is made persistent and associated with the provided `key_id`.
     ///
     /// # Arguments
     ///
     /// * `key_id` - A string slice that uniquely identifies the key to be created.
-    /// * `key_algorithm` - The asymmetric encryption algorithm to be used for the key.
-    /// * `sym_algorithm` - An optional symmetric encryption algorithm to be used with the key.
-    /// * `hash` - An optional hash algorithm to be used with the key.
-    /// * `key_usages` - A vector of `AppKeyUsage` values specifying the intended usages for the key.
+    /// * `config` - A Box containing a `ProviderConfig` object that specifies the settings for the key.
     ///
     /// # Returns
     ///
     /// A `Result` that, on success, contains `Ok(())`, indicating that the key was created successfully.
     /// On failure, it returns a `SecurityModuleError`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// let config = get_config("rsa").unwrap();
+    /// provider.create_key("test_rsa_key", Box::new(config.clone())).expect("Failed to create RSA key");
+    /// ```
     #[instrument]
     fn create_key(&mut self, key_id: &str, config: Box<dyn ProviderConfig>) -> Result<(), SecurityModuleError> {
         if let Some(nks_config) = config.as_any().downcast_ref::<NksConfig>() {
@@ -60,6 +63,7 @@ impl Provider for NksProvider {
                 match nks_config.key_algorithm.clone() {
                     AsymmetricEncryption::Rsa(_) => "rsa",
                     AsymmetricEncryption::Ecc(_) => "ecdsa",
+                    //TODO: add match for ecdh
                 },
                 Url::parse(&nks_config.nks_address).unwrap()
             ));
@@ -98,6 +102,27 @@ impl Provider for NksProvider {
 
     }
 
+    /// Loads an existing cryptographic key identified by `key_id` from the NksProvider.
+    ///
+    /// This function retrieves an existing cryptographic key from the NksProvider, using the settings
+    /// specified in the `config` parameter. The key is associated with the provided `key_id`.
+    ///
+    /// # Arguments
+    ///
+    /// * `key_id` - A string slice that uniquely identifies the key to be loaded.
+    /// * `config` - A Box containing a `ProviderConfig` object that specifies the settings for the key.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` that, on success, contains `Ok(())`, indicating that the key was loaded successfully.
+    /// On failure, it returns a `SecurityModuleError`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// let config = get_config("rsa").unwrap();
+    /// provider.load_key("test_rsa_key", Box::new(config.clone())).expect("Failed to load RSA key");
+    /// ```
     fn load_key(&mut self, key_id: &str, _config: Box<dyn ProviderConfig>) -> Result<(), SecurityModuleError> {
         // Check if secrets_json is None
         if let Some(secrets_json) = &self.secrets_json {
@@ -125,16 +150,21 @@ impl Provider for NksProvider {
         Err(SecurityModuleError::NksError)
     }
 
-    /// Initializes the nks module and returns a handle for further operations.
+    /// Initializes the NksProvider module and prepares it for further cryptographic operations.
     ///
-    /// This method initializes the nks context and prepares it for use. It should be called
-    /// before performing any other operations with the nks.
+    /// This function sets up the NksProvider context by loading the configuration, establishing a connection with the Nks server,
+    /// and retrieving the current secrets. It should be called before performing any other operations with the NksProvider.
     ///
     /// # Returns
     ///
     /// A `Result` that, on success, contains `Ok(())`, indicating that the module was initialized successfully.
     /// On failure, it returns a `SecurityModuleError`.
-
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// provider.initialize_module().expect("Failed to initialize module");
+    /// ```
     #[instrument]
     fn initialize_module(&mut self) -> Result<(), SecurityModuleError> {
         if let Some(nks_config) = self.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>() {
@@ -198,153 +228,22 @@ impl Provider for NksProvider {
             println!("Failed to downcast to NksConfig");
             Err(SecurityModuleError::NksError)
         }
-
-
     }
-// impl NksProvider {
-    /*TODO
-    /// Creates a new cryptographic key identified by `key_id`.
-    ///
-    /// This method generates a new cryptographic key within the nks, using the specified
-    /// algorithm, symmetric algorithm, hash algorithm, and key usages. The key is made persistent
-    /// and associated with the provided `key_id`.
-    ///
-    /// # Arguments
-    ///
-    /// * `key_id` - A string slice that uniquely identifies the key to be created.
-    /// * `key_algorithm` - The asymmetric encryption algorithm to be used for the key.
-    /// * `sym_algorithm` - An optional symmetric encryption algorithm to be used with the key.
-    /// * `hash` - An optional hash algorithm to be used with the key.
-    /// * `key_usages` - A vector of `AppKeyUsage` values specifying the intended usages for the key.
-    ///
-    /// # Returns
-    ///
-    /// A `Result` that, on success, contains `Ok(())`, indicating that the key was created successfully.
-    /// On failure, it returns a `SecurityModuleError`.
-
-    //TODO implement create_key
-    #[instrument]
-    pub(crate) fn create_key(&mut self, key_id: &str, key_algorithm: AsymmetricEncryption,
-                             sym_algorithm: Option<BlockCiphers>,
-                             hash: Option<Hash>,
-                             key_usages: Vec<KeyUsage>, ) -> Result<(), SecurityModuleError> {
-        // Rufen Sie die API auf, um das Token zu erhalten
-        let token = Runtime::new().unwrap().block_on((false)).unwrap();
-
-        // Rufen Sie die API auf, um den Schlüssel zu generieren und zu speichern
-        let _ = Runtime::new().unwrap().block_on(api::get_and_save_key_pair(&token, key_id, "RSA"));
-
-        // Führen Sie den Rest der Logik aus, um den Schlüssel zu erstellen
-        // ...
-
-        Ok(()) // Rückgabe Ok, wenn alles erfolgreich war
-    }
-
-    /// Loads an existing cryptographic key identified by `key_id`.
-    ///
-    /// This method loads an existing cryptographic key from the nks, using the specified
-    /// algorithm, symmetric algorithm, hash algorithm, and key usages. The loaded key is
-    /// associated with the provided `key_id`.
-    ///
-    /// # Arguments
-    ///
-    /// * `key_id` - A string slice that uniquely identifies the key to be loaded.
-    /// * `key_algorithm` - The asymmetric encryption algorithm used for the key.
-    /// * `sym_algorithm` - An optional symmetric encryption algorithm used with the key.
-    /// * `hash` - An optional hash algorithm used with the key.
-    /// * `key_usages` - A vector of `AppKeyUsage` values specifying the intended usages for the key.
-    ///
-    /// # Returns
-    ///
-    /// A `Result` that, on success, contains `Ok(())`, indicating that the key was loaded successfully.
-    /// On failure, it returns a `SecurityModuleError`.
-
-    //TODO implement load_key
-    #[instrument]
-    pub(crate) fn load_key(&mut self, key_id: &str) -> Result<(), SecurityModuleError> {
-        // Rufen Sie die API auf, um das Token zu erhalten
-        let token = Runtime::new().unwrap().block_on(api::get_token(false)).unwrap();
-
-        // Führen Sie die Suche nach dem Schlüssel in der API durch und erhalten Sie das Ergebnis
-        let key_info = Runtime::new().unwrap().block_on(api::search_key_from_api(&token, key_id)).unwrap();
-
-        // Verarbeiten Sie das Ergebnis und geben Sie es aus
-        match key_info {
-            Some((public_key, private_key, key_type, length, curve)) => {
-                println!("Public Key for key '{}': {}", key_id, public_key);
-                println!("Private Key for key '{}': {}", key_id, private_key);
-                println!("Type for key '{}': {}", key_id, key_type);
-                println!("Length for key '{}': {}", key_id, length);
-                match curve {
-                    Some(curve) => println!("Curve for key '{}': {}", key_id, curve),
-                    None => println!("Curve for key '{}': None", key_id),
-                }
-            }
-            None => println!("Key '{}' not found in API", key_id),
-        }
-
-        Ok(()) // Rückgabe Ok, wenn alles erfolgreich war
-    }
-
-    /// Initializes the nks module and returns a handle for further operations.
-    ///
-    /// This method initializes the nks context and prepares it for use. It should be called
-    /// before performing any other operations with the nks.
-    ///
-    /// # Returns
-    ///
-    /// A `Result` that, on success, contains `Ok(())`, indicating that the module was initialized successfully.
-    /// On failure, it returns a `SecurityModuleError`.
-
-
-    //adresse des nks
-    //getsecret
-    //json lokal speichern
-    //neues token updaten
-    //algorithmus checken
-    //TODO implement initialize_module
-    #[instrument]
-    pub(crate) fn initialize_module(
-        &mut self,
-        nks_address: nks_address,
-        nks_token: nks_token,
-        key_algorithm: AsymmetricEncryption,
-        sym_algorithm: Option<BlockCiphers>,
-        hash: Option<Hash>,
-        key_usages: Vec<KeyUsage>,
-    ) -> Result<(), SecurityModuleError> {
-        self.nks_address = nks_address;
-        self.nks_token = nks_token;
-        self.key_algorithm = Some(key_algorithm);
-        self.sym_algorithm = sym_algorithm;
-        self.hash = hash;
-        self.key_usages = Some(key_usages);
-        // Check if tokens file exists
-        let tokens_file_path = "path/to/tokens_file"; // Adjust the path as needed
-        if Path::new(&tokens_file_path).exists() {
-            println!("Tokens file exists.");
-            // Tokens file exists, do something
-        } else {
-            println!("Tokens file does not exist. Generating tokens...");
-            // Tokens file does not exist, generate tokens using API
-            match api::get_token() {
-                Ok(tokens) => {
-                    // Save tokens to file
-                    if let Err(err) = save_tokens_to_file(&tokens_file_path, &tokens) {
-                        println!("Failed to save tokens to file: {}", err);
-                        return Err(SecurityModuleError::TokenFileError);
-                    }
-                    println!("Token safed sucessfully");
-                }
-                Err(err) => {
-                    println!("Failed to get tokens from API: {}", err);
-                    return Err(SecurityModuleError::TokenGenerationError);
-                }
-            }
-        }
-        Ok(())
-    }*/
 }
+
+/// Represents a cryptographic key in the NksProvider.
+///
+/// This struct is used to deserialize the JSON response from the NksProvider when generating and saving a key pair.
+/// It contains the key's unique identifier, type, public key, private key, length, and optional curve (for ECC keys).
+///
+/// # Fields
+///
+/// * `id` - A string that uniquely identifies the key.
+/// * `key_type` - A string that specifies the type of the key. The accepted values are "rsa", "ecdsa" and "ecdh".
+/// * `publicKey` - A string that contains the public part of the key.
+/// * `privateKey` - A string that contains the private part of the key.
+/// * `length` - A string that specifies the length of the key.
+/// * `curve` - An optional string that specifies the curve used for ECC keys.
 
 #[derive(Deserialize)]
 struct Key {
@@ -357,18 +256,55 @@ struct Key {
     curve: Option<String>,
 }
 
+/// Represents the data returned from the NksProvider.
+///
+/// This struct is used to deserialize the JSON response from the NksProvider when retrieving secrets.
+/// It contains a vector of `Key` objects and a vector of `Value` objects representing signatures.
+///
+/// # Fields
+///
+/// * `keys` - A vector of `Key` objects, each representing a cryptographic key.
+/// * `signatures` - A vector of `Value` objects, each representing a signature.
 #[derive(Deserialize)]
 struct Data {
     keys: Vec<Key>,
     signatures: Vec<Value>,
 }
 
+/// Represents the response returned from the NksProvider.
+///
+/// This struct is used to deserialize the JSON response from the NksProvider when generating and saving a key pair or retrieving secrets.
+/// It contains a `Data` object representing the returned data and a `newToken` string representing the updated token.
+///
+/// # Fields
+///
+/// * `data` - A `Data` object that contains a vector of `Key` objects and a vector of `Value` objects representing signatures.
+/// * `newToken` - A string that represents the updated token after the operation.
 #[derive(Deserialize)]
 struct Response {
     data: Data,
     newToken: String,
 }
 
+/// Retrieves the user token from the `token.json` file.
+///
+/// This function opens the `token.json` file and reads its contents. It then parses the contents as JSON and retrieves the `usertoken` field.
+///
+/// # Returns
+///
+/// An `Option<String>` that, if the file exists and the `usertoken` field is found, contains the user token as a `String`.
+/// If the file does not exist, or the `usertoken` field is not found, it returns `None`.
+///
+/// # Example
+///
+/// ```
+/// let user_token = get_usertoken_from_file();
+/// if let Some(token) = user_token {
+///     println!("User token: {}", token);
+/// } else {
+///     println!("User token not found");
+/// }
+/// ```
 fn get_usertoken_from_file() -> Option<String> {
     let mut file = File::open("token.json").ok()?;
     let mut contents = String::new();
@@ -384,6 +320,30 @@ fn get_usertoken_from_file() -> Option<String> {
     }
 }
 
+/// Retrieves a user token from the NksProvider.
+///
+/// This asynchronous function sends a GET request to the NksProvider's `getToken` endpoint.
+/// It then parses the JSON response and retrieves the `token` field.
+///
+/// # Arguments
+///
+/// * `nks_address` - A `Url` that specifies the address of the NksProvider.
+///
+/// # Returns
+///
+/// A `Result` that, on success, contains an `Ok(String)`, which is the user token as a `String`.
+/// On failure, it returns an `Err` with a `Box<dyn std::error::Error>`.
+///
+/// # Example
+///
+/// ```
+/// let nks_address = Url::parse("https://nks.example.com").unwrap();
+/// let runtime = Runtime::new().unwrap();
+/// match runtime.block_on(get_token(nks_address)) {
+///     Ok(token) => println!("User token: {}", token),
+///     Err(err) => println!("Failed to get token: {}", err),
+/// }
+/// ```
 async fn get_token(nks_address: Url) -> anyhow::Result<String, Box<dyn std::error::Error>> {
     let api_url = nks_address.join("getToken");
     let response: Value = reqwest::Client::new()
@@ -406,6 +366,36 @@ async fn get_token(nks_address: Url) -> anyhow::Result<String, Box<dyn std::erro
     Ok(String::new())
 }
 
+/// Generates a new key pair and saves it in the NksProvider.
+///
+/// This asynchronous function sends a POST request to the NksProvider's `generateAndSaveKeyPair` endpoint.
+/// It then parses the JSON response and retrieves the `data` field which contains the generated key pair and the `newToken` field which contains the updated token.
+///
+/// # Arguments
+///
+/// * `token` - A string slice that represents the user token.
+/// * `key_name` - A string slice that represents the name of the key to be generated.
+/// * `key_type` - A string slice that represents the type of the key to be generated. The accepted values are "rsa", "ecdsa" and "ecdh".
+/// * `nks_address` - A `Url` that specifies the address of the NksProvider.
+///
+/// # Returns
+///
+/// A `Result` that, on success, contains an `Ok((String, String))`, where the first string is the JSON representation of the generated key pair and the second string is the updated token.
+/// On failure, it returns an `Err` with a `Box<dyn std::error::Error>`.
+///
+/// # Example
+///
+/// ```
+/// let nks_address = Url::parse("https://nks.example.com").unwrap();
+/// let runtime = Runtime::new().unwrap();
+/// match runtime.block_on(get_and_save_key_pair("user_token", "key_name", "rsa", nks_address)) {
+///     Ok((key_pair, new_token)) => {
+///         println!("Key pair: {}", key_pair);
+///         println!("New token: {}", new_token);
+///     },
+///     Err(err) => println!("Failed to generate and save key pair: {}", err),
+/// }
+/// ```
 async fn get_and_save_key_pair(
     token: &str,
     key_name: &str,
@@ -463,6 +453,34 @@ async fn get_and_save_key_pair(
     Ok((data_str, user_token))
 }
 
+/// Retrieves the secrets from the NksProvider.
+///
+/// This asynchronous function sends a POST request to the NksProvider's `getSecrets` endpoint.
+/// It then parses the JSON response and retrieves the `data` field which contains the secrets and the `newToken` field which contains the updated token.
+///
+/// # Arguments
+///
+/// * `token` - A string slice that represents the user token.
+/// * `nks_address_str` - A string slice that specifies the address of the NksProvider.
+///
+/// # Returns
+///
+/// A `Result` that, on success, contains an `Ok((String, String))`, where the first string is the JSON representation of the secrets and the second string is the updated token.
+/// On failure, it returns an `Err` with a `Box<dyn std::error::Error>`.
+///
+/// # Example
+///
+/// ```
+/// let nks_address_str = "https://nks.example.com";
+/// let runtime = Runtime::new().unwrap();
+/// match runtime.block_on(get_secrets("user_token", nks_address_str)) {
+///     Ok((secrets, new_token)) => {
+///         println!("Secrets: {}", secrets);
+///         println!("New token: {}", new_token);
+///     },
+///     Err(err) => println!("Failed to get secrets: {}", err),
+/// }
+/// ```
 async fn get_secrets(token: &str, nks_address_str: &str) -> anyhow::Result<(String, String), Box<dyn std::error::Error>> {
     let client = reqwest::Client::new();
     let body = json!({

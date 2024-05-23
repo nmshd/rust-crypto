@@ -150,6 +150,25 @@ fn test_load_ecdh_key() {
     }
 }
 
+/// Returns a configuration object for the NksProvider based on the provided key type.
+///
+/// This function creates a new NksConfig object with predefined settings for the
+/// asymmetric encryption algorithm, hash algorithm, and key usages. The specific settings
+/// are determined by the `key_type` parameter.
+///
+/// # Arguments
+///
+/// * `key_type` - A string slice that specifies the type of the key. The accepted values are "rsa", "ecdsa", and "ecdh".
+///
+/// # Returns
+///
+/// An `Option` that, on success, contains an `Arc` to a `ProviderConfig` object. If the `key_type` is not recognized, it returns `None`.
+///
+/// # Example
+///
+/// ```
+/// let config = get_config("rsa").unwrap();
+/// ```
 fn get_config(key_type: &str) -> Option<Arc<dyn ProviderConfig+Send+Sync>> {
     match key_type {
         "rsa" => Some(NksConfig::new(
