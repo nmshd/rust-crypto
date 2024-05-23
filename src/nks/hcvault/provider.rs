@@ -20,6 +20,7 @@ use crate::common::{
     error::SecurityModuleError,
     traits::module_provider::Provider,
 };
+use crate::common::crypto::algorithms::encryption::{EccCurves, EccSchemeAlgorithm};
 use crate::common::traits::module_provider_config::ProviderConfig;
 use crate::nks::NksConfig;
 
@@ -58,8 +59,8 @@ impl Provider for NksProvider {
                 key_id,
                 match nks_config.key_algorithm.clone() {
                     AsymmetricEncryption::Rsa(_) => "rsa",
+                    AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::Curve25519)) => "ecdh",
                     AsymmetricEncryption::Ecc(_) => "ecdsa",
-                    //TODO: add match for ecdh
                 },
                 Url::parse(&nks_config.nks_address).unwrap()
             ));
