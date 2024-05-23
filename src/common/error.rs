@@ -48,6 +48,7 @@ pub enum SecurityModuleError {
     VerificationFailed,
     InvalidSignature,
     InvalidPublicKey,
+    SigningFailed,
 }
 
 impl fmt::Display for SecurityModuleError {
@@ -85,6 +86,7 @@ impl fmt::Display for SecurityModuleError {
             SecurityModuleError::VerificationFailed => write!(f, "Verification failed"),
             SecurityModuleError::InvalidSignature => write!(f, "Invalid signature"),
             SecurityModuleError::InvalidPublicKey => write!(f, "Invalid public key"),
+            SecurityModuleError::SigningFailed => write!(f, "Invalid public key"),
             #[cfg(feature = "nks")]
             SecurityModuleError::NksError => write!(f, "Key error"),
         }
