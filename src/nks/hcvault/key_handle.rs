@@ -520,7 +520,7 @@ impl KeyHandle for NksProvider {
 //
 //         Ok(pretty_response)
 //     }
-}
+//}
 
 // fn rsa_encrypt(data: &[u8], rsa: &Rsa<Public>) -> Vec<u8> {
 //     let mut encrypted_data = vec![0; rsa.size() as usize];
