@@ -168,7 +168,7 @@ fn test_load_ecdh_key() {
 /// ```
 /// let config = get_config("rsa").unwrap();
 /// ```
-fn get_config(key_type: &str) -> Option<Arc<dyn ProviderConfig+Send+Sync>> {
+pub fn get_config(key_type: &str) -> Option<Arc<dyn ProviderConfig+Send+Sync>> {
     match key_type {
         "rsa" => Some(NksConfig::new(
             "".to_string(),
