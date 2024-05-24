@@ -28,6 +28,7 @@ use sodiumoxide::crypto::sign;
 use x25519_dalek::{
     PublicKey as X25519PublicKey, PublicKey, StaticSecret as X25519StaticSecret, StaticSecret,
 };
+use crate::nks::NksConfig;
 use crate::SecurityModuleError::InitializationError;
 
 impl KeyHandle for NksProvider {
@@ -37,15 +38,14 @@ impl KeyHandle for NksProvider {
     ) -> Result<Vec<u8>, SecurityModuleError> {
 
         // Determine the key algorithm based on the key or some other means
-        let key_algorithm = "rsa";
-        ///todo: use the key algorithm from the config
+        let key_algorithm = self.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>().unwrap().key_algorithm;
         let data = _data;
 
         if (self.private_key.is_empty() || data.is_empty()) {
             return Err(InitializationError("Private key is empty".to_string()));
         } else {
             match key_algorithm {
-                "rsa" => {
+                AsymmetricEncryption::Rsa(rsa) => {
                     // RSA signing method
                     let rsa = Rsa::private_key_from_pem(&self.private_key.as_bytes())
                         .map_err(|_| SecurityModuleError::KeyError)?;
@@ -54,9 +54,18 @@ impl KeyHandle for NksProvider {
                         .map_err(|_| SecurityModuleError::SigningFailed)?;
                     signer.update(data).map_err(|_| SecurityModuleError::SigningFailed)?;
                     signer.sign_to_vec().map_err(|_| SecurityModuleError::SigningFailed)
+                    Ok(signer);
                 }
-                "ecc" => {
-                    todo!();
+                AsymmetricEncryption::Ecc(ecdsa) => {
+                    // ECC signing method
+                    let ec_key = openssl::ec::EcKey::private_key_from_pem(&self.private_key.as_bytes())
+                        .map_err(|_| SecurityModuleError::KeyError)?;
+                    let pkey = PKey::from_ec_key(ec_key).map_err(|_| SecurityModuleError::KeyError)?;
+                    let mut signer = RSASigner::new(MessageDigest::sha256(), &pkey)
+                        .map_err(|_| SecurityModuleError::SigningFailed)?;
+                    signer.update(data).map_err(|_| SecurityModuleError::SigningFailed)?;
+                    signer.sign_to_vec().map_err(|_| SecurityModuleError::SigningFailed)
+                    Ok(signer);
                 }
                 _ => Err(SecurityModuleError::UnsupportedAlgorithm),
             }
@@ -69,14 +78,14 @@ impl KeyHandle for NksProvider {
                     _encrypted_data: &[u8],
                     ) -> Result<Vec<u8>, SecurityModuleError> {
         // Determine the key algorithm based on the key or some other means
-        let key_algorithm = "rsa";
+        let key_algorithm = self.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>().unwrap().key_algorithm;
         let encrypted_data = _encrypted_data;
 
         if self.private_key.is_empty() || encrypted_data.is_empty() {
             return Err(InitializationError("Private key or encrypted data is empty".to_string()));
         } else {
             match key_algorithm {
-                "rsa" => {
+                AsymmetricEncryption::Rsa(rsa) => {
                     // RSA decryption method
                     let rsa = Rsa::private_key_from_pem(&self.private_key.as_bytes())
                         .map_err(|_| SecurityModuleError::KeyError)?;
@@ -85,7 +94,13 @@ impl KeyHandle for NksProvider {
                         .map_err(|_| SecurityModuleError::DecryptionError("RSA decryption failed".to_string()))?;
                     Ok(decrypted_data)
                 }
-                "ecc" => {
+                AsymmetricEncryption::Ecc(ecdh) => {
+                    // ECC decryption method
+                    let ec_key = openssl::ec::EcKey::private_key_from_pem(&self.private_key.as_bytes())
+                        .map_err(|_| SecurityModuleError::KeyError)?;
+                    let pkey = PKey::from_ec_key(ec_key).map_err(|_| SecurityModuleError::KeyError)?;
+                    // Here you need to implement the decryption logic for ECC
+                    // This will depend on the specific ECC scheme you are using
                     todo!();
                 }
                 _ => Err(SecurityModuleError::UnsupportedAlgorithm),
@@ -98,14 +113,14 @@ impl KeyHandle for NksProvider {
                     _data: &[u8],
                     ) -> Result<Vec<u8>, SecurityModuleError> {
         // Determine the key algorithm based on the key or some other means
-        let key_algorithm = "rsa";
+        let key_algorithm = self.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>().unwrap().key_algorithm;
         let data = _data;
 
         if self.private_key.is_empty() || data.is_empty() {
             return Err(InitializationError("Private key or data is empty".to_string()));
         } else {
             match key_algorithm {
-                "rsa" => {
+                AsymmetricEncryption::Rsa(rsa) => {
                     // RSA encryption method
                     let rsa = Rsa::public_key_from_pem(&self.public_key.as_bytes())
                         .map_err(|_| SecurityModuleError::KeyError)?;
@@ -114,7 +129,13 @@ impl KeyHandle for NksProvider {
                         .map_err(|_| SecurityModuleError::EncryptionError("RSA encryption failed".to_string()))?;
                     Ok(encrypted_data)
                 }
-                "ecc" => {
+                AsymmetricEncryption::Ecc(ecdh) => {
+                    // ECC encryption method
+                    let ec_key = openssl::ec::EcKey::public_key_from_pem(&self.public_key.as_bytes())
+                        .map_err(|_| SecurityModuleError::KeyError)?;
+                    let pkey = PKey::from_ec_key(ec_key).map_err(|_| SecurityModuleError::KeyError)?;
+                    // Here you need to implement the encryption logic for ECC
+                    // This will depend on the specific ECC scheme you are using
                     todo!();
                 }
                 _ => Err(SecurityModuleError::UnsupportedAlgorithm),
@@ -138,7 +159,7 @@ impl KeyHandle for NksProvider {
             return Err(InitializationError("Public key, data or signature is empty".to_string()));
         } else {
             match key_algorithm {
-                "rsa" => {
+                AsymmetricEncryption::Rsa(rsa) => {
                     // RSA signature verification method
                     let rsa = Rsa::public_key_from_pem(&self.public_key.as_bytes())
                         .map_err(|_| SecurityModuleError::KeyError)?;
@@ -148,8 +169,15 @@ impl KeyHandle for NksProvider {
                     verifier.update(data).map_err(|_| SecurityModuleError::VerificationFailed)?;
                     Ok(verifier.verify(signature).map_err(|_| SecurityModuleError::VerificationFailed)?)
                 }
-                "ecc" => {
-                todo!();
+                AsymmetricEncryption::Ecc(ecdsa) => {
+                    // ECC signature verification method
+                    let ec_key = openssl::ec::EcKey::public_key_from_pem(&self.public_key.as_bytes())
+                        .map_err(|_| SecurityModuleError::KeyError)?;
+                    let pkey = PKey::from_ec_key(ec_key).map_err(|_| SecurityModuleError::KeyError)?;
+                    let mut verifier = RSAVerifier::new(MessageDigest::sha256(), &pkey)
+                        .map_err(|_| SecurityModuleError::VerificationFailed)?;
+                    verifier.update(data).map_err(|_| SecurityModuleError::VerificationFailed)?;
+                    Ok(verifier.verify(signature).map_err(|_| SecurityModuleError::VerificationFailed)?)
                 }
                 _ => Err(SecurityModuleError::UnsupportedAlgorithm),
             }
