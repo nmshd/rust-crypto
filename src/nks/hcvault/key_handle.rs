@@ -54,7 +54,6 @@ impl KeyHandle for NksProvider {
                         .map_err(|_| SecurityModuleError::SigningFailed)?;
                     signer.update(data).map_err(|_| SecurityModuleError::SigningFailed)?;
                     signer.sign_to_vec().map_err(|_| SecurityModuleError::SigningFailed)
-                    Ok(signer);
                 }
                 AsymmetricEncryption::Ecc(ecdsa) => {
                     // ECC signing method
@@ -65,7 +64,6 @@ impl KeyHandle for NksProvider {
                         .map_err(|_| SecurityModuleError::SigningFailed)?;
                     signer.update(data).map_err(|_| SecurityModuleError::SigningFailed)?;
                     signer.sign_to_vec().map_err(|_| SecurityModuleError::SigningFailed)
-                    Ok(signer);
                 }
                 _ => Err(SecurityModuleError::UnsupportedAlgorithm),
             }
@@ -150,8 +148,7 @@ impl KeyHandle for NksProvider {
         _signature: &[u8],
     ) -> Result<bool, SecurityModuleError> {
         // Determine the key algorithm based on the key or some other means
-        let key_algorithm = "rsa";
-        ///todo: use the key algorithm from the config
+        let key_algorithm = self.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>().unwrap().key_algorithm;
         let data = _data;
         let signature = _signature;
 
