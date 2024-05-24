@@ -65,7 +65,7 @@ impl KeyHandle for NksProvider {
                     signer.update(data).map_err(|_| SecurityModuleError::SigningFailed)?;
                     signer.sign_to_vec().map_err(|_| SecurityModuleError::SigningFailed)
                 }
-                None => Err(SecurityModuleError::UnsupportedAlgorithm),
+                _ => Err(SecurityModuleError::UnsupportedAlgorithm),
             }
         }
     }
@@ -101,7 +101,7 @@ impl KeyHandle for NksProvider {
                     // This will depend on the specific ECC scheme you are using
                     todo!();
                 }
-                None => Err(SecurityModuleError::UnsupportedAlgorithm),
+                _ => Err(SecurityModuleError::UnsupportedAlgorithm),
             }
         }
     }
@@ -136,7 +136,7 @@ impl KeyHandle for NksProvider {
                     // This will depend on the specific ECC scheme you are using
                     todo!();
                 }
-                None => Err(SecurityModuleError::UnsupportedAlgorithm),
+                _ => Err(SecurityModuleError::UnsupportedAlgorithm),
             }
         }
     }
@@ -176,7 +176,7 @@ impl KeyHandle for NksProvider {
                     verifier.update(data).map_err(|_| SecurityModuleError::VerificationFailed)?;
                     Ok(verifier.verify(signature).map_err(|_| SecurityModuleError::VerificationFailed)?)
                 }
-                None => Err(SecurityModuleError::UnsupportedAlgorithm),
+                _ => Err(SecurityModuleError::UnsupportedAlgorithm),
             }
         }
     }
