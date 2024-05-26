@@ -52,6 +52,14 @@ fn do_nothing() {
          .expect("Failed to initialize module");
 
      if let Some(nks_config) = provider.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>() {
+         provider
+             .create_key("test_rsa_key", Box::new(nks_config.clone()))
+             .expect("Failed to create RSA key");
+     } else {
+         println!("Failed to downcast to NksConfig");
+     }
+
+     if let Some(nks_config) = provider.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>() {
          println!("NKS Token: {}", nks_config.nks_token);
          println!("NKS Address: {}", nks_config.nks_address);
          provider
@@ -62,8 +70,17 @@ fn do_nothing() {
      }
 
      let data = b"Hello, World!";
-     let signature = provider.sign_data(data).expect("Failed to sign data");
-     assert!(provider.verify_signature(data, &signature,).unwrap());
+     let signature = provider.sign_data(data);
+     match signature {
+         Ok(signature) => {
+             println!("{:?}", signature);
+             assert!(provider.verify_signature(data, &signature, ).unwrap());
+         }
+         Err(e) => {
+             println!("Failed to sign data: {:?}", e);
+             assert!(false, "Failed to sign data");
+         }
+     }
  }
 //
 // #[test]
