@@ -79,9 +79,6 @@ fn test_sign_and_verify_ecdsa() {
 
     if let Some(nks_config) = nks_config {
         provider
-            .create_key("test_ecdsa_key", Box::new(nks_config.clone()))
-            .expect("Failed to create ECDSA key");
-        provider
             .load_key("test_ecdsa_key", Box::new(nks_config.clone()))
             .expect("Failed to load ECDSA key");
     } else {
