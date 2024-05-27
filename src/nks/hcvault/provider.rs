@@ -342,6 +342,45 @@ async fn get_and_save_key_pair(
     key_type: &str,
     nks_address: Url,
 ) -> Result<(String, String), Box<dyn std::error::Error>> {
+
+    let response = get_and_save_key_pair_request(token, key_name, key_type, nks_address).await?;
+    let status = response.status();
+    let response_text = response.text().await?;
+    if !status.is_success() {
+        let response_json: Value = serde_json::from_str(&response_text)?;
+        if let Some(message) = response_json.get("message") {
+            if message.as_str().unwrap() == format!("Key with ID {} already exists.", key_name) {
+                return Err(format!("A key with name {} already exists.", key_name).into());
+            }
+            if let Some(new_token) = response_json.get("newToken") {
+                let token_data = json!({
+                    "user_token": new_token.as_str().unwrap()
+                });
+                fs::write("token.json", token_data.to_string()).expect("Error writing to token.json");
+                return Err(format!("Server returned status code: {}. Message: {}", status, message.as_str().unwrap()).into());
+            }
+        }
+        else {
+            return Err(format!("Server returned status code: {}", status).into());
+        }
+    }
+    let response_json: Value = serde_json::from_str(&response_text)?;
+
+    let data = response_json.get("data").ok_or_else(|| "Data field not found in the response")?;
+
+    let data_str = serde_json::to_string_pretty(data)?;
+
+    let user_token = response_json.get("newToken").unwrap().as_str().unwrap().to_string();
+
+    Ok((data_str, user_token))
+}
+
+async fn get_and_save_key_pair_request(
+    token: &str,
+    key_name: &str,
+    key_type: &str,
+    nks_address: Url,
+) -> Result<reqwest::Response, Box<dyn std::error::Error>> {
     let client = reqwest::Client::builder()
         .danger_accept_invalid_certs(true)
         .build()?;
@@ -360,37 +399,7 @@ async fn get_and_save_key_pair(
         .json(&request_body)
         .send()
         .await?;
-
-    let status = response.status(); // Clone the status here
-    let response_text = response.text().await?;
-    if !status.is_success() {
-        let response_json: Value = serde_json::from_str(&response_text)?;
-        if let Some(message) = response_json.get("message") {
-            if let Some(new_token) = response_json.get("newToken") {
-                let token_data = json!({
-                    "user_token": new_token.as_str().unwrap()
-                });
-                fs::write("token.json", token_data.to_string()).expect("Error writing to token.json");
-                return Err(format!("Server returned status code: {}. Message: {}", status, message.as_str().unwrap()).into());
-            }
-        }
-        else {
-            return Err(format!("Server returned status code: {}", status).into());
-        }
-    }
-
-    let response_json: Value = serde_json::from_str(&response_text)?;
-
-    // Extract the data field from the response
-    let data = response_json.get("data").ok_or_else(|| "Data field not found in the response")?;
-
-    // Convert the data field back to a string
-    let data_str = serde_json::to_string_pretty(data)?;
-
-    //save new token
-    let user_token = response_json.get("newToken").unwrap().as_str().unwrap().to_string();
-
-    Ok((data_str, user_token))
+    Ok(response)
 }
 /// Retrieves the secrets from the NksProvider.
 ///

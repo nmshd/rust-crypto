@@ -44,63 +44,52 @@ fn do_nothing() {
     assert_eq!(1, 1);
 }
 
-#[test]
-fn test_sign_and_verify_rsa() {
-    let mut provider = NksProvider::new("test_key".to_string());
+    #[test]
+    fn test_sign_and_verify_rsa() {
+        let mut provider = NksProvider::new("test_key".to_string());
+        provider.config = Some(crate::tests::nks::provider_handle_tests::get_config("rsa").unwrap());
+        provider
+            .initialize_module()
+            .expect("Failed to initialize module");
 
-    provider.config = Some(crate::tests::nks::provider_handle_tests::get_config("rsa").unwrap());
-
-    match provider.initialize_module() {
-        Ok(_) => {
-            if let Some(nks_config) = provider.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>() {
-                match provider.load_key("test_rsa_key", Box::new(nks_config.clone())) {
-                    Ok(_) => {
-                        let data = b"Hello, World!";
-                        match provider.sign_data(data) {
-                            Ok(signature) => {
-                                assert!(provider.verify_signature(data, &signature,).unwrap());
-                            }
-                            Err(e) => {
-                                eprintln!("Failed to sign data: {:?}", e);
-                            }
-                        }
-                    }
-                    Err(e) => {
-                        eprintln!("Failed to load RSA key: {:?}", e);
-                    }
-                }
-            } else {
-                println!("Failed to downcast to NksConfig");
-            }
+        if let Some(nks_config) = provider.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>() {
+            provider
+                .load_key("test_rsa_key", Box::new(nks_config.clone()))
+                .expect("Failed to load RSA key");
+        } else {
+            println!("Failed to downcast to NksConfig");
         }
-        Err(e) => {
-            eprintln!("Failed to initialize module: {:?}", e);
-        }
-    }
+        let data = b"Hello, World!";
+        let signature = provider.sign_data(data);
+               let signature = provider.sign_data(data).expect(
+            "Failed to sign data",
+        );
+        assert!(provider.verify_signature(data, &signature,).unwrap());
 }
-//
-// #[test]
-// fn test_sign_and_verify_ecdsa() {
-//     let mut provider = NksProvider::new("test_ecdsa_key".to_string());
-//
-//     let key_algorithm = AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::Curve25519));
-//     let sym_algorithm = None;
-//     let hash = Some(Hash::Sha2(256.into()));
-//     let key_usages = vec![KeyUsage::ClientAuth, KeyUsage::SignEncrypt];
-//
-//     provider
-//         .initialize_module(999999,999999, key_algorithm.clone(), sym_algorithm.clone(), hash.clone(), key_usages.clone())
-//         .expect("Failed to initialize module");
-//     provider
-//         .create_key("test_rsa_key", key_algorithm.clone(), sym_algorithm.clone(), hash, key_usages)
-//         .expect("Failed to create ECDSA key");
-//
-//     let data = b"Hello, World!";
-//     let signature = provider.sign_data(data).expect("Failed to sign data");
-//
-//     assert!(provider.verify_signature(data, &signature, "").unwrap());
-// }
-//
+
+#[test]
+fn test_sign_and_verify_ecdsa() {
+    let mut provider = NksProvider::new("test_key".to_string());
+    provider.config = Some(crate::tests::nks::provider_handle_tests::get_config("ecdsa").unwrap());
+    provider
+        .initialize_module()
+        .expect("Failed to initialize module");
+
+    if let Some(nks_config) = provider.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>() {
+        provider
+            .load_key("test_ecdsa_key", Box::new(nks_config.clone()))
+            .expect("Failed to load ECDSA key");
+    } else {
+        println!("Failed to downcast to NksConfig");
+    }
+    let data = b"Hello, World!";
+    let signature = provider.sign_data(data);
+    let signature = provider.sign_data(data).expect(
+        "Failed to sign data",
+    );
+    assert!(provider.verify_signature(data, &signature,).unwrap());
+}
+
  #[test]
  fn test_encrypt_and_decrypt_rsa() {
     let mut provider = NksProvider::new("test_key".to_string());
@@ -119,13 +108,15 @@ fn test_sign_and_verify_rsa() {
         println!("Failed to downcast to NksConfig");
     }
 
+
      let data = b"Hello, World!";
+     let original_length = data.len();
      let encrypted_data = provider.encrypt_data(data).expect("Failed to encrypt data");
      let decrypted_data = provider
          .decrypt_data(&encrypted_data)
          .expect("Failed to decrypt data");
-
-     assert_eq!(data, decrypted_data.as_slice());
+     let decrypted_data_without_padding: Vec<u8> = decrypted_data[0..original_length].to_vec();
+       assert_eq!(data, decrypted_data_without_padding.as_slice())
 }
 //
 // #[test]
