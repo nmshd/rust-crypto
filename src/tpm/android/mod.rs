@@ -1,4 +1,4 @@
-pub(crate) mod config;
+pub mod config;
 pub(crate) mod error;
 pub mod knox;
 pub(crate) mod utils;
