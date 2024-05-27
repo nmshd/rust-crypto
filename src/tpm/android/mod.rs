@@ -1,3 +1,4 @@
+pub mod android_logger;
 pub mod config;
 pub(crate) mod error;
 pub mod knox;
