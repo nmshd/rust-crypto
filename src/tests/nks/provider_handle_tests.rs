@@ -172,7 +172,7 @@ pub fn get_config(key_type: &str) -> Option<Arc<dyn ProviderConfig+Send+Sync>> {
     match key_type {
         "rsa" => Some(NksConfig::new(
             "".to_string(),
-            "http://localhost:5272/apidemo/".to_string(),
+            "https://localhost:5000/".to_string(),
             AsymmetricEncryption::Rsa(2048.into()),
             Hash::Sha2(256.into()),
             vec![
@@ -184,14 +184,14 @@ pub fn get_config(key_type: &str) -> Option<Arc<dyn ProviderConfig+Send+Sync>> {
         )),
         "ecdsa" => Some(NksConfig::new(
             "".to_string(),
-            "http://localhost:5272/apidemo/".to_string(),
+            "https://localhost:5000/".to_string(),
             AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::Curve25519)),
             Hash::Sha2(Sha2Bits::Sha256),
             vec![KeyUsage::SignEncrypt, KeyUsage::ClientAuth],
         )),
         "ecdh" => Some(NksConfig::new(
             "".to_string(),
-            "http://localhost:5272/apidemo/".to_string(),
+            "https://localhost:5000/".to_string(),
             AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::Curve25519)),
             Hash::Sha2(384.into()),
             vec![KeyUsage::Decrypt],

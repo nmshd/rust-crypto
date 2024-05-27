@@ -284,7 +284,11 @@ fn get_user_token_from_file() -> Option<String> {
 /// ```
 async fn get_token(nks_address: Url) -> anyhow::Result<String, Box<dyn std::error::Error>> {
     let api_url = nks_address.join("getToken");
-    let response: Value = reqwest::Client::new()
+    println!("API URL: {:?}", api_url);
+    let response: Value = reqwest::Client::builder()
+        .danger_accept_invalid_certs(true) // Accept self-signed certificates
+        .build()
+        .unwrap()
         .get(api_url.unwrap())
         .header("accept", "*/*")
         .send()
@@ -294,12 +298,13 @@ async fn get_token(nks_address: Url) -> anyhow::Result<String, Box<dyn std::erro
 
     if let Some(user_token) = response.get("token") {
         if let Some(user_token_str) = user_token.as_str() {
-            return Ok(user_token_str.to_string())
+            return Ok(user_token_str.to_string());
         }
     }
     println!("The response does not contain a 'token' field");
     Ok(String::new())
 }
+
 
 /// Generates a new key pair and saves it in the NksProvider.
 ///
@@ -336,15 +341,17 @@ async fn get_and_save_key_pair(
     key_name: &str,
     key_type: &str,
     nks_address: Url,
-    ) -> Result<(String, String), Box<dyn std::error::Error>> {
-    let client = reqwest::Client::new();
+) -> Result<(String, String), Box<dyn std::error::Error>> {
+    let client = reqwest::Client::builder()
+        .danger_accept_invalid_certs(true)
+        .build()?;
     let request_body = json!(
-            {
+        {
             "token": token,
             "name": key_name,
             "type": key_type
-            }
-        );
+        }
+    );
     let api_url = nks_address.join("generateAndSaveKeyPair");
     let response = client
         .post(api_url.unwrap())
@@ -385,7 +392,6 @@ async fn get_and_save_key_pair(
 
     Ok((data_str, user_token))
 }
-
 /// Retrieves the secrets from the NksProvider.
 ///
 /// This asynchronous function sends a POST request to the NksProvider's `getSecrets` endpoint.
@@ -415,7 +421,9 @@ async fn get_and_save_key_pair(
 /// }
 /// ```
 async fn get_secrets(token: &str, nks_address_str: &str) -> anyhow::Result<(String, String), Box<dyn std::error::Error>> {
-    let client = reqwest::Client::new();
+    let client = reqwest::Client::builder()
+        .danger_accept_invalid_certs(true)
+        .build()?;
     let body = json!({
         "token": token
     });

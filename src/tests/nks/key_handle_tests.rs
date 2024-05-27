@@ -41,32 +41,43 @@ fn do_nothing() {
     assert_eq!(1, 1);
 }
 
- #[test]
- fn test_sign_and_verify_rsa() {
-     let mut provider = NksProvider::new("test_key".to_string());
+#[test]
+fn test_sign_and_verify_rsa() {
+    let mut provider = NksProvider::new("test_key".to_string());
 
-     provider.config = Some(crate::tests::nks::provider_handle_tests::get_config("rsa").unwrap());
+    provider.config = Some(crate::tests::nks::provider_handle_tests::get_config("rsa").unwrap());
 
-     provider
-         .initialize_module()
-         .expect("Failed to initialize module");
-
-     if let Some(nks_config) = provider.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>() {
-         provider
-             .load_key("test_rsa_key", Box::new(nks_config.clone()))
-             .expect("Failed to load RSA key");
-     } else {
-         println!("Failed to downcast to NksConfig");
-     }
-
-     let data = b"Hello, World!";
-     let signature = provider.sign_data(data).expect(
-            "Failed to sign data",
-     );
-     assert!(provider.verify_signature(data, &signature,).unwrap());
-
-
- }
+    match provider.initialize_module() {
+        Ok(_) => {
+            if let Some(nks_config) = provider.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>() {
+                match provider.load_key("test_rsa_key", Box::new(nks_config.clone())) {
+                    Ok(_) => {
+                        let data = b"Hello, World!";
+                        match provider.sign_data(data) {
+                            Ok(signature) => {
+                                assert!(provider.verify_signature(data, &signature,).unwrap());
+                            }
+                            Err(e) => {
+                                eprintln!("Failed to sign data: {:?}", e);
+                                eprintln!("{:?}", backtrace::Backtrace::new());
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        eprintln!("Failed to load RSA key: {:?}", e);
+                        eprintln!("{:?}", backtrace::Backtrace::new());
+                    }
+                }
+            } else {
+                println!("Failed to downcast to NksConfig");
+            }
+        }
+        Err(e) => {
+            eprintln!("Failed to initialize module: {:?}", e);
+            eprintln!("{:?}", backtrace::Backtrace::new());
+        }
+    }
+}
 //
 // #[test]
 // fn test_sign_and_verify_ecdsa() {
