@@ -120,12 +120,12 @@ impl Provider for AndroidProvider {
     fn create_key(
         &mut self,
         key_id: &str,
-        config: Box<dyn ProviderConfig>,
+        config: Box<dyn Any>,
     ) -> Result<(), SecurityModuleError> {
         info!("generating key! {}", key_id);
 
         // load config
-        let config = *(Box::new(config) as Box<dyn Any>)
+        let config = *config
             .downcast::<AndroidConfig>()
             .map_err(|_| SecurityModuleError::InitializationError("Wrong Config".to_owned()))?;
         self.apply_config(config)?;
@@ -192,15 +192,11 @@ impl Provider for AndroidProvider {
     ///
     /// Returns `Ok(())` if the key loading is successful, otherwise returns an error of type `SecurityModuleError`.
     #[instrument]
-    fn load_key(
-        &mut self,
-        key_id: &str,
-        config: Box<dyn ProviderConfig>,
-    ) -> Result<(), SecurityModuleError> {
+    fn load_key(&mut self, key_id: &str, config: Box<dyn Any>) -> Result<(), SecurityModuleError> {
         self.key_id = key_id.to_owned();
 
         // load config
-        let config = *(Box::new(config) as Box<dyn Any>)
+        let config = *config
             .downcast::<AndroidConfig>()
             .map_err(|_| SecurityModuleError::InitializationError("Wrong Config".to_owned()))?;
         self.apply_config(config)?;
