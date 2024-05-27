@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use serde_json::json;
 #[allow(unused_imports)]
 use crate::{
     common::{
@@ -17,8 +18,10 @@ use crate::common::crypto::algorithms::encryption::SymmetricMode;
 use crate::common::crypto::algorithms::hashes::Sha2Bits;
 use crate::common::crypto::algorithms::KeyBits;
 use crate::common::traits::module_provider_config::ProviderConfig;
+use crate::nks::hcvault::key_handle::add_signature_to_secrets;
 use crate::nks::hcvault::NksProvider;
 use crate::nks::NksConfig;
+use crate::SecurityModuleError;
 
 #[test]
 fn do_nothing() {
@@ -149,3 +152,38 @@ fn test_sign_and_verify_rsa() {
 //
 //     assert_eq!(data, decrypted_data.as_slice());
 // }
+
+
+#[test]
+fn test_add_signature_to_secrets() {
+    // Prepare the secrets JSON object
+    let mut secrets_json = Some(json!({
+        "data": {
+            "signatures": []
+        }
+    }));
+
+    // Prepare the signature
+    let signature = vec![0, 1, 2, 3, 4, 5];
+
+    // Prepare the ID and hash algorithm
+    let id = "new_signature";
+    let hash_algorithm = "SHA256";
+
+    // Call the function
+    let result = add_signature_to_secrets(secrets_json, signature, id, hash_algorithm);
+
+    // Check the result
+    match result {
+        Ok(Some(updated_secrets_json)) => {
+            // Check if the new signature was added
+            let signatures = updated_secrets_json["data"]["signatures"].as_array().unwrap();
+            assert_eq!(signatures.len(), 1);
+            assert_eq!(signatures[0]["id"], id);
+            assert_eq!(signatures[0]["hashAlgorithm"], hash_algorithm);
+        },
+        Ok(None) => panic!("Function returned Ok(None)"),
+        Err(SecurityModuleError::NksError) => panic!("Function returned an error"),
+        _ => panic!("Unexpected result"),
+    }
+}

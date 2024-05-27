@@ -3,7 +3,7 @@ use std::fs;
 use std::fs::File;
 use std::io::Read;
 use super::NksProvider;
-use base64::Engine;
+use base64::{engine::general_purpose, Engine};
 use tracing::instrument;
 
 
@@ -186,5 +186,47 @@ impl KeyHandle for NksProvider {
                 _ => Err(SecurityModuleError::UnsupportedAlgorithm),
             }
         }
+    }
+}
+
+/// Adds a new signature to the secrets JSON object.
+///
+/// This function takes a mutable `Option<Value>` representing the secrets JSON object, a `Vec<u8>` representing the signature, a string slice representing the ID, and a string slice representing the hash algorithm. It converts the signature to a base64 string, creates a new signature object, and adds it to the signatures array in the secrets JSON object.
+///
+/// # Arguments
+///
+/// * `secrets_json` - A mutable `Option<Value>` representing the secrets JSON object. If `None`, the function will return an error.
+/// * `signature` - A `Vec<u8>` representing the signature to be added to the secrets JSON object.
+/// * `id` - A string slice representing the ID of the new signature.
+/// * `hash_algorithm` - A string slice representing the hash algorithm used for the new signature.
+///
+/// # Returns
+///
+/// A `Result<Option<Value>, SecurityModuleError>` that, on success, contains the updated secrets JSON object. If the `secrets_json` is `None` or if the `signatures` array is not found, it returns a `SecurityModuleError::NksError`.
+pub fn add_signature_to_secrets(mut secrets_json: Option<Value>, signature: Vec<u8>, id: &str, hash_algorithm: &str) -> Result<Option<Value>, SecurityModuleError> {
+    // Convert the signature to a base64 string
+    let signature_base64 = general_purpose::STANDARD.encode(&signature);
+
+    // Create a new signature object
+    let new_signature = json!({
+        "id": id,
+        "signature": signature_base64,
+        "hashAlgorithm": hash_algorithm,
+    });
+
+    // Check if secrets_json is None
+    if let Some(secrets_json) = &mut secrets_json {
+        // Get the signatures array
+        if let Some(signatures) = secrets_json["data"]["signatures"].as_array_mut() {
+            // Add the new signature to the array
+            signatures.push(new_signature);
+            Ok(Some(secrets_json.clone()))
+        } else {
+            println!("Signatures array not found in secrets_json");
+            Err(SecurityModuleError::NksError)
+        }
+    } else {
+        println!("Secrets JSON is empty");
+        Err(SecurityModuleError::NksError)
     }
 }
