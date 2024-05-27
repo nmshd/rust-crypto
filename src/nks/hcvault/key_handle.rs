@@ -21,6 +21,7 @@ use openssl::pkey::PKey;
 use openssl::pkey::{Private, Public};
 use openssl::rsa::{Padding, Rsa};
 use openssl::sign::{Signer as RSASigner, Verifier as RSAVerifier};
+use reqwest::Url;
 use serde_json::{json, Value};
 use sodiumoxide::crypto::sign;
 use sodiumoxide::crypto::{box_, scalarmult, secretbox};
@@ -309,38 +310,6 @@ impl KeyHandle for NksProvider {
 /// # Returns
 ///
 /// A `Result<Option<Value>, SecurityModuleError>` that, on success, contains the updated secrets JSON object. If the `secrets_json` is `None` or if the `signatures` array is not found, it returns a `SecurityModuleError::NksError`.
-pub fn add_signature_to_secrets(
-    mut secrets_json: Option<Value>,
-    signature: Vec<u8>,
-    id: &str,
-    hash_algorithm: &str,
-) -> Result<Option<Value>, SecurityModuleError> {
-    // Convert the signature to a base64 string
-    let signature_base64 = general_purpose::STANDARD.encode(&signature);
-
-    // Create a new signature object
-    let new_signature = json!({
-        "id": id,
-        "signature": signature_base64,
-        "hashAlgorithm": hash_algorithm,
-    });
-
-    // Check if secrets_json is None
-    if let Some(secrets_json) = &mut secrets_json {
-        // Get the signatures array
-        if let Some(signatures) = secrets_json["data"]["signatures"].as_array_mut() {
-            // Add the new signature to the array
-            signatures.push(new_signature);
-            Ok(Some(secrets_json.clone()))
-        } else {
-            println!("Signatures array not found in secrets_json");
-            Err(SecurityModuleError::NksError)
-        }
-    } else {
-        println!("Secrets JSON is empty");
-        Err(SecurityModuleError::NksError)
-    }
-}
 
 pub fn decode_base64_private_key(private_key_base64: &str) -> StaticSecret {
     let private_key_base64 = private_key_base64; // example private key

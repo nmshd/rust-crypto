@@ -21,6 +21,7 @@ use crate::common::{
     traits::module_provider::Provider,
 };
 use crate::common::crypto::algorithms::encryption::{EccCurves, EccSchemeAlgorithm};
+use crate::common::crypto::algorithms::KeyBits;
 use crate::common::traits::module_provider_config::ProviderConfig;
 use crate::nks::NksConfig;
 
@@ -52,18 +53,27 @@ impl Provider for NksProvider {
     /// ```
     #[instrument]
     fn create_key(&mut self, key_id: &str, config: Box<dyn ProviderConfig>) -> Result<(), SecurityModuleError> {
+        let mut key_length: Option<KeyBits> = None;
         if let Some(nks_config) = config.as_any().downcast_ref::<NksConfig>() {
             let runtime = Runtime::new().unwrap();
             let get_and_save_keypair_result = runtime.block_on(get_and_save_key_pair(
                 &*nks_config.nks_token.clone(),
                 key_id,
                 match nks_config.key_algorithm.clone() {
-                    AsymmetricEncryption::Rsa(_) => "rsa",
+                    AsymmetricEncryption::Rsa(rsa) => {
+                        key_length = Some(rsa);
+                        "rsa"
+                    },
                     AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::Curve25519)) => "ecdh",
                     AsymmetricEncryption::Ecc(_) => "ecdsa",
                 },
+                key_length,
                 Url::parse(&nks_config.nks_address).unwrap()
             ));
+            match key_length {
+                Some(kb) => println!("XXXXX Key length: {}", u32::from(kb)),
+                None => println!("XXXXX Key length: None"),
+            }
             match get_and_save_keypair_result {
                 Ok((result_string, new_token)) => {
                     println!("Key pair generated and saved successfully.");
@@ -284,9 +294,8 @@ fn get_user_token_from_file() -> Option<String> {
 /// ```
 async fn get_token(nks_address: Url) -> anyhow::Result<String, Box<dyn std::error::Error>> {
     let api_url = nks_address.join("getToken");
-    println!("API URL: {:?}", api_url);
     let response: Value = reqwest::Client::builder()
-        .danger_accept_invalid_certs(true) // Accept self-signed certificates
+        .danger_accept_invalid_certs(true)
         .build()
         .unwrap()
         .get(api_url.unwrap())
@@ -340,11 +349,13 @@ async fn get_and_save_key_pair(
     token: &str,
     key_name: &str,
     key_type: &str,
+    key_length: Option<KeyBits>,
     nks_address: Url,
 ) -> Result<(String, String), Box<dyn std::error::Error>> {
+    let key_length_u32 = key_length.map(|kb| u32::from(kb));
+    let response = get_and_save_key_pair_request(token, key_name, key_type, nks_address, key_length_u32).await?;
 
-    let response = get_and_save_key_pair_request(token, key_name, key_type, nks_address).await?;
-    let status = response.status();
+    let status = response.status(); // Clone the status here
     let response_text = response.text().await?;
     if !status.is_success() {
         let response_json: Value = serde_json::from_str(&response_text)?;
@@ -380,17 +391,24 @@ async fn get_and_save_key_pair_request(
     key_name: &str,
     key_type: &str,
     nks_address: Url,
+    length: Option<u32>,
 ) -> Result<reqwest::Response, Box<dyn std::error::Error>> {
     let client = reqwest::Client::builder()
         .danger_accept_invalid_certs(true)
         .build()?;
-    let request_body = json!(
-        {
+    let request_body = match length {
+        Some(len) => json!({
+            "token": token,
+            "name": key_name,
+            "type": key_type,
+            "length": len
+        }),
+        None => json!({
             "token": token,
             "name": key_name,
             "type": key_type
-        }
-    );
+        }),
+    };
     let api_url = nks_address.join("generateAndSaveKeyPair");
     let response = client
         .post(api_url.unwrap())
