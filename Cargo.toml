@@ -37,6 +37,7 @@ win = ["tpm", "windows"]
 yubi = ["hsm", "yubikey"]
 
 [dependencies]
+robusta_jni = "0.2"
 anyhow = "*"
 async-std = "*"
 futures = "*"
