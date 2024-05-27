@@ -1,5 +1,4 @@
 use super::YubiKeyProvider;
-use super::YubiKeyProvider;
 use crate::{
     common::{error::SecurityModuleError, traits::key_handle::KeyHandle},
     yubikey::core::error::YubiKeyError,
@@ -56,7 +55,7 @@ fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, yubikey::Error> {
     }
 
     match self.key_algorithm {
-        "Ecc" => {
+        Ecc => {
             // Sign data
             let signature =
                 piv::sign_data(self.yubikey, data, piv::AlgorithmId::EccP256, self.slot_id);
@@ -66,7 +65,7 @@ fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, yubikey::Error> {
                 Err(err) => return err,
             }
         }
-        "Rsa" => {
+        Rsa => {
             // TODO, doesn´t work yet
         }
         "_" => {
@@ -120,7 +119,7 @@ fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, yubikey::Error>
     match decrypted {
         Ok(buffer) => match remove_pkcs1_padding(&buffer) {
             Ok(data) => {
-                return data;
+                return Ok(data);
             }
             Err(_) => return Err(Error::SizeError),
         },
@@ -143,7 +142,7 @@ fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, yubikey::Error>
 #[instrument]
 fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, yubikey::Error> {
     match self.key_algorithm {
-        "Rsa" => {
+        Rsa => {
             let rsa = Rsa::public_key_from_pem(self.pkey.trim().as_bytes())
                 .map_err(|_| "failed to create RSA from public key PEM");
             let mut encrypted_data = vec![0; rsa.size() as usize];
@@ -151,7 +150,7 @@ fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, yubikey::Error> {
                 .map_err(|_| "failed to encrypt data");
             return encrypted_data;
         }
-        "Ecc" => {
+        Ecc => {
             // TODO
         }
         "_" => Error::NotSupported,
@@ -174,7 +173,7 @@ fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, yubikey::Error> {
 #[instrument]
 fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, SecurityModuleError> {
     match self.key_algorithm {
-        "Rsa" => {
+        Rsa => {
             let rsa = Rsa::public_key_from_pem(self.pkey.trim().as_bytes())
                 .map_err(|_| "failed to create RSA from public key PEM");
             let key_pkey = PKey::from_rsa(rsa).unwrap();
@@ -188,7 +187,7 @@ fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, Securi
                 .verify(signature)
                 .map_err(|_| "failed to verify signature")
         }
-        "Ecc" => {
+        Ecc => {
             let ecc = EcKey::public_key_from_pem(self.pkey.trim().as_bytes())
                 .map_err(|_| "failed to create ECC from public key PEM");
             let ecc = PKey::from_ec_key(ecc).map_err(|_| "failed to create PKey from ECC");

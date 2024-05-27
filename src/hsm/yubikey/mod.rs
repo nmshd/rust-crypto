@@ -27,9 +27,10 @@ pub mod provider;
 #[repr(C)]
 pub struct YubiKeyProvider {
     /// A unique identifier for the cryptographic key managed by this provider.
+    pub(super) yubikey: YubiKey,
     pub(super) key_id: String,
     pub(super) pkey: String,
-    pub(super) conf: Option<Arc<dyn ProviderConfig + Sync + Send>>,
+    pub(super) config: Option<Arc<dyn ProviderConfig + Sync + Send>>,
 }
 
 impl YubiKeyProvider {
@@ -45,9 +46,10 @@ impl YubiKeyProvider {
     #[instrument]
     pub fn new(key_id: String) -> Self {
         Self {
+            yubikey: None,
             key_id,
             pkey: None,
-            conf: None,
+            config: None,
         }
     }
     /*

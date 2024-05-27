@@ -3,22 +3,17 @@ pub mod nitrokey;
 pub mod yubikey;
 
 pub struct ProviderConfig {
-    pub key_algorithm: String,
-    pub hash: Option<String>,
-    pub key_usages: Vec<String>,
+    pub(super) key_algorithm: AsymmetricEncryption,
+    pub(super) key_usage: Option<KeyUsage>,
+    pub(super) slot_id: SlotId,
 }
 
 impl ProviderConfig {
-    pub fn new(
-        key_algorithm: String,
-        sym_algorithm: Option<String>,
-        hash: Option<String>,
-        key_usages: Vec<String>,
-    ) -> Self {
+    pub fn new(key_algorithm: AsymmetricEncryption, key_usage: Option<KeyUsage>) -> Self {
         Self {
             key_algorithm,
-            hash,
-            key_usages,
+            key_usage,
+            slot_id: None,
         }
     }
 }

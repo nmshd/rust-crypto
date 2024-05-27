@@ -1,4 +1,5 @@
 use super::YubiKeyProvider;
+use crate::hsm::ProviderConfig;
 use crate::{
     common::{
         crypto::{
@@ -6,7 +7,7 @@ use crate::{
             KeyUsage,
         },
         error::SecurityModuleError,
-        traits::{module_provider::Provider, module_provider_config::ProviderConfig},
+        traits::module_provider::Provider,
     },
     yubikey::{YubiKeyConfig, YubiKeyError},
 };
@@ -43,7 +44,7 @@ const SLOTS: [u32; 20] = [
 /// This implementation interacts with a YubiKey device for key management and cryptographic
 /// operations.
 impl Provider for YubiKeyProvider {
-    /// Creates a new cryptographic key identified by `key_id`.
+    /// Creates a new cryptographic key identified by the provider given key_id.
     ///
     /// This method creates a persisted cryptographic key using the specified algorithm
     /// and identifier, making it retrievable for future operations. The key is created
@@ -51,29 +52,24 @@ impl Provider for YubiKeyProvider {
     ///
     /// # Arguments
     ///
-    /// * `key_id` - A string slice that uniquely identifies the key to be created.
-    /// * `config` - A boxed `ProviderConfig` containing configuration details for the key.
     ///
     /// # Returns
     ///
-    /// A `Result` that, on success, contains `Ok(String)`, which represents the public key, indicating that the key was created successfully.
+    /// The generated Public Key will be stored in the Yubikey as Object with futher information
+    /// A `Result` that, on success, contains `Ok()`.
     /// On failure, it returns a `yubikey::Error`.
     #[instrument]
-    fn create_key(
-        &mut self,
-        //key_id: &str, notwendig? self.key_id???
-        //config: Box<dyn ProviderConfig>,
-    ) -> Result<(), yubikey::Error> {
+    fn create_key(&mut self, config: Box<dyn ProviderConfig>) -> Result<(), yubikey::Error> {
         let key_name = self.key_id;
         let mut usage: &str = "";
 
         if !load_key().is_ok() {
-            match self.key_usage {
-                SignEncrypt => match self.key_algorithm {
-                    "Rsa" => {
+            match config.key_usage {
+                SignEncrypt => match config.key_algorithm {
+                    Rsa => {
                         match get_free_slot() {
                             Ok(free) => {
-                                self.slot_id = free;
+                                self.config.slot_id = free;
                             }
                             Err(err) => {
                                 return Err(err);
@@ -101,10 +97,10 @@ impl Provider for YubiKeyProvider {
                             Err(err) => return Err(Error::KeyError),
                         }
                     }
-                    "Ecc" => {
+                    Ecc => {
                         match get_free_slot() {
                             Ok(free) => {
-                                self.slot_id = free;
+                                self.config.slot_id = free;
                             }
                             Err(err) => {
                                 return Err(err);
@@ -121,15 +117,15 @@ impl Provider for YubiKeyProvider {
                         );
                         self.pkey = gen_key;
                     }
-                    "_" => Err(Error::NotSupported("Algorithm not supported")),
+                    _ => Err(Error::NotSupported("Algorithm not supported")),
                 },
 
                 Decrypt => {
-                    match self.key_algorithm {
-                        "Rsa" => {
+                    match config.key_algorithm {
+                        Rsa => {
                             match get_free_slot() {
                                 Ok(free) => {
-                                    self.slot_id = free;
+                                    self.config.slot_id = free;
                                 }
                                 Err(err) => {
                                     return Err(err);
@@ -157,20 +153,20 @@ impl Provider for YubiKeyProvider {
                                 Err(err) => return Err(Error::KeyError),
                             }
                         }
-                        "Ecc" => {
+                        Ecc => {
                             // TODO, not tested, might work
                         }
-                        "_" => Error::NotSupported,
+                        _ => Error::NotSupported,
                     }
                 }
 
                 _ => Err(Error::NotSupported("KeyUsage not supported")),
             }
         } else {
-            match self.key_usage {
-                SignEncrypt => match self.key_algorithm {
-                    "Rsa" => {
-                        slot = self.slot_id;
+            match config.key_usage {
+                SignEncrypt => match config.key_algorithm {
+                    Rsa => {
+                        slot = self.config.slot_id;
                         usage = "encrypt";
                         let gen_key = piv::generate(
                             self.yubikey,
@@ -193,8 +189,8 @@ impl Provider for YubiKeyProvider {
                             Err(err) => return Err(Error::KeyError),
                         }
                     }
-                    "Ecc" => {
-                        slot = self.slot_id;
+                    Ecc => {
+                        slot = self.config.slot_id;
                         usage = "sign";
                         let gen_key = piv::generate(
                             self.yubikey,
@@ -206,13 +202,13 @@ impl Provider for YubiKeyProvider {
                         );
                         self.pkey = gen_key;
                     }
-                    "_" => Err(Error::NotSupported("Algorithm not supported")),
+                    _ => Err(Error::NotSupported("Algorithm not supported")),
                 },
 
                 Decrypt => {
-                    match self.key_algorithm {
-                        "Rsa" => {
-                            slot = self.slot_id;
+                    match config.key_algorithm {
+                        Rsa => {
+                            slot = self.config.slot_id;
                             usage = "decrypt";
                             let gen_key = piv::generate(
                                 self.yubikey,
@@ -235,10 +231,10 @@ impl Provider for YubiKeyProvider {
                                 Err(err) => return Err(Error::KeyError),
                             }
                         }
-                        "Ecc" => {
+                        Ecc => {
                             // TODO, not tested, might work
                         }
-                        "_" => Error::NotSupported,
+                        _ => Error::NotSupported,
                     }
                 }
 
@@ -246,99 +242,9 @@ impl Provider for YubiKeyProvider {
             }
         }
 
-        save_key_object(usage);
+        save_key_object(self, usage);
 
         OK(())
-    }
-
-    fn save_key_object(&mut self, usage: String) -> Result<(), yubikey::Error> {
-        let key_name = self.key_id;
-        let slot = self.slot_id.to_string();
-        let public_key = self.pkey;
-        let key_usage = usage;
-
-        let total_length =
-            key_name.len() + 1 + slot.len() + 1 + key_usage.len() + 1 + public_key.len();
-        let mut data = vec![0u8; total_length];
-        let data_slice: &mut [u8] = &mut data;
-
-        let mut offset = 0;
-        data_slice[offset..offset + key_name.len()].copy_from_slice(key_name.as_bytes());
-        offset += key_name.len();
-        data_slice[offset] = 0;
-        offset += 1;
-
-        data_slice[offset..offset + slot.len()].copy_from_slice(slot.as_bytes());
-        offset += slot.len();
-        data_slice[offset] = 0;
-        offset += 1;
-
-        data_slice[offset..offset + key_usage.len()].copy_from_slice(key_usage.as_bytes());
-        offset += key_usage.len();
-        data_slice[offset] = 0;
-        offset += 1;
-
-        data_slice[offset..offset + public_key.len()].copy_from_slice(public_key.as_bytes());
-
-        let saved = device.save_object(self.slot_id, data_slice);
-        match saved {
-            Ok(()) => Ok(()),
-            Err(err) => error::Error,
-        }
-    }
-
-    fn parse_slot_data(data: &[u8]) -> Result<(String, String, String, String), Utf8Error> {
-        let parts: Vec<&[u8]> = data.split(|&x| x == 0).collect();
-        let key_name = std::str::from_utf8(
-            parts
-                .get(0)
-                .ok_or(Utf8Error::from_bytes_without_nul(data))?,
-        )?
-        .to_string();
-        let slot = std::str::from_utf8(
-            parts
-                .get(1)
-                .ok_or(Utf8Error::from_bytes_without_nul(data))?,
-        )?
-        .to_string();
-        let usage = std::str::from_utf8(
-            parts
-                .get(2)
-                .ok_or(Utf8Error::from_bytes_without_nul(data))?,
-        )?
-        .to_string();
-        let public_key = std::str::from_utf8(
-            parts
-                .get(3)
-                .ok_or(Utf8Error::from_bytes_without_nul(data))?,
-        )?
-        .to_string();
-
-        Ok((key_name, slot, key_usage, public_key))
-    }
-
-    fn get_free_slot() -> Resul<SlotId, error::Error> {
-        for i in 10..19 {
-            let data = device.fetch_object(RETIRED_SLOT[i]);
-            let mut output: Vec<u8> = Vec::new();
-            match data {
-                Ok(data) => {
-                    output = data.to_vec();
-                }
-                Err(err) => {
-                    println!("Error: {:?}", err);
-                }
-            }
-
-            let data = output;
-            match parse_slot_data(&data) {
-                Ok(()) => {
-                    continue;
-                }
-                Err(_) => RETIRED_SLOT[i - 10],
-            }
-        }
-        Err("No free slot available")
     }
 
     /// Loads an existing cryptographic key identified by `key_id`.
@@ -357,10 +263,10 @@ impl Provider for YubiKeyProvider {
     /// A `Result` that, on success, contains `Ok(())`, indicating that the key was loaded successfully.
     /// On failure, it returns a `SecurityModuleError`.
     #[instrument]
-    fn load_key(&mut self) -> Result<(), yubikey::Error> {
+    fn load_key(&mut self, config: Box<dyn ProviderConfig>) -> Result<(), yubikey::Error> {
         let mut found = false;
         for i in 10..19 {
-            let data = device.fetch_object(RETIRED_SLOT[i]);
+            let data = self..fetch_object(SLOT[i]);
             let mut output: Vec<u8> = Vec::new();
             match data {
                 Ok(data) => {
@@ -375,8 +281,8 @@ impl Provider for YubiKeyProvider {
             match parse_slot_data(&data) {
                 Ok((key_name, slot, usage, public_key)) => {
                     if key_name == self.key_id {
-                        self.slot_id = RETIRED_SLOT[i - 10];
-                        self.key_usage = match usage.as_str() {
+                        self.config.slot_id = SLOT[i - 10];
+                        self.config.key_usage = match usage.as_str() {
                             "sign" | "encrypt" => KeyUsage::SignEncrypt,
                             "decrypt" => KeyUsage::Decrypt,
                             _ => continue,
@@ -416,11 +322,7 @@ impl Provider for YubiKeyProvider {
     /// A `Result` that, on success, contains `Ok(())`, indicating that the module was initialized successfully.
     /// On failure, it returns a Yubikey based `Error`.
     #[instrument]
-    fn initialize_module(
-        &mut self,
-        key_algorithm: Option<AlgorithmId>,
-        key_usage: Option<Vec<KeyUsage>>,
-    ) -> Result<(), Error> {
+    fn initialize_module(&mut self) -> Result<(), Error> {
         let yubikey = YubiKey::open().map_err(|_| Error::NotFound);
         let verify = yubikey
             .verify_pin("123456".as_ref())
@@ -429,8 +331,6 @@ impl Provider for YubiKeyProvider {
             });
 
         self.yubikey = yubikey;
-        self.key_algorithm = Some(key_algorithm);
-        self.key_usages = Some(key_usages);
 
         if verify.is_ok() {
             return Ok(());
@@ -449,7 +349,7 @@ impl Provider for YubiKeyProvider {
         key_algorithm: AsymmetricEncryption,
         sym_algorithm: Option<BlockCiphers>,
         hash: Option<Hash>,
-        key_usages: Vec<KeyUsage>,
+        key_usage: Vec<KeyUsage>,
         input: &str,
     ) -> Result<device, SecurityModuleError> {
         // Opens a connection to the yubikey device
@@ -478,4 +378,130 @@ impl Provider for YubiKeyProvider {
         }
     }
     */
+}
+
+/// Saves the key object to the YubiKey device.
+///
+/// This method saves a object to the YubiKey device. The object is stored in a slot and represents
+/// information about the key, such as the key name, slot, key usage, and public key. This information
+/// belongs to a private key which is stored in a other Slot.
+///
+/// # Arguments
+/// 'usage' - The key usage of the key object to be stored.
+///
+/// # Returns
+///
+/// The saved Object will be stored in the Yubikey on a free Retired slot as Object with futher information
+/// A `Result` that, on success, contains `Ok()`.
+/// On failure, it returns a `yubikey::Error`.
+fn save_key_object(&mut self, usage: &str) -> Result<(), yubikey::Error> {
+    let key_name = self.key_id;
+    let slot = self.config.slot_id.to_string();
+    let public_key = self.pkey;
+
+    let total_length = key_name.len() + 1 + slot.len() + 1 + usage.len() + 1 + public_key.len();
+    let mut data = vec![0u8; total_length];
+    let data_slice: &mut [u8] = &mut data;
+
+    let mut offset = 0;
+    data_slice[offset..offset + key_name.len()].copy_from_slice(key_name.as_bytes());
+    offset += key_name.len();
+    data_slice[offset] = 0;
+    offset += 1;
+
+    data_slice[offset..offset + slot.len()].copy_from_slice(slot.as_bytes());
+    offset += slot.len();
+    data_slice[offset] = 0;
+    offset += 1;
+
+    data_slice[offset..offset + usage.len()].copy_from_slice(usage.as_bytes());
+    offset += usage.len();
+    data_slice[offset] = 0;
+    offset += 1;
+
+    data_slice[offset..offset + public_key.len()].copy_from_slice(public_key.as_bytes());
+
+    let saved = device.save_object(self.config.slot_id, data_slice);
+    match saved {
+        Ok(()) => Ok(()),
+        Err(err) => error::Error,
+    }
+}
+
+/// parses the u8 Data to different Key-Information Strings
+///
+/// This method creates a persisted cryptographic key using the specified algorithm
+/// and identifier, making it retrievable for future operations. The key is created
+/// with the specified key usages and stored in the YubiKey.
+///
+/// # Arguments
+///
+///
+/// # Returns
+///
+/// A `Result` that, on success, contains `Ok(key_name, slot, key_usage, public_key)` where the individual information is given.
+/// On failure, it returns a `Utf8Error`.
+fn parse_slot_data(data: &[u8]) -> Result<(String, String, String, String), Utf8Error> {
+    let parts: Vec<&[u8]> = data.split(|&x| x == 0).collect();
+    let key_name = std::str::from_utf8(
+        parts
+            .get(0)
+            .ok_or(Utf8Error::from_bytes_without_nul(data))?,
+    )?
+    .to_string();
+    let slot = std::str::from_utf8(
+        parts
+            .get(1)
+            .ok_or(Utf8Error::from_bytes_without_nul(data))?,
+    )?
+    .to_string();
+    let usage = std::str::from_utf8(
+        parts
+            .get(2)
+            .ok_or(Utf8Error::from_bytes_without_nul(data))?,
+    )?
+    .to_string();
+    let public_key = std::str::from_utf8(
+        parts
+            .get(3)
+            .ok_or(Utf8Error::from_bytes_without_nul(data))?,
+    )?
+    .to_string();
+
+    Ok((key_name, slot, key_usage, public_key))
+}
+
+/// Gets a free slot for storing a key object.
+///
+/// This method goes through the available slots on the YubiKey and returns the first free slot
+///
+/// # Arguments
+///
+///
+/// # Returns
+///
+/// A `Result` that, on failure, returns the first free slot.
+/// On Success, it returns that no more free slots are available.
+fn get_free_slot() -> Resul<SlotId, error::Error> {
+    for i in 10..19 {
+        let data = device.fetch_object(SLOTS[i]);
+        let mut output: Vec<u8> = Vec::new();
+        match data {
+            Ok(data) => {
+                output = data.to_vec();
+            }
+            Err(err) => {
+                println!("Error: {:?}", err);
+            }
+        }
+
+        let data = output;
+        match parse_slot_data(&data) {
+            Ok(()) => {
+                continue;
+            }
+            Err(_) => SLOT[i - 10],
+        }
+    }
+    Ok("No free slot available")
 }
