@@ -110,13 +110,11 @@ fn test_sign_and_verify_ecdsa() {
 
 
      let data = b"Hello, World!";
-     let original_length = data.len();
      let encrypted_data = provider.encrypt_data(data).expect("Failed to encrypt data");
      let decrypted_data = provider
          .decrypt_data(&encrypted_data)
          .expect("Failed to decrypt data");
-     let decrypted_data_without_padding: Vec<u8> = decrypted_data[0..original_length].to_vec();
-       assert_eq!(data, decrypted_data_without_padding.as_slice())
+       assert_eq!(data, decrypted_data.as_slice())
 }
 //
 // #[test]

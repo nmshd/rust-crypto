@@ -93,6 +93,7 @@ impl KeyHandle for NksProvider {
                     rsa.private_decrypt(encrypted_data, &mut decrypted_data, Padding::PKCS1)
                         .map_err(|_| SecurityModuleError::DecryptionError("RSA decryption failed".to_string()))?;
                     let last_non_zero_pos = decrypted_data.iter().rposition(|&x| x != 0).unwrap_or(0) + 1;
+
                     let (decrypted_data, _) = decrypted_data.split_at(last_non_zero_pos);
 
                     Ok(decrypted_data.to_vec())
