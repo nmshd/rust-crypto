@@ -3,7 +3,7 @@ use std::fs;
 use std::fs::File;
 use std::io::Read;
 use super::NksProvider;
-use base64::{engine::general_purpose, Engine};
+use base64::{engine::general_purpose, Engine, decode};
 use tracing::instrument;
 
 
@@ -22,7 +22,7 @@ use openssl::rsa::{Padding, Rsa};
 use openssl::sign::{Signer as RSASigner, Verifier as RSAVerifier};
 use openssl::pkey::{ Public, Private};
 use serde_json::{json, Value};
-use sodiumoxide::crypto::box_;
+use sodiumoxide::crypto::{box_, scalarmult, secretbox};
 use sodiumoxide::crypto::sign;
 use openssl::sign::{Signer, Verifier};
 
@@ -99,13 +99,21 @@ impl KeyHandle for NksProvider {
                     Ok(decrypted_data.to_vec())
                 }
                 AsymmetricEncryption::Ecc(ecdh) => {
-                    // ECC decryption method
-                    let ec_key = openssl::ec::EcKey::private_key_from_pem(&self.private_key.as_bytes())
-                        .map_err(|_| SecurityModuleError::KeyError)?;
-                    let pkey = PKey::from_ec_key(ec_key).map_err(|_| SecurityModuleError::KeyError)?;
-                    // Here you need to implement the decryption logic for ECC
-                    // This will depend on the specific ECC scheme you are using
-                    todo!();
+                    let public_key_bytes = BASE64_STANDARD.decode(self.public_key.as_bytes()).expect("Invalid public key base64");
+                    let private_key_bytes = BASE64_STANDARD.decode(self.private_key.as_bytes()).expect("Invalid private key base64");
+
+                    let public_key = box_::PublicKey::from_slice(&public_key_bytes).expect("Invalid public key");
+                    let private_key = box_::SecretKey::from_slice(&private_key_bytes).expect("Invalid private key");
+
+                    // Split the encrypted data into the nonce and the encrypted message
+                    let (nonce_bytes, encrypted_message) = _encrypted_data.split_at(box_::NONCEBYTES);
+                    let nonce = box_::Nonce::from_slice(nonce_bytes).expect("Invalid nonce");
+
+                    // Decrypt the message
+                    let decrypted_message = box_::open(encrypted_message, &nonce, &public_key, &private_key)
+                        .map_err(|_| SecurityModuleError::DecryptionError("Decryption failed".to_string()))?;
+
+                    Ok(decrypted_message)
                 }
                 _ => Err(SecurityModuleError::UnsupportedAlgorithm),
             }
@@ -116,7 +124,6 @@ impl KeyHandle for NksProvider {
     fn encrypt_data(&self,
                     _data: &[u8],
                     ) -> Result<Vec<u8>, SecurityModuleError> {
-        // Determine the key algorithm based on the key or some other means
         let key_algorithm = self.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>().unwrap().key_algorithm;
         let data = _data;
 
@@ -134,13 +141,20 @@ impl KeyHandle for NksProvider {
                     Ok(encrypted_data)
                 }
                 AsymmetricEncryption::Ecc(ecdh) => {
-                    // ECC encryption method
-                    let ec_key = openssl::ec::EcKey::public_key_from_pem(&self.public_key.as_bytes())
-                        .map_err(|_| SecurityModuleError::KeyError)?;
-                    let pkey = PKey::from_ec_key(ec_key).map_err(|_| SecurityModuleError::KeyError)?;
-                    // Here you need to implement the encryption logic for ECC
-                    // This will depend on the specific ECC scheme you are using
-                    todo!();
+                    let public_key_bytes = BASE64_STANDARD.decode(self.public_key.as_bytes()).expect("Invalid public key base64");
+                    let private_key_bytes = BASE64_STANDARD.decode(self.private_key.as_bytes()).expect("Invalid private key base64");
+
+                    let public_key = box_::PublicKey::from_slice(&public_key_bytes).expect("Invalid public key");
+                    let private_key = box_::SecretKey::from_slice(&private_key_bytes).expect("Invalid private key");
+
+                    let nonce = box_::gen_nonce();
+                    let encrypted_message = box_::seal(data, &nonce, &public_key, &private_key);
+
+                    // Concatenate the nonce and the encrypted message into a single Vec<u8>
+                    let mut result = Vec::with_capacity(nonce.as_ref().len() + encrypted_message.len());
+                    result.extend_from_slice(nonce.as_ref());
+                    result.extend_from_slice(&encrypted_message);
+                    Ok(result)
                 }
                 _ => Err(SecurityModuleError::UnsupportedAlgorithm),
             }
@@ -187,6 +201,8 @@ impl KeyHandle for NksProvider {
             }
         }
     }
+
+
 }
 
 /// Adds a new signature to the secrets JSON object.
@@ -229,4 +245,6 @@ pub fn add_signature_to_secrets(mut secrets_json: Option<Value>, signature: Vec<
         println!("Secrets JSON is empty");
         Err(SecurityModuleError::NksError)
     }
+
+
 }

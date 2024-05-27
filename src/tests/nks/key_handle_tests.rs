@@ -116,31 +116,33 @@ fn test_sign_and_verify_ecdsa() {
          .expect("Failed to decrypt data");
        assert_eq!(data, decrypted_data.as_slice())
 }
-//
-// #[test]
-// fn test_encrypt_and_decrypt_ecdh() {
-//     let mut provider = NksProvider::new("test_ecdh_key".to_string());
-//
-//     let key_algorithm = AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::Curve25519));
-//     let sym_algorithm = Some(BlockCiphers::Aes(Default::default(), 256.into()));
-//     let hash = Some(Hash::Sha2(384.into()));
-//     let key_usages = vec![KeyUsage::Decrypt];
-//
-//     provider
-//         .initialize_module(999999,999999, key_algorithm.clone(), sym_algorithm.clone(), hash.clone(), key_usages.clone())
-//         .expect("Failed to initialize module");
-//     provider
-//         .create_key("test_rsa_key", key_algorithm.clone(), sym_algorithm.clone(), hash, key_usages)
-//         .expect("Failed to create ECDH key");
-//
-//     let data = b"Hello, World!";
-//     let encrypted_data = provider.encrypt_data(data).expect("Failed to encrypt data");
-//     let decrypted_data = provider
-//         .decrypt_data(&encrypted_data)
-//         .expect("Failed to decrypt data");
-//
-//     assert_eq!(data, decrypted_data.as_slice());
-// }
+
+ #[test]
+ fn test_encrypt_and_decrypt_ecdh() {
+     let mut provider = NksProvider::new("ecdh".to_string());
+
+     provider.config = Some(crate::tests::nks::provider_handle_tests::get_config("ecdh").unwrap());
+
+     provider
+         .initialize_module()
+         .expect("Failed to initialize module");
+
+     if let Some(nks_config) = provider.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>() {
+         provider
+             .load_key("test_ecdh_key", Box::new(nks_config.clone()))
+             .expect("Failed to load ecdh key");
+     } else {
+         println!("Failed to downcast to NksConfig");
+     }
+
+
+     let data = b"Hello, World!";
+     let encrypted_data = provider.encrypt_data(data).expect("Failed to encrypt data");
+     let decrypted_data = provider
+         .decrypt_data(&encrypted_data)
+         .expect("Failed to decrypt data");
+     assert_eq!(data, decrypted_data.as_slice())
+ }
 
 
 #[test]
