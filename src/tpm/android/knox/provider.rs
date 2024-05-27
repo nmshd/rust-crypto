@@ -2,10 +2,8 @@ use crate::{
     common::{
         crypto::{
             algorithms::{
-                encryption::{AsymmetricEncryption, BlockCiphers, EccSchemeAlgorithm},
-                hashes::Hash,
+                encryption::{AsymmetricEncryption, EccSchemeAlgorithm},
             },
-            KeyUsage,
         },
         error::SecurityModuleError,
         traits::module_provider::Provider,
@@ -14,13 +12,12 @@ use crate::{
 use tracing::instrument;
 use serde::de::Unexpected::Option;
 use crate::common::crypto::algorithms::encryption::EccCurves;
-use crate::common::crypto::algorithms::hashes::{Sha2Bits, Sha3Bits};
 use crate::common::crypto::algorithms::KeyBits;
 use crate::common::traits::module_provider_config::ProviderConfig;
 use crate::tpm::android::knox::interface::jni::RustDef;
+use crate::tpm::android::knox::KnoxConfig;
 use crate::tpm::core::error::TpmError::UnsupportedOperation;
 use crate::tpm::linux::TpmProvider;
-use crate::tpm::TpmConfig;
 
 
 /// Implements the `Provider` trait, providing cryptographic operations utilizing a TPM.
@@ -49,77 +46,86 @@ impl Provider for TpmProvider {
     /// On failure, it returns a `SecurityModuleError`.
     #[instrument]
     fn create_key(&mut self, key_id: &str, config: Box<dyn ProviderConfig>) -> Result<(), SecurityModuleError> {
-        let config = config.as_any().downcast_ref::<TpmConfig>().unwrap();
-
-        //Knox Vault only supports SHA256
-        if !config.hash == Hash::Sha2(Sha2Bits::Sha256) {
-            return Err(SecurityModuleError::Tpm(UnsupportedOperation(
-                format!("Unsupported hashing algorithm: {:?}", config.hash))));
-        }
-
-        let asym_string = match config.key_algorithm {
-            AsymmetricEncryption::Rsa(bitslength) => {
-                match bitslength {
-                    KeyBits::Bits128 => { String::from("RSA;128;SHA-256;PKCS1") }
-                    KeyBits::Bits192 => { String::from("RSA;192;SHA-256;PKCS1") }
-                    KeyBits::Bits256 => { String::from("RSA;256;SHA-256;PKCS1") }
-                    KeyBits::Bits512 => { String::from("RSA;512;SHA-256;PKCS1") }
-                    KeyBits::Bits1024 => { String::from("RSA;1024;SHA-256;PKCS1") }
-                    KeyBits::Bits2048 => { String::from("RSA;2048;SHA-256;PKCS1") }
-                    KeyBits::Bits3072 => { String::from("RSA;3072;SHA-256;PKCS1") }
-                    KeyBits::Bits4096 => { String::from("RSA;4096;SHA-256;PKCS1") }
-                    KeyBits::Bits8192 => { String::from("RSA;8192;SHA-256;PKCS1") }
-                }
+        let config = match config.as_any().downcast_ref::<KnoxConfig>() {
+            None => {
+                return Err(SecurityModuleError::CreationError(
+                    "Wrong type used for ProviderConfig in create_key()"));
             }
-            AsymmetricEncryption::Ecc(scheme) => { //todo
-                match scheme {
-                    EccSchemeAlgorithm::EcDsa(curve) => {
-                        match curve {
-                            EccCurves::P256 => {}
-                            EccCurves::P384 => {}
-                            EccCurves::P521 => {}
-                            EccCurves::Secp256k1 => {}
-                            EccCurves::BrainpoolP256r1 => {}
-                            EccCurves::BrainpoolP384r1 => {}
-                            EccCurves::BrainpoolP512r1 => {}
-                            EccCurves::BrainpoolP638 => {}
-                            EccCurves::Curve25519 => {}
-                            EccCurves::Curve448 => {}
-                            EccCurves::Frp256v1 => {}
-                        }
+            Some(conf) => { conf }
+        };
+        let key_algo;
+        if config.key_algorithm.is_some() && config.sym_algorithm.is_none() {
+            key_algo = match config.key_algorithm {
+                AsymmetricEncryption::Rsa(bitslength) => {
+                    match bitslength {
+                        KeyBits::Bits128 => { String::from("RSA;128;SHA-256;PKCS1") }
+                        KeyBits::Bits192 => { String::from("RSA;192;SHA-256;PKCS1") }
+                        KeyBits::Bits256 => { String::from("RSA;256;SHA-256;PKCS1") }
+                        KeyBits::Bits512 => { String::from("RSA;512;SHA-256;PKCS1") }
+                        KeyBits::Bits1024 => { String::from("RSA;1024;SHA-256;PKCS1") }
+                        KeyBits::Bits2048 => { String::from("RSA;2048;SHA-256;PKCS1") }
+                        KeyBits::Bits3072 => { String::from("RSA;3072;SHA-256;PKCS1") }
+                        KeyBits::Bits4096 => { String::from("RSA;4096;SHA-256;PKCS1") }
+                        KeyBits::Bits8192 => { String::from("RSA;8192;SHA-256;PKCS1") }
                     }
-
-                    _ => {}
                 }
-            }
-            _ => {
-                return Err(SecurityModuleError::Tpm(UnsupportedOperation(
-                    format!("Unsupported asymmetric encryption algorithm: {:?}",
-                            config.key_algorithm))));
-            }
-        };
+                AsymmetricEncryption::Ecc(scheme) => { //todo
+                    match scheme {
+                        EccSchemeAlgorithm::EcDsa(curve) => {
+                            match curve {
+                                EccCurves::P256 => {}
+                                EccCurves::P384 => {}
+                                EccCurves::P521 => {}
+                                EccCurves::Secp256k1 => {}
+                                EccCurves::BrainpoolP256r1 => {}
+                                EccCurves::BrainpoolP384r1 => {}
+                                EccCurves::BrainpoolP512r1 => {}
+                                EccCurves::BrainpoolP638 => {}
+                                EccCurves::Curve25519 => {}
+                                EccCurves::Curve448 => {}
+                                EccCurves::Frp256v1 => {}
+                            }
+                        }
 
-        let sym_string = match config.sym_algorithm {
-            Option::DESede(bitslength) => {
-                match bitslength {
-                    KeyBits::Bits128 => { String::from("DESede;CBC;PKCS7,PKCS5Padding") } //todo which one?
-                    KeyBits::Bits128 => { String::from("DESede;ECB;PKCS7,NoPadding") }
+                        _ => {}
+                    }
                 }
-            },
-            Option::Aes(bitslength) => {
-                match bitslength {
-                    KeyBits::Bits128 => { String::from("AES;128;GCM;NoPadding") }
-                    KeyBits::Bits192 => { String::from("AES;192;GCM;NoPadding") }
-                    KeyBits::Bits256 => { String::from("AES;256;GCM;NoPadding") }
+                _ => {
+                    return Err(SecurityModuleError::Tpm(UnsupportedOperation(
+                        format!("Unsupported asymmetric encryption algorithm: {:?}",
+                                config.key_algorithm))));
                 }
-            },
-            _ => {
-                return Err(SecurityModuleError::Tpm(UnsupportedOperation(
-                    format!("Unsupported symmetric encryption algorithm: {:?}", config.sym_algorithm))));
-            }
-        };
-
-        RustDef::create_key(&(), key_id, format!("{};{};"))
+            };
+        } else if config.key_algorithm.is_none() && config.sym_algorithm.is_some() {
+            key_algo = match config.sym_algorithm {
+                Option::DESede(bitslength) => {
+                    match bitslength {
+                        KeyBits::Bits128 => { String::from("DESede;CBC;PKCS7,PKCS5Padding") } //todo which one?
+                        KeyBits::Bits128 => { String::from("DESede;ECB;PKCS7,NoPadding") }
+                    }
+                }
+                Option::Aes(bitslength) => {
+                    match bitslength {
+                        KeyBits::Bits128 => { String::from("AES;128;GCM;NoPadding") }
+                        KeyBits::Bits192 => { String::from("AES;192;GCM;NoPadding") }
+                        KeyBits::Bits256 => { String::from("AES;256;GCM;NoPadding") }
+                    }
+                }
+                _ => {
+                    return Err(SecurityModuleError::Tpm(UnsupportedOperation(
+                        format!("Unsupported symmetric encryption algorithm: {:?}", config.sym_algorithm))));
+                }
+            };
+        }else {
+            return Err(SecurityModuleError::CreationError(format!(
+                "wrong parameters in KnoxConfig:
+                Exactly one of either sym_algorithm or key_algorithm must be Some().\
+                sym_algorithm: {:?}\
+                key_algorithm: {:?}",
+            config.sym_algorithm,
+            config.key_algorithm)))
+        }
+        RustDef::create_key(config.env,key_id, key_algo)
     }
 
     /// Loads an existing cryptographic key identified by `key_id`.

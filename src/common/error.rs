@@ -40,6 +40,10 @@ pub enum SecurityModuleError {
     ///
     /// This variant contains a descriptive error message.
     InitializationError(String),
+    /// Error that occurred during the key generation operation.
+    ///
+    /// This variant contains a descriptive error message.
+    CreationError(String),
 }
 
 impl fmt::Display for SecurityModuleError {
@@ -72,6 +76,9 @@ impl fmt::Display for SecurityModuleError {
             SecurityModuleError::InitializationError(ref error_msg) => {
                 write!(f, "Initialization error: {}", error_msg)
             }
+            SecurityModuleError::CreationError(ref error_msg) => {
+                write!(f, "Creation error: {}", error_msg)
+            }
         }
     }
 }
@@ -96,6 +103,7 @@ impl std::error::Error for SecurityModuleError {
             SecurityModuleError::EncryptionError(_) => None,
             SecurityModuleError::SignatureVerificationError(_) => None,
             SecurityModuleError::InitializationError(_) => None,
+            SecurityModuleError::CreationError(_) => None
         }
     }
 }

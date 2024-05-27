@@ -38,6 +38,7 @@ yubi = ["hsm", "yubikey"]
 
 [dependencies]
 robusta_jni = "0.2"
+jni = "0.20.0"
 anyhow = "*"
 async-std = "*"
 futures = "*"

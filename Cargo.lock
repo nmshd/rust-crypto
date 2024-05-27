@@ -364,6 +364,7 @@ dependencies = [
  "anyhow",
  "async-std",
  "futures",
+ "jni 0.20.0",
  "nitrokey",
  "once_cell",
  "robusta_jni",
@@ -866,6 +867,20 @@ name = "jni"
 version = "0.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c6df18c2e3db7e453d3c6ac5b3e9d5182664d28788126d39b91f2d1e22b017ec"
+dependencies = [
+ "cesu8",
+ "combine",
+ "jni-sys",
+ "log",
+ "thiserror",
+ "walkdir",
+]
+
+[[package]]
+name = "jni"
+version = "0.20.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "039022cdf4d7b1cf548d31f60ae783138e5fd42013f6271049d7df7afadef96c"
 dependencies = [
  "cesu8",
  "combine",
@@ -1457,7 +1472,7 @@ version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c080146e0cc733697fe500413871142af91bd879641205c2febbe5f982f304e3"
 dependencies = [
- "jni",
+ "jni 0.19.0",
  "paste",
  "robusta-codegen",
  "static_assertions",

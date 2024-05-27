@@ -58,7 +58,12 @@ fn setup_security_module(module: SecurityModule) -> Arc<Mutex<dyn Provider>> {
                 Some(log),
             )
             .unwrap(),
-            TpmType::None => unimplemented!(),
+            TpmType::Android(t) => SecModules::get_instance(
+                "test_key".to_owned(),
+                SecurityModule::Tpm(TpmType::Android(t)),
+                Some(log),
+            ).unwrap(),
+            _ => unimplemented!(),
         },
         // _ => unimplemented!(),
     }
