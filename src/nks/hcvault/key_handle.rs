@@ -15,6 +15,7 @@ use crate::common::{
 
 use arrayref::array_ref;
 use base64::prelude::BASE64_STANDARD;
+use ed25519_dalek::{Signature, Signer as EdSigner, SigningKey, Verifier, VerifyingKey};
 //use ed25519_dalek::{Signature, Signer, SigningKey, Verifier, VerifyingKey};
 use openssl::hash::MessageDigest;
 use openssl::pkey::PKey;
@@ -24,7 +25,6 @@ use openssl::pkey::{ Public, Private};
 use serde_json::{json, Value};
 use sodiumoxide::crypto::box_;
 use sodiumoxide::crypto::sign;
-use openssl::sign::{Signer, Verifier};
 
 use x25519_dalek::{
     PublicKey as X25519PublicKey, PublicKey, StaticSecret as X25519StaticSecret, StaticSecret,
@@ -59,13 +59,10 @@ impl KeyHandle for NksProvider {
                 }
                 AsymmetricEncryption::Ecc(ecdsa) => {
                     // ECC signing method
-                    let ec_key = openssl::ec::EcKey::private_key_from_pem(&self.private_key.as_bytes())
-                        .map_err(|_| SecurityModuleError::KeyError)?;
-                    let pkey = PKey::from_ec_key(ec_key).map_err(|_| SecurityModuleError::KeyError)?;
-                    let mut signer = RSASigner::new(MessageDigest::sha256(), &pkey)
-                        .map_err(|_| SecurityModuleError::SigningFailed)?;
-                    signer.update(data).map_err(|_| SecurityModuleError::SigningFailed)?;
-                    signer.sign_to_vec().map_err(|_| SecurityModuleError::SigningFailed)
+                    let static_secret = decode_base64_private_key(self.private_key.as_str());
+                    let signing_key = SigningKey::from_bytes(&static_secret.to_bytes());
+                    let signature_sig = signing_key.sign(data);
+                    Ok(signature_sig.to_vec())
                 }
                 _ => Err(SecurityModuleError::UnsupportedAlgorithm),
             }
@@ -175,13 +172,13 @@ impl KeyHandle for NksProvider {
                 }
                 AsymmetricEncryption::Ecc(ecdsa) => {
                     // ECC signature verification method
-                    let ec_key = openssl::ec::EcKey::public_key_from_pem(&self.public_key.as_bytes())
-                        .map_err(|_| SecurityModuleError::KeyError)?;
-                    let pkey = PKey::from_ec_key(ec_key).map_err(|_| SecurityModuleError::KeyError)?;
-                    let mut verifier = RSAVerifier::new(MessageDigest::sha256(), &pkey)
-                        .map_err(|_| SecurityModuleError::VerificationFailed)?;
-                    verifier.update(data).map_err(|_| SecurityModuleError::VerificationFailed)?;
-                    Ok(verifier.verify(signature).map_err(|_| SecurityModuleError::VerificationFailed)?)
+                    let signature_sig = Signature::from_slice(signature).map_err(|_| SecurityModuleError::InvalidSignature)?;
+                    let public_key_bytes = BASE64_STANDARD.decode(&self.public_key).map_err(|_| SecurityModuleError::InvalidPublicKey)?;
+                    let verifying_result = VerifyingKey::from_bytes(<&[u8; 32]>::try_from(public_key_bytes.as_slice()).map_err(|_| SecurityModuleError::InvalidPublicKey)?);
+                    match verifying_result {
+                        Ok(verifying_key) => Ok(verifying_key.verify(data, &signature_sig).is_ok()),
+                        Err(_) => Err(SecurityModuleError::VerificationFailed),
+                    }
                 }
                 _ => Err(SecurityModuleError::UnsupportedAlgorithm),
             }
@@ -229,4 +226,13 @@ pub fn add_signature_to_secrets(mut secrets_json: Option<Value>, signature: Vec<
         println!("Secrets JSON is empty");
         Err(SecurityModuleError::NksError)
     }
+}
+
+pub fn decode_base64_private_key(private_key_base64: &str) -> StaticSecret {
+    let private_key_base64 = private_key_base64; // example private key
+    let private_key_bytes = BASE64_STANDARD
+        .decode(private_key_base64.as_bytes())
+        .expect("Invalid private key base64");
+    let x25519_private_key = X25519StaticSecret::from(*array_ref![private_key_bytes, 0, 32]);
+    return x25519_private_key;
 }

@@ -75,7 +75,12 @@ fn test_sign_and_verify_ecdsa() {
         .initialize_module()
         .expect("Failed to initialize module");
 
-    if let Some(nks_config) = provider.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>() {
+    let nks_config = provider.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>().cloned();
+
+    if let Some(nks_config) = nks_config {
+        provider
+            .create_key("test_ecdsa_key", Box::new(nks_config.clone()))
+            .expect("Failed to create ECDSA key");
         provider
             .load_key("test_ecdsa_key", Box::new(nks_config.clone()))
             .expect("Failed to load ECDSA key");
@@ -83,7 +88,6 @@ fn test_sign_and_verify_ecdsa() {
         println!("Failed to downcast to NksConfig");
     }
     let data = b"Hello, World!";
-    let signature = provider.sign_data(data);
     let signature = provider.sign_data(data).expect(
         "Failed to sign data",
     );
