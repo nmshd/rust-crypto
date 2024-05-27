@@ -1,7 +1,10 @@
+pub(crate) mod config;
 pub(crate) mod error;
 pub mod knox;
 pub(crate) mod utils;
 pub(crate) mod wrapper;
+
+use std::any::Any;
 
 use robusta_jni::jni::objects::JObject;
 use robusta_jni::jni::JavaVM;
@@ -11,10 +14,12 @@ use crate::common::crypto::algorithms::hashes::Hash;
 use crate::common::crypto::KeyUsage;
 use crate::common::error::SecurityModuleError;
 use crate::common::traits::key_handle::KeyHandle;
+use crate::common::traits::module_provider_config::ProviderConfig;
 use crate::common::{
     crypto::algorithms::encryption::{AsymmetricEncryption, BlockCiphers},
     traits::module_provider::Provider,
 };
+use crate::tpm::android::config::AndroidConfig;
 use crate::tpm::android::wrapper::key_store::key_store::jni::KeyStore;
 use crate::tpm::android::wrapper::key_store::signature::jni::Signature;
 use crate::tpm::core::error::ToTpmError;
@@ -62,6 +67,18 @@ impl AndroidProvider {
             vm: None,
         }
     }
+
+    fn apply_config(&mut self, config: AndroidConfig) -> Result<(), SecurityModuleError> {
+        self.key_algo = config.key_algo;
+        self.sym_algo = config.sym_algo;
+        self.hash = config.hash;
+        self.key_usages = config.key_usages;
+        self.vm = config.vm;
+        if self.vm.is_none() {
+            self.vm = Some(get_java_vm()?);
+        }
+        Ok(())
+    }
 }
 
 /// Implementation of the `Provider` trait for the Android platform.
@@ -99,12 +116,18 @@ impl Provider for AndroidProvider {
     ///
     /// Returns `Ok(())` if the key generation is successful, otherwise returns an error of type `SecurityModuleError`.
     #[instrument]
-    fn create_key(&mut self, key_id: &str) -> Result<(), SecurityModuleError> {
+    fn create_key(
+        &mut self,
+        key_id: &str,
+        config: Box<dyn ProviderConfig>,
+    ) -> Result<(), SecurityModuleError> {
         info!("generating key! {}", key_id);
 
-        // errors if not initialized
-        let algorithm = self.get_algorithm()?;
-        let digest = self.get_digest()?;
+        // load config
+        let config = *(Box::new(config) as Box<dyn Any>)
+            .downcast::<AndroidConfig>()
+            .map_err(|_| SecurityModuleError::InitializationError("Wrong Config".to_owned()))?;
+        self.apply_config(config)?;
 
         let env = self
             .vm
@@ -116,6 +139,10 @@ impl Provider for AndroidProvider {
                     "Could not get java environment, this should never happen".to_owned(),
                 )
             })?;
+
+        // errors if not initialized
+        let algorithm = self.get_algorithm()?;
+        let digest = self.get_digest()?;
 
         let strongbox_backed = true;
 
@@ -162,8 +189,19 @@ impl Provider for AndroidProvider {
     ///
     /// Returns `Ok(())` if the key loading is successful, otherwise returns an error of type `SecurityModuleError`.
     #[instrument]
-    fn load_key(&mut self, key_id: &str) -> Result<(), SecurityModuleError> {
+    fn load_key(
+        &mut self,
+        key_id: &str,
+        config: Box<dyn ProviderConfig>,
+    ) -> Result<(), SecurityModuleError> {
         self.key_id = key_id.to_owned();
+
+        // load config
+        let config = *(Box::new(config) as Box<dyn Any>)
+            .downcast::<AndroidConfig>()
+            .map_err(|_| SecurityModuleError::InitializationError("Wrong Config".to_owned()))?;
+        self.apply_config(config)?;
+
         Ok(())
     }
 
@@ -180,18 +218,10 @@ impl Provider for AndroidProvider {
     ///
     /// Returns `Ok(())` if the module initialization is successful, otherwise returns an error of type `SecurityModuleError`.
     #[instrument]
-    fn initialize_module(
-        &mut self,
-        key_algorithm: AsymmetricEncryption,
-        sym_algorithm: Option<BlockCiphers>,
-        hash: Option<Hash>,
-        key_usages: Vec<KeyUsage>,
-    ) -> Result<(), SecurityModuleError> {
-        self.key_algo = Some(key_algorithm);
-        self.sym_algo = sym_algorithm;
-        self.hash = hash;
-        self.key_usages = Some(key_usages);
-        self.vm = Some(get_java_vm()?);
+    fn initialize_module(&mut self) -> Result<(), SecurityModuleError> {
+        if self.vm.is_none() {
+            self.vm = Some(get_java_vm()?);
+        }
         Ok(())
     }
 }
