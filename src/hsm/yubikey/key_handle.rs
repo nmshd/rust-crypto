@@ -1,9 +1,6 @@
 use super::YubiKeyProvider;
-use crate::{
-    common::{error::SecurityModuleError, traits::key_handle::KeyHandle},
-    yubikey::core::error::YubiKeyError,
-};
-use base64::general_purpose;
+use crate::common::{error::SecurityModuleError, traits::key_handle::KeyHandle};
+use base64::engine::general_purpose;
 use openssl::{
     ec::EcKey,
     hash::MessageDigest,
