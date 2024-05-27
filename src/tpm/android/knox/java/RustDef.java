@@ -72,16 +72,11 @@ class RustDef {
      */
     static native String callRust();
 
-    /**
-     * Is called to start all demo method calls from the Rust side
-     * --temporary--
-     */
     static native byte[] demoEncrypt(byte[] data);
 
-    static native void demoCreate(String key_id, String keyGenInfo);
+    static native void demoCreate(String key_id, String key_gen_info);
 
     static native void demoInit();
-
 
     static native byte[] demoDecrypt(byte[] data);
 
