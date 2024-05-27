@@ -92,7 +92,10 @@ impl KeyHandle for NksProvider {
                     let mut decrypted_data = vec![0; rsa.size() as usize];
                     rsa.private_decrypt(encrypted_data, &mut decrypted_data, Padding::PKCS1)
                         .map_err(|_| SecurityModuleError::DecryptionError("RSA decryption failed".to_string()))?;
-                    Ok(decrypted_data)
+                    let last_non_zero_pos = decrypted_data.iter().rposition(|&x| x != 0).unwrap_or(0) + 1;
+                    let (decrypted_data, _) = decrypted_data.split_at(last_non_zero_pos);
+
+                    Ok(decrypted_data.to_vec())
                 }
                 AsymmetricEncryption::Ecc(ecdh) => {
                     // ECC decryption method
