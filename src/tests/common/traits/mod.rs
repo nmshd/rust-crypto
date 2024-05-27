@@ -2,7 +2,6 @@ use tracing::Level;
 use tracing_appender::rolling;
 use tracing_subscriber::FmtSubscriber;
 
-use crate::nks::hcvault::NksProvider;
 #[cfg(feature = "tpm")]
 use crate::tpm::core::instance::TpmType;
 #[cfg(feature = "tpm")]
