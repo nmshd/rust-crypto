@@ -10,9 +10,7 @@ use crate::{
     },
 };
 use tracing::instrument;
-use serde::de::Unexpected::Option;
 use crate::common::crypto::algorithms::encryption::{BlockCiphers, EccCurves, SymmetricMode};
-use crate::common::crypto::algorithms::hashes::{Sha2Bits, Sha3Bits};
 use crate::common::crypto::algorithms::KeyBits;
 use crate::common::traits::module_provider_config::ProviderConfig;
 use crate::tpm::android::knox::interface::jni::RustDef;
@@ -87,7 +85,6 @@ impl Provider for TpmProvider {
                                 }
                             }
                         }
-
                         _ => {}
                     }
                 }
