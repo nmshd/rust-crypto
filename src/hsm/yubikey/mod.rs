@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use super::YubiKey;
 use crate::common::traits::module_provider_config::ProviderConfig;
 use crate::common::{
     self,
@@ -13,6 +12,7 @@ use crate::common::{
     },
 };
 use tracing::instrument;
+use yubikey::YubiKey;
 
 pub mod key_handle;
 pub mod provider;
@@ -24,7 +24,6 @@ pub mod provider;
 /// like signing, encryption, and decryption. It provides a secure and hardware-backed solution
 /// for managing cryptographic keys and performing cryptographic operations.
 #[derive(Clone, Debug)]
-#[repr(C)]
 pub struct YubiKeyProvider {
     /// A unique identifier for the cryptographic key managed by this provider.
     pub(super) yubikey: YubiKey,

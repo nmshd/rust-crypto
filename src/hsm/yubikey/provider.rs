@@ -1,20 +1,17 @@
 use super::YubiKeyProvider;
-use crate::hsm::ProviderConfig;
-use crate::{
-    common::{
-        crypto::{
-            algorithms::encryption::{AsymmetricEncryption, EccSchemeAlgorithm},
-            KeyUsage,
-        },
-        error::SecurityModuleError,
-        traits::module_provider::Provider,
+use crate::common::{
+    crypto::{
+        algorithms::encryption::{AsymmetricEncryption, EccSchemeAlgorithm},
+        KeyUsage,
     },
-    yubikey::{YubiKeyConfig, YubiKeyError},
+    error::SecurityModuleError,
+    traits::module_provider::Provider,
 };
+use crate::hsm::ProviderConfig;
 use base64::{engine::general_purpose, Engine};
 use tracing::instrument;
-use yubikey::Error;
-use yubikey::{piv::algorithm::AlgorithmId, piv::slot::SlotId, YubiKey};
+
+use yubikey::{piv::algorithm::AlgorithmId, piv::slot::SlotId, Error, YubiKey};
 
 const SLOTS: [u32; 20] = [
     0x005f_c10d,
