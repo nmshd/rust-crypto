@@ -151,9 +151,11 @@ impl Provider for AndroidProvider {
                 .err_internal()?
                 .set_digests(&env, vec![digest])
                 .err_internal()?
-                .set_encryption_paddings(&env, vec!["PKCS1Padding".to_owned()])
+                .set_encryption_paddings(&env, vec![self.get_padding_for_algorithm()?.to_owned()])
                 .err_internal()?
                 .set_signature_paddings(&env, vec!["PKCS1".to_owned()])
+                .err_internal()?
+                .set_block_modes(&env, vec!["ECB".to_owned()])
                 .err_internal()?
                 .set_is_strongbox_backed(&env, strongbox_backed)
                 .err_internal()?;
@@ -346,13 +348,25 @@ impl KeyHandle for AndroidProvider {
                 )
             })?;
 
-        let algorithm = match self.key_algo.as_ref().unwrap() {
-            AsymmetricEncryption::Rsa(_) => "RSA",
-            AsymmetricEncryption::Ecc(_) => {
-                return Err(TpmError::UnsupportedOperation(
-                    "EC is not allowed for en/decryption on android".to_owned(),
-                )
-                .into());
+        let algorithm = if let Some(sym_algo) = &self.sym_algo {
+            match sym_algo {
+                BlockCiphers::Aes(_, _) => "AES",
+                _ => {
+                    return Err(TpmError::UnsupportedOperation(
+                        "Unsupported symmetric algorithm".to_owned(),
+                    )
+                    .into())
+                }
+            }
+        } else {
+            match self.key_algo.as_ref().unwrap() {
+                AsymmetricEncryption::Rsa(_) => "RSA",
+                AsymmetricEncryption::Ecc(_) => {
+                    return Err(TpmError::UnsupportedOperation(
+                        "EC is not allowed for en/decryption on android".to_owned(),
+                    )
+                    .into());
+                }
             }
         };
 
@@ -365,7 +379,7 @@ impl KeyHandle for AndroidProvider {
 
         let cipher = wrapper::key_store::cipher::jni::Cipher::getInstance(
             &env,
-            format!("{algorithm}/ECB/PKCS1Padding"),
+            format!("{}/ECB/{}", algorithm, self.get_padding_for_algorithm()?),
         )
         .err_internal()?;
         cipher.init(&env, 2, key.raw.as_obj()).err_internal()?;
@@ -414,13 +428,25 @@ impl KeyHandle for AndroidProvider {
                 )
             })?;
 
-        let algorithm = match self.key_algo.as_ref().unwrap() {
-            AsymmetricEncryption::Rsa(_) => "RSA",
-            AsymmetricEncryption::Ecc(_) => {
-                return Err(TpmError::UnsupportedOperation(
-                    "EC is not allowed for en/decryption on android".to_owned(),
-                )
-                .into());
+        let algorithm = if let Some(sym_algo) = &self.sym_algo {
+            match sym_algo {
+                BlockCiphers::Aes(_, _) => "AES",
+                _ => {
+                    return Err(TpmError::UnsupportedOperation(
+                        "Unsupported symmetric algorithm".to_owned(),
+                    )
+                    .into())
+                }
+            }
+        } else {
+            match self.key_algo.as_ref().unwrap() {
+                AsymmetricEncryption::Rsa(_) => "RSA",
+                AsymmetricEncryption::Ecc(_) => {
+                    return Err(TpmError::UnsupportedOperation(
+                        "EC is not allowed for en/decryption on android".to_owned(),
+                    )
+                    .into());
+                }
             }
         };
 
@@ -438,7 +464,7 @@ impl KeyHandle for AndroidProvider {
 
         let cipher = wrapper::key_store::cipher::jni::Cipher::getInstance(
             &env,
-            format!("{algorithm}/ECB/PKCS1Padding"),
+            format!("{}/ECB/PKCS1Padding", algorithm),
         )
         .err_internal()?;
 

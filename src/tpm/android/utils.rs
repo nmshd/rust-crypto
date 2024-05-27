@@ -1,7 +1,7 @@
 use crate::{
     common::{
         crypto::algorithms::{
-            encryption::AsymmetricEncryption,
+            encryption::{AsymmetricEncryption, BlockCiphers},
             hashes::{Hash, Sha2Bits},
         },
         error::SecurityModuleError,
@@ -13,6 +13,15 @@ use super::AndroidProvider;
 
 impl AndroidProvider {
     pub fn get_algorithm(&self) -> Result<String, SecurityModuleError> {
+        if let Some(sym_algo) = &self.sym_algo {
+            return match sym_algo {
+                BlockCiphers::Aes(_, _) => Ok("AES".to_owned()),
+                _ => Err(SecurityModuleError::InitializationError(
+                    "Unsupported Algorithm".to_owned(),
+                )),
+            };
+        }
+
         let key_algo = self
             .key_algo
             .as_ref()
@@ -23,6 +32,30 @@ impl AndroidProvider {
         Ok(match key_algo {
             AsymmetricEncryption::Rsa(_) => "RSA",
             AsymmetricEncryption::Ecc(_) => "EC",
+        }
+        .to_owned())
+    }
+
+    pub fn get_padding_for_algorithm(&self) -> Result<String, SecurityModuleError> {
+        if let Some(sym_algo) = &self.sym_algo {
+            return match sym_algo {
+                BlockCiphers::Aes(_, _) => Ok("PKCS7Padding".to_owned()),
+                _ => Err(SecurityModuleError::InitializationError(
+                    "Unsupported Algorithm".to_owned(),
+                )),
+            };
+        }
+
+        let key_algo = self
+            .key_algo
+            .as_ref()
+            .ok_or(SecurityModuleError::InitializationError(
+                "Module is not initialized".to_owned(),
+            ))?;
+
+        Ok(match key_algo {
+            AsymmetricEncryption::Rsa(_) => "PKCS1Padding",
+            AsymmetricEncryption::Ecc(_) => "PKCS1Padding",
         }
         .to_owned())
     }
@@ -43,12 +76,12 @@ impl AndroidProvider {
                 Sha2Bits::Sha384 => Ok("SHA-384".to_owned()),
                 Sha2Bits::Sha512 => Ok("SHA-512".to_owned()),
                 Sha2Bits::Sha512_224 | Sha2Bits::Sha512_256 => {
-                    Err(TpmError::UnsupportedOperation("not supportet".to_owned()).into())
+                    Err(TpmError::UnsupportedOperation("not supported".to_owned()).into())
                 }
             },
             Hash::Md5 => Ok("MD5".to_owned()),
             Hash::Sha3(_) | Hash::Md2 | Hash::Md4 | Hash::Ripemd160 => {
-                Err(TpmError::UnsupportedOperation("not supportet".to_owned()).into())
+                Err(TpmError::UnsupportedOperation("not supported".to_owned()).into())
             }
         }
     }

@@ -140,6 +140,29 @@ impl<'env: 'borrow, 'borrow> Builder<'env, 'borrow> {
         Ok(self)
     }
 
+    pub fn set_block_modes(
+        mut self,
+        env: &'borrow JNIEnv<'env>,
+        block_modes: Vec<String>,
+    ) -> JniResult<Self> {
+        let string_class = env.find_class("java/lang/String")?;
+        let block_mode_array =
+            env.new_object_array(block_modes.len() as jsize, string_class, JObject::null())?;
+        for (i, block_mode) in block_modes.iter().enumerate() {
+            let jstring_block_mode = env.new_string(block_mode)?;
+            env.set_object_array_element(block_mode_array, i as jsize, jstring_block_mode)?;
+        }
+
+        let result = env.call_method(
+            self.raw.as_obj(),
+            "setBlockModes",
+            "([Ljava/lang/String;)Landroid/security/keystore/KeyGenParameterSpec$Builder;",
+            &[block_mode_array.into()],
+        )?;
+        self.raw = AutoLocal::new(env, result.l()?);
+        Ok(self)
+    }
+
     /// Sets whether the key is backed by a strongbox.
     ///
     /// # Arguments
