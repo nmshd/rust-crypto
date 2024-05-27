@@ -160,6 +160,7 @@ impl KeyHandle for NksProvider {
         let data = _data;
         let signature = _signature;
         let pub_key = "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0NCk1JR2ZNQTBHQ1NxR1NJYjNEUUVCQVFVQUE0R05BRENCaVFLQmdRQ2hvV3UyTlZ1ZUl6a2V3cTkzSlFWSUFyMTkNCnRZc3l2YmxzbHIvWGsxd0tRMUpNaWZscWdYQTNlYzZDK3NhOWJSditFeFlvTTQ2eFdNMGNjUDZCNjR1cENMT0ENCk0wc3N0M2pHejJqNmhjRGdJQmNIclBnV005MWpZdE15c1ozZ2t0L3FCd1BTcWM2WTVqeFR4K3ZuSkFmbXB4cTENClRwV0xuNFBsSE9rdkhkNW8yd0lEQVFBQg0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t";
+        let pub_key_ecc = "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0NCk1GWXdFQVlIS29aSXpqMENBUVlGSzRFRUFBb0RRZ0FFaWt3VE9aeVlCbzMvWVZ0M3NYVzBnNDlUR2pUVWRnN0MNCmE5VXpINlJWVHU0QlZtdmlUM2RPT1lHTGNEcEYzWFVJOVhjNkZCQWRER3VtQXNJR1psR1dHdz09DQotLS0tLUVORCBQVUJMSUMgS0VZLS0tLS0NCg==";
 
         if self.public_key.is_empty() || data.is_empty() || signature.is_empty() {
             return Err(InitializationError("Public key, data or signature is empty".to_string()));
@@ -178,7 +179,8 @@ impl KeyHandle for NksProvider {
                 }
                 AsymmetricEncryption::Ecc(ecdsa) => {
                     // ECC signature verification method
-                    let ec_key = openssl::ec::EcKey::public_key_from_pem(&self.public_key.as_bytes())
+                    let public_key_bytes = BASE64_STANDARD.decode(pub_key_ecc.as_bytes()).expect("Invalid private key base64");
+                    let ec_key = openssl::ec::EcKey::public_key_from_pem(public_key_bytes.as_slice())
                         .map_err(|_| SecurityModuleError::KeyError)?;
                     let pkey = PKey::from_ec_key(ec_key).map_err(|_| SecurityModuleError::KeyError)?;
                     let mut verifier = RSAVerifier::new(MessageDigest::sha256(), &pkey)
