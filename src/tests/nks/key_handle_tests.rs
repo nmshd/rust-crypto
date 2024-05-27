@@ -59,13 +59,11 @@ fn test_sign_and_verify_rsa() {
                             }
                             Err(e) => {
                                 eprintln!("Failed to sign data: {:?}", e);
-                                eprintln!("{:?}", backtrace::Backtrace::new());
                             }
                         }
                     }
                     Err(e) => {
                         eprintln!("Failed to load RSA key: {:?}", e);
-                        eprintln!("{:?}", backtrace::Backtrace::new());
                     }
                 }
             } else {
@@ -74,7 +72,6 @@ fn test_sign_and_verify_rsa() {
         }
         Err(e) => {
             eprintln!("Failed to initialize module: {:?}", e);
-            eprintln!("{:?}", backtrace::Backtrace::new());
         }
     }
 }
