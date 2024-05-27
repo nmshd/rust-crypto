@@ -11,7 +11,8 @@ use crate::{
 };
 use tracing::instrument;
 use serde::de::Unexpected::Option;
-use crate::common::crypto::algorithms::encryption::EccCurves;
+use crate::common::crypto::algorithms::encryption::{BlockCiphers, EccCurves, SymmetricMode};
+use crate::common::crypto::algorithms::hashes::{Sha2Bits, Sha3Bits};
 use crate::common::crypto::algorithms::KeyBits;
 use crate::common::traits::module_provider_config::ProviderConfig;
 use crate::tpm::android::knox::interface::jni::RustDef;
@@ -69,21 +70,21 @@ impl Provider for TpmProvider {
                         KeyBits::Bits8192 => { String::from("RSA;8192;SHA-256;PKCS1") }
                     }
                 }
-                AsymmetricEncryption::Ecc(scheme) => { //todo
+                AsymmetricEncryption::Ecc(scheme) => { //todo: test in java prototype
                     match scheme {
                         EccSchemeAlgorithm::EcDsa(curve) => {
                             match curve {
-                                EccCurves::P256 => {}
-                                EccCurves::P384 => {}
-                                EccCurves::P521 => {}
-                                EccCurves::Secp256k1 => {}
-                                EccCurves::BrainpoolP256r1 => {}
-                                EccCurves::BrainpoolP384r1 => {}
-                                EccCurves::BrainpoolP512r1 => {}
-                                EccCurves::BrainpoolP638 => {}
-                                EccCurves::Curve25519 => {}
-                                EccCurves::Curve448 => {}
-                                EccCurves::Frp256v1 => {}
+                                EccCurves::P256 => { String::from("EC/secp256r1/SHA-256") }
+                                EccCurves::P384 => { String::from("EC/secp384r1/SHA-256") }
+                                EccCurves::P521 => { String::from("EC/secp384r1/SHA-256") }
+                                EccCurves::Secp256k1 => { String::from("EC/secp256k1/SHA-256") }
+                                EccCurves::Curve25519 => { String::from("EC/X25519/SHA-256") }
+                                EccCurves::Curve448 => { String::from("EC/X448/SHA-256") }
+                                _ => {
+                                    return Err(SecurityModuleError::Tpm(UnsupportedOperation(
+                                        format!("Unsupported asymmetric encryption algorithm: {:?}",
+                                                config.key_algorithm))));
+                                }
                             }
                         }
 
@@ -98,34 +99,47 @@ impl Provider for TpmProvider {
             };
         } else if config.key_algorithm.is_none() && config.sym_algorithm.is_some() {
             key_algo = match config.sym_algorithm {
-                Option::DESede(bitslength) => {
+                BlockCiphers::Des() => { String::from("DESede;CBC;PKCS7Padding") }
+
+                BlockCiphers::Aes(block, bitslength) => {
+                    //todo: check for correct rust syntax
+                    let mut rv: String = "AES;";
                     match bitslength {
-                        KeyBits::Bits128 => { String::from("DESede;CBC;PKCS7,PKCS5Padding") } //todo which one?
-                        KeyBits::Bits128 => { String::from("DESede;ECB;PKCS7,NoPadding") }
+                        KeyBits::Bits128 => { rv += "128;"; }
+                        KeyBits::Bits192 => { rv += "192;"; }
+                        KeyBits::Bits256 => { rv += "256;"; }
+                        _ => {
+                            return Err(SecurityModuleError::Tpm(UnsupportedOperation(
+                                format!("Unsupported symmetric encryption algorithm: {:?}", config.sym_algorithm))));
+                        }
                     }
-                }
-                Option::Aes(bitslength) => {
-                    match bitslength {
-                        KeyBits::Bits128 => { String::from("AES;128;GCM;NoPadding") }
-                        KeyBits::Bits192 => { String::from("AES;192;GCM;NoPadding") }
-                        KeyBits::Bits256 => { String::from("AES;256;GCM;NoPadding") }
+                    match block { //todo: check if paddings match blocking modes
+                        SymmetricMode::Gcm => { rv += "GCM;NoPadding" }
+                        SymmetricMode::Ecb => { rv += "ECB;PKCS7Padding" }
+                        SymmetricMode::Cbc => { rv += "CBC;PKCS7Padding" }
+                        SymmetricMode::Ctr => { rv += "CTR;PKCS7Padding" }
+                        _ => {
+                            return Err(SecurityModuleError::Tpm(UnsupportedOperation(
+                                format!("Unsupported symmetric encryption algorithm: {:?}", config.sym_algorithm))));
+                        }
                     }
-                }
+                    return rv;
+                },
                 _ => {
                     return Err(SecurityModuleError::Tpm(UnsupportedOperation(
                         format!("Unsupported symmetric encryption algorithm: {:?}", config.sym_algorithm))));
                 }
             };
-        }else {
+        } else {
             return Err(SecurityModuleError::CreationError(format!(
                 "wrong parameters in KnoxConfig:
                 Exactly one of either sym_algorithm or key_algorithm must be Some().\
                 sym_algorithm: {:?}\
                 key_algorithm: {:?}",
-            config.sym_algorithm,
-            config.key_algorithm)))
+                config.sym_algorithm,
+                config.key_algorithm)));
         }
-        RustDef::create_key(config.env,key_id, key_algo)
+        RustDef::create_key(config.env, key_id, key_algo)
     }
 
     /// Loads an existing cryptographic key identified by `key_id`.
