@@ -1,3 +1,4 @@
+pub mod android_logger;
 pub mod config;
 pub(crate) mod error;
 pub mod knox;
@@ -221,9 +222,6 @@ impl Provider for AndroidProvider {
     /// Returns `Ok(())` if the module initialization is successful, otherwise returns an error of type `SecurityModuleError`.
     #[instrument]
     fn initialize_module(&mut self) -> Result<(), SecurityModuleError> {
-        if self.vm.is_none() {
-            self.vm = Some(get_java_vm()?);
-        }
         Ok(())
     }
 }
