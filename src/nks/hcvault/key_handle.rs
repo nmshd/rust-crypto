@@ -30,49 +30,63 @@ use crate::SecurityModuleError::InitializationError;
 use x25519_dalek::{
     PublicKey as X25519PublicKey, PublicKey, StaticSecret as X25519StaticSecret, StaticSecret,
 };
+use crate::common::crypto::algorithms::encryption::{EccCurves, EccSchemeAlgorithm};
+use crate::common::crypto::algorithms::hashes::*;
 
 impl KeyHandle for NksProvider {
     #[tracing::instrument]
     fn sign_data(&self, _data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
-        // Determine the key algorithm based on the key or some other means
-        let key_algorithm = self
-            .config
-            .as_ref()
-            .unwrap()
-            .as_any()
-            .downcast_ref::<NksConfig>()
-            .unwrap()
-            .key_algorithm;
-        let data = _data;
+        if let Some(nks_config) = self.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>() {
+            let key_algorithm = nks_config.key_algorithm;
+            let data = _data;
+            let hash = nks_config.hash;
 
-        if (self.private_key.is_empty() || data.is_empty()) {
-            return Err(InitializationError("Private key is empty".to_string()));
-        } else {
-            match key_algorithm {
-                AsymmetricEncryption::Rsa(rsa) => {
-                    // RSA signing method
-                    let private_key_pem = self.private_key.as_bytes();
-                    let rsa = Rsa::private_key_from_pem(private_key_pem)
-                        .map_err(|_| SecurityModuleError::KeyError)?;
-                    let pkey = PKey::from_rsa(rsa).map_err(|_| SecurityModuleError::KeyError)?;
-                    let mut signer = RSASigner::new(MessageDigest::sha256(), &pkey)
-                        .map_err(|_| SecurityModuleError::SigningFailed)?;
-                    signer
-                        .update(data)
-                        .map_err(|_| SecurityModuleError::SigningFailed)?;
-                    signer
-                        .sign_to_vec()
-                        .map_err(|_| SecurityModuleError::SigningFailed)
+            if (self.private_key.is_empty() || data.is_empty()) {
+                return Err(InitializationError("Private key is empty".to_string()));
+            } else {
+                match key_algorithm {
+                    AsymmetricEncryption::Rsa(key_bits) => {
+                        // RSA signing method
+                        let private_key_pem = self.private_key.as_bytes();
+                        let rsa = Rsa::private_key_from_pem(private_key_pem)
+                            .map_err(|_| SecurityModuleError::KeyError)?;
+                        let pkey = PKey::from_rsa(rsa).map_err(|_| SecurityModuleError::KeyError)?;
+                        // Create the signer based on the hash algorithm
+                        let mut signer = match hash {
+                            Hash::Sha1 => RSASigner::new(MessageDigest::sha1(), &pkey),
+                            Hash::Sha2(Sha2Bits::Sha224) => RSASigner::new(MessageDigest::sha224(), &pkey),
+                            Hash::Sha2(Sha2Bits::Sha256) => RSASigner::new(MessageDigest::sha256(), &pkey),
+                            Hash::Sha2(Sha2Bits::Sha384) => RSASigner::new(MessageDigest::sha384(), &pkey),
+                            Hash::Sha2(Sha2Bits::Sha512) => RSASigner::new(MessageDigest::sha512(), &pkey),
+                            Hash::Sha3(Sha3Bits::Sha3_224) => RSASigner::new(MessageDigest::sha3_224(), &pkey),
+                            Hash::Sha3(Sha3Bits::Sha3_256) => RSASigner::new(MessageDigest::sha3_256(), &pkey),
+                            Hash::Sha3(Sha3Bits::Sha3_384) => RSASigner::new(MessageDigest::sha3_384(), &pkey),
+                            Hash::Sha3(Sha3Bits::Sha3_512) => RSASigner::new(MessageDigest::sha3_512(), &pkey),
+                            Hash::Md5 => RSASigner::new(MessageDigest::md5(), &pkey),
+                            Hash::Ripemd160 => RSASigner::new(MessageDigest::ripemd160(), &pkey),
+                            //Md2 and Md4 are not supported by openssl crate
+                            _ => return Err(SecurityModuleError::UnsupportedAlgorithm),
+                        }.map_err(|_| SecurityModuleError::SigningFailed)?;
+                        signer
+                            .update(data)
+                            .map_err(|_| SecurityModuleError::SigningFailed)?;
+                        signer
+                            .sign_to_vec()
+                            .map_err(|_| SecurityModuleError::SigningFailed)
+                    }
+                    AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::Curve25519)) => {
+                        // ECC signing method
+                        let static_secret = decode_base64_private_key(self.private_key.as_str());
+                        let signing_key = SigningKey::from_bytes(&static_secret.to_bytes());
+                        let signature_sig = signing_key.sign(data);
+                        Ok(signature_sig.to_vec())
+                    }
+                    _ => Err(SecurityModuleError::UnsupportedAlgorithm),
                 }
-                AsymmetricEncryption::Ecc(ecdsa) => {
-                    // ECC signing method
-                    let static_secret = decode_base64_private_key(self.private_key.as_str());
-                    let signing_key = SigningKey::from_bytes(&static_secret.to_bytes());
-                    let signature_sig = signing_key.sign(data);
-                    Ok(signature_sig.to_vec())
-                }
-                _ => Err(SecurityModuleError::UnsupportedAlgorithm),
             }
+        } else {
+            println!("Failed to downcast to NksConfig");
+            Err(SecurityModuleError::NksError)
         }
     }
 
@@ -213,57 +227,70 @@ impl KeyHandle for NksProvider {
         _data: &[u8],
         _signature: &[u8],
     ) -> Result<bool, SecurityModuleError> {
-        // Determine the key algorithm based on the key or some other means
-        let key_algorithm = self
-            .config
-            .as_ref()
-            .unwrap()
-            .as_any()
-            .downcast_ref::<NksConfig>()
-            .unwrap()
-            .key_algorithm;
-        let data = _data;
-        let signature = _signature;
+        if let Some(nks_config) = self.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>() {
+            let key_algorithm = nks_config.key_algorithm;
+            let data = _data;
+            let signature = _signature;
+            let hash = nks_config.hash;
 
-        if self.public_key.is_empty() || data.is_empty() || signature.is_empty() {
-            return Err(InitializationError(
-                "Public key, data or signature is empty".to_string(),
-            ));
-        } else {
-            match key_algorithm {
-                AsymmetricEncryption::Rsa(rsa) => {
-                    // RSA signature verification method
-                    let public_key_pem = self.public_key.as_bytes();
-                    let rsa = Rsa::public_key_from_pem(public_key_pem)
-                        .map_err(|_| SecurityModuleError::KeyError)?;
-                    let pkey = PKey::from_rsa(rsa).map_err(|_| SecurityModuleError::KeyError)?;
-                    let mut verifier = RSAVerifier::new(MessageDigest::sha256(), &pkey)
-                        .map_err(|_| SecurityModuleError::VerificationFailed)?;
-                    verifier
-                        .update(data)
-                        .map_err(|_| SecurityModuleError::VerificationFailed)?;
-                    Ok(verifier
-                        .verify(signature)
-                        .map_err(|_| SecurityModuleError::VerificationFailed)?)
-                }
-                AsymmetricEncryption::Ecc(ecdsa) => {
-                    // ECC signature verification method
-                    let signature_sig = Signature::from_slice(signature)
-                        .map_err(|_| SecurityModuleError::InvalidSignature)?;
-                    let public_key_bytes = BASE64_STANDARD
-                        .decode(&self.public_key)
-                        .map_err(|_| SecurityModuleError::InvalidPublicKey)?;
-                    let verifying_result = VerifyingKey::from_bytes(
-                        <&[u8; 32]>::try_from(public_key_bytes.as_slice())
-                            .map_err(|_| SecurityModuleError::InvalidPublicKey)?,
-                    );
-                    match verifying_result {
-                        Ok(verifying_key) => Ok(verifying_key.verify(data, &signature_sig).is_ok()),
-                        Err(_) => Err(SecurityModuleError::VerificationFailed),
+            if self.public_key.is_empty() || data.is_empty() || signature.is_empty() {
+                return Err(InitializationError(
+                    "Public key, data or signature is empty".to_string(),
+                ));
+            } else {
+                match key_algorithm {
+                    AsymmetricEncryption::Rsa(rsa) => {
+                        // RSA signature verification method
+                        let public_key_pem = self.public_key.as_bytes();
+                        let rsa = Rsa::public_key_from_pem(public_key_pem)
+                            .map_err(|_| SecurityModuleError::KeyError)?;
+                        let pkey = PKey::from_rsa(rsa).map_err(|_| SecurityModuleError::KeyError)?;
+                        let mut verifier = RSAVerifier::new(MessageDigest::sha256(), &pkey)
+                            .map_err(|_| SecurityModuleError::VerificationFailed)?;
+                        let mut verifier = match hash {
+                            Hash::Sha1 => RSAVerifier::new(MessageDigest::sha1(), &pkey),
+                            Hash::Sha2(Sha2Bits::Sha224) => RSAVerifier::new(MessageDigest::sha224(), &pkey),
+                            Hash::Sha2(Sha2Bits::Sha256) => RSAVerifier::new(MessageDigest::sha256(), &pkey),
+                            Hash::Sha2(Sha2Bits::Sha384) => RSAVerifier::new(MessageDigest::sha384(), &pkey),
+                            Hash::Sha2(Sha2Bits::Sha512) => RSAVerifier::new(MessageDigest::sha512(), &pkey),
+                            Hash::Sha3(Sha3Bits::Sha3_224) => RSAVerifier::new(MessageDigest::sha3_224(), &pkey),
+                            Hash::Sha3(Sha3Bits::Sha3_256) => RSAVerifier::new(MessageDigest::sha3_256(), &pkey),
+                            Hash::Sha3(Sha3Bits::Sha3_384) => RSAVerifier::new(MessageDigest::sha3_384(), &pkey),
+                            Hash::Sha3(Sha3Bits::Sha3_512) => RSAVerifier::new(MessageDigest::sha3_512(), &pkey),
+                            Hash::Md5 => RSAVerifier::new(MessageDigest::md5(), &pkey),
+                            Hash::Ripemd160 => RSAVerifier::new(MessageDigest::ripemd160(), &pkey),
+                            //Md2 and Md4 are not supported by openssl crate
+                            _ => return Err(SecurityModuleError::UnsupportedAlgorithm),
+                        }.map_err(|_| SecurityModuleError::SigningFailed)?;
+                        verifier
+                            .update(data)
+                            .map_err(|_| SecurityModuleError::VerificationFailed)?;
+                        Ok(verifier
+                            .verify(signature)
+                            .map_err(|_| SecurityModuleError::VerificationFailed)?)
                     }
+                    AsymmetricEncryption::Ecc(ecdsa) => {
+                        // ECC signature verification method
+                        let signature_sig = Signature::from_slice(signature)
+                            .map_err(|_| SecurityModuleError::InvalidSignature)?;
+                        let public_key_bytes = BASE64_STANDARD
+                            .decode(&self.public_key)
+                            .map_err(|_| SecurityModuleError::InvalidPublicKey)?;
+                        let verifying_result = VerifyingKey::from_bytes(
+                            <&[u8; 32]>::try_from(public_key_bytes.as_slice())
+                                .map_err(|_| SecurityModuleError::InvalidPublicKey)?,
+                        );
+                        match verifying_result {
+                            Ok(verifying_key) => Ok(verifying_key.verify(data, &signature_sig).is_ok()),
+                            Err(_) => Err(SecurityModuleError::VerificationFailed),
+                        }
+                    }
+                    _ => Err(SecurityModuleError::UnsupportedAlgorithm),
                 }
-                _ => Err(SecurityModuleError::UnsupportedAlgorithm),
             }
+        } else {
+            println!("Failed to downcast to NksConfig");
+            Err(SecurityModuleError::NksError)
         }
     }
 }
