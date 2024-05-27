@@ -135,7 +135,7 @@ fn test_sign_and_verify_ecdsa() {
          .decrypt_data(&encrypted_data)
          .expect("Failed to decrypt data");
 
-     assert_eq!(data, decrypted_data.as_slice());
+     assert_eq!(data, decrypted_data.as_slice())
 }
 //
 // #[test]

@@ -41,9 +41,6 @@ impl KeyHandle for NksProvider {
         // Determine the key algorithm based on the key or some other means
         let key_algorithm = self.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>().unwrap().key_algorithm;
         let data = _data;
-        let private_key = "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDpccmrGEsNL7+P6/lLpZBLDLWnwg9qOOxaRK2qscW4knCij5teinwiiaLKB7OtmUwvzN5mJ1wYYdFE6y3nOIXmN8y7xbAKzvBAN7TEXBss/KagtlCXlVTZ0moVZzRNZ8g8BKe1mXgKa2mAjL4PeAQZZfKqtd0AIeqvc6afig/D0tNVxdJdjGyYL+0ul8URu4LtqC9p8i9SbHGWcO1ELJGHJl4OSmvI0P+FqcDRv1QyiZ2ZNzcHcb+zUMAwfHUR130bRzEzgcZUcdKEEvzVfhL6juhQoAuRVriwOi4cIP+x4yjxV0/Tnil1DXwfe7fwfwhabUykI3M4wqTzBf2hKBJfAgMBAAECggEAUS22mX7bKny+OsguavXqFY8X5HyBa8jbuBBF7CPhw+t4q68QsnGp9UCzkVnYS7gRXFX7yL5LMldhtHur/MoVFhe1ZF68dyW7Ojmk7Nuyv5QkRaLgp7XQSeb36PV4pKpAYU6lG2uA6O6tQ3yt4yczFbn0BxUzAwbIW7b17GjQTqHpubS8eratu+fDrUH12uDe8TiMWhb3v831tBkNv7lPdzq20WW0mf66JnJy7uYnEumPP14rjunaclB9tPyHJRBFsELsPsHWTVoTB1ozp344NPlTlNuR1cPb5Qt3GLr+hF0F3EXyZfADjQSKuyl+zm8ZMxoX1nKGJnIfu5cHnQyUIQKBgQD5USFejyNlPSK9bXg8ujAcBt5OnGLE8TrExLD2sWqtQY5m1eIJZG7gR4b8jW6J6f8o9SNkV/DiX8KchGjf9c8jSEhyGdWi501nEWN3nisqb/Y0xtilMzPV7+BNRAJ95oKKDoILCr6Bv7cHh4q++JARaHF8OkYipA3Lg4yg5cfKSQKBgQDvs7y2q9g1OYPyTGTZoxEqn81AucC67x1wUVkjVtnk/BU2jPyArf1LBAgyRIcuPr0R2PgLbCgtDmq10b/T6BNIircTA61ic9r5X0LdD8M94FT7iiXckZv7NOlvNYJgdk3KqGD0ZxMV5HhnhYoC4HUiuq4pPO2vjmPygr3HttA3ZwKBgFcgwi+giDceGWDnu8hFLQDuaYxBXMcEoowXTNy5fdVUfqZzgo3TumfIt2TVLFcoHlK68IZlsTn7SzCVmW0DI0NqRF8TpjRK7yLg0ckAzocDH6CsCRQag7f1H4cBCHnlL6N9lHa1Z4RCcn1AIf3BMd/Thy1p1A7RFD0WGPQ1uQ95AoGBALrgcCIie5+TRbFjqcSbg0it6YGqz/1tapAke9A3aA1EEu3CoSFZhH41mIZIMvP06ca+VzPgkLn/4WX7LwjwiAgoTW6/kS+Oj4uXnzNllJvrB5ZMMBR0WR1SNSQEna7CzQdQmrYwngqVYuGilOSFRg1baWixHcWex4FMONU5S7/FAoGAakVdaKe24kGoICHZjfz7RX3gk2e+0UfoN4x1vfCN9mnq0P5KZSPPuQS/mS1mhoLFgnYE+iPl5CNaWQPNTTOCrYHSbyUpmYCG4e+ZZy5nlV66i+pXug6CF1DHoqsjsU7+SX0RQ4YxyZmeTaYOktrHOfb7kaLS+1DSlCVWsdXaer4=";
-        let priv_key = "LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQ0KTUlJQ1d3SUJBQUtCZ1FDaG9XdTJOVnVlSXprZXdxOTNKUVZJQXIxOXRZc3l2YmxzbHIvWGsxd0tRMUpNaWZscQ0KZ1hBM2VjNkMrc2E5YlJ2K0V4WW9NNDZ4V00wY2NQNkI2NHVwQ0xPQU0wc3N0M2pHejJqNmhjRGdJQmNIclBnVw0KTTkxall0TXlzWjNna3QvcUJ3UFNxYzZZNWp4VHgrdm5KQWZtcHhxMVRwV0xuNFBsSE9rdkhkNW8yd0lEQVFBQg0KQW9HQVJ2VFpsNFUzTW1aZU5pM2I0QjlsZ1NhS3o3dzZYczFCc1BWQlJUK1JBWVJxaGVWd2xKdzhpbTQwQmZaWA0KOTJNR0RmV05IWnI4d3Npc1N4Y2o5QjlYRU94K01tMnFWK0FmWTk0MCsvRDQyQW1GU3JoQUljNG1Ca1BhSG56NA0KVERTa2NDbmp3RmZ0ZkVzU0tWc24ycmUrQk54ekJSTGhYVy9lNFlJUC9EeGFuTmtDUVFETi9ZbEFIbUJiVnVuRA0KbXd2dkkvTUcwc3RNSlU4V2w2bjNMLzJnRkR1RTVjc1dFYTFhTk5yKzNhVDgvdE1rQjYvWFlNOTBkSjRWcTVGYg0KVUdUOUtpOEhBa0VBeU43aTlTbEhZSjFMWkZTWE9JTGgwQitRMEdDQzJQbFhhNi8vMXoycUdhZDRjUldsWmZpaw0KOEx3NDJVL2hocTVXOGtBNVdiRno2NnBIQmgrcEZrYnVqUUpBRlhsSXhaWmxGU0NLWGduYnhLSkt3M3RXRmlvTg0KaEoxcTZvbm1Ocm5sT29WNkZtTGhYM1lESG02Y3RJTWNIN1Z0YjFaNFNmdWVQMFFUY3lGK1phWHdJUUpBZW1LaQ0Kc1hDM0ZueC94Tjl0UzNjakVtVkpIRXpSTEZXdkYrT2g0NGlrclFER2QxQVMrREFvZnF5UGpvZ0hCc0lPSTRkUg0KNmY0ZWZNWEFoRkNoK3ZxNHVRSkFLdVBiVDNpZVNLTlR4Z1J0eDJXY3VPanB2MXZuQ29mMk9OVkxsOGMvSVJDRA0KdCtrbW5qU0wzQmZLdkJ1RHJ0RUJSRENQY1FyUnRVTjFLR0FWQXpWWndnPT0NCi0tLS0tRU5EIFJTQSBQUklWQVRFIEtFWS0tLS0t";
-        let priv_key_ecc = "LS0tLS1CRUdJTiBFQyBQUklWQVRFIEtFWS0tLS0tDQpNSFFDQVFFRUlFZ0tFUC9KeG9neXRzNE1FZUR2V2JjUW5VREJnVEt2YWNVdXJKc3lETUJDb0FjR0JTdUJCQUFLDQpvVVFEUWdBRWlrd1RPWnlZQm8zL1lWdDNzWFcwZzQ5VEdqVFVkZzdDYTlVekg2UlZUdTRCVm12aVQzZE9PWUdMDQpjRHBGM1hVSTlYYzZGQkFkREd1bUFzSUdabEdXR3c9PQ0KLS0tLS1FTkQgRUMgUFJJVkFURSBLRVktLS0tLQ0K";
 
         if (self.private_key.is_empty() || data.is_empty()) {
             return Err(InitializationError("Private key is empty".to_string()));
@@ -51,9 +48,8 @@ impl KeyHandle for NksProvider {
             match key_algorithm {
                 AsymmetricEncryption::Rsa(rsa) => {
                     // RSA signing method
-                    //println!("{}", &self.private_key);
-                    let private_key_bytes = BASE64_STANDARD.decode(priv_key.as_bytes()).expect("Invalid private key base64");
-                    let rsa = Rsa::private_key_from_pem(private_key_bytes.as_slice())
+                    let private_key_pem = self.private_key.as_bytes();
+                    let rsa = Rsa::private_key_from_pem(private_key_pem)
                         .map_err(|_| SecurityModuleError::KeyError)?;
                     let pkey = PKey::from_rsa(rsa).map_err(|_| SecurityModuleError::KeyError)?;
                     let mut signer = RSASigner::new(MessageDigest::sha256(), &pkey)
@@ -63,9 +59,7 @@ impl KeyHandle for NksProvider {
                 }
                 AsymmetricEncryption::Ecc(ecdsa) => {
                     // ECC signing method
-                    let private_key_bytes = BASE64_STANDARD.decode(priv_key_ecc.as_bytes()).expect("Invalid private key base64");
-
-                    let ec_key = openssl::ec::EcKey::private_key_from_pem(private_key_bytes.as_slice())
+                    let ec_key = openssl::ec::EcKey::private_key_from_pem(&self.private_key.as_bytes())
                         .map_err(|_| SecurityModuleError::KeyError)?;
                     let pkey = PKey::from_ec_key(ec_key).map_err(|_| SecurityModuleError::KeyError)?;
                     let mut signer = RSASigner::new(MessageDigest::sha256(), &pkey)
@@ -159,8 +153,6 @@ impl KeyHandle for NksProvider {
         let key_algorithm = self.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>().unwrap().key_algorithm;
         let data = _data;
         let signature = _signature;
-        let pub_key = "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0NCk1JR2ZNQTBHQ1NxR1NJYjNEUUVCQVFVQUE0R05BRENCaVFLQmdRQ2hvV3UyTlZ1ZUl6a2V3cTkzSlFWSUFyMTkNCnRZc3l2YmxzbHIvWGsxd0tRMUpNaWZscWdYQTNlYzZDK3NhOWJSditFeFlvTTQ2eFdNMGNjUDZCNjR1cENMT0ENCk0wc3N0M2pHejJqNmhjRGdJQmNIclBnV005MWpZdE15c1ozZ2t0L3FCd1BTcWM2WTVqeFR4K3ZuSkFmbXB4cTENClRwV0xuNFBsSE9rdkhkNW8yd0lEQVFBQg0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t";
-        let pub_key_ecc = "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0NCk1GWXdFQVlIS29aSXpqMENBUVlGSzRFRUFBb0RRZ0FFaWt3VE9aeVlCbzMvWVZ0M3NYVzBnNDlUR2pUVWRnN0MNCmE5VXpINlJWVHU0QlZtdmlUM2RPT1lHTGNEcEYzWFVJOVhjNkZCQWRER3VtQXNJR1psR1dHdz09DQotLS0tLUVORCBQVUJMSUMgS0VZLS0tLS0NCg==";
 
         if self.public_key.is_empty() || data.is_empty() || signature.is_empty() {
             return Err(InitializationError("Public key, data or signature is empty".to_string()));
@@ -168,8 +160,8 @@ impl KeyHandle for NksProvider {
             match key_algorithm {
                 AsymmetricEncryption::Rsa(rsa) => {
                     // RSA signature verification method
-                    let public_key_bytes = BASE64_STANDARD.decode(pub_key.as_bytes()).expect("Invalid private key base64");
-                    let rsa = Rsa::public_key_from_pem(public_key_bytes.as_slice())
+                    let public_key_pem = self.public_key.as_bytes();
+                    let rsa = Rsa::public_key_from_pem(public_key_pem)
                         .map_err(|_| SecurityModuleError::KeyError)?;
                     let pkey = PKey::from_rsa(rsa).map_err(|_| SecurityModuleError::KeyError)?;
                     let mut verifier = RSAVerifier::new(MessageDigest::sha256(), &pkey)
@@ -179,8 +171,7 @@ impl KeyHandle for NksProvider {
                 }
                 AsymmetricEncryption::Ecc(ecdsa) => {
                     // ECC signature verification method
-                    let public_key_bytes = BASE64_STANDARD.decode(pub_key_ecc.as_bytes()).expect("Invalid private key base64");
-                    let ec_key = openssl::ec::EcKey::public_key_from_pem(public_key_bytes.as_slice())
+                    let ec_key = openssl::ec::EcKey::public_key_from_pem(&self.public_key.as_bytes())
                         .map_err(|_| SecurityModuleError::KeyError)?;
                     let pkey = PKey::from_ec_key(ec_key).map_err(|_| SecurityModuleError::KeyError)?;
                     let mut verifier = RSAVerifier::new(MessageDigest::sha256(), &pkey)
