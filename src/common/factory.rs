@@ -132,7 +132,7 @@ impl SecModule {
             SecurityModule::Hsm(hsm_type) => Some(HsmInstance::create_instance(key_id, hsm_type)),
             #[cfg(feature = "tpm")]
             SecurityModule::Tpm(tpm_type) => Some(TpmInstance::create_instance(key_id, tpm_type)),
-            // _ => unimplemented!(),
+            _ => unimplemented!(),
         }
     }
 }
