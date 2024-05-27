@@ -105,6 +105,7 @@ fn test_sign_and_verify_ecdsa() {
         println!("Failed to downcast to NksConfig");
     }
 
+
      let data = b"Hello, World!";
      let original_length = data.len();
      let encrypted_data = provider.encrypt_data(data).expect("Failed to encrypt data");
