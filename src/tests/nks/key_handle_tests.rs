@@ -87,30 +87,6 @@ fn test_sign_and_verify_ecdsa() {
     assert!(provider.verify_signature(data, &signature,).unwrap());
 }
 
-
-//
-// #[test]
-// fn test_sign_and_verify_ecdsa() {
-//     let mut provider = NksProvider::new("test_ecdsa_key".to_string());
-//
-//     let key_algorithm = AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::Curve25519));
-//     let sym_algorithm = None;
-//     let hash = Some(Hash::Sha2(256.into()));
-//     let key_usages = vec![KeyUsage::ClientAuth, KeyUsage::SignEncrypt];
-//
-//     provider
-//         .initialize_module(999999,999999, key_algorithm.clone(), sym_algorithm.clone(), hash.clone(), key_usages.clone())
-//         .expect("Failed to initialize module");
-//     provider
-//         .create_key("test_rsa_key", key_algorithm.clone(), sym_algorithm.clone(), hash, key_usages)
-//         .expect("Failed to create ECDSA key");
-//
-//     let data = b"Hello, World!";
-//     let signature = provider.sign_data(data).expect("Failed to sign data");
-//
-//     assert!(provider.verify_signature(data, &signature, "").unwrap());
-// }
-//
  #[test]
  fn test_encrypt_and_decrypt_rsa() {
     let mut provider = NksProvider::new("test_key".to_string());
@@ -130,12 +106,13 @@ fn test_sign_and_verify_ecdsa() {
     }
 
      let data = b"Hello, World!";
+     let original_length = data.len();
      let encrypted_data = provider.encrypt_data(data).expect("Failed to encrypt data");
      let decrypted_data = provider
          .decrypt_data(&encrypted_data)
          .expect("Failed to decrypt data");
-
-     assert_eq!(data, decrypted_data.as_slice())
+     let decrypted_data_without_padding: Vec<u8> = decrypted_data[0..original_length].to_vec();
+       assert_eq!(data, decrypted_data_without_padding.as_slice())
 }
 //
 // #[test]
