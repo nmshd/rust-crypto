@@ -38,7 +38,7 @@ use x509_cert::der;
 impl KeyHandle for YubiKeyProvider {
     #[instrument]
     fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
-        let yubikey = self.yubikey.unwrap();
+        let mut yubikey = *self.yubikey.as_ref().unwrap().lock().unwrap();
         let data = data.to_vec();
         let key_algo = self.key_algo.unwrap();
 

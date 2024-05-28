@@ -3,15 +3,15 @@ use crate::common::{
     crypto::KeyUsage, error::SecurityModuleError, traits::module_provider::Provider,
 };
 use crate::hsm::{core::error::HsmError, HsmProviderConfig, ProviderConfig};
-use base64::{engine::general_purpose, Engine};
-use std::str::Utf8Error;
-use tracing::instrument;
-use x509_cert::der::Encode;
-
 use ::yubikey::{
     piv::{self, AlgorithmId, RetiredSlotId, SlotId},
     Error, YubiKey,
 };
+use base64::{engine::general_purpose, Engine};
+use std::str::Utf8Error;
+use std::sync::{Arc, Mutex};
+use tracing::instrument;
+use x509_cert::der::Encode;
 
 const SLOTS: [RetiredSlotId; 20] = [
     RetiredSlotId::R1,
@@ -89,9 +89,8 @@ impl Provider for YubiKeyProvider {
             self.key_usages = Some(hsm_config.key_usage.clone());
             let key_algo = self.key_algo.clone().unwrap();
 
-            let mut yubikey = self.yubikey.as_mut().unwrap();
             let mut usage: &str = "";
-            let slot: u32;
+            let mut slot: u32 = 1;
             let key_usages = self.key_usages.clone().unwrap();
 
             if !self.load_key(key_id, config).is_ok() {
@@ -99,13 +98,14 @@ impl Provider for YubiKeyProvider {
                     SignEncrypt => {
                         match key_algo {
                             Rsa => {
+                                let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
                                 match get_free_slot(&mut yubikey) {
                                     Ok(free) => {
                                         self.slot_id = Some(free);
                                     }
                                     Err(err) => {
                                         return Err(SecurityModuleError::InitializationError(
-                                            "No free slot available".to_string(),
+                                            err.to_string(),
                                         ));
                                     }
                                 }
@@ -127,7 +127,7 @@ impl Provider for YubiKeyProvider {
                                         "-----BEGIN PUBLIC KEY-----\n{}\n-----END PUBLIC KEY-----",
                                         gen_key.trim()
                                     );
-                                        self.pkey = Some(gen_key);
+                                        self.pkey = gen_key;
                                     }
                                     Err(err) => {
                                         return Err(SecurityModuleError::Hsm(
@@ -137,13 +137,14 @@ impl Provider for YubiKeyProvider {
                                 }
                             }
                             Ecc => {
+                                let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
                                 match get_free_slot(&mut yubikey) {
                                     Ok(free) => {
                                         self.slot_id = Some(free);
                                     }
                                     Err(err) => {
                                         return Err(SecurityModuleError::InitializationError(
-                                            "No free slot available".to_string(),
+                                            err.to_string(),
                                         ));
                                     }
                                 }
@@ -166,7 +167,7 @@ impl Provider for YubiKeyProvider {
                                         "-----BEGIN PUBLIC KEY-----\n{}\n-----END PUBLIC KEY-----",
                                         gen_key.trim()
                                     );
-                                        self.pkey = Some(gen_key);
+                                        self.pkey = gen_key;
                                     }
                                     Err(err) => {
                                         return Err(SecurityModuleError::Hsm(
@@ -186,13 +187,14 @@ impl Provider for YubiKeyProvider {
                     Decrypt => {
                         match self.key_algo {
                             Rsa => {
+                                let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
                                 match get_free_slot(&mut yubikey) {
                                     Ok(free) => {
                                         self.slot_id = Some(free);
                                     }
                                     Err(err) => {
                                         return Err(SecurityModuleError::InitializationError(
-                                            "No free slot available".to_string(),
+                                            err.to_string(),
                                         ));
                                     }
                                 }
@@ -214,7 +216,7 @@ impl Provider for YubiKeyProvider {
                                         "-----BEGIN PUBLIC KEY-----\n{}\n-----END PUBLIC KEY-----",
                                         gen_key.trim()
                                     );
-                                        self.pkey = Some(gen_key);
+                                        self.pkey = gen_key;
                                     }
                                     Err(err) => {
                                         return Err(SecurityModuleError::Hsm(
@@ -244,6 +246,7 @@ impl Provider for YubiKeyProvider {
                 match key_usages {
                     SignEncrypt => match self.key_algo {
                         Rsa => {
+                            let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
                             slot = get_reference_u32slot(self.slot_id.unwrap());
                             usage = "encrypt";
                             let gen_key = piv::generate(
@@ -262,7 +265,7 @@ impl Provider for YubiKeyProvider {
                                         "-----BEGIN PUBLIC KEY-----\n{}\n-----END PUBLIC KEY-----",
                                         gen_key.trim()
                                     );
-                                    self.pkey = Some(gen_key);
+                                    self.pkey = gen_key;
                                 }
                                 Err(err) => {
                                     return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
@@ -272,6 +275,7 @@ impl Provider for YubiKeyProvider {
                             }
                         }
                         Ecc => {
+                            let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
                             slot = get_reference_u32slot(self.slot_id.unwrap());
                             usage = "sign";
                             let gen_key = piv::generate(
@@ -290,7 +294,7 @@ impl Provider for YubiKeyProvider {
                                         "-----BEGIN PUBLIC KEY-----\n{}\n-----END PUBLIC KEY-----",
                                         gen_key.trim()
                                     );
-                                    self.pkey = Some(gen_key);
+                                    self.pkey = gen_key;
                                 }
                                 Err(err) => {
                                     return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
@@ -309,6 +313,7 @@ impl Provider for YubiKeyProvider {
                     Decrypt => {
                         match self.key_algo {
                             Rsa => {
+                                let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
                                 slot = get_reference_u32slot(self.slot_id.unwrap());
                                 usage = "decrypt";
                                 let gen_key = piv::generate(
@@ -327,7 +332,7 @@ impl Provider for YubiKeyProvider {
                                         "-----BEGIN PUBLIC KEY-----\n{}\n-----END PUBLIC KEY-----",
                                         gen_key.trim()
                                     );
-                                        self.pkey = Some(gen_key);
+                                        self.pkey = gen_key;
                                     }
                                     Err(err) => {
                                         return Err(SecurityModuleError::Hsm(
@@ -354,7 +359,8 @@ impl Provider for YubiKeyProvider {
                     }
                 }
             }
-            let pkey = self.pkey.unwrap();
+            let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
+            let pkey = self.pkey.clone();
 
             save_key_object(&mut yubikey, usage, key_id, slot, &pkey);
 
@@ -387,7 +393,7 @@ impl Provider for YubiKeyProvider {
         key_id: &str,
         config: Box<dyn ProviderConfig>,
     ) -> Result<(), SecurityModuleError> {
-        let mut yubikey = self.yubikey.unwrap();
+        let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
         let mut found = false;
         for i in 10..19 {
             let data = yubikey.fetch_object(SLOTSU32[i]);
@@ -418,20 +424,22 @@ impl Provider for YubiKeyProvider {
                             }
                             _ => continue,
                         };
-                        self.pkey = Some(public_key);
+                        self.pkey = public_key;
                         found = true;
                         break;
                     }
                 }
                 Err(e) => {
                     println!("Error parsing slot data: {:?}", e);
-                    continue; // Gehe zur nächsten Iteration, wenn ein Fehler beim Parsen auftritt
+                    continue;
                 }
             }
         }
 
         if !found {
-            return Err(SecurityModuleError::Hsm("Key not found"));
+            return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
+                "Key not found".to_string(),
+            )));
         }
 
         Ok(())
@@ -454,22 +462,21 @@ impl Provider for YubiKeyProvider {
     /// On failure, it returns a Yubikey based `Error`.
     #[instrument]
     fn initialize_module(&mut self) -> Result<(), SecurityModuleError> {
-        let yubikey = YubiKey::open().map_err(|_| Error::NotFound).unwrap();
+        let mut yubikey = YubiKey::open().map_err(|_| Error::NotFound).unwrap();
         let verify = yubikey
             .verify_pin("123456".as_ref())
             .map_err(|_| Error::WrongPin {
                 tries: yubikey.get_pin_retries().unwrap(),
             });
 
-        self.yubikey = Some(yubikey);
+        self.yubikey = Some(Arc::new(Mutex::new(yubikey)));
 
         if verify.is_ok() {
             return Ok(());
         } else {
-            return Err(SecurityModuleError::Hsm(
-                "Failed to verify PIN, retries: {}",
-                yubikey.get_pin_retries().unwrap(),
-            ));
+            return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
+                "Failed to verify PIN, retries: {}".to_string(),
+            )));
         }
     }
 
@@ -608,7 +615,7 @@ fn parse_slot_data(data: &[u8]) -> Result<(String, String, String, String), Utf8
 /// On Success, it returns that no more free slots are available.
 fn get_free_slot(yubikey: &mut YubiKey) -> Result<RetiredSlotId, SecurityModuleError> {
     let mut end = false;
-    let mut slot_id: RetiredSlotId;
+    let mut slot_id: RetiredSlotId = SLOTS[0];
     for i in 10..19 {
         let data = yubikey.fetch_object(SLOTSU32[i]);
         let mut output: Vec<u8> = Vec::new();
@@ -638,7 +645,7 @@ fn get_free_slot(yubikey: &mut YubiKey) -> Result<RetiredSlotId, SecurityModuleE
 }
 
 fn get_reference_u32slot(slot: RetiredSlotId) -> u32 {
-    let mut output: u32;
+    let mut output: u32 = SLOTSU32[0];
     for i in 0..20 {
         if SLOTS[i] == slot {
             output = SLOTSU32[i];

@@ -1,10 +1,8 @@
-use std::sync::Arc;
-
 use crate::common::crypto::{algorithms::encryption::AsymmetricEncryption, KeyUsage};
 use crate::hsm::ProviderConfig;
-use tracing::instrument;
-
 use ::yubikey::{piv::RetiredSlotId, YubiKey};
+use std::sync::{Arc, Mutex};
+use tracing::instrument;
 
 pub mod key_handle;
 pub mod provider;
@@ -21,12 +19,12 @@ pub mod provider;
 pub struct YubiKeyProvider {
     /// A unique identifier for the cryptographic key managed by this provider.
     pub(super) key_id: String,
-    pub(super) pkey: Option<String>,
+    pub(super) pkey: String,
     pub(super) config: Option<Arc<dyn ProviderConfig + Sync + Send>>,
     pub(super) slot_id: Option<RetiredSlotId>,
     pub(super) key_usages: Option<Vec<KeyUsage>>,
     pub(super) key_algo: Option<AsymmetricEncryption>,
-    pub(super) yubikey: Option<YubiKey>,
+    pub(super) yubikey: Option<Arc<Mutex<YubiKey>>>,
 }
 
 impl YubiKeyProvider {
@@ -44,7 +42,7 @@ impl YubiKeyProvider {
         Self {
             yubikey: None,
             key_id,
-            pkey: None,
+            pkey: String::new(),
             config: None,
             slot_id: None,
             key_usages: None,
