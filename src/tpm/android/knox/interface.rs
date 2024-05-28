@@ -11,6 +11,7 @@ pub mod jni {
     use jni::JNIEnv;
     use jni::errors::Error;
     use jni::objects::JValue;
+    use jni::JavaVM;
     use robusta_jni::jni::objects::AutoLocal;
     use robusta_jni::jni::sys::jbyteArray;
     use crate::SecurityModuleError;
@@ -66,7 +67,7 @@ pub mod jni {
 
         ///Demo method used to call functions in Rust from the Java app while testing
         pub extern "jni" fn demoCreate(environment: &JNIEnv, key_id: String, key_gen_info: String) -> () {
-            Self::create_key(environment, key_id, key_gen_info).unwrap();
+            Self::create_key(environment.get_java_vm().unwrap(), key_id, key_gen_info).unwrap();
         }
 
         ///Demo method used to call functions in Rust from the Java app while testing
@@ -131,7 +132,8 @@ pub mod jni {
         ///
         /// # Arguments
         /// `key_id` - String that uniquely identifies the key so that it can be retrieved later
-        pub fn create_key(environment: &JNIEnv, key_id: String, key_gen_info: String) -> Result<(), SecurityModuleError> {
+        pub fn create_key(vm: JavaVM, key_id: String, key_gen_info: String) -> Result<(), SecurityModuleError> {
+            let environment = vm.get_env().unwrap();
             let result = environment.call_static_method(
                 "com/example/vulcans_limes/RustDef",
                 "create_key",

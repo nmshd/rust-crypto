@@ -1,4 +1,3 @@
-use jni::errors::Error;
 use crate::{
     common::{
         crypto::{
@@ -55,6 +54,7 @@ impl Provider for KnoxProvider {
             Ok(value) => value,
             Err(value) => return Err(value),
         };
+
         let key_algo;
         if config.key_algorithm.is_some() && config.sym_algorithm.is_none() {
             key_algo = match config.key_algorithm.expect("Already checked") {
@@ -91,11 +91,6 @@ impl Provider for KnoxProvider {
                                     config.key_algorithm))));
                         }
                     }
-                }
-                _ => {
-                    return Err(SecurityModuleError::Tpm(UnsupportedOperation(
-                        format!("Unsupported asymmetric encryption algorithm: {:?}",
-                                config.key_algorithm))));
                 }
             };
         } else if config.key_algorithm.is_none() && config.sym_algorithm.is_some() {
@@ -139,16 +134,7 @@ impl Provider for KnoxProvider {
                 config.sym_algorithm,
                 config.key_algorithm)));
         }
-        
-        let env = match &config.vm.get_env() {
-            Ok(e) => {e}
-            Err(_) => {
-                return Err(SecurityModuleError::CreationError(
-                    String::from("failed to extract JNIEnv from JavaVM")))
-            }
-        };
-        
-        RustDef::create_key(env, String::from(key_id), key_algo)
+        RustDef::create_key(config.vm, String::from(key_id), key_algo)
     }
 
     /// Loads an existing cryptographic key identified by `key_id`.
@@ -175,7 +161,11 @@ impl Provider for KnoxProvider {
             Ok(value) => value,
             Err(value) => return Err(value),
         };
-        RustDef::load_key(&conf.env, String::from(key_id))
+        let env = match Self::jvm_to_jnienv(&conf) {
+            Ok(value) => value,
+            Err(value) => return value,
+        };
+        RustDef::load_key(&env, String::from(key_id))
     }
 
     /// Initializes the TPM module and returns a handle for cryptographic operations.
