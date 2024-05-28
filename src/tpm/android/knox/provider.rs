@@ -29,7 +29,7 @@ impl Provider for TpmProvider {
     ///
     /// This method creates a persisted cryptographic key using the specified algorithm
     /// and identifier, making it retrievable for future operations. The key is created
-    /// with the specified key usages and stored in the TPM.
+    ///  and stored in Knox Vault.
     ///
     /// # Arguments
     ///
@@ -99,8 +99,7 @@ impl Provider for TpmProvider {
                 BlockCiphers::Des() => { String::from("DESede;CBC;PKCS7Padding") }
 
                 BlockCiphers::Aes(block, bitslength) => {
-                    //todo: check for correct rust syntax
-                    let mut rv: String = "AES;";
+                    let mut rv = String::from("AES;");
                     match bitslength {
                         KeyBits::Bits128 => { rv += "128;"; }
                         KeyBits::Bits192 => { rv += "192;"; }
@@ -120,7 +119,7 @@ impl Provider for TpmProvider {
                                 format!("Unsupported symmetric encryption algorithm: {:?}", config.sym_algorithm))));
                         }
                     }
-                    return rv;
+                    rv
                 },
                 _ => {
                     return Err(SecurityModuleError::Tpm(UnsupportedOperation(
