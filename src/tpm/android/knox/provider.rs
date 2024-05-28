@@ -110,9 +110,8 @@ impl Provider for KnoxProvider {
                     }
                     match block { //todo: check if paddings match blocking modes
                         SymmetricMode::Gcm => { rv += "GCM;NoPadding" }
-                        SymmetricMode::Ecb => { rv += "ECB;PKCS7Padding" }
                         SymmetricMode::Cbc => { rv += "CBC;PKCS7Padding" }
-                        SymmetricMode::Ctr => { rv += "CTR;PKCS7Padding" }
+                        SymmetricMode::Ctr => { rv += "CTR;NoPadding" }
                         _ => {
                             return Err(SecurityModuleError::Tpm(UnsupportedOperation(
                                 format!("Unsupported symmetric encryption algorithm: {:?}", config.sym_algorithm))));
