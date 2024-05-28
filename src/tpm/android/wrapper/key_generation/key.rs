@@ -16,6 +16,13 @@ pub mod jni {
         pub raw: AutoLocal<'env, 'borrow>,
     }
 
+    #[derive(Signature, TryIntoJavaValue, IntoJavaValue, TryFromJavaValue)]
+    #[package(javax.crypto)]
+    pub struct SecretKey<'env: 'borrow, 'borrow> {
+        #[instance]
+        pub raw: AutoLocal<'env, 'borrow>,
+    }
+
     /// Represents a public key in Java's `java.security` package.
     #[derive(Signature, TryIntoJavaValue, IntoJavaValue, TryFromJavaValue)]
     #[package(java.security)]
