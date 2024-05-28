@@ -67,7 +67,7 @@ impl Provider for YubiKeyProvider {
             match config.key_usage {
                 SignEncrypt => match config.key_algorithm {
                     Rsa => {
-                        match get_free_slot() {
+                        match self.get_free_slot() {
                             Ok(free) => {
                                 self.slot_id = free;
                             }
@@ -98,7 +98,7 @@ impl Provider for YubiKeyProvider {
                         }
                     }
                     Ecc => {
-                        match get_free_slot() {
+                        match self.get_free_slot() {
                             Ok(free) => {
                                 self.slot_id = free;
                             }
@@ -123,7 +123,7 @@ impl Provider for YubiKeyProvider {
                 Decrypt => {
                     match config.key_algorithm {
                         Rsa => {
-                            match get_free_slot() {
+                            match self.get_free_slot() {
                                 Ok(free) => {
                                     self.slot_id = free;
                                 }
@@ -242,7 +242,7 @@ impl Provider for YubiKeyProvider {
             }
         }
 
-        save_key_object(usage);
+        self.save_key_object(usage);
 
         OK(())
     }

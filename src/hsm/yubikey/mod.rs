@@ -50,7 +50,7 @@ impl YubiKeyProvider {
             key_id,
             pkey: None,
             config: None,
-            SlotId: None,
+            slot_id: None,
         }
     }
     /*

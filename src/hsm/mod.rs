@@ -3,7 +3,7 @@ use crate::common::crypto::{algorithms::encryption::AsymmetricEncryption, KeyUsa
 pub mod core;
 pub mod nitrokey;
 
-#[cfg(feature = "yubikey")]
+//#[cfg(feature = "yubikey")]
 pub mod yubikey;
 
 pub struct ProviderConfig {
