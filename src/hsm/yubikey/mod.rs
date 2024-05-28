@@ -5,9 +5,10 @@ use crate::hsm::yubikey;
 use crate::hsm::ProviderConfig;
 use tracing::instrument;
 
-use yubikey::{piv::RetiredSlotId, YubiKey};
+use ::yubikey::{piv::RetiredSlotId, YubiKey};
 
 pub mod key_handle;
+mod main;
 pub mod provider;
 
 /// A YubiKey-based cryptographic provider for managing cryptographic keys and performing

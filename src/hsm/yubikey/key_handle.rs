@@ -1,6 +1,11 @@
 use super::YubiKeyProvider;
 use crate::common::{error::SecurityModuleError, traits::key_handle::KeyHandle};
 
+use ::yubikey::piv;
+use ::yubikey::{
+    piv::{AlgorithmId, SlotId},
+    MgmKey,
+};
 use base64::{engine::general_purpose, Engine};
 use openssl::{
     ec::EcKey,
@@ -13,11 +18,6 @@ use rsa::sha2::Digest;
 use sha2::Sha256;
 use tracing::instrument;
 use x509_cert::der;
-use yubikey::piv;
-use yubikey::{
-    piv::{AlgorithmId, SlotId},
-    MgmKey,
-};
 
 /// Provides cryptographic operations for asymmetric keys on a YubiKey,
 /// such as signing, encryption, decryption, and signature verification.

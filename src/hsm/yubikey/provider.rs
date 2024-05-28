@@ -8,7 +8,7 @@ use std::str::Utf8Error;
 use tracing::instrument;
 use x509_cert::der::Encode;
 
-use yubikey::{
+use ::yubikey::{
     piv::{self, AlgorithmId, RetiredSlotId, SlotId},
     Error, YubiKey,
 };
