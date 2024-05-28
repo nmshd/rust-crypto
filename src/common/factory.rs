@@ -17,7 +17,7 @@ type SecurityModuleInstances = Lazy<Mutex<SecurityModuleMap>>;
 ///
 /// This enum categorizes security modules into HSM (Hardware Security Module) and
 /// TPM (Trusted Platform Module), allowing for a unified interface when working with different types of security modules.
-#[repr(C)]
+//#[repr(C)]
 #[derive(Eq, Hash, PartialEq, Clone, Debug)]
 pub enum SecurityModule {
     #[cfg(feature = "hsm")]
@@ -132,7 +132,7 @@ impl SecModule {
             SecurityModule::Hsm(hsm_type) => Some(HsmInstance::create_instance(key_id, hsm_type)),
             #[cfg(feature = "tpm")]
             SecurityModule::Tpm(tpm_type) => Some(TpmInstance::create_instance(key_id, tpm_type)),
-            // _ => unimplemented!(),
+            _ => unimplemented!(),
         }
     }
 }

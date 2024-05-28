@@ -1,33 +1,23 @@
 #[cfg(test)]
-use crate::{
-    common::crypto::algorithms::{encryption::SymmetricMode, hashes::Sha2Bits, KeyBits},
-    tpm::TpmConfig,
-};
+use crate::common::crypto::algorithms::{encryption::SymmetricMode, hashes::Sha2Bits, KeyBits};
 #[allow(unused_imports)]
-use crate::{
-    common::{
-        crypto::{
-            algorithms::{
-                encryption::{AsymmetricEncryption, BlockCiphers, EccCurves, EccSchemeAlgorithm},
-                hashes::Hash,
-            },
-            KeyUsage,
+use crate::common::{
+    crypto::{
+        algorithms::{
+            encryption::{AsymmetricEncryption, BlockCiphers, EccCurves, EccSchemeAlgorithm},
+            hashes::Hash,
         },
-        traits::{key_handle::KeyHandle, module_provider::Provider},
+        KeyUsage,
     },
-    tpm::win::TpmProvider,
+    traits::{key_handle::KeyHandle, module_provider::Provider},
 };
+use crate::hsm::yubikey::{self, YubiKeyProvider};
 
 #[test]
 fn test_sign_and_verify_rsa() {
-    let mut provider = TpmProvider::new("test_rsa_key".to_string());
+    let mut provider = YubiKeyProvider::new("test_rsa_key".to_string());
 
-    let config = TpmConfig::new(
-        AsymmetricEncryption::Rsa(KeyBits::Bits4096),
-        BlockCiphers::Aes(SymmetricMode::Gcm, KeyBits::Bits512),
-        Hash::Sha2(Sha2Bits::Sha256),
-        vec![KeyUsage::SignEncrypt, KeyUsage::ClientAuth],
-    );
+    let config = YubiKeyProvider::new("rsa-test-key".to_string());
 
     provider
         .initialize_module()
@@ -43,20 +33,10 @@ fn test_sign_and_verify_rsa() {
 }
 
 #[test]
-fn test_sign_and_verify_ecdsa() {
-    let mut provider = TpmProvider::new("test_ecdsa_key".to_string());
+fn test_sign_and_verify_ecc() {
+    let mut provider = YubiKeyProvider::new("test_ecdsa_key".to_string());
 
-    let config = TpmConfig::new(
-        AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::Curve25519)),
-        BlockCiphers::Aes(SymmetricMode::Gcm, KeyBits::Bits512),
-        Hash::Sha2(Sha2Bits::Sha256),
-        vec![
-            KeyUsage::SignEncrypt,
-            KeyUsage::ClientAuth,
-            KeyUsage::Decrypt,
-            KeyUsage::CreateX509,
-        ],
-    );
+    let config = YubiKeyProvider::new("ecc-test-key".to_string());
 
     provider
         .initialize_module()
