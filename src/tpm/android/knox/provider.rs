@@ -14,9 +14,9 @@ use crate::common::crypto::algorithms::encryption::{BlockCiphers, EccCurves, Sym
 use crate::common::crypto::algorithms::KeyBits;
 use crate::common::traits::module_provider_config::ProviderConfig;
 use crate::tpm::android::knox::interface::jni::RustDef;
-use crate::tpm::android::knox::KnoxConfig;
+use crate::tpm::android::knox::{KnoxConfig, KnoxProvider};
 use crate::tpm::core::error::TpmError::UnsupportedOperation;
-use crate::tpm::linux::TpmProvider;
+
 
 
 /// Implements the `Provider` trait, providing cryptographic operations utilizing a TPM.
@@ -24,7 +24,7 @@ use crate::tpm::linux::TpmProvider;
 /// This implementation is specific to the Windows platform and utilizes the Windows CNG API
 /// to interact with the Trusted Platform Module (TPM) for key management and cryptographic
 /// operations.
-impl Provider for TpmProvider {
+impl Provider for KnoxProvider {
     /// Creates a new cryptographic key identified by `key_id`.
     ///
     /// This method creates a persisted cryptographic key using the specified algorithm
@@ -34,10 +34,16 @@ impl Provider for TpmProvider {
     /// # Arguments
     ///
     /// * `key_id` - A string slice that uniquely identifies the key to be created.
-    /// * `key_algorithm` - The asymmetric encryption algorithm to be used for the key.
-    /// * `sym_algorithm` - An optional symmetric encryption algorithm to be used with the key.
-    /// * `hash` - An optional hash algorithm to be used with the key.
-    /// * `key_usages` - A vector of `AppKeyUsage` values specifying the intended usages for the key.
+    /// * `Box<dyn ProviderConfig>` - A Box containing a KnoxConfig that has all further required parameters:
+    ///   * key_algorithm: Option\<AsymmetricEncryption>,
+    ///   * sym_algorithm: Option\<BlockCiphers>,
+    ///   * env: JNIEnv<'a>
+    ///
+    ///   There must be exactly one of either key_algorithm or sym_algorithm provided.
+    ///   If both are Some or None, the method returns an Error.
+    ///   The env parameter is necessary to access the Java Virtual Machine from Rust code. When
+    ///   calling Rust code from Java using the Java Native Interface, this value will be provided to the
+    ///   Rust code by the JNI.
     ///
     /// # Returns
     ///

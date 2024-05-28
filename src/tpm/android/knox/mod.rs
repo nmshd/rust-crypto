@@ -1,14 +1,34 @@
 use std::any::Any;
 use std::fmt;
 use std::fmt::{Debug, Formatter};
-use robusta_jni::jni;
 use crate::common::crypto::algorithms::encryption::{AsymmetricEncryption, BlockCiphers};
-use crate::common::crypto::algorithms::hashes::Hash;
 use crate::common::traits::module_provider_config::ProviderConfig;
 use jni::JNIEnv;
+use tracing::instrument;
+
 mod interface;
-mod key_handle;
-mod provider;
+pub mod key_handle;
+pub mod provider;
+
+/// A TPM-based cryptographic provider for managing cryptographic keys and performing
+/// cryptographic operations in an Samsung environment. This provider uses the Java Native Interface
+/// and the Android Keystore API to access the TPM "Knox Vault" developed by Samsung
+#[derive(Clone, Debug)]
+#[repr(C)]
+pub struct KnoxProvider {}
+
+impl KnoxProvider {
+    /// Constructs a new `TpmProvider`.
+    ///
+    ///
+    /// # Returns
+    ///
+    /// A new instance of `TpmProvider`.
+    #[instrument]
+    pub fn new() -> Self {
+        Self {}
+    }
+}
 
 ///A struct defining the needed values for the create_key() function in provider.rs
 ///At any time, either a key_algorithm OR a sym_algorithm must be supplied, not both.
@@ -41,7 +61,6 @@ impl KnoxConfig {
     pub fn new<'a>(
          key_algorithm: Option<AsymmetricEncryption>,
          sym_algorithm: Option<BlockCiphers>,
-         hash: Hash, //todo: Test if necessary for sym keys
          env: JNIEnv<'a>
     ) -> Box<dyn ProviderConfig> {
         Box::new(Self {
