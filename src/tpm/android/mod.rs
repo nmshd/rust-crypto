@@ -8,14 +8,15 @@ pub(crate) mod wrapper;
 use std::any::Any;
 
 use robusta_jni::jni::objects::JObject;
-use robusta_jni::jni::JavaVM;
 use tracing::{debug, info, instrument};
+use utils::{
+    get_algorithm, get_cipher_mode, get_digest, get_key_size, get_padding, get_signature_algorithm,
+    get_signature_padding, get_sym_block_mode,
+};
 
-use crate::common::crypto::algorithms::hashes::Hash;
 use crate::common::crypto::KeyUsage;
 use crate::common::error::SecurityModuleError;
 use crate::common::traits::key_handle::KeyHandle;
-use crate::common::traits::module_provider_config::ProviderConfig;
 use crate::common::{
     crypto::algorithms::encryption::{AsymmetricEncryption, BlockCiphers},
     traits::module_provider::Provider,
@@ -25,8 +26,6 @@ use crate::tpm::android::wrapper::key_store::key_store::jni::KeyStore;
 use crate::tpm::android::wrapper::key_store::signature::jni::Signature;
 use crate::tpm::core::error::ToTpmError;
 use crate::tpm::core::error::TpmError;
-
-use self::wrapper::get_java_vm;
 
 const ANDROID_KEYSTORE: &str = "AndroidKeyStore";
 
@@ -38,13 +37,10 @@ const ANDROID_KEYSTORE: &str = "AndroidKeyStore";
 /// for operations like signing, encryption, and decryption.
 /// It provides a secure and hardware-backed solution for managing cryptographic keys and performing
 /// cryptographic operations on Android.
+#[derive(Debug)]
 pub(crate) struct AndroidProvider {
     key_id: String,
-    key_algo: Option<AsymmetricEncryption>,
-    sym_algo: Option<BlockCiphers>,
-    hash: Option<Hash>,
-    key_usages: Option<Vec<KeyUsage>>,
-    vm: Option<JavaVM>,
+    config: Option<AndroidConfig>,
 }
 
 impl AndroidProvider {
@@ -53,6 +49,7 @@ impl AndroidProvider {
     /// # Arguments
     ///
     /// * `key_id` - A string identifier for the cryptographic key to be managed by this provider.
+    /// * `config` - Configuration
     ///
     /// # Returns
     ///
@@ -61,23 +58,13 @@ impl AndroidProvider {
     pub fn new(key_id: String) -> Self {
         Self {
             key_id,
-            key_algo: None,
-            sym_algo: None,
-            hash: None,
-            key_usages: None,
-            vm: None,
+            config: None,
         }
     }
 
     fn apply_config(&mut self, config: AndroidConfig) -> Result<(), SecurityModuleError> {
-        self.key_algo = config.key_algo;
-        self.sym_algo = config.sym_algo;
-        self.hash = config.hash;
-        self.key_usages = config.key_usages;
-        self.vm = config.vm;
-        if self.vm.is_none() {
-            self.vm = Some(get_java_vm()?);
-        }
+        // TODO: verify config
+        self.config = Some(config);
         Ok(())
     }
 }
@@ -128,9 +115,8 @@ impl Provider for AndroidProvider {
         let config = *config
             .downcast::<AndroidConfig>()
             .map_err(|_| SecurityModuleError::InitializationError("Wrong Config".to_owned()))?;
-        self.apply_config(config)?;
 
-        let env = self
+        let env = config
             .vm
             .as_ref()
             .expect("cannot happen, already checked")
@@ -141,43 +127,92 @@ impl Provider for AndroidProvider {
                 )
             })?;
 
-        // errors if not initialized
-        let algorithm = self.get_algorithm()?;
-        let digest = self.get_digest()?;
-
-        let strongbox_backed = true;
-
-        let kps_builder =
+        // build up key specs
+        let mut kps_builder =
             wrapper::key_generation::builder::Builder::new(&env, key_id.to_owned(), 1 | 2 | 4 | 8)
-                .err_internal()?
-                .set_digests(&env, vec![digest])
-                .err_internal()?
-                .set_encryption_paddings(&env, vec![self.get_padding_for_algorithm()?.to_owned()])
-                .err_internal()?
-                .set_signature_paddings(&env, vec!["PKCS1".to_owned()])
-                .err_internal()?
-                .set_block_modes(&env, vec!["ECB".to_owned()])
-                .err_internal()?
-                .set_is_strongbox_backed(&env, strongbox_backed)
                 .err_internal()?;
 
-        // TODO: if we have a key size, set it
-        self.get_key_size();
+        match config.mode {
+            config::EncryptionMode::Sym(cipher) => {
+                match cipher {
+                    BlockCiphers::Aes(mode, size) => {
+                        kps_builder = kps_builder
+                            .set_block_modes(&env, vec![get_sym_block_mode(mode)?])
+                            .err_internal()?
+                            .set_encryption_paddings(&env, vec![get_padding()?])
+                            .err_internal()?
+                            .set_key_size(&env, Into::<u32>::into(size) as i32)
+                            .err_internal()?;
+                    }
+                    BlockCiphers::Des => {
+                        kps_builder = kps_builder
+                            .set_block_modes(&env, vec!["CBC".to_owned()])
+                            .err_internal()?
+                            .set_encryption_paddings(&env, vec![get_padding()?])
+                            .err_internal()?;
+                    }
+                    BlockCiphers::TripleDes(_)
+                    | BlockCiphers::Rc2(_)
+                    | BlockCiphers::Camellia(_, _) => {
+                        Err(TpmError::UnsupportedOperation("not supported".to_owned()))?
+                    }
+                };
+                kps_builder = kps_builder
+                    .set_is_strongbox_backed(&env, config.hardware_backed)
+                    .err_internal()?;
 
-        let kps = kps_builder.build(&env).err_internal()?;
+                let kps = kps_builder.build(&env).err_internal()?;
 
-        let kpg = wrapper::key_generation::key_pair_generator::jni::KeyPairGenerator::getInstance(
-            &env,
-            algorithm.to_owned(),
-            ANDROID_KEYSTORE.to_owned(),
-        )
-        .err_internal()?;
+                let kg = wrapper::key_generation::key_generator::jni::KeyGenerator::getInstance(
+                    &env,
+                    get_algorithm(config.mode)?,
+                    ANDROID_KEYSTORE.to_owned(),
+                )
+                .err_internal()?;
+                kg.init(&env, kps.raw.as_obj()).err_internal()?;
 
-        kpg.initialize(&env, kps.raw.as_obj()).err_internal()?;
+                kg.generateKey(&env).err_internal()?;
+            }
+            config::EncryptionMode::ASym { algo, digest } => {
+                match algo {
+                    AsymmetricEncryption::Rsa(_key_bits) => {
+                        kps_builder = kps_builder
+                            .set_digests(&env, vec![get_digest(digest)?])
+                            .err_internal()?
+                            .set_signature_paddings(&env, vec![get_signature_padding()?])
+                            .err_internal()?
+                            .set_encryption_paddings(&env, vec![get_padding()?])
+                            .err_internal()?
+                            .set_key_size(&env, get_key_size(algo)? as i32)
+                            .err_internal()?;
+                    }
+                    AsymmetricEncryption::Ecc(_scheme) => {
+                        kps_builder = kps_builder
+                            .set_digests(&env, vec![get_digest(digest)?])
+                            .err_internal()?;
+                    }
+                };
+                kps_builder = kps_builder
+                    .set_is_strongbox_backed(&env, config.hardware_backed)
+                    .err_internal()?;
 
-        kpg.generateKeyPair(&env).err_internal()?;
+                let kps = kps_builder.build(&env).err_internal()?;
+
+                let kpg = wrapper::key_generation::key_pair_generator::jni::KeyPairGenerator::getInstance(
+                    &env,
+                    get_algorithm(config.mode)?,
+                    ANDROID_KEYSTORE.to_owned(),
+                    )
+                    .err_internal()?;
+
+                kpg.initialize(&env, kps.raw.as_obj()).err_internal()?;
+
+                kpg.generateKeyPair(&env).err_internal()?;
+            }
+        }
 
         debug!("key generated");
+        self.apply_config(config)?;
 
         Ok(())
     }
@@ -193,7 +228,7 @@ impl Provider for AndroidProvider {
     /// Returns `Ok(())` if the key loading is successful, otherwise returns an error of type `SecurityModuleError`.
     #[instrument]
     fn load_key(&mut self, key_id: &str, config: Box<dyn Any>) -> Result<(), SecurityModuleError> {
-        self.key_id = key_id.to_owned();
+        key_id.clone_into(&mut self.key_id);
 
         // load config
         let config = *config
@@ -254,21 +289,21 @@ impl KeyHandle for AndroidProvider {
     #[instrument]
     fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         // check that signing is allowed
-        if !self
-            .key_usages
+        let config = self
+            .config
             .as_ref()
             .ok_or(SecurityModuleError::InitializationError(
                 "Module is not initialized".to_owned(),
-            ))?
-            .contains(&KeyUsage::SignEncrypt)
-        {
+            ))?;
+
+        if !config.key_usages.contains(&KeyUsage::SignEncrypt) {
             return Err(TpmError::UnsupportedOperation(
                 "KeyUsage::SignEncrypt was not provided".to_owned(),
             )
             .into());
         }
 
-        let env = self
+        let env = config
             .vm
             .as_ref()
             .ok_or_else(|| TpmError::InitializationError("Module is not initialized".to_owned()))?
@@ -286,11 +321,7 @@ impl KeyHandle for AndroidProvider {
             .getKey(&env, self.key_id.clone(), JObject::null())
             .err_internal()?;
 
-        let signature_algorithm = match self.key_algo {
-            Some(AsymmetricEncryption::Rsa(_)) => "SHA256withRSA",
-            Some(AsymmetricEncryption::Ecc(_)) => "SHA256withECDSA",
-            _ => panic!("Invalid key_algo"),
-        };
+        let signature_algorithm = get_signature_algorithm(config.mode)?;
         debug!("Signature Algorithm: {}", signature_algorithm);
 
         let s = Signature::getInstance(&env, signature_algorithm.to_string()).err_internal()?;
@@ -331,7 +362,15 @@ impl KeyHandle for AndroidProvider {
     #[instrument]
     fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         info!("decrypting data");
-        let env = self
+
+        let config = self
+            .config
+            .as_ref()
+            .ok_or(SecurityModuleError::InitializationError(
+                "Module is not initialized".to_owned(),
+            ))?;
+
+        let env = config
             .vm
             .as_ref()
             .ok_or_else(|| TpmError::InitializationError("Module is not initialized".to_owned()))?
@@ -342,27 +381,7 @@ impl KeyHandle for AndroidProvider {
                 )
             })?;
 
-        let algorithm = if let Some(sym_algo) = &self.sym_algo {
-            match sym_algo {
-                BlockCiphers::Aes(_, _) => "AES",
-                _ => {
-                    return Err(TpmError::UnsupportedOperation(
-                        "Unsupported symmetric algorithm".to_owned(),
-                    )
-                    .into())
-                }
-            }
-        } else {
-            match self.key_algo.as_ref().unwrap() {
-                AsymmetricEncryption::Rsa(_) => "RSA",
-                AsymmetricEncryption::Ecc(_) => {
-                    return Err(TpmError::UnsupportedOperation(
-                        "EC is not allowed for en/decryption on android".to_owned(),
-                    )
-                    .into());
-                }
-            }
-        };
+        let cipher_mode = get_cipher_mode(config.mode)?;
 
         let key_store = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_owned()).err_internal()?;
         key_store.load(&env, None).err_internal()?;
@@ -371,11 +390,8 @@ impl KeyHandle for AndroidProvider {
             .getKey(&env, self.key_id.to_owned(), JObject::null())
             .err_internal()?;
 
-        let cipher = wrapper::key_store::cipher::jni::Cipher::getInstance(
-            &env,
-            format!("{}/ECB/{}", algorithm, self.get_padding_for_algorithm()?),
-        )
-        .err_internal()?;
+        let cipher = wrapper::key_store::cipher::jni::Cipher::getInstance(&env, cipher_mode)
+            .err_internal()?;
         cipher.init(&env, 2, key.raw.as_obj()).err_internal()?;
 
         let decrypted = cipher
@@ -411,7 +427,15 @@ impl KeyHandle for AndroidProvider {
     #[instrument]
     fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         info!("encrypting");
-        let env = self
+
+        let config = self
+            .config
+            .as_ref()
+            .ok_or(SecurityModuleError::InitializationError(
+                "Module is not initialized".to_owned(),
+            ))?;
+
+        let env = config
             .vm
             .as_ref()
             .ok_or_else(|| TpmError::InitializationError("Module is not initialized".to_owned()))?
@@ -421,28 +445,6 @@ impl KeyHandle for AndroidProvider {
                     "Could not get java environment, this should never happen".to_owned(),
                 )
             })?;
-
-        let algorithm = if let Some(sym_algo) = &self.sym_algo {
-            match sym_algo {
-                BlockCiphers::Aes(_, _) => "AES",
-                _ => {
-                    return Err(TpmError::UnsupportedOperation(
-                        "Unsupported symmetric algorithm".to_owned(),
-                    )
-                    .into())
-                }
-            }
-        } else {
-            match self.key_algo.as_ref().unwrap() {
-                AsymmetricEncryption::Rsa(_) => "RSA",
-                AsymmetricEncryption::Ecc(_) => {
-                    return Err(TpmError::UnsupportedOperation(
-                        "EC is not allowed for en/decryption on android".to_owned(),
-                    )
-                    .into());
-                }
-            }
-        };
 
         let key_store = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_owned()).err_internal()?;
         key_store.load(&env, None).err_internal()?;
@@ -458,7 +460,7 @@ impl KeyHandle for AndroidProvider {
 
         let cipher = wrapper::key_store::cipher::jni::Cipher::getInstance(
             &env,
-            format!("{}/ECB/PKCS1Padding", algorithm),
+            get_cipher_mode(config.mode)?,
         )
         .err_internal()?;
 
@@ -499,7 +501,15 @@ impl KeyHandle for AndroidProvider {
     #[instrument]
     fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, SecurityModuleError> {
         info!("verifiying");
-        let env = self
+
+        let config = self
+            .config
+            .as_ref()
+            .ok_or(SecurityModuleError::InitializationError(
+                "Module is not initialized".to_owned(),
+            ))?;
+
+        let env = config
             .vm
             .as_ref()
             .ok_or_else(|| TpmError::InitializationError("Module is not initialized".to_owned()))?
@@ -513,11 +523,7 @@ impl KeyHandle for AndroidProvider {
         let key_store = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_string()).err_internal()?;
         key_store.load(&env, None).err_internal()?;
 
-        let signature_algorithm = match self.key_algo {
-            Some(AsymmetricEncryption::Rsa(_)) => "SHA256withRSA",
-            Some(AsymmetricEncryption::Ecc(_)) => "SHA256withECDSA",
-            _ => panic!("Invalid key_algo"),
-        };
+        let signature_algorithm = get_signature_algorithm(config.mode)?;
         debug!("Signature Algorithm: {}", signature_algorithm);
 
         let s = Signature::getInstance(&env, signature_algorithm.to_string()).err_internal()?;
@@ -537,17 +543,5 @@ impl KeyHandle for AndroidProvider {
         debug!("Signature verified: {:?}", output);
 
         Ok(output)
-    }
-}
-
-impl std::fmt::Debug for AndroidProvider {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("AndroidProvider")
-            .field("key_id", &self.key_id)
-            .field("key_algo", &self.key_algo)
-            .field("sym_algo", &self.sym_algo)
-            .field("hash", &self.hash)
-            .field("key_usages", &self.key_usages)
-            .finish()
     }
 }

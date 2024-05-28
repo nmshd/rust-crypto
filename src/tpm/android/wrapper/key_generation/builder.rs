@@ -216,7 +216,7 @@ impl<'env: 'borrow, 'borrow> Builder<'env, 'borrow> {
         self.raw.as_obj(),
         "setAlgorithmParameterSpec",
         "(Ljavax/crypto/spec/AlgorithmParameterSpec;)Landroid/security/keystore/KeyGenParameterSpec$Builder;",
-        &[JValue::Object(spec.into())],
+        &[JValue::Object(spec)],
     )?;
         self.raw = AutoLocal::new(env, result.l()?);
         Ok(self)

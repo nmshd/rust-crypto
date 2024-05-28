@@ -11,21 +11,28 @@ use crate::common::{
     traits::module_provider_config::ProviderConfig,
 };
 
+#[derive(Debug, Clone, Copy)]
+pub enum EncryptionMode {
+    Sym(BlockCiphers),
+    ASym {
+        algo: AsymmetricEncryption,
+        digest: Hash,
+    },
+}
+
 pub struct AndroidConfig {
-    pub key_algo: Option<AsymmetricEncryption>,
-    pub sym_algo: Option<BlockCiphers>,
-    pub hash: Option<Hash>,
-    pub key_usages: Option<Vec<KeyUsage>>,
+    pub mode: EncryptionMode,
+    pub key_usages: Vec<KeyUsage>,
+    pub hardware_backed: bool,
     pub vm: Option<JavaVM>,
 }
 
 impl std::fmt::Debug for AndroidConfig {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("AndroidProvider")
-            .field("key_algo", &self.key_algo)
-            .field("sym_algo", &self.sym_algo)
-            .field("hash", &self.hash)
+            .field("mode", &self.mode)
             .field("key_usages", &self.key_usages)
+            .field("hardware_backed", &self.hardware_backed)
             .finish()
     }
 }
