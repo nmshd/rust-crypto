@@ -56,11 +56,14 @@ impl Provider for YubiKeyProvider {
     /// A `Result` that, on success, contains `Ok()`.
     /// On failure, it returns a `yubikey::Error`.
     #[instrument]
-    fn create_key(&mut self, config: Box<dyn ProviderConfig>) -> Result<(), yubikey::Error> {
-        let key_name = self.key_id;
+    fn create_key(
+        &mut self,
+        key_id: String,
+        config: Box<dyn ProviderConfig>,
+    ) -> Result<(), yubikey::Error> {
         let mut usage: &str = "";
 
-        if !load_key().is_ok() {
+        if !load_key(key_id).is_ok() {
             match config.key_usage {
                 SignEncrypt => match config.key_algorithm {
                     Rsa => {
@@ -239,7 +242,7 @@ impl Provider for YubiKeyProvider {
             }
         }
 
-        save_key_object(self, usage);
+        save_key_object(usage);
 
         OK(())
     }
@@ -260,7 +263,7 @@ impl Provider for YubiKeyProvider {
     /// A `Result` that, on success, contains `Ok(())`, indicating that the key was loaded successfully.
     /// On failure, it returns a `SecurityModuleError`.
     #[instrument]
-    fn load_key(&mut self, config: Box<dyn ProviderConfig>) -> Result<(), yubikey::Error> {
+    fn load_key(&mut self, key_id: String) -> Result<(), yubikey::Error> {
         let mut found = false;
         for i in 10..19 {
             let data = self.fetch_object(SLOT[i]);
@@ -277,7 +280,7 @@ impl Provider for YubiKeyProvider {
             let data = output;
             match parse_slot_data(&data) {
                 Ok((key_name, slot, usage, public_key)) => {
-                    if key_name == self.key_id {
+                    if key_name == key_id {
                         self.slot_id = SLOT[i - 10];
                         self.config.key_usage = match usage.as_str() {
                             "sign" | "encrypt" => KeyUsage::SignEncrypt,
