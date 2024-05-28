@@ -47,68 +47,6 @@ pub mod jni {
     /// |----------------------------------------------------------------------------------------|
     #[allow(non_snake_case)]
     impl<'env: 'borrow, 'borrow> RustDef<'env, 'borrow> {
-
-        //------------------------------------------------------------------------------------------
-        // Rust methods that can be called from Java
-
-        ///Proof of concept - shows type conversion
-        ///     DO NOT USE
-        pub extern "jni" fn special(mut input1: Vec<i32>, input2: i32) -> Vec<String> {
-            input1.push(input2);
-            input1.push(42);
-            input1.iter().map(ToString::to_string).collect()
-        }
-
-        ///Proof of concept method - shows callback from Rust to a java method
-        ///     ONLY USE FOR TESTING
-        pub extern "jni" fn callRust( _environment: &JNIEnv) -> String {
-            String::from("not implemented")
-        }
-
-        ///Demo method used to call functions in Rust from the Java app while testing
-        // pub extern "jni" fn demoCreate(environment: &JNIEnv, key_id: String, key_gen_info: String) -> () {
-        //     Self::create_key(environment.get_java_vm().unwrap(), key_id, key_gen_info).unwrap();
-        // }
-
-        ///Demo method used to call functions in Rust from the Java app while testing
-        pub extern "jni" fn demoInit(environment: &JNIEnv)
-                                     -> () {
-            let _ = Self::initialize_module(environment);
-        }
-
-        ///Demo method used to call functions in Rust from the Java app while testing
-        pub extern "jni" fn demoEncrypt(environment: &JNIEnv, data: Box<[u8]>) -> Box<[u8]> {
-            let result = Self::encrypt_data(environment, data.as_ref())
-                .expect("Sign_data failed");
-            result.into_boxed_slice()
-        }
-
-        ///Demo method used to call functions in Rust from the Java app while testing
-        pub extern "jni" fn demoDecrypt(environment: &JNIEnv, data: Box<[u8]>) -> Box<[u8]> {
-            let result = Self::decrypt_data(environment, data.as_ref());
-            return match result {
-                Ok(res) => { res.into_boxed_slice() }
-                Err(_) => { Vec::new().into_boxed_slice() }
-            };
-        }
-
-        ///Demo method used to call functions in Rust from the Java app while testing
-        pub extern "jni" fn demoSign(environment: &JNIEnv, data: Box<[u8]>) -> Box<[u8]> {
-            let result = Self::sign_data(environment, data.as_ref())
-                .expect("Sign_data failed");
-            result.into_boxed_slice()
-        }
-
-        ///Demo method used to call functions in Rust from the Java app while testing
-        pub extern "jni" fn demoVerify(environment: &JNIEnv, data: Box<[u8]>) -> bool {
-            let result = Self::verify_signature(environment, data.as_ref(), data.as_ref());
-            return match result {
-                Ok(value) => { value }
-                Err(_) => { false }
-            };
-        }
-
-
         //------------------------------------------------------------------------------------------
         // Java methods that can be called from rust
 
