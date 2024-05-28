@@ -28,13 +28,13 @@ pub fn get_algorithm(enc: EncryptionMode) -> Result<String, SecurityModuleError>
     .to_owned())
 }
 
-pub fn get_cipher_mode(mode: EncryptionMode) -> Result<String, SecurityModuleError> {
-    match mode {
+pub fn get_cipher_mode(e_mode: EncryptionMode) -> Result<String, SecurityModuleError> {
+    match e_mode {
         EncryptionMode::Sym(cipher) => match cipher {
             BlockCiphers::Aes(mode, _) => Ok(format!(
                 "AES/{}/{}",
                 get_sym_block_mode(mode)?,
-                get_padding()?
+                get_padding(e_mode)?
             )),
             BlockCiphers::TripleDes(_) => {
                 Err(TpmError::UnsupportedOperation("not supported".to_owned()).into())
@@ -48,7 +48,7 @@ pub fn get_cipher_mode(mode: EncryptionMode) -> Result<String, SecurityModuleErr
             }
         },
         EncryptionMode::ASym { algo, digest: _ } => match algo {
-            AsymmetricEncryption::Rsa(_) => Ok(format!("RSA/ECB/{}", get_padding()?)),
+            AsymmetricEncryption::Rsa(_) => Ok(format!("RSA/ECB/{}", get_padding(e_mode)?)),
             AsymmetricEncryption::Ecc(_) => {
                 Err(TpmError::UnsupportedOperation("not supported".to_owned()).into())
             }
@@ -71,8 +71,13 @@ pub fn get_sym_block_mode(mode: SymmetricMode) -> Result<String, SecurityModuleE
     .to_owned())
 }
 
-pub fn get_padding() -> Result<String, SecurityModuleError> {
-    Ok("NoPadding".to_owned())
+pub fn get_padding(mode: EncryptionMode) -> Result<String, SecurityModuleError> {
+    Ok(match mode {
+        EncryptionMode::Sym(BlockCiphers::Aes(_, _)) => "PKCS5Padding",
+        EncryptionMode::ASym { algo: _, digest: _ } => "PKCS1Padding",
+        _ => "PKCS1Padding",
+    }
+    .to_owned())
 }
 
 pub fn get_signature_padding() -> Result<String, SecurityModuleError> {

@@ -139,7 +139,7 @@ impl Provider for AndroidProvider {
                         kps_builder = kps_builder
                             .set_block_modes(&env, vec![get_sym_block_mode(mode)?])
                             .err_internal()?
-                            .set_encryption_paddings(&env, vec![get_padding()?])
+                            .set_encryption_paddings(&env, vec![get_padding(config.mode)?])
                             .err_internal()?
                             .set_key_size(&env, Into::<u32>::into(size) as i32)
                             .err_internal()?;
@@ -148,7 +148,7 @@ impl Provider for AndroidProvider {
                         kps_builder = kps_builder
                             .set_block_modes(&env, vec!["CBC".to_owned()])
                             .err_internal()?
-                            .set_encryption_paddings(&env, vec![get_padding()?])
+                            .set_encryption_paddings(&env, vec![get_padding(config.mode)?])
                             .err_internal()?;
                     }
                     BlockCiphers::TripleDes(_)
@@ -181,7 +181,7 @@ impl Provider for AndroidProvider {
                             .err_internal()?
                             .set_signature_paddings(&env, vec![get_signature_padding()?])
                             .err_internal()?
-                            .set_encryption_paddings(&env, vec![get_padding()?])
+                            .set_encryption_paddings(&env, vec![get_padding(config.mode)?])
                             .err_internal()?
                             .set_key_size(&env, get_key_size(algo)? as i32)
                             .err_internal()?;
