@@ -5,13 +5,13 @@ pub mod jni {
     #[allow(unused_imports)]
     use robusta_jni::bridge;
     use robusta_jni::convert::{IntoJavaValue, Signature, TryFromJavaValue, TryIntoJavaValue};
-    // use robusta_jni::jni::errors::Error;
-    // use robusta_jni::jni::JNIEnv;
-    // use robusta_jni::jni::objects::JValue;
-    use jni::JNIEnv;
-    use jni::errors::Error;
-    use jni::objects::JValue;
-    use jni::JavaVM;
+    use robusta_jni::jni::errors::Error;
+    use robusta_jni::jni::JNIEnv;
+    use robusta_jni::jni::objects::JValue;
+    // use jni::JNIEnv;
+    // use jni::errors::Error;
+    // use jni::objects::JValue;
+    use robusta_jni::jni::JavaVM;
     use robusta_jni::jni::objects::AutoLocal;
     use robusta_jni::jni::sys::jbyteArray;
     use crate::SecurityModuleError;
@@ -66,9 +66,9 @@ pub mod jni {
         }
 
         ///Demo method used to call functions in Rust from the Java app while testing
-        pub extern "jni" fn demoCreate(environment: &JNIEnv, key_id: String, key_gen_info: String) -> () {
-            Self::create_key(environment.get_java_vm().unwrap(), key_id, key_gen_info).unwrap();
-        }
+        // pub extern "jni" fn demoCreate(environment: &JNIEnv, key_id: String, key_gen_info: String) -> () {
+        //     Self::create_key(environment.get_java_vm().unwrap(), key_id, key_gen_info).unwrap();
+        // }
 
         ///Demo method used to call functions in Rust from the Java app while testing
         pub extern "jni" fn demoInit(environment: &JNIEnv)
@@ -132,8 +132,8 @@ pub mod jni {
         ///
         /// # Arguments
         /// `key_id` - String that uniquely identifies the key so that it can be retrieved later
-        pub fn create_key(vm: JavaVM, key_id: String, key_gen_info: String) -> Result<(), SecurityModuleError> {
-            let environment = vm.get_env().unwrap();
+        pub fn create_key(environment: JNIEnv, key_id: String, key_gen_info: String) -> Result<(), SecurityModuleError> {
+            // let environment = vm.get_env().unwrap();
             let result = environment.call_static_method(
                 "com/example/vulcans_limes/RustDef",
                 "create_key",
@@ -265,7 +265,7 @@ pub mod jni {
         ///
         /// A `Result` containing the signature as a `Vec<u8>` on success,
         /// or an `Error` on failure.
-        fn sign_data(environment: &JNIEnv, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
+        pub fn sign_data(environment: &JNIEnv, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
             let result = environment.call_static_method(
                 "com/example/vulcans_limes/RustDef",
                 "sign_data",
@@ -317,7 +317,7 @@ pub mod jni {
         ///
         /// A `Result` containing a `bool` signifying whether the signature is valid,
         /// or an `Error` on failure to determine the validity.
-        fn verify_signature(environment: &JNIEnv, data: &[u8], signature: &[u8]) -> Result<bool, SecurityModuleError> {
+        pub fn verify_signature(environment: &JNIEnv, data: &[u8], signature: &[u8]) -> Result<bool, SecurityModuleError> {
             let result = environment.call_static_method(
                 "com/example/vulcans_limes/RustDef",
                 "verify_signature",
@@ -368,7 +368,7 @@ pub mod jni {
         ///
         /// A `Result` containing the encrypted data as a `Vec<u8>` on success,
         /// or an `Error` on failure.
-        fn encrypt_data(environment: &JNIEnv, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
+        pub fn encrypt_data(environment: &JNIEnv, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
             let result = environment.call_static_method(
                 "com/example/vulcans_limes/RustDef",
                 "encrypt_data",
@@ -420,7 +420,7 @@ pub mod jni {
         ///
         /// A `Result` containing the Decrypted data as a `Vec<u8>` on success,
         /// or an `Error` on failure.
-        fn decrypt_data(environment: &JNIEnv, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
+        pub fn decrypt_data(environment: &JNIEnv, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
             let result = environment.call_static_method(
                 "com/example/vulcans_limes/RustDef",
                 "decrypt_data",
