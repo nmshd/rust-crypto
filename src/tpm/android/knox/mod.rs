@@ -34,7 +34,7 @@ impl KnoxProvider {
 ///At any time, either a key_algorithm OR a sym_algorithm must be supplied, not both.
 /// For hashing operations, SHA-256 is always used since it is the only one available on Knox Vault
 // #[derive(Clone)]
-pub struct KnoxConfig<'a> {
+pub struct KnoxConfig {
     pub key_algorithm: Option<AsymmetricEncryption>,
     pub sym_algorithm: Option<BlockCiphers>,
     // pub env: JNIEnv<'a>,
