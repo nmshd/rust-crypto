@@ -11,6 +11,7 @@ use crate::common::{
     },
     traits::{key_handle::KeyHandle, module_provider::Provider},
 };
+
 use crate::hsm::yubikey::YubiKeyProvider;
 
 #[test]

@@ -1,9 +1,11 @@
 use std::sync::Arc;
 
 use crate::common::crypto::{algorithms::encryption::AsymmetricEncryption, KeyUsage};
+use crate::hsm::yubikey;
 use crate::hsm::ProviderConfig;
 use tracing::instrument;
-use yubikey::{piv::SlotId, YubiKey};
+
+use yubikey::{piv::RetiredSlotId, YubiKey};
 
 pub mod key_handle;
 pub mod provider;
@@ -14,16 +16,18 @@ pub mod provider;
 /// This provider leverages the YubiKey API to interact with a YubiKey device for operations
 /// like signing, encryption, and decryption. It provides a secure and hardware-backed solution
 /// for managing cryptographic keys and performing cryptographic operations.
-#[derive(Clone, Debug)]
+
+// #[derive(cloe, Debug)]???
+#[derive(Debug)]
 pub struct YubiKeyProvider {
     /// A unique identifier for the cryptographic key managed by this provider.
-    pub(super) yubikey: YubiKey,
     pub(super) key_id: String,
-    pub(super) pkey: String,
+    pub(super) pkey: Option<String>,
     pub(super) config: Option<Arc<dyn ProviderConfig + Sync + Send>>,
-    pub(super) slot_id: u32,
+    pub(super) slot_id: Option<RetiredSlotId>,
     pub(super) key_usages: Option<Vec<KeyUsage>>,
     pub(super) key_algo: Option<AsymmetricEncryption>,
+    pub(super) yubikey: Option<YubiKey>,
 }
 
 impl YubiKeyProvider {
