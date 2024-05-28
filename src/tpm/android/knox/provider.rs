@@ -72,12 +72,12 @@ impl Provider for TpmProvider {
                     match scheme {
                         EccSchemeAlgorithm::EcDsa(curve) => {
                             match curve {
-                                EccCurves::P256 => { String::from("EC/secp256r1/SHA-256") }
-                                EccCurves::P384 => { String::from("EC/secp384r1/SHA-256") }
-                                EccCurves::P521 => { String::from("EC/secp384r1/SHA-256") }
-                                EccCurves::Secp256k1 => { String::from("EC/secp256k1/SHA-256") }
-                                EccCurves::Curve25519 => { String::from("EC/X25519/SHA-256") }
-                                EccCurves::Curve448 => { String::from("EC/X448/SHA-256") }
+                                EccCurves::P256 => { String::from("EC;secp256r1;SHA-256") }
+                                EccCurves::P384 => { String::from("EC;secp384r1;SHA-256") }
+                                EccCurves::P521 => { String::from("EC;secp521r1;SHA-256") }
+                                EccCurves::Secp256k1 => { String::from("EC;secp256k1;SHA-256") }
+                                EccCurves::Curve25519 => { String::from("EC;X25519;SHA-256") }
+                                EccCurves::Curve448 => { String::from("EC;X448;SHA-256") }
                                 _ => {
                                     return Err(SecurityModuleError::Tpm(UnsupportedOperation(
                                         format!("Unsupported asymmetric encryption algorithm: {:?}",
