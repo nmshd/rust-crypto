@@ -164,11 +164,6 @@ impl<'env: 'borrow, 'borrow> Builder<'env, 'borrow> {
     }
 
     pub fn set_key_size(mut self, env: &'borrow JNIEnv<'env>, key_size: i32) -> JniResult<Self> {
-        if key_size < 0 {
-            return Err(JniError::from(JniErrorKind::IllegalArgumentException(
-                "keySize < 0",
-            )));
-        }
         let result = env.call_method(
             self.raw.as_obj(),
             "setKeySize",
@@ -182,11 +177,8 @@ impl<'env: 'borrow, 'borrow> Builder<'env, 'borrow> {
     pub fn set_algorithm_parameter_spec(
         mut self,
         env: &'borrow JNIEnv<'env>,
-        #[input_type("Ljava/security/spec/AlgorithmParameterSpec;")] spec: JObject,
+        spec: JObject,
     ) -> JniResult<Self> {
-        if spec.is_null() {
-            return Err(JniError::from(JniErrorKind::NullPtr));
-        }
         let result = env.call_method(
         self.raw.as_obj(),
         "setAlgorithmParameterSpec",
