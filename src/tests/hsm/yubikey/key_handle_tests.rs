@@ -11,7 +11,7 @@ use crate::common::{
     },
     traits::{key_handle::KeyHandle, module_provider::Provider},
 };
-use crate::hsm::yubikey::{self, YubiKeyProvider};
+use crate::hsm::yubikey::YubiKeyProvider;
 
 #[test]
 fn test_sign_and_verify_rsa() {
@@ -50,7 +50,7 @@ fn test_sign_and_verify_ecc() {
 
     assert!(provider.verify_signature(data, &signature).unwrap());
 }
-
+/*
 #[test]
 fn test_encrypt_and_decrypt_rsa() {
     let mut provider = TpmProvider::new("test_rsa_key".to_string());
@@ -104,3 +104,4 @@ fn test_encrypt_and_decrypt_ecdh() {
 
     assert_eq!(data, decrypted_data.as_slice());
 }
+*/

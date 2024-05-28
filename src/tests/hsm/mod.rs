@@ -1,1 +1,1 @@
-mod yubikey;
+pub mod yubikey;

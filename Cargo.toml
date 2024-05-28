@@ -33,11 +33,12 @@ macos = []
 std = []
 tpm = []
 win = ["tpm", "windows"]
-yubi = ["hsm", "yubikey"]
 
 [dependencies]
+sha2 = "0.10.8"
+ring = "0.17.8"
 tracing-attributes = "0.1.15"
-yubikey = { version = "0.8.0", optional = true, features = ["untested"] }
+yubikey = { version = "0.8.0", optional = false, features = ["untested"] }
 anyhow = "*"
 async-std = "*"
 futures = "*"
@@ -57,8 +58,6 @@ x509-cert = "0.2.5"
 base64 = "0.22.1"
 hex = "0.4.3"
 rsa = "0.9.6"
-sha = "1.0.3"
-ring = "0.17.8"
 md-5 = "0.10.6"
 openssl = "0.10.64"
 

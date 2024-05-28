@@ -2,14 +2,13 @@ use tracing::Level;
 use tracing_appender::rolling;
 use tracing_subscriber::FmtSubscriber;
 
-use crate::{
-    common::{
-        factory::SecurityModule,
-        traits::{log_config::LogConfig, module_provider::Provider},
-    },
-    tpm::core::instance::TpmType,
-    SecModules,
+use crate::common::{
+    factory::SecurityModule,
+    traits::{log_config::LogConfig, module_provider::Provider},
 };
+
+use crate::common::tpm::core::instance::TpmType;
+
 use std::sync::{Arc, Mutex};
 
 pub mod key_handle;

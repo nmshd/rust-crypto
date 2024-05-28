@@ -1,17 +1,17 @@
 use super::YubiKeyProvider;
 use crate::common::{
-    crypto::{
-        algorithms::encryption::{AsymmetricEncryption, EccSchemeAlgorithm},
-        KeyUsage,
-    },
-    error::SecurityModuleError,
-    traits::module_provider::Provider,
+    crypto::KeyUsage, error::SecurityModuleError, traits::module_provider::Provider,
 };
-use crate::hsm::ProviderConfig;
+use crate::hsm::{HsmProviderConfig, ProviderConfig};
 use base64::{engine::general_purpose, Engine};
+use std::str::Utf8Error;
 use tracing::instrument;
+use x509_cert::der::Encode;
 
-use yubikey::{piv::algorithm::AlgorithmId, piv::slot::SlotId, Error, YubiKey};
+use yubikey::{
+    piv::{self, AlgorithmId, SlotId},
+    Error, YubiKey,
+};
 
 const SLOTS: [u32; 20] = [
     0x005f_c10d,
@@ -58,193 +58,233 @@ impl Provider for YubiKeyProvider {
     #[instrument]
     fn create_key(
         &mut self,
-        key_id: String,
+        key_id: &str,
         config: Box<dyn ProviderConfig>,
-    ) -> Result<(), yubikey::Error> {
-        let mut usage: &str = "";
+    ) -> Result<(), SecurityModuleError> {
+        if let Some(hsm_config) = config.as_any().downcast_ref::<HsmProviderConfig>() {
+            self.key_algo = Some(hsm_config.key_algorithm);
+            self.key_usages = Some(hsm_config.key_usage.clone());
 
-        if !load_key(key_id).is_ok() {
-            match config.key_usage {
-                SignEncrypt => match config.key_algorithm {
-                    Rsa => {
-                        match self.get_free_slot() {
-                            Ok(free) => {
-                                self.slot_id = free;
-                            }
-                            Err(err) => {
-                                return Err(err);
-                            }
-                        }
-                        usage = "encrypt";
-                        let gen_key = piv::generate(
-                            self.yubikey,
-                            // SlotId wird noch variabel gemacht, abhängig davon wie viele Slots benötigt werden
-                            SlotId::KeyManagement,
-                            AlgorithmId::RSA2048,
-                            yubikey::PinPolicy::Default,
-                            yubikey::TouchPolicy::Default,
-                        );
-                        match gen_key {
-                            Ok(()) => {
-                                gen_key = gen_key.as_ref().unwrap().to_der().unwrap();
-                                gen_key = general_purpose::STANDARD.encode(&gen_key);
-                                gen_key = format!(
-                                    "-----BEGIN PUBLIC KEY-----\n{}\n-----END PUBLIC KEY-----",
-                                    gen_key.trim()
+            let mut yubikey = self.yubikey;
+            let mut usage: &str = "";
+            let mut slot: u32;
+
+            if !self.load_key(key_id, config).is_ok() {
+                match self.key_usages {
+                    SignEncrypt => {
+                        match self.key_algo {
+                            Rsa => {
+                                match get_free_slot(self.yubikey) {
+                                    Ok(free) => {
+                                        self.slot_id = free;
+                                    }
+                                    Err(err) => {
+                                        return Err(SecurityModuleError::InitializationError(
+                                            "No free slot available".to_string(),
+                                        ));
+                                    }
+                                }
+                                usage = "encrypt";
+                                let gen_key = piv::generate(
+                                    &mut self.yubikey,
+                                    // SlotId wird noch variabel gemacht, abhängig davon wie viele Slots benötigt werden
+                                    self.slot_id,
+                                    AlgorithmId::Rsa2048,
+                                    yubikey::PinPolicy::Default,
+                                    yubikey::TouchPolicy::Default,
                                 );
-                                self.pkey = gen_key;
-                            }
-                            Err(err) => return Err(Error::KeyError),
-                        }
-                    }
-                    Ecc => {
-                        match self.get_free_slot() {
-                            Ok(free) => {
-                                self.slot_id = free;
-                            }
-                            Err(err) => {
-                                return Err(err);
-                            }
-                        }
-                        usage = "sign";
-                        let gen_key = piv::generate(
-                            self.yubikey,
-                            // SlotId wird noch variabel gemacht, abhängig davon wie viele Slots benötigt werden
-                            SlotId::Signature,
-                            AlgorithmId::EccP256,
-                            yubikey::PinPolicy::Default,
-                            yubikey::TouchPolicy::Default,
-                        );
-                        self.pkey = gen_key;
-                    }
-                    _ => Err(Error::NotSupported("Algorithm not supported")),
-                },
-
-                Decrypt => {
-                    match config.key_algorithm {
-                        Rsa => {
-                            match self.get_free_slot() {
-                                Ok(free) => {
-                                    self.slot_id = free;
-                                }
-                                Err(err) => {
-                                    return Err(err);
-                                }
-                            }
-                            usage = "decrypt";
-                            let gen_key = piv::generate(
-                                self.yubikey,
-                                // SlotId wird noch variabel gemacht, abhängig davon wie viele Slots benötigt werden
-                                SlotId::KeyManagement,
-                                AlgorithmId::RSA2048,
-                                yubikey::PinPolicy::Default,
-                                yubikey::TouchPolicy::Default,
-                            );
-                            match gen_key {
-                                Ok(()) => {
-                                    gen_key = gen_key.as_ref().unwrap().to_der().unwrap();
-                                    gen_key = general_purpose::STANDARD.encode(&gen_key);
-                                    gen_key = format!(
+                                match gen_key {
+                                    Ok(_) => {
+                                        let gen_key = gen_key.as_ref().unwrap().to_der().unwrap();
+                                        let gen_key = general_purpose::STANDARD.encode(&gen_key);
+                                        let gen_key = format!(
                                         "-----BEGIN PUBLIC KEY-----\n{}\n-----END PUBLIC KEY-----",
                                         gen_key.trim()
                                     );
-                                    self.pkey = gen_key;
+                                        self.pkey = gen_key;
+                                    }
+                                    Err(err) => return Err(SecurityModuleError::Hsm(err)),
                                 }
-                                Err(err) => return Err(Error::KeyError),
                             }
-                        }
-                        Ecc => {
-                            // TODO, not tested, might work
-                        }
-                        _ => Error::NotSupported,
-                    }
-                }
-
-                _ => Err(Error::NotSupported("KeyUsage not supported")),
-            }
-        } else {
-            match config.key_usage {
-                SignEncrypt => match config.key_algorithm {
-                    Rsa => {
-                        slot = self.slot_id;
-                        usage = "encrypt";
-                        let gen_key = piv::generate(
-                            self.yubikey,
-                            // SlotId wird noch variabel gemacht, abhängig davon wie viele Slots benötigt werden
-                            SlotId::KeyManagement,
-                            AlgorithmId::RSA2048,
-                            yubikey::PinPolicy::Default,
-                            yubikey::TouchPolicy::Default,
-                        );
-                        match gen_key {
-                            Ok(()) => {
-                                gen_key = gen_key.as_ref().unwrap().to_der().unwrap();
-                                gen_key = general_purpose::STANDARD.encode(&gen_key);
-                                gen_key = format!(
-                                    "-----BEGIN PUBLIC KEY-----\n{}\n-----END PUBLIC KEY-----",
-                                    gen_key.trim()
+                            Ecc => {
+                                match get_free_slot(self.yubikey) {
+                                    Ok(free) => {
+                                        self.slot_id = free;
+                                    }
+                                    Err(err) => {
+                                        return Err(SecurityModuleError::InitializationError(
+                                            "No free slot available".to_string(),
+                                        ));
+                                    }
+                                }
+                                usage = "sign";
+                                let gen_key = piv::generate(
+                                    &mut self.yubikey,
+                                    // SlotId wird noch variabel gemacht, abhängig davon wie viele Slots benötigt werden
+                                    self.slot_id,
+                                    AlgorithmId::EccP256,
+                                    yubikey::PinPolicy::Default,
+                                    yubikey::TouchPolicy::Default,
                                 );
-                                self.pkey = gen_key;
+                                let mut generated;
+                                match gen_key {
+                                    Ok(_) => {
+                                        let gen_key = gen_key.as_ref().unwrap().to_der().unwrap();
+                                        let gen_key = general_purpose::STANDARD.encode(&gen_key);
+                                        let gen_key = format!(
+                                        "-----BEGIN PUBLIC KEY-----\n{}\n-----END PUBLIC KEY-----",
+                                        gen_key.trim()
+                                    );
+                                        self.pkey = gen_key;
+                                    }
+                                    Err(err) => return Err(SecurityModuleError::Hsm(err)),
+                                }
                             }
-                            Err(err) => return Err(Error::KeyError),
+                            _ => Err(SecurityModuleError::Hsm("Key Algorithm not supported")),
                         }
                     }
-                    Ecc => {
-                        slot = self.slot_id;
-                        usage = "sign";
-                        let gen_key = piv::generate(
-                            self.yubikey,
-                            // SlotId wird noch variabel gemacht, abhängig davon wie viele Slots benötigt werden
-                            SlotId::Signature,
-                            AlgorithmId::EccP256,
-                            yubikey::PinPolicy::Default,
-                            yubikey::TouchPolicy::Default,
-                        );
-                        self.pkey = gen_key;
-                    }
-                    _ => Err(Error::NotSupported("Algorithm not supported")),
-                },
 
-                Decrypt => {
-                    match config.key_algorithm {
+                    Decrypt => {
+                        match self.key_algo {
+                            Rsa => {
+                                match get_free_slot(self.yubikey) {
+                                    Ok(free) => {
+                                        self.slot_id = free;
+                                    }
+                                    Err(err) => {
+                                        return Err(SecurityModuleError::InitializationError(
+                                            "No free slot available".to_string(),
+                                        ));
+                                    }
+                                }
+                                usage = "decrypt";
+                                let gen_key = piv::generate(
+                                    &mut self.yubikey,
+                                    // SlotId wird noch variabel gemacht, abhängig davon wie viele Slots benötigt werden
+                                    self.slot_id,
+                                    AlgorithmId::Rsa2048,
+                                    yubikey::PinPolicy::Default,
+                                    yubikey::TouchPolicy::Default,
+                                );
+                                match gen_key {
+                                    Ok(_) => {
+                                        let gen_key = gen_key.as_ref().unwrap().to_der().unwrap();
+                                        let gen_key = general_purpose::STANDARD.encode(&gen_key);
+                                        let gen_key = format!(
+                                        "-----BEGIN PUBLIC KEY-----\n{}\n-----END PUBLIC KEY-----",
+                                        gen_key.trim()
+                                    );
+                                        self.pkey = gen_key;
+                                    }
+                                    Err(err) => return Err(SecurityModuleError::Hsm(err)),
+                                }
+                            }
+                            Ecc => {
+                                // TODO, not tested, might work
+                            }
+                            _ => Err(SecurityModuleError::Hsm("Key Algorithm not supported")),
+                        }
+                    }
+
+                    _ => Err(SecurityModuleError::Hsm("Key Usage not supported")),
+                }
+            } else {
+                match self.key_usages {
+                    SignEncrypt => match self.key_algo {
                         Rsa => {
                             slot = self.slot_id;
-                            usage = "decrypt";
+                            usage = "encrypt";
                             let gen_key = piv::generate(
-                                self.yubikey,
+                                &mut self.yubikey,
                                 // SlotId wird noch variabel gemacht, abhängig davon wie viele Slots benötigt werden
-                                SlotId::KeyManagement,
-                                AlgorithmId::RSA2048,
+                                self.slot_id,
+                                AlgorithmId::Rsa2048,
                                 yubikey::PinPolicy::Default,
                                 yubikey::TouchPolicy::Default,
                             );
                             match gen_key {
-                                Ok(()) => {
-                                    gen_key = gen_key.as_ref().unwrap().to_der().unwrap();
-                                    gen_key = general_purpose::STANDARD.encode(&gen_key);
-                                    gen_key = format!(
+                                Ok(_) => {
+                                    let gen_key = gen_key.as_ref().unwrap().to_der().unwrap();
+                                    let gen_key = general_purpose::STANDARD.encode(&gen_key);
+                                    let gen_key = format!(
                                         "-----BEGIN PUBLIC KEY-----\n{}\n-----END PUBLIC KEY-----",
                                         gen_key.trim()
                                     );
                                     self.pkey = gen_key;
                                 }
-                                Err(err) => return Err(Error::KeyError),
+                                Err(err) => return Err(SecurityModuleError::Hsm(err)),
                             }
                         }
                         Ecc => {
-                            // TODO, not tested, might work
+                            slot = self.slot_id;
+                            usage = "sign";
+                            let gen_key = piv::generate(
+                                &mut self.yubikey,
+                                // SlotId wird noch variabel gemacht, abhängig davon wie viele Slots benötigt werden
+                                SlotId::Retired(slot_id),
+                                AlgorithmId::EccP256,
+                                yubikey::PinPolicy::Default,
+                                yubikey::TouchPolicy::Default,
+                            );
+                            match gen_key {
+                                Ok(_) => {
+                                    let gen_key = gen_key.as_ref().unwrap().to_der().unwrap();
+                                    let gen_key = general_purpose::STANDARD.encode(&gen_key);
+                                    let gen_key = format!(
+                                        "-----BEGIN PUBLIC KEY-----\n{}\n-----END PUBLIC KEY-----",
+                                        gen_key.trim()
+                                    );
+                                    self.pkey = gen_key;
+                                }
+                                Err(err) => return Err(SecurityModuleError::Hsm(err)),
+                            }
                         }
-                        _ => Error::NotSupported,
+                        _ => Err(SecurityModuleError::Hsm("Key Algorithm not supported")),
+                    },
+
+                    Decrypt => {
+                        match self.key_algo {
+                            Rsa => {
+                                slot = self.slot_id;
+                                usage = "decrypt";
+                                let gen_key = piv::generate(
+                                    &mut self.yubikey,
+                                    // SlotId wird noch variabel gemacht, abhängig davon wie viele Slots benötigt werden
+                                    self.slot_id,
+                                    AlgorithmId::Rsa2048,
+                                    yubikey::PinPolicy::Default,
+                                    yubikey::TouchPolicy::Default,
+                                );
+                                match gen_key {
+                                    Ok(_) => {
+                                        let gen_key = gen_key.as_ref().unwrap().to_der().unwrap();
+                                        let gen_key = general_purpose::STANDARD.encode(&gen_key);
+                                        let gen_key = format!(
+                                        "-----BEGIN PUBLIC KEY-----\n{}\n-----END PUBLIC KEY-----",
+                                        gen_key.trim()
+                                    );
+                                        self.pkey = gen_key;
+                                    }
+                                    Err(err) => return Err(SecurityModuleError::Hsm(err)),
+                                }
+                            }
+                            Ecc => {
+                                // TODO, not tested, might work
+                            }
+                            _ => Err(SecurityModuleError::Hsm("Key Algorithm not supported")),
+                        }
                     }
+
+                    _ => Err(SecurityModuleError::Hsm("Key Usage not supported")),
                 }
-
-                _ => Err(Error::NotSupported("KeyUsage not supported")),
             }
+
+            save_key_object(yubikey, usage, key_id, slot, &self.pkey);
+
+            Ok(())
+        } else {
+            Err(SecurityModuleError::Hsm("Failed to get the Configurations"))
         }
-
-        self.save_key_object(usage);
-
-        OK(())
     }
 
     /// Loads an existing cryptographic key identified by `key_id`.
@@ -263,10 +303,15 @@ impl Provider for YubiKeyProvider {
     /// A `Result` that, on success, contains `Ok(())`, indicating that the key was loaded successfully.
     /// On failure, it returns a `SecurityModuleError`.
     #[instrument]
-    fn load_key(&mut self, key_id: String) -> Result<(), yubikey::Error> {
+    fn load_key(
+        &mut self,
+        key_id: &str,
+        config: Box<dyn ProviderConfig>,
+    ) -> Result<(), SecurityModuleError> {
+        let mut yubikey = self.yubikey;
         let mut found = false;
         for i in 10..19 {
-            let data = self.fetch_object(SLOT[i]);
+            let data = yubikey.fetch_object(SLOTS[i]);
             let mut output: Vec<u8> = Vec::new();
             match data {
                 Ok(data) => {
@@ -281,8 +326,8 @@ impl Provider for YubiKeyProvider {
             match parse_slot_data(&data) {
                 Ok((key_name, slot, usage, public_key)) => {
                     if key_name == key_id {
-                        self.slot_id = SLOT[i - 10];
-                        self.config.key_usage = match usage.as_str() {
+                        self.slot_id = SLOTS[i - 10];
+                        self.key_usages = match usage.as_str() {
                             "sign" | "encrypt" => KeyUsage::SignEncrypt,
                             "decrypt" => KeyUsage::Decrypt,
                             _ => continue,
@@ -300,7 +345,7 @@ impl Provider for YubiKeyProvider {
         }
 
         if !found {
-            return Err(yubikey::Error::NotFound);
+            return Err(SecurityModuleError::Hsm("Key not found"));
         }
 
         Ok(())
@@ -322,12 +367,12 @@ impl Provider for YubiKeyProvider {
     /// A `Result` that, on success, contains `Ok(())`, indicating that the module was initialized successfully.
     /// On failure, it returns a Yubikey based `Error`.
     #[instrument]
-    fn initialize_module(&mut self) -> Result<(), Error> {
-        let yubikey = YubiKey::open().map_err(|_| Error::NotFound);
+    fn initialize_module(&mut self) -> Result<(), SecurityModuleError> {
+        let yubikey = YubiKey::open().map_err(|_| Error::NotFound).unwrap();
         let verify = yubikey
             .verify_pin("123456".as_ref())
             .map_err(|_| Error::WrongPin {
-                tries: yubikey::get_pin_retries(),
+                tries: yubikey.get_pin_retries().unwrap(),
             });
 
         self.yubikey = yubikey;
@@ -335,9 +380,10 @@ impl Provider for YubiKeyProvider {
         if verify.is_ok() {
             return Ok(());
         } else {
-            return Err(Error::WrongPin {
-                tries: yubikey::get_pin_retries(),
-            });
+            return Err(SecurityModuleError::Hsm(
+                "Failed to verify PIN, retries: {}",
+                yubikey.get_pin_retries().unwrap(),
+            ));
         }
     }
 
@@ -394,10 +440,16 @@ impl Provider for YubiKeyProvider {
 /// The saved Object will be stored in the Yubikey on a free Retired slot as Object with futher information
 /// A `Result` that, on success, contains `Ok()`.
 /// On failure, it returns a `yubikey::Error`.
-fn save_key_object(&mut self, usage: &str) -> Result<(), yubikey::Error> {
-    let key_name = self.key_id;
-    let slot = self.slot_id.to_string();
-    let public_key = self.pkey;
+fn save_key_object(
+    yubikey: YubiKey,
+    usage: &str,
+    key_id: &str,
+    slot_id: u32,
+    pkey: &str,
+) -> Result<(), yubikey::Error> {
+    let key_name = key_id;
+    let slot = slot_id.to_string();
+    let public_key = pkey;
 
     let total_length = key_name.len() + 1 + slot.len() + 1 + usage.len() + 1 + public_key.len();
     let mut data = vec![0u8; total_length];
@@ -421,10 +473,10 @@ fn save_key_object(&mut self, usage: &str) -> Result<(), yubikey::Error> {
 
     data_slice[offset..offset + public_key.len()].copy_from_slice(public_key.as_bytes());
 
-    let saved = device.save_object(self.config.slot_id, data_slice);
+    let saved = yubikey.save_object(slot_id, data_slice);
     match saved {
         Ok(()) => Ok(()),
-        Err(err) => error::Error,
+        Err(err) => Err(err),
     }
 }
 
@@ -468,7 +520,7 @@ fn parse_slot_data(data: &[u8]) -> Result<(String, String, String, String), Utf8
     )?
     .to_string();
 
-    Ok((key_name, slot, key_usage, public_key))
+    Ok((key_name, slot, usage, public_key))
 }
 
 /// Gets a free slot for storing a key object.
@@ -482,9 +534,9 @@ fn parse_slot_data(data: &[u8]) -> Result<(String, String, String, String), Utf8
 ///
 /// A `Result` that, on failure, returns the first free slot.
 /// On Success, it returns that no more free slots are available.
-fn get_free_slot(&mut self) -> Resul<SlotId, error::Error> {
+fn get_free_slot(yubikey: YubiKey) -> Result<u32, Error> {
     for i in 10..19 {
-        let data = self.fetch_object(SLOTS[i]);
+        let data = yubikey.fetch_object(SLOTS[i]);
         let mut output: Vec<u8> = Vec::new();
         match data {
             Ok(data) => {
@@ -497,10 +549,10 @@ fn get_free_slot(&mut self) -> Resul<SlotId, error::Error> {
 
         let data = output;
         match parse_slot_data(&data) {
-            Ok(()) => {
+            Ok(_) => {
                 continue;
             }
-            Err(_) => SLOT[i - 10],
+            Err(_) => SLOTS[i - 10],
         }
     }
     Ok("No free slot available")

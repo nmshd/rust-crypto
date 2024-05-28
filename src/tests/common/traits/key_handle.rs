@@ -1,3 +1,5 @@
+use crate::common::tpm::{core::instance::TpmType, TpmConfig};
+
 use crate::{
     common::{
         crypto::{
@@ -15,8 +17,8 @@ use crate::{
     },
     hsm::core::instance::HsmType,
     tests::common::traits::setup_security_module,
-    tpm::{core::instance::TpmType, TpmConfig},
 };
+
 use test_case::test_matrix;
 
 #[test_matrix(
