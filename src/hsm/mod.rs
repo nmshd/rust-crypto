@@ -5,7 +5,7 @@ use std::sync::Arc;
 pub mod core;
 pub mod nitrokey;
 
-#[cfg(feature = "yubikey")]
+#[cfg(feature = "yubi")]
 pub mod yubikey;
 
 #[derive(Debug)]

@@ -40,6 +40,7 @@ impl KeyHandle for YubiKeyProvider {
     fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         let yubikey = self.yubikey.unwrap();
         let data = data.to_vec();
+        let key_algo = self.key_algo.unwrap();
 
         // Input gets hashed with SHA-256
         let mut hasher = Sha256::new();
@@ -50,13 +51,21 @@ impl KeyHandle for YubiKeyProvider {
         //TODO After PIN input implementation in App, insert code for re-authentication
         let verify = yubikey.verify_pin("123456".as_ref());
         if !verify.is_ok() {
-            return Err(SecurityModuleError::Hsm("PIN verification failed"));
+            return Err(SecurityModuleError::Hsm(
+                crate::hsm::core::error::HsmError::DeviceSpecific(
+                    "PIN verification failed".to_string(),
+                ),
+            ));
         }
         let auth = yubikey.authenticate(MgmKey::default());
         if !auth.is_ok() {
-            return Err(SecurityModuleError::Hsm("Authentication  failed"));
+            return Err(SecurityModuleError::Hsm(
+                crate::hsm::core::error::HsmError::DeviceSpecific(
+                    "Authentication  failed".to_string(),
+                ),
+            ));
         }
-        match self.key_algo {
+        match key_algo {
             Ecc => {
                 // Sign data
                 let signature = piv::sign_data(
@@ -73,14 +82,20 @@ impl KeyHandle for YubiKeyProvider {
                             .expect("Failed to decode signature");
                         Ok(signature)
                     }
-                    Err(err) => Err(SecurityModuleError::Hsm("")),
+                    Err(err) => Err(SecurityModuleError::Hsm(
+                        crate::hsm::core::error::HsmError::DeviceSpecific(err.to_string()),
+                    )),
                 }
             }
             /*Rsa => {
                 // TODO, doesn´t work yet
             }*/
             _ => {
-                return Err(SecurityModuleError::Hsm("Unsupported feature"));
+                return Err(SecurityModuleError::Hsm(
+                    crate::hsm::core::error::HsmError::UnsupportedFeature(
+                        "Unsupported feature".to_string(),
+                    ),
+                ));
             }
         }
     }
@@ -102,8 +117,9 @@ impl KeyHandle for YubiKeyProvider {
         let encrypted_data = general_purpose::STANDARD.decode(encrypted_data).unwrap();
         let input: &[u8] = &encrypted_data;
         let decrypted: Result<der::zeroize::Zeroizing<Vec<u8>>, SecurityModuleError>;
+        let key_algo = self.key_algo.unwrap();
 
-        match self.key_algo {
+        match key_algo {
             Rsa => {
                 decrypted = piv::decrypt_data(
                     &mut yubikey,

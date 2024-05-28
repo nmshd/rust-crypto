@@ -2,7 +2,7 @@ use super::YubiKeyProvider;
 use crate::common::{
     crypto::KeyUsage, error::SecurityModuleError, traits::module_provider::Provider,
 };
-use crate::hsm::{HsmProviderConfig, ProviderConfig};
+use crate::hsm::{core::error::HsmError, HsmProviderConfig, ProviderConfig};
 use base64::{engine::general_purpose, Engine};
 use std::str::Utf8Error;
 use tracing::instrument;
@@ -87,15 +87,17 @@ impl Provider for YubiKeyProvider {
         if let Some(hsm_config) = config.as_any().downcast_ref::<HsmProviderConfig>() {
             self.key_algo = Some(hsm_config.key_algorithm);
             self.key_usages = Some(hsm_config.key_usage.clone());
+            let key_algo = self.key_algo.clone().unwrap();
 
-            let mut yubikey = self.yubikey.unwrap();
+            let mut yubikey = self.yubikey.as_mut().unwrap();
             let mut usage: &str = "";
-            let mut slot: u32;
+            let slot: u32;
+            let key_usages = self.key_usages.clone().unwrap();
 
             if !self.load_key(key_id, config).is_ok() {
-                match self.key_usages {
+                match key_usages {
                     SignEncrypt => {
-                        match self.key_algo {
+                        match key_algo {
                             Rsa => {
                                 match get_free_slot(&mut yubikey) {
                                     Ok(free) => {
@@ -127,7 +129,11 @@ impl Provider for YubiKeyProvider {
                                     );
                                         self.pkey = Some(gen_key);
                                     }
-                                    Err(err) => return Err(SecurityModuleError::Hsm(err)),
+                                    Err(err) => {
+                                        return Err(SecurityModuleError::Hsm(
+                                            HsmError::DeviceSpecific(err.to_string()),
+                                        ))
+                                    }
                                 }
                             }
                             Ecc => {
@@ -151,7 +157,7 @@ impl Provider for YubiKeyProvider {
                                     yubikey::PinPolicy::Default,
                                     yubikey::TouchPolicy::Default,
                                 );
-                                let mut generated;
+
                                 match gen_key {
                                     Ok(_) => {
                                         let gen_key = gen_key.as_ref().unwrap().to_der().unwrap();
@@ -162,10 +168,18 @@ impl Provider for YubiKeyProvider {
                                     );
                                         self.pkey = Some(gen_key);
                                     }
-                                    Err(err) => return Err(SecurityModuleError::Hsm(err)),
+                                    Err(err) => {
+                                        return Err(SecurityModuleError::Hsm(
+                                            HsmError::DeviceSpecific(err.to_string()),
+                                        ))
+                                    }
                                 }
                             }
-                            _ => Err(SecurityModuleError::Hsm("Key Algorithm not supported")),
+                            _ => {
+                                return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
+                                    "Key Algorithm not supported".to_string(),
+                                )));
+                            }
                         }
                     }
 
@@ -202,20 +216,32 @@ impl Provider for YubiKeyProvider {
                                     );
                                         self.pkey = Some(gen_key);
                                     }
-                                    Err(err) => return Err(SecurityModuleError::Hsm(err)),
+                                    Err(err) => {
+                                        return Err(SecurityModuleError::Hsm(
+                                            HsmError::DeviceSpecific(err.to_string()),
+                                        ))
+                                    }
                                 }
                             }
                             Ecc => {
                                 // TODO, not tested, might work
                             }
-                            _ => Err(SecurityModuleError::Hsm("Key Algorithm not supported")),
+                            _ => {
+                                return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
+                                    "Key Algorithm not supported".to_string(),
+                                )));
+                            }
                         }
                     }
 
-                    _ => Err(SecurityModuleError::Hsm("Key Usage not supported")),
+                    _ => {
+                        return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
+                            "Key Usage not supported".to_string(),
+                        )));
+                    }
                 }
             } else {
-                match self.key_usages {
+                match key_usages {
                     SignEncrypt => match self.key_algo {
                         Rsa => {
                             slot = get_reference_u32slot(self.slot_id.unwrap());
@@ -238,7 +264,11 @@ impl Provider for YubiKeyProvider {
                                     );
                                     self.pkey = Some(gen_key);
                                 }
-                                Err(err) => return Err(SecurityModuleError::Hsm(err)),
+                                Err(err) => {
+                                    return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
+                                        err.to_string(),
+                                    )))
+                                }
                             }
                         }
                         Ecc => {
@@ -262,10 +292,18 @@ impl Provider for YubiKeyProvider {
                                     );
                                     self.pkey = Some(gen_key);
                                 }
-                                Err(err) => return Err(SecurityModuleError::Hsm(err)),
+                                Err(err) => {
+                                    return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
+                                        err.to_string(),
+                                    )))
+                                }
                             }
                         }
-                        _ => Err(SecurityModuleError::Hsm("Key Algorithm not supported")),
+                        _ => {
+                            return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
+                                "Key Algorithm not supported".to_string(),
+                            )));
+                        }
                     },
 
                     Decrypt => {
@@ -291,25 +329,40 @@ impl Provider for YubiKeyProvider {
                                     );
                                         self.pkey = Some(gen_key);
                                     }
-                                    Err(err) => return Err(SecurityModuleError::Hsm(err)),
+                                    Err(err) => {
+                                        return Err(SecurityModuleError::Hsm(
+                                            HsmError::DeviceSpecific(err.to_string()),
+                                        ))
+                                    }
                                 }
                             }
                             Ecc => {
                                 // TODO, not tested, might work
                             }
-                            _ => Err(SecurityModuleError::Hsm("Key Algorithm not supported")),
+                            _ => {
+                                return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
+                                    "Key Algorithm not supported".to_string(),
+                                )));
+                            }
                         }
                     }
 
-                    _ => Err(SecurityModuleError::Hsm("Key Usage not supported")),
+                    _ => {
+                        return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
+                            "Key Usage not supported".to_string(),
+                        )));
+                    }
                 }
             }
+            let pkey = self.pkey.unwrap();
 
-            save_key_object(&mut yubikey, usage, key_id, slot, &self.pkey.unwrap());
+            save_key_object(&mut yubikey, usage, key_id, slot, &pkey);
 
             Ok(())
         } else {
-            Err(SecurityModuleError::Hsm("Failed to get the Configurations"))
+            Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
+                "Failed to get the Configurations".to_string(),
+            )))
         }
     }
 

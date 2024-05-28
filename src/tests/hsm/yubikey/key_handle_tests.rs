@@ -1,5 +1,4 @@
 #[cfg(test)]
-use crate::common::crypto::algorithms::{encryption::SymmetricMode, hashes::Sha2Bits, KeyBits};
 #[allow(unused_imports)]
 use crate::common::{
     crypto::{
@@ -12,15 +11,16 @@ use crate::common::{
     traits::{key_handle::KeyHandle, module_provider::Provider},
 };
 
-use crate::hsm::yubikey::YubiKeyProvider;
-
-use yubikey;
+use crate::hsm::{yubikey::YubiKeyProvider, HsmProviderConfig};
 
 #[test]
 fn test_sign_and_verify_rsa() {
     let mut provider = YubiKeyProvider::new("test_rsa_key".to_string());
 
-    let config = YubiKeyProvider::new("rsa-test-key".to_string());
+    let config = HsmProviderConfig::new(
+        AsymmetricEncryption::Rsa(crate::common::crypto::algorithms::KeyBits::Bits1024),
+        vec![KeyUsage::SignEncrypt],
+    );
 
     provider
         .initialize_module()
