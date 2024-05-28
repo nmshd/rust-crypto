@@ -4,6 +4,7 @@ use crate::{
     tpm::core::error::TpmError,
 };
 use tracing::instrument;
+use crate::tpm::android::knox::interface::jni::RustDef;
 
 /// Provides cryptographic operations for asymmetric keys on Windows,
 /// such as signing, encryption, decryption, and signature verification.
@@ -22,7 +23,7 @@ impl KeyHandle for KnoxProvider {
     /// A `Result` containing the signature as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
     #[instrument]
     fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
-        unimplemented!()
+        let result = RustDef::sign_data(data);
     }
 
     /// Decrypts data encrypted with the corresponding public key.
@@ -38,8 +39,7 @@ impl KeyHandle for KnoxProvider {
     /// A `Result` containing the decrypted data as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
     #[instrument]
     fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
-        unimplemented!()
-
+        let result = RustDef::decrypt_data(encrypted_data);
     }
 
     /// Encrypts data with the cryptographic key.
@@ -55,8 +55,7 @@ impl KeyHandle for KnoxProvider {
     /// A `Result` containing the encrypted data as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
     #[instrument]
     fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
-        unimplemented!()
-
+        let result = RustDef::encrypt_data(data);
     }
 
     /// Verifies a signature against the provided data.
@@ -75,7 +74,6 @@ impl KeyHandle for KnoxProvider {
     /// or a `SecurityModuleError` on failure.
     #[instrument]
     fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, SecurityModuleError> {
-        unimplemented!()
-
+        let result = RustDef::verify_signature(data, signature);
     }
 }
