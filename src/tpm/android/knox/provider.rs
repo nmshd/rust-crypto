@@ -13,7 +13,7 @@ use tracing::instrument;
 use crate::common::crypto::algorithms::encryption::{BlockCiphers, EccCurves, SymmetricMode};
 use crate::common::crypto::algorithms::KeyBits;
 use crate::common::traits::module_provider_config::ProviderConfig;
-use crate::tpm::android::knox::interface::jni::RustDef;
+use crate::tpm::android::knox::interface::RustDef;
 use crate::tpm::android::knox::{KnoxConfig, KnoxProvider};
 use crate::tpm::core::error::TpmError::UnsupportedOperation;
 
@@ -50,9 +50,12 @@ impl Provider for KnoxProvider {
     /// On failure, it returns a `SecurityModuleError`.
     #[instrument]
     fn create_key(&mut self, key_id: &str, config: Box<dyn ProviderConfig>) -> Result<(), SecurityModuleError> {
-        let config = match Self::unpack_ProviderConfig(config) {
-            Ok(value) => value,
-            Err(value) => return Err(value),
+        let config = match config.as_any().downcast_ref::<KnoxConfig>() {
+            None => {
+                return Err(SecurityModuleError::CreationError(
+                    String::from("Wrong type used for ProviderConfig in create_key()")));
+            }
+            Some(conf) => { conf }
         };
 
         let key_algo;
@@ -110,9 +113,8 @@ impl Provider for KnoxProvider {
                     }
                     match block { //todo: check if paddings match blocking modes
                         SymmetricMode::Gcm => { rv += "GCM;NoPadding" }
-                        SymmetricMode::Ecb => { rv += "ECB;PKCS7Padding" }
                         SymmetricMode::Cbc => { rv += "CBC;PKCS7Padding" }
-                        SymmetricMode::Ctr => { rv += "CTR;PKCS7Padding" }
+                        SymmetricMode::Ctr => { rv += "CTR;NoPadding" }
                         _ => {
                             return Err(SecurityModuleError::Tpm(UnsupportedOperation(
                                 format!("Unsupported symmetric encryption algorithm: {:?}", config.sym_algorithm))));
@@ -157,11 +159,15 @@ impl Provider for KnoxProvider {
     /// On failure, it returns a `SecurityModuleError`.
     #[instrument]
     fn load_key(&mut self, key_id: &str, config: Box<dyn ProviderConfig>) -> Result<(), SecurityModuleError> {
-        let conf = match Self::unpack_ProviderConfig(config) {
-            Ok(value) => value,
-            Err(value) => return Err(value),
+        let config = match config.as_any().downcast_ref::<KnoxConfig>() {
+            None => {
+                return Err(SecurityModuleError::CreationError(
+                    String::from("Wrong type used for ProviderConfig in create_key()")));
+            }
+            Some(conf) => { conf }
         };
-        let env = match Self::jvm_to_jnienv(&conf) {
+
+        let env = match Self::jvm_to_jnienv(&config) {
             Ok(value) => value,
             Err(value) => return value,
         };
@@ -210,19 +216,5 @@ impl Provider for KnoxProvider {
     /// }
     fn initialize_module(&mut self) -> Result<(), SecurityModuleError> {
         Ok(())
-    }
-}
-
-impl KnoxProvider {
-    #[allow(non_snake_case)]
-    fn unpack_ProviderConfig(config: Box<dyn ProviderConfig>) -> Result<&KnoxConfig, SecurityModuleError> {
-        let config = match config.as_any().downcast_ref::<KnoxConfig>() {
-            None => {
-                return Err(SecurityModuleError::CreationError(
-                    String::from("Wrong type used for ProviderConfig in create_key()")));
-            }
-            Some(conf) => { conf }
-        };
-        Ok(config)
     }
 }
