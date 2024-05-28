@@ -182,7 +182,7 @@ impl<'env: 'borrow, 'borrow> Builder<'env, 'borrow> {
     pub fn set_algorithm_parameter_spec(
         mut self,
         env: &'borrow JNIEnv<'env>,
-        spec: AlgorithmParameterSpec,
+        #[input_type("Ljava/security/spec/AlgorithmParameterSpec;")] spec: JObject,
     ) -> JniResult<Self> {
         if spec.is_null() {
             return Err(JniError::from(JniErrorKind::NullPtr));
