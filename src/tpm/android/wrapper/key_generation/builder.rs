@@ -163,6 +163,40 @@ impl<'env: 'borrow, 'borrow> Builder<'env, 'borrow> {
         Ok(self)
     }
 
+    pub fn set_key_size(mut self, env: &'borrow JNIEnv<'env>, key_size: i32) -> JniResult<Self> {
+        if key_size < 0 {
+            return Err(JniError::from(JniErrorKind::IllegalArgumentException(
+                "keySize < 0",
+            )));
+        }
+        let result = env.call_method(
+            self.raw.as_obj(),
+            "setKeySize",
+            "(I)Landroid/security/keystore/KeyGenParameterSpec$Builder;",
+            &[JValue::Int(key_size)],
+        )?;
+        self.raw = AutoLocal::new(env, result.l()?);
+        Ok(self)
+    }
+
+    pub fn set_algorithm_parameter_spec(
+        mut self,
+        env: &'borrow JNIEnv<'env>,
+        spec: AlgorithmParameterSpec,
+    ) -> JniResult<Self> {
+        if spec.is_null() {
+            return Err(JniError::from(JniErrorKind::NullPtr));
+        }
+        let result = env.call_method(
+        self.raw.as_obj(),
+        "setAlgorithmParameterSpec",
+        "(Ljavax/crypto/spec/AlgorithmParameterSpec;)Landroid/security/keystore/KeyGenParameterSpec$Builder;",
+        &[JValue::Object(spec.into())],
+    )?;
+        self.raw = AutoLocal::new(env, result.l()?);
+        Ok(self)
+    }
+
     /// Sets whether the key is backed by a strongbox.
     ///
     /// # Arguments
