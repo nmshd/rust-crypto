@@ -12,7 +12,7 @@ use crate::common::{
     },
 };
 use tracing::instrument;
-use yubikey::YubiKey;
+use yubikey::{piv::SlotId, YubiKey};
 
 pub mod key_handle;
 pub mod provider;
@@ -30,6 +30,7 @@ pub struct YubiKeyProvider {
     pub(super) key_id: String,
     pub(super) pkey: String,
     pub(super) config: Option<Arc<dyn ProviderConfig + Sync + Send>>,
+    pub(super) slot_id: SlotId,
 }
 
 impl YubiKeyProvider {
@@ -49,6 +50,7 @@ impl YubiKeyProvider {
             key_id,
             pkey: None,
             config: None,
+            SlotId: None,
         }
     }
     /*

@@ -1,14 +1,14 @@
 use crate::common::crypto::{algorithms::encryption::AsymmetricEncryption, KeyUsage};
-use yubikey::piv::SlotId;
 
 pub mod core;
 pub mod nitrokey;
+
+#[cfg(feature = "yubikey")]
 pub mod yubikey;
 
 pub struct ProviderConfig {
     pub(super) key_algorithm: AsymmetricEncryption,
     pub(super) key_usage: Option<KeyUsage>,
-    pub(super) slot_id: SlotId,
 }
 
 impl ProviderConfig {
@@ -16,7 +16,6 @@ impl ProviderConfig {
         Self {
             key_algorithm,
             key_usage,
-            slot_id: None,
         }
     }
 }
