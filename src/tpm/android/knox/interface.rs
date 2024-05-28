@@ -56,7 +56,7 @@ pub mod jni {
 
         ///Proof of concept method - shows callback from Rust to a java method
         ///     ONLY USE FOR TESTING
-        pub extern "jni" fn callRust(_environment: &JNIEnv) -> String {
+        pub extern "jni" fn callRust( _environment: &JNIEnv) -> String {
             String::from("not implemented")
         }
 
