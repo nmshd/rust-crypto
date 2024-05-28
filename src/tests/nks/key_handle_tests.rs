@@ -22,27 +22,6 @@ use crate::nks::hcvault::NksProvider;
 use crate::nks::NksConfig;
 use crate::SecurityModuleError;
 
-#[test]
-fn do_nothing() {
-    let mut provider = NksProvider::new("test_rsa_key".to_string());
-
-    let config = NksConfig::new(
-        "test_token".to_string(),
-        "test_address".to_string(),
-        AsymmetricEncryption::Rsa(KeyBits::Bits4096),
-        Hash::Sha2(Sha2Bits::Sha256),
-        vec![KeyUsage::SignEncrypt, KeyUsage::ClientAuth],
-    );
-    provider.config = Some(config);
-    if let Some(nks_config) = provider.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>() {
-        println!("NKS Token: {}", nks_config.nks_token);
-        println!("NKS Address: {}", nks_config.nks_address);
-    } else {
-        println!("Failed to downcast to NksConfig");
-    }
-    assert_eq!(1, 1);
-}
-
     #[test]
     fn test_sign_and_verify_rsa() {
         let mut provider = NksProvider::new("test_key".to_string());

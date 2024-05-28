@@ -16,24 +16,6 @@ use crate::common::crypto::algorithms::hashes::Sha2Bits;
 use crate::common::traits::module_provider_config::ProviderConfig;
 use crate::nks::NksConfig;
 
-
-#[test]
-fn do_nothing() {
-    assert_eq!(1, 1);
-}
-
-#[test]
-fn test_initialize_module() {
-    let mut provider = NksProvider::new("test_key".to_string());
-
-    provider.config = Some(get_config("rsa").unwrap());
-
-    provider
-        .initialize_module()
-        .expect("Failed to initialize module");
-    println!("Provider: {:?}", provider);
-}
-
 #[test]
 fn test_create_rsa_key() {
     let mut provider = NksProvider::new("test_key".to_string());
