@@ -5,9 +5,13 @@ pub mod jni {
     #[allow(unused_imports)]
     use robusta_jni::bridge;
     use robusta_jni::convert::{IntoJavaValue, Signature, TryFromJavaValue, TryIntoJavaValue};
-    use robusta_jni::jni::errors::Error;
-    use robusta_jni::jni::JNIEnv;
-    use robusta_jni::jni::objects::{AutoLocal, JValue};
+    // use robusta_jni::jni::errors::Error;
+    // use robusta_jni::jni::JNIEnv;
+    // use robusta_jni::jni::objects::JValue;
+    use jni::JNIEnv;
+    use jni::errors::Error;
+    use jni::objects::JValue;
+    use robusta_jni::jni::objects::AutoLocal;
     use robusta_jni::jni::sys::jbyteArray;
     use crate::SecurityModuleError;
 

@@ -1,3 +1,4 @@
+use jni::errors::Error;
 use crate::{
     common::{
         crypto::{
@@ -21,9 +22,8 @@ use crate::tpm::core::error::TpmError::UnsupportedOperation;
 
 /// Implements the `Provider` trait, providing cryptographic operations utilizing a TPM.
 ///
-/// This implementation is specific to the Windows platform and utilizes the Windows CNG API
-/// to interact with the Trusted Platform Module (TPM) for key management and cryptographic
-/// operations.
+/// This implementation is specific to Samsung Knox Vault and uses it for all cryptographic operations
+/// In theory, this should also work for other TPMs on Android phones, but it is only tested with Samsung Knox Vault
 impl Provider for KnoxProvider {
     /// Creates a new cryptographic key identified by `key_id`.
     ///
@@ -51,16 +51,13 @@ impl Provider for KnoxProvider {
     /// On failure, it returns a `SecurityModuleError`.
     #[instrument]
     fn create_key(&mut self, key_id: &str, config: Box<dyn ProviderConfig>) -> Result<(), SecurityModuleError> {
-        let config = match config.as_any().downcast_ref::<KnoxConfig>() {
-            None => {
-                return Err(SecurityModuleError::CreationError(
-                    "Wrong type used for ProviderConfig in create_key()"));
-            }
-            Some(conf) => { conf }
+        let config = match Self::unpack_ProviderConfig(config) {
+            Ok(value) => value,
+            Err(value) => return Err(value),
         };
         let key_algo;
         if config.key_algorithm.is_some() && config.sym_algorithm.is_none() {
-            key_algo = match config.key_algorithm {
+            key_algo = match config.key_algorithm.expect("Already checked") {
                 AsymmetricEncryption::Rsa(bitslength) => {
                     match bitslength {
                         KeyBits::Bits128 => { String::from("RSA;128;SHA-256;PKCS1") }
@@ -89,7 +86,10 @@ impl Provider for KnoxProvider {
                                 }
                             }
                         }
-                        _ => {}
+                        _ => {return Err(SecurityModuleError::Tpm(UnsupportedOperation(
+                            format!("Unsupported asymmetric encryption algorithm: {:?}",
+                                    config.key_algorithm))));
+                        }
                     }
                 }
                 _ => {
@@ -99,8 +99,8 @@ impl Provider for KnoxProvider {
                 }
             };
         } else if config.key_algorithm.is_none() && config.sym_algorithm.is_some() {
-            key_algo = match config.sym_algorithm {
-                BlockCiphers::Des() => { String::from("DESede;CBC;PKCS7Padding") }
+            key_algo = match config.sym_algorithm.expect("Already checked") {
+                BlockCiphers::Des => { String::from("DESede;CBC;PKCS7Padding") },
 
                 BlockCiphers::Aes(block, bitslength) => {
                     let mut rv = String::from("AES;");
@@ -139,7 +139,16 @@ impl Provider for KnoxProvider {
                 config.sym_algorithm,
                 config.key_algorithm)));
         }
-        RustDef::create_key(config.env, key_id, key_algo)
+        
+        let env = match &config.vm.get_env() {
+            Ok(e) => {e}
+            Err(_) => {
+                return Err(SecurityModuleError::CreationError(
+                    String::from("failed to extract JNIEnv from JavaVM")))
+            }
+        };
+        
+        RustDef::create_key(env, String::from(key_id), key_algo)
     }
 
     /// Loads an existing cryptographic key identified by `key_id`.
@@ -161,8 +170,12 @@ impl Provider for KnoxProvider {
     /// A `Result` that, on success, contains `Ok(())`, indicating that the key was loaded successfully.
     /// On failure, it returns a `SecurityModuleError`.
     #[instrument]
-    fn load_key(&mut self, key_id: &str, _config: Box<dyn ProviderConfig>) -> Result<(), SecurityModuleError> {
-        Ok(())
+    fn load_key(&mut self, key_id: &str, config: Box<dyn ProviderConfig>) -> Result<(), SecurityModuleError> {
+        let conf = match Self::unpack_ProviderConfig(config) {
+            Ok(value) => value,
+            Err(value) => return Err(value),
+        };
+        RustDef::load_key(&conf.env, String::from(key_id))
     }
 
     /// Initializes the TPM module and returns a handle for cryptographic operations.
@@ -207,5 +220,19 @@ impl Provider for KnoxProvider {
     /// }
     fn initialize_module(&mut self) -> Result<(), SecurityModuleError> {
         Ok(())
+    }
+}
+
+impl KnoxProvider {
+    #[allow(non_snake_case)]
+    fn unpack_ProviderConfig(config: Box<dyn ProviderConfig>) -> Result<&KnoxConfig, SecurityModuleError> {
+        let config = match config.as_any().downcast_ref::<KnoxConfig>() {
+            None => {
+                return Err(SecurityModuleError::CreationError(
+                    String::from("Wrong type used for ProviderConfig in create_key()")));
+            }
+            Some(conf) => { conf }
+        };
+        Ok(config)
     }
 }
