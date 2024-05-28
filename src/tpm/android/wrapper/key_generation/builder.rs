@@ -140,6 +140,17 @@ impl<'env: 'borrow, 'borrow> Builder<'env, 'borrow> {
         Ok(self)
     }
 
+    /// Sets the block modes for the key.
+    ///
+    /// # Arguments
+    ///
+    /// * `self` - The `Builder` instance.
+    /// * `env` - The JNI environment.
+    /// * `block_modes` - The block modes to set.
+    ///
+    /// # Returns
+    ///
+    /// A `JniResult` containing the updated `Builder` instance.
     pub fn set_block_modes(
         mut self,
         env: &'borrow JNIEnv<'env>,
@@ -163,6 +174,17 @@ impl<'env: 'borrow, 'borrow> Builder<'env, 'borrow> {
         Ok(self)
     }
 
+    /// Sets the key size for the key.
+    ///
+    /// # Arguments
+    ///
+    /// * `self` - The `Builder` instance.
+    /// * `env` - The JNI environment.
+    /// * `key_size` - The key size to set.
+    ///
+    /// # Returns
+    ///
+    /// A `JniResult` containing the updated `Builder` instance.
     pub fn set_key_size(mut self, env: &'borrow JNIEnv<'env>, key_size: i32) -> JniResult<Self> {
         if key_size < 0 {
             return Err(JniError::from(JniErrorKind::IllegalArgumentException(
@@ -179,6 +201,17 @@ impl<'env: 'borrow, 'borrow> Builder<'env, 'borrow> {
         Ok(self)
     }
 
+    /// Sets the algorithm parameter specification for the key.
+    ///
+    /// # Arguments
+    ///
+    /// * `self` - The `Builder` instance.
+    /// * `env` - The JNI environment.
+    /// * `spec` - The algorithm parameter specification to set.
+    ///
+    /// # Returns
+    ///
+    /// A `JniResult` containing the updated `Builder` instance.
     pub fn set_algorithm_parameter_spec(
         mut self,
         env: &'borrow JNIEnv<'env>,
