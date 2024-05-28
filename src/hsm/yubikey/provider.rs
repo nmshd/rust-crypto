@@ -180,7 +180,7 @@ impl Provider for YubiKeyProvider {
                     }
 
                     Decrypt => {
-                        match self.key_algo {
+                        match key_algo {
                             Rsa => {
                                 let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
                                 match get_free_slot(&mut yubikey) {
@@ -234,7 +234,7 @@ impl Provider for YubiKeyProvider {
                 }
             } else {
                 match key_usages {
-                    SignEncrypt => match self.key_algo {
+                    SignEncrypt => match key_algo {
                         Rsa => {
                             let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
                             slot = get_reference_u32slot(self.slot_id.unwrap());
@@ -296,7 +296,7 @@ impl Provider for YubiKeyProvider {
                     },
 
                     Decrypt => {
-                        match self.key_algo {
+                        match key_algo {
                             Rsa => {
                                 let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
                                 slot = get_reference_u32slot(self.slot_id.unwrap());
