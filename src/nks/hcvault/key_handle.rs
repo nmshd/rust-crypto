@@ -35,6 +35,15 @@ use crate::common::crypto::algorithms::encryption::{EccCurves, EccSchemeAlgorith
 use crate::common::crypto::algorithms::hashes::*;
 
 impl KeyHandle for NksProvider {
+    /// Signs the given data using the configured key and algorithm.
+    ///
+    /// # Arguments
+    ///
+    /// * `_data` - A slice of bytes representing the data to be signed.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing the signature as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
     #[tracing::instrument]
     fn sign_data(&self, _data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         if let Some(nks_config) = self.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>() {
@@ -91,6 +100,15 @@ impl KeyHandle for NksProvider {
         }
     }
 
+    /// Decrypts the given encrypted data using the configured key and algorithm.
+    ///
+    /// # Arguments
+    ///
+    /// * `_encrypted_data` - A slice of bytes representing the encrypted data.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing the decrypted data as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
     #[tracing::instrument]
     fn decrypt_data(&self, _encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         // Determine the key algorithm based on the key or some other means
@@ -163,6 +181,15 @@ impl KeyHandle for NksProvider {
         }
     }
 
+    /// Encrypts the given data using the configured key and algorithm.
+    ///
+    /// # Arguments
+    ///
+    /// * `_data` - A slice of bytes representing the data to be encrypted.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing the encrypted data as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
     #[tracing::instrument]
     fn encrypt_data(&self, _data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         let key_algorithm = self
@@ -222,6 +249,16 @@ impl KeyHandle for NksProvider {
         }
     }
 
+    /// Verifies the given signature against the provided data using the configured key and algorithm.
+    ///
+    /// # Arguments
+    ///
+    /// * `_data` - A slice of bytes representing the data that was signed.
+    /// * `_signature` - A slice of bytes representing the signature to be verified.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing `true` if the signature is valid, `false` if it is invalid, or a `SecurityModuleError` on failure.
     #[tracing::instrument]
     fn verify_signature(
         &self,
@@ -296,21 +333,15 @@ impl KeyHandle for NksProvider {
     }
 }
 
-/// Adds a new signature to the secrets JSON object.
-///
-/// This function takes a mutable `Option<Value>` representing the secrets JSON object, a `Vec<u8>` representing the signature, a string slice representing the ID, and a string slice representing the hash algorithm. It converts the signature to a base64 string, creates a new signature object, and adds it to the signatures array in the secrets JSON object.
+/// Decodes a base64-encoded private key.
 ///
 /// # Arguments
 ///
-/// * `secrets_json` - A mutable `Option<Value>` representing the secrets JSON object. If `None`, the function will return an error.
-/// * `signature` - A `Vec<u8>` representing the signature to be added to the secrets JSON object.
-/// * `id` - A string slice representing the ID of the new signature.
-/// * `hash_algorithm` - A string slice representing the hash algorithm used for the new signature.
+/// * `private_key_base64` - A string slice representing the base64-encoded private key.
 ///
 /// # Returns
 ///
-/// A `Result<Option<Value>, SecurityModuleError>` that, on success, contains the updated secrets JSON object. If the `secrets_json` is `None` or if the `signatures` array is not found, it returns a `SecurityModuleError::NksError`.
-
+/// A `StaticSecret` representing the decoded private key.
 pub fn decode_base64_private_key(private_key_base64: &str) -> StaticSecret {
     let private_key_base64 = private_key_base64; // example private key
     let private_key_bytes = BASE64_STANDARD

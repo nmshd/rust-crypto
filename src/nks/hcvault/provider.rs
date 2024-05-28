@@ -386,6 +386,41 @@ async fn get_and_save_key_pair(
     Ok((data_str, user_token))
 }
 
+/// Sends a request to the Nks server to generate and save a cryptographic key pair.
+///
+/// This asynchronous function builds an HTTP client, constructs a JSON request body,
+/// and sends a POST request to the Nks server to generate and save a cryptographic key pair.
+/// The request includes the token for authentication, the key name, key type, and optionally the key length.
+///
+/// # Arguments
+///
+/// * `token` - A reference to the Nks token string used for authentication.
+/// * `key_name` - A string slice that uniquely identifies the key to be created.
+/// * `key_type` - A string slice representing the cryptographic algorithm to be used (e.g., "rsa").
+/// * `nks_address` - A `Url` object representing the address of the Nks server.
+/// * `length` - An optional `Option<u32>` representing the length of the key (e.g., 2048 bits for RSA).
+///
+/// # Returns
+///
+/// A `Result` that, on success, contains a `reqwest::Response` object representing the server's response.
+/// On failure, it returns a boxed `dyn std::error::Error`.
+///
+/// # Example
+///
+/// ```
+/// let response = get_and_save_key_pair_request(&token, "test_rsa_key", "rsa", nks_address, Some(2048))
+///     .await
+///     .expect("Failed to send key pair generation request");
+/// ```
+///
+/// # Errors
+///
+/// This function will return an error if:
+/// - The HTTP client cannot be built.
+/// - The API URL cannot be joined with the endpoint.
+/// - The request cannot be sent successfully.
+///
+/// The function uses `reqwest` for HTTP communication and handles any errors that may arise during the process.
 async fn get_and_save_key_pair_request(
     token: &str,
     key_name: &str,
