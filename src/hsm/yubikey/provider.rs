@@ -66,7 +66,7 @@ impl Provider for YubiKeyProvider {
                     Rsa => {
                         match get_free_slot() {
                             Ok(free) => {
-                                self.config.slot_id = free;
+                                self.slot_id = free;
                             }
                             Err(err) => {
                                 return Err(err);
@@ -97,7 +97,7 @@ impl Provider for YubiKeyProvider {
                     Ecc => {
                         match get_free_slot() {
                             Ok(free) => {
-                                self.config.slot_id = free;
+                                self.slot_id = free;
                             }
                             Err(err) => {
                                 return Err(err);
@@ -122,7 +122,7 @@ impl Provider for YubiKeyProvider {
                         Rsa => {
                             match get_free_slot() {
                                 Ok(free) => {
-                                    self.config.slot_id = free;
+                                    self.slot_id = free;
                                 }
                                 Err(err) => {
                                     return Err(err);
@@ -163,7 +163,7 @@ impl Provider for YubiKeyProvider {
             match config.key_usage {
                 SignEncrypt => match config.key_algorithm {
                     Rsa => {
-                        slot = self.config.slot_id;
+                        slot = self.slot_id;
                         usage = "encrypt";
                         let gen_key = piv::generate(
                             self.yubikey,
@@ -187,7 +187,7 @@ impl Provider for YubiKeyProvider {
                         }
                     }
                     Ecc => {
-                        slot = self.config.slot_id;
+                        slot = self.slot_id;
                         usage = "sign";
                         let gen_key = piv::generate(
                             self.yubikey,
@@ -205,7 +205,7 @@ impl Provider for YubiKeyProvider {
                 Decrypt => {
                     match config.key_algorithm {
                         Rsa => {
-                            slot = self.config.slot_id;
+                            slot = self.slot_id;
                             usage = "decrypt";
                             let gen_key = piv::generate(
                                 self.yubikey,
@@ -263,7 +263,7 @@ impl Provider for YubiKeyProvider {
     fn load_key(&mut self, config: Box<dyn ProviderConfig>) -> Result<(), yubikey::Error> {
         let mut found = false;
         for i in 10..19 {
-            let data = self..fetch_object(SLOT[i]);
+            let data = self.fetch_object(SLOT[i]);
             let mut output: Vec<u8> = Vec::new();
             match data {
                 Ok(data) => {
@@ -278,7 +278,7 @@ impl Provider for YubiKeyProvider {
             match parse_slot_data(&data) {
                 Ok((key_name, slot, usage, public_key)) => {
                     if key_name == self.key_id {
-                        self.config.slot_id = SLOT[i - 10];
+                        self.slot_id = SLOT[i - 10];
                         self.config.key_usage = match usage.as_str() {
                             "sign" | "encrypt" => KeyUsage::SignEncrypt,
                             "decrypt" => KeyUsage::Decrypt,
@@ -393,7 +393,7 @@ impl Provider for YubiKeyProvider {
 /// On failure, it returns a `yubikey::Error`.
 fn save_key_object(&mut self, usage: &str) -> Result<(), yubikey::Error> {
     let key_name = self.key_id;
-    let slot = self.config.slot_id.to_string();
+    let slot = self.slot_id.to_string();
     let public_key = self.pkey;
 
     let total_length = key_name.len() + 1 + slot.len() + 1 + usage.len() + 1 + public_key.len();
@@ -479,9 +479,9 @@ fn parse_slot_data(data: &[u8]) -> Result<(String, String, String, String), Utf8
 ///
 /// A `Result` that, on failure, returns the first free slot.
 /// On Success, it returns that no more free slots are available.
-fn get_free_slot() -> Resul<SlotId, error::Error> {
+fn get_free_slot(&mut self) -> Resul<SlotId, error::Error> {
     for i in 10..19 {
-        let data = device.fetch_object(SLOTS[i]);
+        let data = self.fetch_object(SLOTS[i]);
         let mut output: Vec<u8> = Vec::new();
         match data {
             Ok(data) => {
