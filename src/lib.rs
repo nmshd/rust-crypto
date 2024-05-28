@@ -8,6 +8,9 @@ mod tests;
 #[cfg(feature = "tpm")]
 pub mod tpm;
 
+#[cfg(feature = "yubi")]
+pub mod yubikey;
+
 pub use common::{error::SecurityModuleError, factory::SecModules};
 #[cfg(feature = "ffi")]
 pub use ffi::factory::{secmodules_free_instance, secmodules_get_instance};

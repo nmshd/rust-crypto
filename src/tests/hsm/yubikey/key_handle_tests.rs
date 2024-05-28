@@ -14,6 +14,8 @@ use crate::common::{
 
 use crate::hsm::yubikey::YubiKeyProvider;
 
+use yubikey;
+
 #[test]
 fn test_sign_and_verify_rsa() {
     let mut provider = YubiKeyProvider::new("test_rsa_key".to_string());
