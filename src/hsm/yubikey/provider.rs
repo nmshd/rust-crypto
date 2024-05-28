@@ -176,11 +176,6 @@ impl Provider for YubiKeyProvider {
                                     }
                                 }
                             }
-                            _ => {
-                                return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
-                                    "Key Algorithm not supported".to_string(),
-                                )));
-                            }
                         }
                     }
 
@@ -227,11 +222,6 @@ impl Provider for YubiKeyProvider {
                             }
                             Ecc => {
                                 // TODO, not tested, might work
-                            }
-                            _ => {
-                                return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
-                                    "Key Algorithm not supported".to_string(),
-                                )));
                             }
                         }
                     }
@@ -303,11 +293,6 @@ impl Provider for YubiKeyProvider {
                                 }
                             }
                         }
-                        _ => {
-                            return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
-                                "Key Algorithm not supported".to_string(),
-                            )));
-                        }
                     },
 
                     Decrypt => {
@@ -343,11 +328,6 @@ impl Provider for YubiKeyProvider {
                             }
                             Ecc => {
                                 // TODO, not tested, might work
-                            }
-                            _ => {
-                                return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
-                                    "Key Algorithm not supported".to_string(),
-                                )));
                             }
                         }
                     }
