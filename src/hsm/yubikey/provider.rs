@@ -14,6 +14,7 @@ use std::str::Utf8Error;
 use std::sync::{Arc, Mutex};
 use tracing::instrument;
 use x509_cert::der::Encode;
+use yubikey::MgmKey;
 
 const SLOTS: [RetiredSlotId; 20] = [
     RetiredSlotId::R1,
@@ -95,7 +96,7 @@ impl Provider for YubiKeyProvider {
             let mut slot: u32 = 1;
             let key_usages = self.key_usages.clone().unwrap();
 
-            if !self.load_key(key_id, config).is_ok() {
+            if !(self.load_key(key_id, config).is_ok()) {
                 match *key_usages.get(0).unwrap() {
                     KeyUsage::SignEncrypt => {
                         match key_algo {
@@ -111,11 +112,13 @@ impl Provider for YubiKeyProvider {
                                         ));
                                     }
                                 }
-                                slot = get_reference_u32slot(self.slot_id.unwrap());
+
                                 usage = "encrypt";
+                                let _ = yubikey.verify_pin("123456".as_ref());
+                                let _ = yubikey.authenticate(MgmKey::default());
+
                                 let gen_key = piv::generate(
                                     &mut yubikey,
-                                    // SlotId wird noch variabel gemacht, abhängig davon wie viele Slots benötigt werden
                                     SlotId::Retired(self.slot_id.unwrap()),
                                     AlgorithmId::Rsa2048,
                                     yubikey::PinPolicy::Default,
@@ -150,8 +153,10 @@ impl Provider for YubiKeyProvider {
                                         ));
                                     }
                                 }
-                                slot = get_reference_u32slot(self.slot_id.unwrap());
+
                                 usage = "sign";
+                                let _ = yubikey.verify_pin("123456".as_ref());
+                                let _ = yubikey.authenticate(MgmKey::default());
                                 let gen_key = piv::generate(
                                     &mut yubikey,
                                     // SlotId wird noch variabel gemacht, abhängig davon wie viele Slots benötigt werden
@@ -197,6 +202,8 @@ impl Provider for YubiKeyProvider {
                                 }
                                 slot = get_reference_u32slot(self.slot_id.unwrap());
                                 usage = "decrypt";
+                                let _ = yubikey.verify_pin("123456".as_ref());
+                                let _ = yubikey.authenticate(MgmKey::default());
                                 let gen_key = piv::generate(
                                     &mut yubikey,
                                     // SlotId wird noch variabel gemacht, abhängig davon wie viele Slots benötigt werden
@@ -239,8 +246,9 @@ impl Provider for YubiKeyProvider {
                     KeyUsage::SignEncrypt => match key_algo {
                         AsymmetricEncryption::Rsa(_) => {
                             let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
-                            slot = get_reference_u32slot(self.slot_id.unwrap());
                             usage = "encrypt";
+                            let _ = yubikey.verify_pin("123456".as_ref());
+                            let _ = yubikey.authenticate(MgmKey::default());
                             let gen_key = piv::generate(
                                 &mut yubikey,
                                 // SlotId wird noch variabel gemacht, abhängig davon wie viele Slots benötigt werden
@@ -268,8 +276,9 @@ impl Provider for YubiKeyProvider {
                         }
                         AsymmetricEncryption::Ecc(_) => {
                             let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
-                            slot = get_reference_u32slot(self.slot_id.unwrap());
                             usage = "sign";
+                            let _ = yubikey.verify_pin("123456".as_ref());
+                            let _ = yubikey.authenticate(MgmKey::default());
                             let gen_key = piv::generate(
                                 &mut yubikey,
                                 // SlotId wird noch variabel gemacht, abhängig davon wie viele Slots benötigt werden
@@ -301,8 +310,9 @@ impl Provider for YubiKeyProvider {
                         match key_algo {
                             AsymmetricEncryption::Rsa(_) => {
                                 let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
-                                slot = get_reference_u32slot(self.slot_id.unwrap());
                                 usage = "decrypt";
+                                let _ = yubikey.verify_pin("123456".as_ref());
+                                let _ = yubikey.authenticate(MgmKey::default());
                                 let gen_key = piv::generate(
                                     &mut yubikey,
                                     // SlotId wird noch variabel gemacht, abhängig davon wie viele Slots benötigt werden
@@ -342,11 +352,21 @@ impl Provider for YubiKeyProvider {
                 }
             }
             let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
+
             let pkey = self.pkey.clone();
+            slot = get_reference_u32slot(self.slot_id.unwrap());
 
-            save_key_object(&mut yubikey, usage, key_id, slot, &pkey);
+            let _ = yubikey.verify_pin("123456".as_ref());
+            let _ = yubikey.authenticate(MgmKey::default());
 
-            Ok(())
+            match save_key_object(&mut yubikey, usage, key_id, slot, &pkey) {
+                Ok(_) => Ok(()),
+                Err(err) => {
+                    return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
+                        err.to_string(),
+                    )))
+                }
+            }
         } else {
             Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
                 "Failed to get the Configurations".to_string(),
@@ -378,6 +398,8 @@ impl Provider for YubiKeyProvider {
         let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
         let mut found = false;
         for i in 10..19 {
+            let _ = yubikey.verify_pin("123456".as_ref());
+            let _ = yubikey.authenticate(MgmKey::default());
             let data = yubikey.fetch_object(SLOTSU32[i]);
             let mut output: Vec<u8> = Vec::new();
             match data {
@@ -422,9 +444,9 @@ impl Provider for YubiKeyProvider {
             return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
                 "Key not found".to_string(),
             )));
+        } else {
+            Ok(())
         }
-
-        Ok(())
     }
 
     /// Initializes the YubiKey module and returns a handle for cryptographic operations.
@@ -569,7 +591,7 @@ fn save_key_object(
 ///
 /// A `Result` that, on success, contains `Ok(key_name, slot, key_usage, public_key)` where the individual information is given.
 /// On failure, it returns a `Utf8Error`.
-fn parse_slot_data(data: &[u8]) -> Result<(String, String, String, String), Utf8Error> {
+fn parse_slot_data(data: &[u8]) -> Result<(String, String, String, String), SecurityModuleError> {
     let parts: Vec<&[u8]> = data.split(|&x| x == 0).collect();
     if !(parts.len() < 4
         || parts[0].is_empty()
@@ -589,7 +611,9 @@ fn parse_slot_data(data: &[u8]) -> Result<(String, String, String, String), Utf8
             public_key.to_string(),
         ))
     } else {
-        return;
+        return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
+            "Failed to verify PIN, retries: {}".to_string(),
+        )));
     }
 }
 
@@ -637,9 +661,9 @@ fn get_free_slot(yubikey: &mut YubiKey) -> Result<RetiredSlotId, SecurityModuleE
 
 fn get_reference_u32slot(slot: RetiredSlotId) -> u32 {
     let mut output: u32 = SLOTSU32[0];
-    for i in 0..20 {
+    for i in 0..19 {
         if SLOTS[i] == slot {
-            output = SLOTSU32[i];
+            output = SLOTSU32[i + 10];
             break;
         } else {
             continue;

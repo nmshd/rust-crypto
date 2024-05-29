@@ -38,7 +38,7 @@ fn test_create_ecc_key() {
     let mut provider = YubiKeyProvider::new(key_id.to_string());
 
     let config = HsmProviderConfig::new(
-        AsymmetricEncryption::Rsa(crate::common::crypto::algorithms::KeyBits::Bits1024),
+        AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P256)),
         vec![KeyUsage::SignEncrypt],
     );
     provider
@@ -46,23 +46,17 @@ fn test_create_ecc_key() {
         .expect("Failed to initialize module");
     provider
         .create_key(key_id, config)
-        .expect("Failed to create RSA key");
+        .expect("Failed to create ECC key");
 }
-/*
+
 #[test]
 fn test_load_rsa_key() {
-    let mut provider = TpmProvider::new("test_rsa_key".to_string());
+    let key_id = "test_rsa_key";
+    let mut provider = YubiKeyProvider::new(key_id.to_string());
 
-    let config = TpmConfig::new(
-        AsymmetricEncryption::Rsa(KeyBits::Bits4096),
-        BlockCiphers::Aes(SymmetricMode::Gcm, KeyBits::Bits512),
-        Hash::Sha2(Sha2Bits::Sha256),
-        vec![
-            KeyUsage::SignEncrypt,
-            KeyUsage::ClientAuth,
-            KeyUsage::Decrypt,
-            KeyUsage::CreateX509,
-        ],
+    let config = HsmProviderConfig::new(
+        AsymmetricEncryption::Rsa(crate::common::crypto::algorithms::KeyBits::Bits2048),
+        vec![KeyUsage::SignEncrypt],
     );
 
     provider
@@ -72,7 +66,7 @@ fn test_load_rsa_key() {
         .load_key("test_rsa_key", config)
         .expect("Failed to load RSA key");
 }
-
+/*
 #[test]
 fn test_load_ecdsa_key() {
     let mut provider = TpmProvider::new("test_ecdsa_key".to_string());

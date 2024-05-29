@@ -18,7 +18,7 @@ fn test_sign_and_verify_rsa() {
     let mut provider = YubiKeyProvider::new("test_rsa_key".to_string());
 
     let config = HsmProviderConfig::new(
-        AsymmetricEncryption::Rsa(crate::common::crypto::algorithms::KeyBits::Bits1024),
+        AsymmetricEncryption::Rsa(crate::common::crypto::algorithms::KeyBits::Bits2048),
         vec![KeyUsage::SignEncrypt],
     );
 
