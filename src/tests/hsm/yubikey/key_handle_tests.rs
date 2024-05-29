@@ -37,10 +37,10 @@ fn test_sign_and_verify_rsa() {
 
 #[test]
 fn test_sign_and_verify_ecc() {
-    let mut provider = YubiKeyProvider::new("test_ecdsa_key".to_string());
+    let mut provider = YubiKeyProvider::new("test_ecc_key".to_string());
 
     let config = HsmProviderConfig::new(
-        AsymmetricEncryption::Rsa(crate::common::crypto::algorithms::KeyBits::Bits1024),
+        AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P256)),
         vec![KeyUsage::SignEncrypt],
     );
 
@@ -48,7 +48,7 @@ fn test_sign_and_verify_ecc() {
         .initialize_module()
         .expect("Failed to initialize module");
     provider
-        .create_key("test_ecdsa_key", config)
+        .create_key("test_ecc_key", config)
         .expect("Failed to create ECDSA key");
 
     let data = b"Hello, World!";

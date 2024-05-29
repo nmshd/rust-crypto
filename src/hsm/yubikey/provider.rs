@@ -10,7 +10,6 @@ use ::yubikey::{
     Error, YubiKey,
 };
 use base64::{engine::general_purpose, Engine};
-use std::str::Utf8Error;
 use std::sync::{Arc, Mutex};
 use tracing::instrument;
 use x509_cert::der::Encode;
@@ -200,7 +199,6 @@ impl Provider for YubiKeyProvider {
                                         ));
                                     }
                                 }
-                                slot = get_reference_u32slot(self.slot_id.unwrap());
                                 usage = "decrypt";
                                 let _ = yubikey.verify_pin("123456".as_ref());
                                 let _ = yubikey.authenticate(MgmKey::default());
