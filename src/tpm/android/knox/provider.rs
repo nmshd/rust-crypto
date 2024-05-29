@@ -168,7 +168,12 @@ impl Provider for KnoxProvider {
             }
             Some(conf) => { conf }
         };
-        // RustDef::load_key(config.vm, String::from(key_id))
+        let environment = config.vm.get_env().unwrap();
+        let key_id = key_id.to_string();
+
+        // Call the create_key method with the correct parameters
+        RustDef::load_key(environment, key_id)?;
+
         Ok(())
     }
 
@@ -200,7 +205,7 @@ impl Provider for KnoxProvider {
     ///
     /// # Examples
     ///
-    /// ```rust
+    /// rust
     /// let result = module.initialize_module(
     ///     AsymmetricEncryption::Rsa(KeyBits::Bits2048),
     ///     Some(BlockCiphers::Aes(KeyBits::Bits256)),
