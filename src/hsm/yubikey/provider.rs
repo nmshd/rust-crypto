@@ -1,6 +1,8 @@
 use super::YubiKeyProvider;
 use crate::common::{
-    crypto::KeyUsage, error::SecurityModuleError, traits::module_provider::Provider,
+    crypto::{algorithms::encryption::AsymmetricEncryption, KeyUsage},
+    error::SecurityModuleError,
+    traits::module_provider::Provider,
 };
 use crate::hsm::{core::error::HsmError, HsmProviderConfig, ProviderConfig};
 use ::yubikey::{
@@ -94,10 +96,10 @@ impl Provider for YubiKeyProvider {
             let key_usages = self.key_usages.clone().unwrap();
 
             if !self.load_key(key_id, config).is_ok() {
-                match key_usages {
-                    SignEncrypt => {
+                match *key_usages.get(0).unwrap() {
+                    KeyUsage::SignEncrypt => {
                         match key_algo {
-                            Rsa => {
+                            AsymmetricEncryption::Rsa(_) => {
                                 let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
                                 match get_free_slot(&mut yubikey) {
                                     Ok(free) => {
@@ -136,7 +138,7 @@ impl Provider for YubiKeyProvider {
                                     }
                                 }
                             }
-                            Ecc => {
+                            AsymmetricEncryption::Ecc(_) => {
                                 let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
                                 match get_free_slot(&mut yubikey) {
                                     Ok(free) => {
@@ -179,9 +181,9 @@ impl Provider for YubiKeyProvider {
                         }
                     }
 
-                    Decrypt => {
+                    KeyUsage::Decrypt => {
                         match key_algo {
-                            Rsa => {
+                            AsymmetricEncryption::Rsa(_) => {
                                 let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
                                 match get_free_slot(&mut yubikey) {
                                     Ok(free) => {
@@ -220,7 +222,7 @@ impl Provider for YubiKeyProvider {
                                     }
                                 }
                             }
-                            Ecc => {
+                            AsymmetricEncryption::Ecc(_) => {
                                 // TODO, not tested, might work
                             }
                         }
@@ -233,9 +235,9 @@ impl Provider for YubiKeyProvider {
                     }
                 }
             } else {
-                match key_usages {
-                    SignEncrypt => match key_algo {
-                        Rsa => {
+                match key_usages.get(0).unwrap() {
+                    KeyUsage::SignEncrypt => match key_algo {
+                        AsymmetricEncryption::Rsa(_) => {
                             let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
                             slot = get_reference_u32slot(self.slot_id.unwrap());
                             usage = "encrypt";
@@ -264,7 +266,7 @@ impl Provider for YubiKeyProvider {
                                 }
                             }
                         }
-                        Ecc => {
+                        AsymmetricEncryption::Ecc(_) => {
                             let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
                             slot = get_reference_u32slot(self.slot_id.unwrap());
                             usage = "sign";
@@ -295,9 +297,9 @@ impl Provider for YubiKeyProvider {
                         }
                     },
 
-                    Decrypt => {
+                    KeyUsage::Decrypt => {
                         match key_algo {
-                            Rsa => {
+                            AsymmetricEncryption::Rsa(_) => {
                                 let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
                                 slot = get_reference_u32slot(self.slot_id.unwrap());
                                 usage = "decrypt";
@@ -326,7 +328,7 @@ impl Provider for YubiKeyProvider {
                                     }
                                 }
                             }
-                            Ecc => {
+                            AsymmetricEncryption::Ecc(_) => {
                                 // TODO, not tested, might work
                             }
                         }
