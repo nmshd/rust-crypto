@@ -20,7 +20,7 @@ pub struct YubiKeyProvider {
     /// A unique identifier for the cryptographic key managed by this provider.
     pub(super) key_id: String,
     pub(super) pkey: String,
-    pub(super) config: Option<Arc<dyn ProviderConfig + Sync + Send>>,
+    pub(super) config: Option<Box<dyn ProviderConfig + Sync + Send>>,
     pub(super) slot_id: Option<RetiredSlotId>,
     pub(super) key_usages: Option<Vec<KeyUsage>>,
     pub(super) key_algo: Option<AsymmetricEncryption>,

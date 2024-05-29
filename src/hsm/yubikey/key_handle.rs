@@ -1,5 +1,11 @@
 use super::YubiKeyProvider;
-use crate::common::{error::SecurityModuleError, traits::key_handle::KeyHandle};
+use crate::{
+    common::{
+        crypto::algorithms::encryption::AsymmetricEncryption, error::SecurityModuleError,
+        traits::key_handle::KeyHandle,
+    },
+    hsm::core::error::HsmError,
+};
 
 use ::yubikey::piv;
 use ::yubikey::{
@@ -17,7 +23,7 @@ use openssl::{
 use rsa::sha2::Digest;
 use sha2::Sha256;
 use tracing::instrument;
-use x509_cert::der;
+use x509_cert::der::zeroize::Zeroizing;
 
 /// Provides cryptographic operations for asymmetric keys on a YubiKey,
 /// such as signing, encryption, decryption, and signature verification.
@@ -38,7 +44,8 @@ use x509_cert::der;
 impl KeyHandle for YubiKeyProvider {
     #[instrument]
     fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
-        let mut yubikey = *self.yubikey.as_ref().unwrap().lock().unwrap();
+        let yubikey = self.yubikey.as_ref().unwrap();
+        let mut yubikey = yubikey.lock().unwrap();
         let data = data.to_vec();
         let key_algo = self.key_algo.unwrap();
 
@@ -51,22 +58,18 @@ impl KeyHandle for YubiKeyProvider {
         //TODO After PIN input implementation in App, insert code for re-authentication
         let verify = yubikey.verify_pin("123456".as_ref());
         if !verify.is_ok() {
-            return Err(SecurityModuleError::Hsm(
-                crate::hsm::core::error::HsmError::DeviceSpecific(
-                    "PIN verification failed".to_string(),
-                ),
-            ));
+            return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
+                "PIN verification failed".to_string(),
+            )));
         }
         let auth = yubikey.authenticate(MgmKey::default());
         if !auth.is_ok() {
-            return Err(SecurityModuleError::Hsm(
-                crate::hsm::core::error::HsmError::DeviceSpecific(
-                    "Authentication  failed".to_string(),
-                ),
-            ));
+            return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
+                "Authentication  failed".to_string(),
+            )));
         }
         match key_algo {
-            Ecc => {
+            AsymmetricEncryption::Ecc(_) => {
                 // Sign data
                 let signature = piv::sign_data(
                     &mut yubikey,
@@ -82,20 +85,18 @@ impl KeyHandle for YubiKeyProvider {
                             .expect("Failed to decode signature");
                         Ok(signature)
                     }
-                    Err(err) => Err(SecurityModuleError::Hsm(
-                        crate::hsm::core::error::HsmError::DeviceSpecific(err.to_string()),
-                    )),
+                    Err(err) => Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
+                        err.to_string(),
+                    ))),
                 }
             }
             /*Rsa => {
                 // TODO, doesn´t work yet
             }*/
             _ => {
-                return Err(SecurityModuleError::Hsm(
-                    crate::hsm::core::error::HsmError::UnsupportedFeature(
-                        "Unsupported feature".to_string(),
-                    ),
-                ));
+                return Err(SecurityModuleError::Hsm(HsmError::UnsupportedFeature(
+                    "Unsupported feature".to_string(),
+                )));
             }
         }
     }
@@ -113,25 +114,26 @@ impl KeyHandle for YubiKeyProvider {
     /// A `Result` containing the decrypted data as a `Vec<u8>` on success, or a `yubikey::Error` on failure.
     #[instrument]
     fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
-        let yubikey = self.yubikey.unwrap();
+        let yubikey = self.yubikey.as_ref().unwrap();
+        let mut yubikey = yubikey.lock().unwrap();
         let encrypted_data = general_purpose::STANDARD.decode(encrypted_data).unwrap();
         let input: &[u8] = &encrypted_data;
-        let decrypted: Result<der::zeroize::Zeroizing<Vec<u8>>, SecurityModuleError>;
+        let mut decrypted: Result<Zeroizing<Vec<u8>>, &str> = Ok(Zeroizing::new(Vec::new()));
         let key_algo = self.key_algo.unwrap();
 
         match key_algo {
-            Rsa => {
+            AsymmetricEncryption::Rsa(_) => {
                 decrypted = piv::decrypt_data(
                     &mut yubikey,
                     input,
                     piv::AlgorithmId::Rsa2048,
                     piv::SlotId::Retired(self.slot_id.unwrap()),
-                );
+                )
+                .map_err(|_| "Failed to decrypt data");
             }
-            Ecc => {
+            AsymmetricEncryption::Ecc(_) => {
                 // TODO, not tested, might work
             }
-            _ => Err(SecurityModuleError::Hsm("Unsupported feature")),
         }
         fn remove_pkcs1_padding(buffer: &[u8]) -> Result<Vec<u8>, &'static str> {
             let mut pos = 2; // Start nach dem ersten Padding-Byte `0x02`
@@ -155,12 +157,15 @@ impl KeyHandle for YubiKeyProvider {
                 }
                 Err(err) => {
                     return Err(SecurityModuleError::Hsm(
-                        "Failed to remove padding: {}",
-                        err,
+                        crate::hsm::core::error::HsmError::DeviceSpecific(err.to_string()),
                     ));
                 }
             },
-            Err(err) => return Err(SecurityModuleError::Hsm("Failed to decrypt data")),
+            Err(err) => {
+                return Err(SecurityModuleError::Hsm(
+                    crate::hsm::core::error::HsmError::DeviceSpecific(err.to_string()),
+                ));
+            }
         }
     }
 
@@ -178,12 +183,13 @@ impl KeyHandle for YubiKeyProvider {
     /// Möglicher Fehler: Müssen Daten vor dem returnen noch in Base64 umgewandelt werden?
     #[instrument]
     fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
-        match self.key_algo {
-            Rsa => {
-                let rsa = Rsa::public_key_from_pem(self.pkey.unwrap().trim().as_bytes())
+        match self.key_algo.unwrap() {
+            AsymmetricEncryption::Rsa(_) => {
+                let rsa = Rsa::public_key_from_pem(self.pkey.trim().as_bytes())
                     .map_err(|_| "failed to create RSA from public key PEM");
-                let mut encrypted_data = vec![0; rsa.unwrap().size() as usize];
-                rsa.map_err(|_| "")
+                let mut encrypted_data = vec![0; rsa.clone().unwrap().size() as usize];
+                let _ = rsa
+                    .map_err(|_| "")
                     .unwrap()
                     .public_encrypt(data, &mut encrypted_data, Padding::PKCS1)
                     .map_err(|_| "failed to encrypt data");
@@ -193,11 +199,9 @@ impl KeyHandle for YubiKeyProvider {
                     Err(err) => return Err(SecurityModuleError::Hsm("Failed to encrypt data")),
                 } */
             }
-            /*   Ecc => {
-                // TODO
-
-            } */
-            _ => Err(SecurityModuleError::Hsm("Unsupported feature")),
+            AsymmetricEncryption::Ecc(_) => Err(SecurityModuleError::Hsm(
+                HsmError::DeviceSpecific("Unsupported feature".to_string()),
+            )),
         }
     }
 
@@ -216,9 +220,9 @@ impl KeyHandle for YubiKeyProvider {
     /// or a `SecurityModuleError` on failure.
     #[instrument]
     fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, SecurityModuleError> {
-        match self.key_algo {
-            Rsa => {
-                let rsa = Rsa::public_key_from_pem(self.pkey.unwrap().trim().as_bytes())
+        match self.key_algo.unwrap() {
+            AsymmetricEncryption::Rsa(_) => {
+                let rsa = Rsa::public_key_from_pem(self.pkey.trim().as_bytes())
                     .expect("failed to create RSA from public key PEM");
                 let key_pkey = PKey::from_rsa(rsa).unwrap();
 
@@ -235,11 +239,13 @@ impl KeyHandle for YubiKeyProvider {
                     //keine ahnung ob das funktioniert
                     return Result::Ok(true);
                 } else {
-                    return Err(SecurityModuleError::Hsm("Signature verification failed"));
+                    return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
+                        "Signature verification failed".to_string(),
+                    )));
                 }
             }
-            Ecc => {
-                let ecc = EcKey::public_key_from_pem(self.pkey.unwrap().trim().as_bytes())
+            AsymmetricEncryption::Ecc(_) => {
+                let ecc = EcKey::public_key_from_pem(self.pkey.trim().as_bytes())
                     .expect("failed to create ECC from public key PEM");
                 let ecc = PKey::from_ec_key(ecc).expect("failed to create PKey from ECC");
 
@@ -256,10 +262,11 @@ impl KeyHandle for YubiKeyProvider {
                     //keine ahnung ob das funktioniert
                     return Result::Ok(true);
                 } else {
-                    return Err(SecurityModuleError::Hsm("Signature verification failed"));
+                    return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
+                        "Signature verification failed".to_string(),
+                    )));
                 }
             }
-            _ => Err(SecurityModuleError::Hsm("Unsupported feature")),
         }
     }
 }
