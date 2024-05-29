@@ -1,8 +1,3 @@
-/// A module that provides logging and security module setup functionalities.
-///
-/// This module contains the implementation of a `Logger` struct for setting up
-/// logging and a function for setting up different types of security modules.
-
 use tracing::Level;
 use tracing_appender::rolling;
 use tracing_subscriber::FmtSubscriber;
@@ -28,23 +23,12 @@ pub mod module_provider;
 struct Logger {}
 
 impl Logger {
-    /// Creates a new boxed `Logger` instance.
-    ///
-    /// # Returns
-    ///
-    /// A boxed `Logger` instance implementing the `LogConfig` trait.
     fn new_boxed() -> Box<dyn LogConfig> {
         Box::new(Self {})
     }
 }
 
 impl LogConfig for Logger {
-    /// Sets up the logging configuration.
-    ///
-    /// This method configures the logger to write logs to a daily rotating file
-    /// located in the `./logs` directory with the filename `output.log`.
-    /// It sets the logging level to `TRACE` and sets this configuration as the
-    /// global default subscriber.
     fn setup_logging(&self) {
         let file_appender = rolling::daily("./logs", "output.log");
         let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
@@ -57,31 +41,6 @@ impl LogConfig for Logger {
     }
 }
 
-/// Sets up a security module based on the given `SecurityModule` variant.
-///
-/// This function takes a `SecurityModule` enum variant and initializes the
-/// corresponding security module. The function supports TPM, HSM, and NKS security
-/// modules, and uses the `Logger` for logging configuration.
-///
-/// # Arguments
-///
-/// * `module` - A `SecurityModule` enum variant representing the type of security
-///   module to set up.
-///
-/// # Returns
-///
-/// An `Arc<Mutex<dyn Provider>>` representing the initialized security module.
-///
-/// # Panics
-///
-/// This function will panic if the security module initialization fails or if the
-/// logging configuration cannot be set as the global default.
-///
-/// # Example
-///
-/// ```rust
-/// let security_module = setup_security_module(SecurityModule::Tpm(TpmType::Linux));
-/// ```
 fn setup_security_module(module: SecurityModule) -> Arc<Mutex<dyn Provider>> {
     let log = Logger::new_boxed();
     match module {
