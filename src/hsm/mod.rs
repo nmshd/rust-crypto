@@ -1,6 +1,5 @@
 use crate::common::crypto::{algorithms::encryption::AsymmetricEncryption, KeyUsage};
 use crate::common::traits::module_provider_config::ProviderConfig;
-use std::sync::Arc;
 
 pub mod core;
 pub mod nitrokey;
@@ -25,8 +24,8 @@ impl HsmProviderConfig {
     pub fn new(
         key_algorithm: AsymmetricEncryption,
         key_usage: Vec<KeyUsage>,
-    ) -> Arc<dyn ProviderConfig + Send + Sync> {
-        Arc::new(Self {
+    ) -> Box<dyn ProviderConfig> {
+        Box::new(Self {
             key_algorithm,
             key_usage,
         })
