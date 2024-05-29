@@ -3,7 +3,7 @@ use std::fmt;
 use std::fmt::{Debug, Formatter};
 use crate::common::crypto::algorithms::encryption::{AsymmetricEncryption, BlockCiphers};
 use crate::common::traits::module_provider_config::ProviderConfig;
-use jni::JavaVM;
+use robusta_jni::jni::JavaVM;
 use tracing::instrument;
 
 mod interface;
@@ -13,8 +13,8 @@ pub mod provider;
 /// A TPM-based cryptographic provider for managing cryptographic keys and performing
 /// cryptographic operations in an Samsung environment. This provider uses the Java Native Interface
 /// and the Android Keystore API to access the TPM "Knox Vault" developed by Samsung
-#[derive(Clone, Debug)]
 #[repr(C)]
+#[derive(Debug)]
 pub struct KnoxProvider {}
 
 impl KnoxProvider {
@@ -33,7 +33,6 @@ impl KnoxProvider {
 ///A struct defining the needed values for the create_key() function in provider.rs
 ///At any time, either a key_algorithm OR a sym_algorithm must be supplied, not both.
 /// For hashing operations, SHA-256 is always used since it is the only one available on Knox Vault
-// #[derive(Clone)]
 pub struct KnoxConfig {
     pub key_algorithm: Option<AsymmetricEncryption>,
     pub sym_algorithm: Option<BlockCiphers>,
@@ -46,7 +45,6 @@ impl Debug for KnoxConfig {
         f.debug_struct("KnoxConfig")
             .field("key_algorithm", &self.key_algorithm)
             .field("sym_algorithm", &self.sym_algorithm)
-            .field("vm", &self.vm)
             .finish()
     }
 }

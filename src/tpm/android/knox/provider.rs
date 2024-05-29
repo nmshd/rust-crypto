@@ -1,3 +1,4 @@
+use std::fmt::{Debug, Formatter};
 use crate::{
     common::{
         crypto::{
@@ -13,9 +14,10 @@ use tracing::instrument;
 use crate::common::crypto::algorithms::encryption::{BlockCiphers, EccCurves, SymmetricMode};
 use crate::common::crypto::algorithms::KeyBits;
 use crate::common::traits::module_provider_config::ProviderConfig;
-use crate::tpm::android::knox::interface::RustDef;
 use crate::tpm::android::knox::{KnoxConfig, KnoxProvider};
+use crate::tpm::android::knox::interface::jni::RustDef;
 use crate::tpm::core::error::TpmError::UnsupportedOperation;
+
 
 
 
@@ -57,7 +59,6 @@ impl Provider for KnoxProvider {
             }
             Some(conf) => { conf }
         };
-
         let key_algo;
         if config.key_algorithm.is_some() && config.sym_algorithm.is_none() {
             key_algo = match config.key_algorithm.expect("Already checked") {
@@ -136,7 +137,8 @@ impl Provider for KnoxProvider {
                 config.sym_algorithm,
                 config.key_algorithm)));
         }
-        RustDef::create_key(config.vm, String::from(key_id), key_algo)
+        let env = config.vm.get_env().unwrap();
+        RustDef::create_key(env, String::from(key_id), key_algo)
     }
 
     /// Loads an existing cryptographic key identified by `key_id`.
@@ -166,12 +168,8 @@ impl Provider for KnoxProvider {
             }
             Some(conf) => { conf }
         };
-
-        let env = match Self::jvm_to_jnienv(&config) {
-            Ok(value) => value,
-            Err(value) => return value,
-        };
-        RustDef::load_key(&env, String::from(key_id))
+        // RustDef::load_key(config.vm, String::from(key_id))
+        Ok(())
     }
 
     /// Initializes the TPM module and returns a handle for cryptographic operations.
