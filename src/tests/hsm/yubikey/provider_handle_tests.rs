@@ -10,18 +10,17 @@ use crate::common::{
     traits::module_provider::Provider,
 };
 use crate::hsm::yubikey::YubiKeyProvider;
-use crate::{
-    common::crypto::algorithms::{encryption::SymmetricMode, hashes::Sha2Bits, KeyBits},
-    hsm::ProviderConfig,
-};
-
+use crate::hsm::HsmProviderConfig;
 #[cfg(feature = "yubi")]
 #[test]
 fn test_create_rsa_key() {
     let key_id = "test_rsa_key";
     let mut provider = YubiKeyProvider::new(key_id.to_string());
 
-    let config = ProviderConfig::new(AsymmetricEncryption::Rsa, Some(KeyUsage::SignEncrypt));
+    let config = HsmProviderConfig::new(
+        AsymmetricEncryption::Rsa(crate::common::crypto::algorithms::KeyBits::Bits1024),
+        vec![KeyUsage::SignEncrypt],
+    );
 
     provider
         .initialize_module()
@@ -38,8 +37,10 @@ fn test_create_ecc_key() {
 
     let mut provider = YubiKeyProvider::new(key_id.to_string());
 
-    let config = ProviderConfig::new(AsymmetricEncryption::Ecc, Some(KeyUsage::SignEncrypt));
-
+    let config = HsmProviderConfig::new(
+        AsymmetricEncryption::Rsa(crate::common::crypto::algorithms::KeyBits::Bits1024),
+        vec![KeyUsage::SignEncrypt],
+    );
     provider
         .initialize_module()
         .expect("Failed to initialize module");

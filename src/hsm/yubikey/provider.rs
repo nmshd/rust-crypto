@@ -445,6 +445,7 @@ impl Provider for YubiKeyProvider {
     #[instrument]
     fn initialize_module(&mut self) -> Result<(), SecurityModuleError> {
         let mut yubikey = YubiKey::open().map_err(|_| Error::NotFound).unwrap();
+
         let verify = yubikey
             .verify_pin("123456".as_ref())
             .map_err(|_| Error::WrongPin {
@@ -570,18 +571,26 @@ fn save_key_object(
 /// On failure, it returns a `Utf8Error`.
 fn parse_slot_data(data: &[u8]) -> Result<(String, String, String, String), Utf8Error> {
     let parts: Vec<&[u8]> = data.split(|&x| x == 0).collect();
+    if !(parts.len() < 4
+        || parts[0].is_empty()
+        || parts[1].is_empty()
+        || parts[2].is_empty()
+        || parts[3].is_empty())
+    {
+        let key_name = std::str::from_utf8(parts[0]).unwrap();
+        let slot = std::str::from_utf8(parts[1]).unwrap();
+        let usage = std::str::from_utf8(parts[2]).unwrap();
+        let public_key = std::str::from_utf8(parts[3]).unwrap();
 
-    let key_name = std::str::from_utf8(parts[0]).unwrap();
-    let slot = std::str::from_utf8(parts[1]).unwrap();
-    let usage = std::str::from_utf8(parts[2]).unwrap();
-    let public_key = std::str::from_utf8(parts[3]).unwrap();
-
-    Ok((
-        key_name.to_string(),
-        slot.to_string(),
-        usage.to_string(),
-        public_key.to_string(),
-    ))
+        Ok((
+            key_name.to_string(),
+            slot.to_string(),
+            usage.to_string(),
+            public_key.to_string(),
+        ))
+    } else {
+        return;
+    }
 }
 
 /// Gets a free slot for storing a key object.

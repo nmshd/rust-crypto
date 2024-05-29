@@ -39,7 +39,10 @@ fn test_sign_and_verify_rsa() {
 fn test_sign_and_verify_ecc() {
     let mut provider = YubiKeyProvider::new("test_ecdsa_key".to_string());
 
-    let config = HsmProviderConfig::new(AsymmetricEncryption::Rsa(crate::common::crypto::algorithms::KeyBits::Bits1024), vec![KeyUsage::SignEncrypt]);
+    let config = HsmProviderConfig::new(
+        AsymmetricEncryption::Rsa(crate::common::crypto::algorithms::KeyBits::Bits1024),
+        vec![KeyUsage::SignEncrypt],
+    );
 
     provider
         .initialize_module()
