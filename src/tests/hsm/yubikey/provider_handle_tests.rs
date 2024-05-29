@@ -68,7 +68,7 @@ fn test_load_rsa_key() {
 }
 
 #[test]
-fn test_load_ecdsa_key() {
+fn test_load_ecc_key() {
     let key_id = "test_ecc_key";
 
     let mut provider = YubiKeyProvider::new(key_id.to_string());
