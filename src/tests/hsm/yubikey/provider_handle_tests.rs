@@ -66,31 +66,27 @@ fn test_load_rsa_key() {
         .load_key("test_rsa_key", config)
         .expect("Failed to load RSA key");
 }
-/*
+
 #[test]
 fn test_load_ecdsa_key() {
-    let mut provider = TpmProvider::new("test_ecdsa_key".to_string());
+    let key_id = "test_ecc_key";
 
-    let config = TpmConfig::new(
-        AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::Curve25519)),
-        BlockCiphers::Aes(SymmetricMode::Gcm, KeyBits::Bits512),
-        Hash::Sha2(Sha2Bits::Sha256),
-        vec![
-            KeyUsage::SignEncrypt,
-            KeyUsage::ClientAuth,
-            KeyUsage::Decrypt,
-            KeyUsage::CreateX509,
-        ],
+    let mut provider = YubiKeyProvider::new(key_id.to_string());
+
+    let config = HsmProviderConfig::new(
+        AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P256)),
+        vec![KeyUsage::SignEncrypt],
     );
 
     provider
         .initialize_module()
         .expect("Failed to initialize module");
     provider
-        .load_key("test_ecdsa_key", config)
+        .load_key("test_ecc_key", config)
         .expect("Failed to load ECDSA key");
 }
 
+/*
 #[test]
 fn test_load_ecdh_key() {
     let mut provider = TpmProvider::new("test_ecdh_key".to_string());

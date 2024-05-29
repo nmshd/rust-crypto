@@ -414,7 +414,7 @@ impl Provider for YubiKeyProvider {
             let data = output;
             match parse_slot_data(&data) {
                 Ok((key_name, slot, usage, public_key)) => {
-                    if key_name == key_id {
+                    if key_name == key_id.to_string() {
                         let mut vector = Vec::new();
                         self.slot_id = Some(SLOTS[i - 10]);
                         self.key_usages = match usage.as_str() {
