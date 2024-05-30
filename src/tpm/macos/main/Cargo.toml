@@ -1,5 +1,5 @@
 [package]
-name = "rust-binary-calls-swift-package"
+name = "apple-secure-enclave-bindings"
 version = "0.1.0"
 edition = "2021"
 publish = []
