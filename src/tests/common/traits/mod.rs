@@ -37,7 +37,7 @@ impl LogConfig for Logger {
     }
 }
 
-fn setup_security_module(module: SecurityModule) -> Arc<Mutex<dyn Provider>> {
+pub fn setup_security_module(module: SecurityModule) -> Arc<Mutex<dyn Provider>> {
     let log = Logger::new_boxed();
     match module {
         #[cfg(feature = "hsm")]

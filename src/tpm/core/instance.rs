@@ -123,7 +123,11 @@ impl TpmInstance {
                 Arc::new(Mutex::new(instance))
             }
             #[cfg(feature = "android")]
-            TpmType::Android(_tpm_type) => todo!(),
+            TpmType::Android(tpm_type) => match tpm_type {
+                AndroidTpmType::Knox => Arc::new(Mutex::new(
+                    crate::tpm::android::knox::KnoxProvider::new(),
+                )),
+            },
             TpmType::None => todo!(),
         }
     }
