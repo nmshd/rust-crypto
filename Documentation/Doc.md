@@ -50,7 +50,8 @@ Our project aims to address this critical need by developing a comprehensive sol
 ## Architecture
 
 ### Component Diagram
-![Alt Text](path/to/image.jpg)
+![Komponentendiagramm](../Documentation/Komp.png)
+
 ### Explanation
 
 ### Abstraction Layer
