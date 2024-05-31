@@ -103,6 +103,25 @@ pub fn get_digest(digest: Hash) -> Result<String, SecurityModuleError> {
     }
 }
 
+pub fn get_hash_name(hash: Hash) -> Result<String, SecurityModuleError> {
+    match hash {
+        Hash::Sha1 => Ok("SHA1".to_owned()),
+        Hash::Sha2(size) => match size {
+            Sha2Bits::Sha224 => Ok("SHA224".to_owned()),
+            Sha2Bits::Sha256 => Ok("SHA256".to_owned()),
+            Sha2Bits::Sha384 => Ok("SHA384".to_owned()),
+            Sha2Bits::Sha512 => Ok("SHA512".to_owned()),
+            Sha2Bits::Sha512_224 | Sha2Bits::Sha512_256 => {
+                Err(TpmError::UnsupportedOperation("not supported".to_owned()).into())
+            }
+        },
+        Hash::Md5 => Ok("MD5".to_owned()),
+        Hash::Sha3(_) | Hash::Md2 | Hash::Md4 | Hash::Ripemd160 => {
+            Err(TpmError::UnsupportedOperation("not supported".to_owned()).into())
+        }
+    }
+}
+
 pub fn get_key_size(algo: AsymmetricEncryption) -> Result<u32, SecurityModuleError> {
     match algo {
         AsymmetricEncryption::Rsa(size) => Ok(Into::<u32>::into(size)),
@@ -169,7 +188,7 @@ pub fn get_signature_algorithm(mode: EncryptionMode) -> Result<String, SecurityM
                 AsymmetricEncryption::Rsa(_) => "RSA",
                 AsymmetricEncryption::Ecc(_) => "ECDSA",
             };
-            let part2 = get_digest(digest)?;
+            let part2 = get_hash_name(digest)?;
 
             Ok(format!("{part2}with{part1}"))
         }
