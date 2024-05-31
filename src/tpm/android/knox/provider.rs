@@ -1,22 +1,32 @@
 use std::any::Any;
-use robusta_jni::jni:: JNIEnv;
 use crate::{
     common::{
         crypto::{
             algorithms::{
-                encryption::{AsymmetricEncryption, EccSchemeAlgorithm},
-            },
+                encryption::{
+                    AsymmetricEncryption,
+                    EccSchemeAlgorithm,
+                    BlockCiphers,
+                    EccCurves,
+                    SymmetricMode
+                },
+                KeyBits
+            }
         },
         error::SecurityModuleError,
         traits::module_provider::Provider,
     },
+    tpm::{
+        android::{
+            knox::{
+                KnoxProvider,
+                interface::jni::RustDef
+            }
+        },
+        core::error::TpmError::UnsupportedOperation
+    }
 };
 use tracing::instrument;
-use crate::common::crypto::algorithms::encryption::{BlockCiphers, EccCurves, SymmetricMode};
-use crate::common::crypto::algorithms::KeyBits;
-use crate::tpm::android::knox::{KnoxConfig, KnoxProvider};
-use crate::tpm::android::knox::interface::jni::RustDef;
-use crate::tpm::core::error::TpmError::UnsupportedOperation;
 
 
 /// Implements the `Provider` trait, providing cryptographic operations utilizing a TPM.
@@ -62,18 +72,20 @@ impl Provider for KnoxProvider {
             key_algo = match asym_alg.expect("Already checked") {
                 AsymmetricEncryption::Rsa(bitslength) => {
                     match bitslength {
-                        KeyBits::Bits128 => { String::from("RSA;128;SHA-256;PKCS1") }
-                        KeyBits::Bits192 => { String::from("RSA;192;SHA-256;PKCS1") }
-                        KeyBits::Bits256 => { String::from("RSA;256;SHA-256;PKCS1") }
                         KeyBits::Bits512 => { String::from("RSA;512;SHA-256;PKCS1") }
                         KeyBits::Bits1024 => { String::from("RSA;1024;SHA-256;PKCS1") }
                         KeyBits::Bits2048 => { String::from("RSA;2048;SHA-256;PKCS1") }
                         KeyBits::Bits3072 => { String::from("RSA;3072;SHA-256;PKCS1") }
                         KeyBits::Bits4096 => { String::from("RSA;4096;SHA-256;PKCS1") }
                         KeyBits::Bits8192 => { String::from("RSA;8192;SHA-256;PKCS1") }
+                        _ => {
+                            return Err(SecurityModuleError::Tpm(UnsupportedOperation(
+                                format!("Unsupported asymmetric encryption algorithm: {:?}",
+                                        asym_alg))));
+                        }
                     }
                 }
-                AsymmetricEncryption::Ecc(scheme) => { //todo: test in java prototype
+                AsymmetricEncryption::Ecc(scheme) => {
                     match scheme {
                         EccSchemeAlgorithm::EcDsa(curve) => {
                             match curve {
@@ -111,7 +123,7 @@ impl Provider for KnoxProvider {
                                 format!("Unsupported symmetric encryption algorithm: {:?}", sym_alg))));
                         }
                     }
-                    match block { //todo: check if paddings match blocking modes
+                    match block {
                         SymmetricMode::Gcm => { rv += "GCM;NoPadding" }
                         SymmetricMode::Cbc => { rv += "CBC;PKCS7Padding" }
                         SymmetricMode::Ctr => { rv += "CTR;NoPadding" }
@@ -210,23 +222,5 @@ impl Provider for KnoxProvider {
     /// }
     fn initialize_module(&mut self) -> Result<(), SecurityModuleError> {
         Ok(())
-    }
-}
-
-impl KnoxProvider {
-    ///Get the JavaVM stored in &self and provides the JNIEnv based on it
-    fn get_env(&mut self) -> Result<JNIEnv, SecurityModuleError> {
-        let conf = self.config.as_ref().ok_or(
-            SecurityModuleError::CreationError(String::from("failed to store config data")))?;
-        let env = conf.vm.get_env().unwrap();
-        Ok(env)
-    }
-
-    ///Converts the config parameter to a KnoxConfig
-    fn downcast_config(config: Box<dyn Any>) -> Result<KnoxConfig, SecurityModuleError> {
-        let config = *config
-            .downcast::<KnoxConfig>()
-            .map_err(|err| SecurityModuleError::InitializationError(format!("wrong config provided: {:?}", err)))?;
-        Ok(config)
     }
 }
