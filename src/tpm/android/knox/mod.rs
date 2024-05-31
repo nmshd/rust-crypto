@@ -14,8 +14,17 @@ pub mod provider;
 /// cryptographic operations in an Samsung environment. This provider uses the Java Native Interface
 /// and the Android Keystore API to access the TPM "Knox Vault" developed by Samsung
 #[repr(C)]
-#[derive(Debug)]
-pub struct KnoxProvider {}
+pub struct KnoxProvider {
+    config: Option<KnoxConfig>,
+}
+
+impl Debug for KnoxProvider {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("KnoxProvider")
+            .field("config", &self.config)
+            .finish()
+    }
+}
 
 impl KnoxProvider {
     /// Constructs a new `TpmProvider`.
@@ -26,7 +35,11 @@ impl KnoxProvider {
     /// A new instance of `TpmProvider`.
     #[instrument]
     pub fn new() -> Self {
-        Self {}
+        Self { config: None }
+    }
+
+    fn set_config(&mut self, config: KnoxConfig) -> () {
+        self.config = Some(config);
     }
 }
 
@@ -36,7 +49,6 @@ impl KnoxProvider {
 pub struct KnoxConfig {
     pub key_algorithm: Option<AsymmetricEncryption>,
     pub sym_algorithm: Option<BlockCiphers>,
-    // pub env: JNIEnv<'a>,
     pub vm: JavaVM
 }
 
@@ -45,6 +57,7 @@ impl Debug for KnoxConfig {
         f.debug_struct("KnoxConfig")
             .field("key_algorithm", &self.key_algorithm)
             .field("sym_algorithm", &self.sym_algorithm)
+            .field("JavaVM", &"Contains a JavaVM to interact with Java")
             .finish()
     }
 }
@@ -60,13 +73,12 @@ impl KnoxConfig {
     pub fn new(
          key_algorithm: Option<AsymmetricEncryption>,
          sym_algorithm: Option<BlockCiphers>,
-         // env: JNIEnv<'a>
          vm: JavaVM
-    ) -> Box<dyn ProviderConfig> {
-        Box::new(Self {
+    ) -> KnoxConfig {
+        Self {
             key_algorithm,
             sym_algorithm,
             vm,
-        })
+        }
     }
 }

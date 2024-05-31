@@ -1,4 +1,5 @@
-use std::fmt::{Debug, Formatter};
+use std::any::Any;
+use robusta_jni::jni:: JNIEnv;
 use crate::{
     common::{
         crypto::{
@@ -13,12 +14,9 @@ use crate::{
 use tracing::instrument;
 use crate::common::crypto::algorithms::encryption::{BlockCiphers, EccCurves, SymmetricMode};
 use crate::common::crypto::algorithms::KeyBits;
-use crate::common::traits::module_provider_config::ProviderConfig;
 use crate::tpm::android::knox::{KnoxConfig, KnoxProvider};
 use crate::tpm::android::knox::interface::jni::RustDef;
 use crate::tpm::core::error::TpmError::UnsupportedOperation;
-
-
 
 
 /// Implements the `Provider` trait, providing cryptographic operations utilizing a TPM.
@@ -50,18 +48,18 @@ impl Provider for KnoxProvider {
     ///
     /// A `Result` that, on success, contains `Ok(())`, indicating that the key was created successfully.
     /// On failure, it returns a `SecurityModuleError`.
-    #[instrument]
-    fn create_key(&mut self, key_id: &str, config: Box<dyn ProviderConfig>) -> Result<(), SecurityModuleError> {
-        let config = match config.as_any().downcast_ref::<KnoxConfig>() {
-            None => {
-                return Err(SecurityModuleError::CreationError(
-                    String::from("Wrong type used for ProviderConfig in create_key()")));
-            }
-            Some(conf) => { conf }
-        };
+    #[instrument(skip(config))]
+    fn create_key(&mut self, key_id: &str, config: Box<dyn Any>) -> Result<(), SecurityModuleError> {
+        let config = Self::downcast_config(config)?;
+        let sym_alg = config.sym_algorithm;
+        let asym_alg = config.key_algorithm;
+
+        //Stores the vm for future access
+        self.set_config(config);
+
         let key_algo;
-        if config.key_algorithm.is_some() && config.sym_algorithm.is_none() {
-            key_algo = match config.key_algorithm.expect("Already checked") {
+        if asym_alg.is_some() && sym_alg.is_none() {
+            key_algo = match asym_alg.expect("Already checked") {
                 AsymmetricEncryption::Rsa(bitslength) => {
                     match bitslength {
                         KeyBits::Bits128 => { String::from("RSA;128;SHA-256;PKCS1") }
@@ -82,24 +80,25 @@ impl Provider for KnoxProvider {
                                 EccCurves::P256 => { String::from("EC;secp256r1;SHA-256") }
                                 EccCurves::P384 => { String::from("EC;secp384r1;SHA-256") }
                                 EccCurves::P521 => { String::from("EC;secp521r1;SHA-256") }
-                            //    EccCurves::Curve25519 => { String::from("EC;X25519;SHA-256") } <- x25519 may ONLY be used for key agreement, not signing
+                                //    EccCurves::Curve25519 => { String::from("EC;X25519;SHA-256") } <- x25519 may ONLY be used for key agreement, not signing
                                 _ => {
                                     return Err(SecurityModuleError::Tpm(UnsupportedOperation(
                                         format!("Unsupported asymmetric encryption algorithm: {:?}",
-                                                config.key_algorithm))));
+                                                asym_alg))));
                                 }
                             }
                         }
-                        _ => {return Err(SecurityModuleError::Tpm(UnsupportedOperation(
-                            format!("Unsupported asymmetric encryption algorithm: {:?}",
-                                    config.key_algorithm))));
+                        _ => {
+                            return Err(SecurityModuleError::Tpm(UnsupportedOperation(
+                                format!("Unsupported asymmetric encryption algorithm: {:?}",
+                                        asym_alg))));
                         }
                     }
                 }
             };
-        } else if config.key_algorithm.is_none() && config.sym_algorithm.is_some() {
-            key_algo = match config.sym_algorithm.expect("Already checked") {
-                BlockCiphers::Des => { String::from("DESede;CBC;PKCS7Padding") },
+        } else if asym_alg.is_none() && sym_alg.is_some() {
+            key_algo = match sym_alg.expect("Already checked") {
+                BlockCiphers::Des => { String::from("DESede;CBC;PKCS7Padding") }
 
                 BlockCiphers::Aes(block, bitslength) => {
                     let mut rv = String::from("AES;");
@@ -109,7 +108,7 @@ impl Provider for KnoxProvider {
                         KeyBits::Bits256 => { rv += "256;"; }
                         _ => {
                             return Err(SecurityModuleError::Tpm(UnsupportedOperation(
-                                format!("Unsupported symmetric encryption algorithm: {:?}", config.sym_algorithm))));
+                                format!("Unsupported symmetric encryption algorithm: {:?}", sym_alg))));
                         }
                     }
                     match block { //todo: check if paddings match blocking modes
@@ -118,14 +117,14 @@ impl Provider for KnoxProvider {
                         SymmetricMode::Ctr => { rv += "CTR;NoPadding" }
                         _ => {
                             return Err(SecurityModuleError::Tpm(UnsupportedOperation(
-                                format!("Unsupported symmetric encryption algorithm: {:?}", config.sym_algorithm))));
+                                format!("Unsupported symmetric encryption algorithm: {:?}", sym_alg))));
                         }
                     }
                     rv
-                },
+                }
                 _ => {
                     return Err(SecurityModuleError::Tpm(UnsupportedOperation(
-                        format!("Unsupported symmetric encryption algorithm: {:?}", config.sym_algorithm))));
+                        format!("Unsupported symmetric encryption algorithm: {:?}", sym_alg))));
                 }
             };
         } else {
@@ -134,11 +133,10 @@ impl Provider for KnoxProvider {
                 Exactly one of either sym_algorithm or key_algorithm must be Some().\
                 sym_algorithm: {:?}\
                 key_algorithm: {:?}",
-                config.sym_algorithm,
-                config.key_algorithm)));
+                sym_alg,
+                asym_alg)));
         }
-        let env = config.vm.get_env().unwrap();
-        RustDef::create_key(env, String::from(key_id), key_algo)
+        RustDef::create_key(&self.get_env()?, String::from(key_id), key_algo)
     }
 
     /// Loads an existing cryptographic key identified by `key_id`.
@@ -160,21 +158,14 @@ impl Provider for KnoxProvider {
     /// A `Result` that, on success, contains `Ok(())`, indicating that the key was loaded successfully.
     /// On failure, it returns a `SecurityModuleError`.
     #[instrument]
-    fn load_key(&mut self, key_id: &str, config: Box<dyn ProviderConfig>) -> Result<(), SecurityModuleError> {
-        let config = match config.as_any().downcast_ref::<KnoxConfig>() {
-            None => {
-                return Err(SecurityModuleError::CreationError(
-                    String::from("Wrong type used for ProviderConfig in create_key()")));
-            }
-            Some(conf) => { conf }
-        };
-        let environment = config.vm.get_env().unwrap();
-        let key_id = key_id.to_string();
+    fn load_key(&mut self, key_id: &str, config: Box<dyn Any>) -> Result<(), SecurityModuleError> {
+        let config = Self::downcast_config(config)?;
+
+        //Stores the vm for future access
+        self.set_config(config);
 
         // Call the create_key method with the correct parameters
-        RustDef::load_key(environment, key_id)?;
-
-        Ok(())
+        RustDef::load_key(&self.get_env()?, key_id.to_string())
     }
 
     /// Initializes the TPM module and returns a handle for cryptographic operations.
@@ -219,5 +210,23 @@ impl Provider for KnoxProvider {
     /// }
     fn initialize_module(&mut self) -> Result<(), SecurityModuleError> {
         Ok(())
+    }
+}
+
+impl KnoxProvider {
+    ///Get the JavaVM stored in &self and provides the JNIEnv based on it
+    fn get_env(&mut self) -> Result<JNIEnv, SecurityModuleError> {
+        let conf = self.config.as_ref().ok_or(
+            SecurityModuleError::CreationError(String::from("failed to store config data")))?;
+        let env = conf.vm.get_env().unwrap();
+        Ok(env)
+    }
+
+    ///Converts the config parameter to a KnoxConfig
+    fn downcast_config(config: Box<dyn Any>) -> Result<KnoxConfig, SecurityModuleError> {
+        let config = *config
+            .downcast::<KnoxConfig>()
+            .map_err(|err| SecurityModuleError::InitializationError(format!("wrong config provided: {:?}", err)))?;
+        Ok(config)
     }
 }

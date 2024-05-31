@@ -8,10 +8,6 @@ pub mod jni {
     use robusta_jni::jni::errors::Error;
     use robusta_jni::jni::JNIEnv;
     use robusta_jni::jni::objects::JValue;
-    // use jni::JNIEnv;
-    // use jni::errors::Error;
-    // use jni::objects::JValue;
-    use robusta_jni::jni::JavaVM;
     use robusta_jni::jni::objects::AutoLocal;
     use robusta_jni::jni::sys::jbyteArray;
     use crate::SecurityModuleError;
@@ -70,8 +66,7 @@ pub mod jni {
         ///
         /// # Arguments
         /// `key_id` - String that uniquely identifies the key so that it can be retrieved later
-        pub fn create_key(environment: JNIEnv, key_id: String, key_gen_info: String) -> Result<(), SecurityModuleError> {
-            // let environment = vm.get_env().unwrap();
+        pub fn create_key(environment: &JNIEnv, key_id: String, key_gen_info: String) -> Result<(), SecurityModuleError> {
             let result = environment.call_static_method(
                 "com/example/vulcans_limes/RustDef",
                 "create_key",
@@ -91,8 +86,7 @@ pub mod jni {
                         }
                         Error::JavaException => {
                             Err(SecurityModuleError::InitializationError(
-                                String::from("Failed to create key: Some exception occurred in Java.
-                                             Check console for details")
+                                String::from("Failed to create key: Some exception occurred in Java. Check console for details")
                             ))
                         }
                         _ => {
@@ -115,7 +109,7 @@ pub mod jni {
         pub fn load_key(environment: &JNIEnv, key_id: String) -> Result<(), SecurityModuleError> {
             let result = environment.call_static_method(
                 "com/example/vulcans_limes/RustDef",
-                "create_key",
+                "load_key",
                 "(Ljava/lang/String;)V",
                 &[JValue::from(environment.new_string(key_id).unwrap())],
             );
@@ -131,8 +125,7 @@ pub mod jni {
                         }
                         Error::JavaException => {
                             Err(SecurityModuleError::InitializationError(
-                                String::from("Failed to load key: Some exception occurred in Java.
-                                             Check console for details")
+                                String::from("Failed to load key: Some exception occurred in Java. Check console for details")
                             ))
                         }
                         _ => {
@@ -179,8 +172,7 @@ pub mod jni {
                     match e {
                         Error::JavaException => {
                             Err(SecurityModuleError::InitializationError(
-                                String::from("Failed to initialise Module: Some exception occurred in Java.
-                                             Check console for details")
+                                String::from("Failed to initialise Module: Some exception occurred in Java. Check console for details")
                             ))
                         }
                         _ => {
@@ -230,8 +222,7 @@ pub mod jni {
                         }
                         Error::JavaException => {
                             Err(SecurityModuleError::SigningError(
-                                String::from("Failed to sign data: Some exception occurred in Java.
-                                             Check console for details")
+                                String::from("Failed to sign data: Some exception occurred in Java. Check console for details")
                             ))
                         }
                         _ => {
@@ -282,8 +273,7 @@ pub mod jni {
                         }
                         Error::JavaException => {
                             Err(SecurityModuleError::SignatureVerificationError(
-                                String::from("Failed to verify signature: Some exception occurred in Java.
-                                             Check console for details")
+                                String::from("Failed to verify signature: Some exception occurred in Java. Check console for details")
                             ))
                         }
                         _ => {
@@ -333,8 +323,7 @@ pub mod jni {
                         }
                         Error::JavaException => {
                             Err(SecurityModuleError::EncryptionError(
-                                String::from("Failed to encrypt data: Some exception occurred in Java.
-                                             Check console for details")
+                                String::from("Failed to encrypt data: Some exception occurred in Java. Check console for details")
                             ))
                         }
                         _ => {
@@ -385,8 +374,7 @@ pub mod jni {
                         }
                         Error::JavaException => {
                             Err(SecurityModuleError::DecryptionError(
-                                String::from("Failed to decrypt data: Some exception occurred in Java.
-                                             Check console for details")
+                                String::from("Failed to decrypt data: Some exception occurred in Java. Check console for details")
                             ))
                         }
                         _ => {
