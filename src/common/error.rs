@@ -40,6 +40,14 @@ pub enum SecurityModuleError {
     ///
     /// This variant contains a descriptive error message.
     InitializationError(String),
+    /// Error that occurs during the create Key process.
+    ///
+    /// This variant contains a descriptive error message.
+    CreateKeyError(String),
+    /// Error that occurs during the load Key process.
+    ///
+    /// This variant contains a descriptive error message.
+    LoadKeyError(String),
 }
 
 impl fmt::Display for SecurityModuleError {
@@ -72,6 +80,12 @@ impl fmt::Display for SecurityModuleError {
             SecurityModuleError::InitializationError(ref error_msg) => {
                 write!(f, "Initialization error: {}", error_msg)
             }
+            SecurityModuleError::CreateKeyError(ref error_msg) => {
+                write!(f, "Create Key error: {}", error_msg)
+            }
+            SecurityModuleError::LoadKeyError(ref error_msg) => {
+                write!(f, "Load Key error: {}", error_msg)
+            }
         }
     }
 }
@@ -96,6 +110,8 @@ impl std::error::Error for SecurityModuleError {
             SecurityModuleError::EncryptionError(_) => None,
             SecurityModuleError::SignatureVerificationError(_) => None,
             SecurityModuleError::InitializationError(_) => None,
+            SecurityModuleError::CreateKeyError(_) => None,
+            SecurityModuleError::LoadKeyError(_) => None,
         }
     }
 }
