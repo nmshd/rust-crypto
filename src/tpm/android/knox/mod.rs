@@ -3,8 +3,9 @@ use std::fmt;
 use std::fmt::{Debug, Formatter};
 use crate::common::crypto::algorithms::encryption::{AsymmetricEncryption, BlockCiphers};
 use crate::common::traits::module_provider_config::ProviderConfig;
-use robusta_jni::jni::JavaVM;
+use robusta_jni::jni::{JavaVM, JNIEnv};
 use tracing::instrument;
+use crate::SecurityModuleError;
 
 mod interface;
 pub mod key_handle;
@@ -40,6 +41,22 @@ impl KnoxProvider {
 
     fn set_config(&mut self, config: KnoxConfig) -> () {
         self.config = Some(config);
+    }
+
+    ///Get the JavaVM stored in &self and provides the JNIEnv based on it
+    fn get_env(&self) -> Result<JNIEnv, SecurityModuleError> {
+        let conf = self.config.as_ref().ok_or(
+            SecurityModuleError::CreationError(String::from("failed to store config data")))?;
+        let env = conf.vm.get_env().unwrap();
+        Ok(env)
+    }
+
+    ///Converts the config parameter to a KnoxConfig
+    fn downcast_config(config: Box<dyn Any>) -> Result<KnoxConfig, SecurityModuleError> {
+        let config = *config
+            .downcast::<KnoxConfig>()
+            .map_err(|err| SecurityModuleError::InitializationError(format!("wrong config provided: {:?}", err)))?;
+        Ok(config)
     }
 }
 
