@@ -2,14 +2,20 @@ use robusta_jni::bridge;
 
 #[bridge]
 pub mod jni {
-    #[allow(unused_imports)]
-    use robusta_jni::bridge;
-    use robusta_jni::convert::{IntoJavaValue, Signature, TryFromJavaValue, TryIntoJavaValue};
-    use robusta_jni::jni::errors::Error;
-    use robusta_jni::jni::JNIEnv;
-    use robusta_jni::jni::objects::JValue;
-    use robusta_jni::jni::objects::AutoLocal;
-    use robusta_jni::jni::sys::jbyteArray;
+    #[allow(unused_imports)] //the bridge import is marked as unused, but if removed the compiler throws an error
+    use robusta_jni::{
+        jni::{
+            objects::{
+                JValue,
+                AutoLocal
+            },
+            JNIEnv,
+            errors::Error,
+            sys::jbyteArray
+        },
+        convert::{IntoJavaValue, Signature, TryFromJavaValue, TryIntoJavaValue},
+        bridge,
+    };
     use crate::SecurityModuleError;
 
     #[derive(Signature, TryIntoJavaValue, IntoJavaValue, TryFromJavaValue)]
