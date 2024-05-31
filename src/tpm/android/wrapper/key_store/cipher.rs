@@ -3,6 +3,7 @@ use robusta_jni::bridge;
 #[bridge]
 /// This module contains the JNI bindings for the Cipher class in the javax.crypto package.
 pub mod jni {
+    use crate::tpm::android::wrapper::key_generation::key::jni::Key;
     use robusta_jni::{
         convert::{IntoJavaValue, Signature, TryFromJavaValue, TryIntoJavaValue},
         jni::{
@@ -55,6 +56,27 @@ pub mod jni {
             opmode: i32,
             #[input_type("Ljava/security/Key;")] key: JObject,
         ) -> JniResult<()> {
+        }
+
+        pub fn init2(
+            mut self,
+            env: &'borrow JNIEnv<'env>,
+            opmode: i32,
+            key: Key,
+            params: JObject,
+        ) -> JniResult<Self> {
+            let result = env.call_method(
+                self.raw.as_obj(),
+                "init",
+                "(ILjava/security/Key;Ljava/security/AlgorithmParameters;)V",
+                &[
+                    JValue::Int(opmode),
+                    JValue::Object(key.raw.as_obj()),
+                    JValue::Object(params),
+                ],
+            )?;
+            self.raw = AutoLocal::new(env, result.l()?);
+            Ok(self)
         }
 
         /// Performs the final operation of the Cipher, processing any remaining data.
