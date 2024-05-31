@@ -456,7 +456,7 @@ import CryptoKit
                     throw SecureEnclaveError.runtimeError("Did not initailze any Module")
                 }
                 guard SecureEnclave.isAvailable else {
-                throw SecureEnclaveError.runtimeError("Secure Enclave is not Available on this Device")
+                    throw SecureEnclaveError.runtimeError("Secure Enclave is not Available on this Device")
                 }  
             }catch{
                 return false
