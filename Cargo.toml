@@ -6,7 +6,7 @@ license = "MIT"
 crate-type = ["staticlib"]
 
 [lib]
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "lib"] #TODO: "lib" muss vor dem PR entfernt werden. 
 
 [profile.dev]
 debug-assertions = true
@@ -29,7 +29,7 @@ debug = []
 hsm = []
 ffi = []
 linux = ["tpm", "tss-esapi"]
-macos = []
+macos = ["tpm"]
 nitro = ["hsm", "nitrokey"]
 std = []
 tpm = []
@@ -51,6 +51,7 @@ tracing-subscriber = "0.3.18"
 tracing-appender = "0.2.3"
 yubikey = { version = "0.8.0", optional = true }
 apple-secure-enclave-bindings = {edition = "2021", version = "0.1.0", path="./src/tpm/macos/main", name="main"}
+regex = "1.10.4"
 
 
 [dev-dependencies]

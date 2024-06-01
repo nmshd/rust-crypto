@@ -1,0 +1,1 @@
+/Users/danielreimer/dev/binaryknights_rust_crypto/src/tpm/macos/main/target/debug/libapple_secure_enclave_bindings.a: /Users/danielreimer/dev/binaryknights_rust_crypto/src/tpm/macos/main/build.rs /Users/danielreimer/dev/binaryknights_rust_crypto/src/tpm/macos/main/src/lib.rs

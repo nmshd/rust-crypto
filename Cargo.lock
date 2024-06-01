@@ -343,6 +343,7 @@ dependencies = [
  "futures",
  "nitrokey",
  "once_cell",
+ "regex",
  "serde",
  "serde_json",
  "test-case",
