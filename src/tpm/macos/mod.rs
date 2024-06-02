@@ -15,11 +15,11 @@ pub mod key_handle;
 pub mod logger;
 pub mod provider;
 
-/// `TpmProvider` is a structure representing a TPM (Trusted Platform Module) provider
+/// `SEProvider` is a structure representing a TPM (Trusted Platform Module) provider, here the Secure Enclave,
 /// which manages cryptographic keys and algorithms.
 #[derive(Clone, Debug)]
 #[repr(C)]
-pub struct TpmProvider {
+pub struct SEProvider {
     /// Unique identifier for the key.
     key_id: String,
     // pub(super) key_handle: Option<String>, // Placeholder for key handle (optional, not used here).
@@ -38,8 +38,8 @@ pub struct TpmProvider {
     pub(super) key_usages: Option<Vec<KeyUsage>>,
 }
 
-impl TpmProvider {
-    /// Creates a new `TpmProvider` instance with the specified key identifier.
+impl SEProvider {
+    /// Creates a new `SEProvider` instance with the specified key identifier.
     ///
     /// # Arguments
     ///
@@ -47,10 +47,10 @@ impl TpmProvider {
     ///
     /// # Returns
     ///
-    /// A new instance of `TpmProvider`.
+    /// A new instance of `SEProvider`.
     #[instrument]
     pub fn new(key_id: String) -> Self {
-        tracing::info!("Creating new TpmProvider with key_id: {}", key_id);
+        tracing::info!("Creating new SEProvider with key_id: {}", key_id);
         Self {
             key_id,
             // key_handle: None,
@@ -99,5 +99,37 @@ impl LogConfig for Logger {
         // Set the subscriber as the global default for tracing.
         tracing::subscriber::set_global_default(subscriber)
             .expect("setting default subscriber failed");
+    }
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct SEConfig {
+    pub key_algorithm: AsymmetricEncryption,
+    pub sym_algorithm: BlockCiphers,
+    pub hash: Hash,
+    pub key_usages: Vec<KeyUsage>,
+}
+
+impl ProviderConfig for SEConfig {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
+
+impl SEConfig {
+    #[allow(clippy::new_ret_no_self)]
+    pub fn new(
+        key_algorithm: AsymmetricEncryption,
+        sym_algorithm: BlockCiphers,
+        hash: Hash,
+        key_usages: Vec<KeyUsage>,
+    ) -> Box<dyn ProviderConfig> {
+        Box::new(Self {
+            key_algorithm,
+            sym_algorithm,
+            hash,
+            key_usages,
+        })
     }
 }
