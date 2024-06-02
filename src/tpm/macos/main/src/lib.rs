@@ -34,8 +34,7 @@ pub mod provider {
     }
 
     pub fn rust_crypto_call_initialize_module() -> bool {
-        // ffi::initializeModule();
-        todo!();
+        ffi::initializeModule()
     }
 }
 

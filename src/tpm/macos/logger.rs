@@ -5,6 +5,6 @@ pub struct SwiftLogger;
 
 impl LogConfig for SwiftLogger{
     fn setup_logging(&self){
-        todo!(); 
+        println!("Logger muss noch erstellt und implementiert werden!"); 
     }
 }

@@ -12,10 +12,12 @@ use crate::{
     tpm::{core::error::TpmError, TpmConfig},
 };
 use regex::Regex;
+
 use tracing::instrument;
 
 impl Provider for TpmProvider {
-    #[instrument]
+    
+    // #[instrument]
     fn create_key(
         &mut self,
         key_id: &str,
@@ -35,7 +37,7 @@ impl Provider for TpmProvider {
         }
     }
 
-    #[instrument]
+    // #[instrument]
     fn load_key(
         &mut self,
         key_id: &str,
@@ -56,7 +58,7 @@ impl Provider for TpmProvider {
         }
     }
 
-    #[instrument]
+    // #[instrument]
     fn initialize_module(&mut self) -> Result<(), SecurityModuleError> {
         let initialization_result =
             apple_secure_enclave_bindings::provider::rust_crypto_call_initialize_module();

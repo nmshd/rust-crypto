@@ -1,4 +1,4 @@
-use crate::common::traits::module_provider::Provider;
+use crate::{common::traits::module_provider::Provider, tpm::macos::TpmProvider};
 #[cfg(feature = "linux")]
 use crate::tpm::linux::TpmProvider;
 #[cfg(feature = "win")]
@@ -116,7 +116,10 @@ impl TpmInstance {
                 Arc::new(Mutex::new(instance))
             }
             #[cfg(feature = "macos")]
-            TpmType::MacOs => todo!(),
+            TpmType::MacOs => {
+                let instance = TpmProvider::new(key_id);
+                Arc::new(Mutex::new(instance))
+            },
             #[cfg(feature = "linux")]
             TpmType::Linux => {
                 let instance = TpmProvider::new(key_id);
