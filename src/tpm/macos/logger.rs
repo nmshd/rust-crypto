@@ -1,9 +1,8 @@
-use tracing_subscriber::{layer::SubscriberExt, Registry}; 
 use crate::common::traits::log_config::LogConfig;
 #[derive(Debug)]
-pub struct SwiftLogger; 
+pub struct SecureEnclaveLogger; 
 
-impl LogConfig for SwiftLogger{
+impl LogConfig for SecureEnclaveLogger{
     fn setup_logging(&self){
         println!("Logger muss noch erstellt und implementiert werden!"); 
     }

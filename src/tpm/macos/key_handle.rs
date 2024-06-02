@@ -1,7 +1,7 @@
 use super::TpmProvider;
 use crate::{
     common::{error::SecurityModuleError, traits::key_handle::KeyHandle},
-    tpm::core::error::TpmError,
+    // tpm::core::error::TpmError,
 };
 use tracing::instrument;
 
@@ -12,7 +12,7 @@ use regex::Regex;
 impl KeyHandle for TpmProvider {
     #[instrument]
     fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
-        let string_data = String::from_utf8(data.to_vec())
+        let _string_data = String::from_utf8(data.to_vec())
             .map_err(|_| SecurityModuleError::SigningError("Data conversion error".to_string()))?;
         let signed_data = apple_secure_enclave_bindings::keyhandle::rust_crypto_call_sign_data();
 
@@ -33,7 +33,7 @@ impl KeyHandle for TpmProvider {
 
     #[instrument]
     fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
-        let string_data = String::from_utf8(encrypted_data.to_vec()).map_err(|_| {
+        let _string_data = String::from_utf8(encrypted_data.to_vec()).map_err(|_| {
             SecurityModuleError::DecryptionError("Data conversion error".to_string())
         })?;
         let decrypted_data =
@@ -56,7 +56,7 @@ impl KeyHandle for TpmProvider {
 
     #[instrument]
     fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
-        let string_data = String::from_utf8(data.to_vec()).map_err(|_| {
+        let _string_data = String::from_utf8(data.to_vec()).map_err(|_| {
             SecurityModuleError::EncryptionError("Data conversion error".to_string())
         })?;
         let encrypted_data =
@@ -79,10 +79,10 @@ impl KeyHandle for TpmProvider {
 
     #[instrument]
     fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, SecurityModuleError> {
-        let string_data = String::from_utf8(data.to_vec()).map_err(|_| {
+        let _string_data = String::from_utf8(data.to_vec()).map_err(|_| {
             SecurityModuleError::SignatureVerificationError("Data conversion error".to_string())
         })?;
-        let string_signature = String::from_utf8(signature.to_vec()).map_err(|_| {
+        let _string_signature = String::from_utf8(signature.to_vec()).map_err(|_| {
             SecurityModuleError::SignatureVerificationError(
                 "Signature conversion error".to_string(),
             )

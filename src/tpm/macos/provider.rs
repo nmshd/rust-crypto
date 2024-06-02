@@ -1,27 +1,26 @@
 use super::TpmProvider;
 extern crate apple_secure_enclave_bindings;
-use crate::{
+use crate::
     common::{
         crypto::{
             algorithms::encryption::{AsymmetricEncryption, EccSchemeAlgorithm},
             KeyUsage,
-        },
+         },
         error::SecurityModuleError,
         traits::{module_provider::Provider, module_provider_config::ProviderConfig},
-    },
-    tpm::{core::error::TpmError, TpmConfig},
-};
+    }
+;
 use regex::Regex;
 
-use tracing::instrument;
+// use tracing::instrument;
 
 impl Provider for TpmProvider {
     
     // #[instrument]
     fn create_key(
         &mut self,
-        key_id: &str,
-        config: Box<dyn ProviderConfig>,
+        _key_id: &str,
+        _config: Box<dyn ProviderConfig>,
     ) -> Result<(), SecurityModuleError> {
         let config = config.as_any().downcast_ref::<SEConfig>().unwrap();
 
@@ -37,8 +36,8 @@ impl Provider for TpmProvider {
     // #[instrument]
     fn load_key(
         &mut self,
-        key_id: &str,
-        config: Box<dyn ProviderConfig>,
+        _key_id: &str,
+        _config: Box<dyn ProviderConfig>,
     ) -> Result<(), SecurityModuleError> {
         //wie die anderen Teams es gemacht haben mit config und in module_privider_config.rs:
         //let config = match config.as_any().downcast_ref::<Config>()
