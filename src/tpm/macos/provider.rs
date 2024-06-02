@@ -22,8 +22,11 @@ impl Provider for TpmProvider {
         _key_id: &str,
         _config: Box<dyn ProviderConfig>,
     ) -> Result<(), SecurityModuleError> {
-        let config = config.as_any().downcast_ref::<SEConfig>().unwrap();
+        //wie die anderen Teams es gemacht haben mit config und in module_privider_config.rs:
+        //let config = match config.as_any().downcast_ref::<Config>()
 
+        //welcher Error?
+        //let string_key_id = String::from_utf8(key_id.map_err(|_| SecurityModuleError::Error("Key ID conversion error".to_string())))?;
         let keypair = apple_secure_enclave_bindings::provider::rust_crypto_call_create_key();
 
         if Regex::new("(?i)error").unwrap().is_match(keypair.as_str()) {
