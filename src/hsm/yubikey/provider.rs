@@ -174,7 +174,7 @@ impl Provider for YubiKeyProvider {
 
                         usage = "SignEncrypt";
                     }
-                    AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::P256)) => {
+                    AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P256)) => {
                         let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
                         let (slot_id, pkey) =
                             generate_key(&mut yubikey, AlgorithmId::EccP256, slot_id).unwrap();
@@ -183,7 +183,7 @@ impl Provider for YubiKeyProvider {
 
                         usage = "SignEncrypt";
                     }
-                    AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::P384)) => {
+                    AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P384)) => {
                         let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
                         let (slot_id, pkey) =
                             generate_key(&mut yubikey, AlgorithmId::EccP384, slot_id).unwrap();
@@ -219,10 +219,10 @@ impl Provider for YubiKeyProvider {
 
                             usage = "Decrypt";
                         }
-                        AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::P256)) => {
+                        AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P256)) => {
                             // TODO, not tested, might work
                         }
-                        AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::P384)) => {
+                        AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P384)) => {
                             // TODO, not tested, might work
                         }
                         _ => {

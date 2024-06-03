@@ -119,7 +119,7 @@ impl KeyHandle for YubiKeyProvider {
                 }
             }
 
-            AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::P256)) => {
+            AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P256)) => {
                 // Sign data
                 let signature = piv::sign_data(
                     &mut yubikey,
@@ -140,7 +140,7 @@ impl KeyHandle for YubiKeyProvider {
                     ))),
                 }
             }
-            AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::P384)) => {
+            AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P384)) => {
                 // Sign data
                 let signature = piv::sign_data(
                     &mut yubikey,
@@ -211,10 +211,10 @@ impl KeyHandle for YubiKeyProvider {
             // The Yubikey do not support decryption with ECC:
             // https://docs.yubico.com/yesdk/users-manual/application-piv/apdu/auth-decrypt.html
             /*
-            AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::P256)) => {
+            AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P256)) => {
 
             }
-            AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::P384)) => {
+            AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P384)) => {
 
             }
             */
@@ -337,8 +337,8 @@ impl KeyHandle for YubiKeyProvider {
                 }
             }
 
-            AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::P256))
-            | AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::P384)) => {
+            AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P256))
+            | AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P384)) => {
                 let ecc = EcKey::public_key_from_pem(self.pkey.trim().as_bytes())
                     .expect("failed to create ECC from public key PEM");
                 let ecc = PKey::from_ec_key(ecc).expect("failed to create PKey from ECC");
