@@ -14,7 +14,7 @@ use crate::common::{
 use crate::hsm::{yubikey::YubiKeyProvider, HsmProviderConfig};
 
 #[test]
-fn test_sign_and_verify_rsa() {
+fn test_sign_and_verify_rsa_2048() {
     let mut provider = YubiKeyProvider::new("test_rsa_key".to_string());
 
     let config = HsmProviderConfig::new(
