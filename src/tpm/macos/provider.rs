@@ -66,12 +66,7 @@ impl Provider for TpmProvider {
                 Ok(())
             }
         }else{
-            if Regex::new("(?i)error").unwrap().is_match("keypair") {
-                Err(SecurityModuleError::CreateKeyError("keypair".to_string()))
-            } else {
-                println!("Not generated KeyPair:");
-                Ok(())
-            }
+            return Err(CreateKeyError("Algorithm is not supported".to_string()))
         }
 
 
