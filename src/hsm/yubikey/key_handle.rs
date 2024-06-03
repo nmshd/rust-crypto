@@ -17,7 +17,6 @@ use ::yubikey::{
     MgmKey,
 };
 use base64::{engine::general_purpose, Engine};
-use md5::digest::Key;
 use openssl::{
     ec::EcKey,
     hash::MessageDigest,
