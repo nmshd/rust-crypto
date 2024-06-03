@@ -4,18 +4,19 @@ use robusta_jni::bridge;
 pub mod jni {
     #[allow(unused_imports)] //the bridge import is marked as unused, but if removed the compiler throws an error
     use robusta_jni::{
+        bridge,
+        convert::{IntoJavaValue, Signature, TryFromJavaValue, TryIntoJavaValue},
         jni::{
-            objects::{
-                JValue,
-                AutoLocal
-            },
-            JNIEnv,
             errors::Error,
+            JNIEnv,
+            objects::{
+                AutoLocal,
+                JValue
+            },
             sys::jbyteArray
         },
-        convert::{IntoJavaValue, Signature, TryFromJavaValue, TryIntoJavaValue},
-        bridge,
     };
+
     use crate::SecurityModuleError;
 
     #[derive(Signature, TryIntoJavaValue, IntoJavaValue, TryFromJavaValue)]
@@ -73,6 +74,7 @@ pub mod jni {
         /// # Arguments
         /// `key_id` - String that uniquely identifies the key so that it can be retrieved later
         pub fn create_key(environment: &JNIEnv, key_id: String, key_gen_info: String) -> Result<(), SecurityModuleError> {
+            RustDef::initialize_module(environment)?;
             let result = environment.call_static_method(
                 "com/example/vulcans_limes/RustDef",
                 "create_key",
@@ -113,6 +115,7 @@ pub mod jni {
         /// # Arguments
         /// `key_id` - String that uniquely identifies the key so that it can be retrieved later
         pub fn load_key(environment: &JNIEnv, key_id: String) -> Result<(), SecurityModuleError> {
+            RustDef::initialize_module(environment)?;
             let result = environment.call_static_method(
                 "com/example/vulcans_limes/RustDef",
                 "load_key",
