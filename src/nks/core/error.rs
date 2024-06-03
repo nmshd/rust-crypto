@@ -19,7 +19,25 @@ pub enum NksError {
     UnsupportedOperation(String),
 }
 
+
 impl fmt::Display for NksError {
+    /// Formats the `NksError` for display.
+    ///
+    /// This method provides a user-friendly description of the error based on the variant of `NksError`.
+    ///
+    /// # Arguments
+    ///
+    /// * `f` - A mutable reference to a `fmt::Formatter`.
+    ///
+    /// # Returns
+    ///
+    /// A `fmt::Result` indicating the success or failure of the formatting.
+    ///
+    /// # Variants
+    ///
+    /// * `NksError::Io(ref err)` - Formats as `"Communication error: {err}"`.
+    /// * `NksError::InitializationError(ref msg)` - Formats as `"Authentication error: {msg}"`.
+    /// * `NksError::UnsupportedOperation(ref msg)` - Formats as `"Device-specific error: {msg}"`.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             NksError::Io(ref err) => write!(f, "Communication error: {}", err),
@@ -29,13 +47,6 @@ impl fmt::Display for NksError {
         }
     }
 }
-
-/// Enables `NksError` to be treated as a trait object for any error (`dyn std::error::Error`).
-///
-/// This implementation allows for compatibility with Rust's standard error handling mechanisms,
-/// facilitating the propagation and inspection of errors through the `source` method.
-impl std::error::Error for NksError {}
-
 
 /// Enables `NksError` to be treated as a trait object for any error (`dyn std::error::Error`).
 ///
