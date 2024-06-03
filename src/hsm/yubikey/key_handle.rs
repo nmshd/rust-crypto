@@ -1,7 +1,11 @@
 use super::YubiKeyProvider;
 use crate::{
     common::{
-        crypto::algorithms::encryption::AsymmetricEncryption, error::SecurityModuleError,
+        crypto::algorithms::{
+            encryption::{AsymmetricEncryption, EccCurves, EccSchemeAlgorithm},
+            KeyBits,
+        },
+        error::SecurityModuleError,
         traits::key_handle::KeyHandle,
     },
     hsm::core::error::HsmError,
@@ -13,6 +17,7 @@ use ::yubikey::{
     MgmKey,
 };
 use base64::{engine::general_purpose, Engine};
+use md5::digest::Key;
 use openssl::{
     ec::EcKey,
     hash::MessageDigest,
@@ -69,7 +74,7 @@ impl KeyHandle for YubiKeyProvider {
             )));
         }
         match key_algo {
-            AsymmetricEncryption::Ecc(_) => {
+            AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::P256)) => {
                 // Sign data
                 let signature = piv::sign_data(
                     &mut yubikey,
@@ -90,12 +95,33 @@ impl KeyHandle for YubiKeyProvider {
                     ))),
                 }
             }
+            AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::P384)) => {
+                // Sign data
+                let signature = piv::sign_data(
+                    &mut yubikey,
+                    data,
+                    AlgorithmId::EccP384,
+                    SlotId::Retired(self.slot_id.unwrap()),
+                );
+                match signature {
+                    Ok(buffer) => {
+                        let signature = general_purpose::STANDARD.encode(&buffer);
+                        let signature = general_purpose::STANDARD
+                            .decode(signature)
+                            .expect("Failed to decode signature");
+                        Ok(signature)
+                    }
+                    Err(err) => Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
+                        err.to_string(),
+                    ))),
+                }
+            }
             /*Rsa => {
                 // TODO, doesn´t work yet
             }*/
             _ => {
-                return Err(SecurityModuleError::Hsm(HsmError::UnsupportedFeature(
-                    "Unsupported feature".to_string(),
+                return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
+                    "Key Algorithm not supported".to_string(),
                 )));
             }
         }
@@ -122,7 +148,16 @@ impl KeyHandle for YubiKeyProvider {
         let key_algo = self.key_algo.unwrap();
 
         match key_algo {
-            AsymmetricEncryption::Rsa(_) => {
+            AsymmetricEncryption::Rsa(KeyBits::Bits1024) => {
+                decrypted = piv::decrypt_data(
+                    &mut yubikey,
+                    input,
+                    piv::AlgorithmId::Rsa1024,
+                    piv::SlotId::Retired(self.slot_id.unwrap()),
+                )
+                .map_err(|_| "Failed to decrypt data");
+            }
+            AsymmetricEncryption::Rsa(KeyBits::Bits2048) => {
                 decrypted = piv::decrypt_data(
                     &mut yubikey,
                     input,
@@ -131,8 +166,16 @@ impl KeyHandle for YubiKeyProvider {
                 )
                 .map_err(|_| "Failed to decrypt data");
             }
-            AsymmetricEncryption::Ecc(_) => {
+            AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::P256)) => {
                 // TODO, not tested, might work
+            }
+            AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::P384)) => {
+                // TODO, not tested, might work
+            }
+            _ => {
+                return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
+                    "Key Algorithm not supported".to_string(),
+                )));
             }
         }
         fn remove_pkcs1_padding(buffer: &[u8]) -> Result<Vec<u8>, &'static str> {
