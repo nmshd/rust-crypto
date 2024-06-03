@@ -40,13 +40,13 @@ impl YubiKeyProvider {
     #[instrument]
     pub fn new(key_id: String) -> Self {
         Self {
-            yubikey: None,
             key_id,
             pkey: String::new(),
             config: None,
             slot_id: None,
             key_usages: None,
             key_algo: None,
+            yubikey: None,
         }
     }
 }
