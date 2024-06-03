@@ -72,15 +72,53 @@ impl KeyHandle for YubiKeyProvider {
                 "Authentication  failed".to_string(),
             )));
         }
+
         match key_algo {
-            /*
             AsymmetricEncryption::Rsa(KeyBits::Bits1024) => {
-                // TODO, doesn´t work yet
+                let data = create_digest_info(data).unwrap();
+                let data = apply_pkcs1v15_padding(&data, 128);
+                let signature = piv::sign_data(
+                    &mut yubikey,
+                    data.as_slice(),
+                    AlgorithmId::Rsa1024,
+                    SlotId::Retired(self.slot_id.unwrap()),
+                );
+                match signature {
+                    Ok(buffer) => {
+                        let signature = general_purpose::STANDARD.encode(&buffer);
+                        let signature = general_purpose::STANDARD
+                            .decode(signature)
+                            .expect("Failed to decode signature");
+                        Ok(signature)
+                    }
+                    Err(err) => Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
+                        err.to_string(),
+                    ))),
+                }
             }
             AsymmetricEncryption::Rsa(KeyBits::Bits2048) => {
-                // TODO, doesn´t work yet
+                let data = create_digest_info(data).unwrap();
+                let data = apply_pkcs1v15_padding(&data, 256);
+                let signature = piv::sign_data(
+                    &mut yubikey,
+                    data.as_slice(),
+                    AlgorithmId::Rsa2048,
+                    SlotId::Retired(self.slot_id.unwrap()),
+                );
+                match signature {
+                    Ok(buffer) => {
+                        let signature = general_purpose::STANDARD.encode(&buffer);
+                        let signature = general_purpose::STANDARD
+                            .decode(signature)
+                            .expect("Failed to decode signature");
+                        Ok(signature)
+                    }
+                    Err(err) => Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
+                        err.to_string(),
+                    ))),
+                }
             }
-            */
+
             AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::P256)) => {
                 // Sign data
                 let signature = piv::sign_data(
@@ -329,4 +367,40 @@ impl KeyHandle for YubiKeyProvider {
             }
         }
     }
+}
+
+#[instrument]
+fn create_digest_info(digest: &[u8]) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+    let oid_sha256: [u8; 9] = [0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x01]; // OID für SHA-256
+    let mut digest_info = vec![];
+
+    // ASN.1 SEQUENCE Header
+    digest_info.extend_from_slice(&[
+        0x30, 0x31, // SEQUENCE, Länge 49
+        0x30, 0x0d, // SEQUENCE, Länge 13
+        0x06, 0x09, // OID Header
+    ]);
+    digest_info.extend_from_slice(&oid_sha256); // OID SHA-256
+    digest_info.extend_from_slice(&[
+        0x05, 0x00, // NULL
+        0x04, 0x20, // OCTET STRING, Länge 32
+    ]);
+    digest_info.extend_from_slice(digest); // SHA-256 Hash-Wert
+
+    Ok(digest_info)
+}
+
+#[instrument]
+fn apply_pkcs1v15_padding(data: &[u8], block_size: usize) -> Vec<u8> {
+    let padding_length = block_size - data.len() - 3;
+    let mut padded_data = Vec::with_capacity(block_size);
+    padded_data.push(0x00);
+    padded_data.push(0x01);
+    for _ in 0..padding_length {
+        padded_data.push(0xFF);
+    }
+    padded_data.push(0x00);
+    padded_data.extend_from_slice(data);
+    //println!("{:?}", padded_data);
+    padded_data
 }

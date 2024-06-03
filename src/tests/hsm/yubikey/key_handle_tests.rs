@@ -26,13 +26,12 @@ use crate::hsm::{yubikey::YubiKeyProvider, HsmProviderConfig};
 //Test for signing and verifying RSA data with 1024-bit key
 #[test]
 fn test_sign_and_verify_rsa_1024() {
-
     // Initialization of YubiKeyProvider and configuration of HsmProviderConfig
     // omitted for brevity; please refer to the individual test implementations
     let mut provider = YubiKeyProvider::new("test_rsa_key".to_string());
 
     let config = HsmProviderConfig::new(
-        AsymmetricEncryption::Rsa(KeyBits::Bits2048),
+        AsymmetricEncryption::Rsa(KeyBits::Bits1024),
         vec![KeyUsage::SignEncrypt],
     );
 
