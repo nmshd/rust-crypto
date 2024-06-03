@@ -61,7 +61,9 @@ The Repository contains a Wrapper that is used to perform cryptographic operatio
 ### Libraries
 - **Robusta**
 - **JNI**
+
 - **KeyStore API**
+  The [Android Keystore system](https://developer.android.com/privacy-and-security/keystore) manages the handling of cryptographic keys for us. With the help of other APIs, we can use the keys to encrypt and decrypt data, as well as sign and verify it.
 
 ## Installation Guide
 
