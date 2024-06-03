@@ -1,10 +1,12 @@
 use std::any::Any;
 use std::fmt;
 use std::fmt::{Debug, Formatter};
-use crate::common::crypto::algorithms::encryption::{AsymmetricEncryption, BlockCiphers};
-use crate::common::traits::module_provider_config::ProviderConfig;
+
 use robusta_jni::jni::{JavaVM, JNIEnv};
 use tracing::instrument;
+
+use crate::common::crypto::algorithms::encryption::{AsymmetricEncryption, BlockCiphers};
+use crate::common::traits::module_provider_config::ProviderConfig;
 use crate::SecurityModuleError;
 
 mod interface;
@@ -45,6 +47,7 @@ impl KnoxProvider {
 
     ///Get the JavaVM stored in &self and provides the JNIEnv based on it
     fn get_env(&self) -> Result<JNIEnv, SecurityModuleError> {
+        if self.config.is_none() { return Err(SecurityModuleError::InitializationError(String::from("No key loaded"))) }
         let conf = self.config.as_ref().ok_or(
             SecurityModuleError::CreationError(String::from("failed to store config data")))?;
         let env = conf.vm.get_env().unwrap();
