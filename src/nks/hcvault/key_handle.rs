@@ -11,7 +11,6 @@ use x25519_dalek::{
     StaticSecret as X25519StaticSecret, StaticSecret,
 };
 
-//TODO use CAL once it can compile
 use crate::common::{
     crypto::algorithms::encryption::AsymmetricEncryption, error::SecurityModuleError,
     traits::key_handle::KeyHandle,

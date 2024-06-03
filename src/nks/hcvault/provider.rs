@@ -27,8 +27,6 @@ use crate::nks::NksConfig;
 
 
 /// Implements the `Provider` trait, providing cryptographic operations utilizing a nks.
-
-
 impl Provider for NksProvider {
     /// Creates a new cryptographic key identified by `key_id` within the NksProvider.
     ///
@@ -127,6 +125,7 @@ impl Provider for NksProvider {
     /// let config = get_config("rsa").unwrap();
     /// provider.load_key("test_rsa_key", Box::new(config.clone())).expect("Failed to load RSA key");
     /// ```
+    #[instrument]
     fn load_key(&mut self, key_id: &str, _config: Box<dyn ProviderConfig>) -> Result<(), SecurityModuleError> {
         // Check if secrets_json is None
         if let Some(secrets_json) = &self.secrets_json {
@@ -454,6 +453,7 @@ async fn get_and_save_key_pair_request(
         .await?;
     Ok(response)
 }
+
 /// Retrieves the secrets from the NksProvider.
 ///
 /// This asynchronous function sends a POST request to the NksProvider's `getSecrets` endpoint.
