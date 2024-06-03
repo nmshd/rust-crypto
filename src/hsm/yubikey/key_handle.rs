@@ -264,7 +264,7 @@ impl KeyHandle for YubiKeyProvider {
     #[instrument]
     fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, SecurityModuleError> {
         match self.key_algo.unwrap() {
-            AsymmetricEncryption::Rsa(_) => {
+            AsymmetricEncryption::Rsa(KeyBits::Bits1024) => {
                 let rsa = Rsa::public_key_from_pem(self.pkey.trim().as_bytes())
                     .expect("failed to create RSA from public key PEM");
                 let key_pkey = PKey::from_rsa(rsa).unwrap();
@@ -279,7 +279,6 @@ impl KeyHandle for YubiKeyProvider {
                     .verify(signature)
                     .expect("failed to verify signature")
                 {
-                    //keine ahnung ob das funktioniert
                     return Result::Ok(true);
                 } else {
                     return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
@@ -287,7 +286,29 @@ impl KeyHandle for YubiKeyProvider {
                     )));
                 }
             }
-            AsymmetricEncryption::Ecc(_) => {
+            AsymmetricEncryption::Rsa(KeyBits::Bits2048) => {
+                let rsa = Rsa::public_key_from_pem(self.pkey.trim().as_bytes())
+                    .expect("failed to create RSA from public key PEM");
+                let key_pkey = PKey::from_rsa(rsa).unwrap();
+
+                let mut verifier = Verifier::new(MessageDigest::sha256(), &key_pkey)
+                    .expect("failed to create verifier");
+                verifier
+                    .update(data)
+                    .map_err(|_| "failed to update verifier")
+                    .unwrap();
+                if verifier
+                    .verify(signature)
+                    .expect("failed to verify signature")
+                {
+                    return Result::Ok(true);
+                } else {
+                    return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
+                        "Signature verification failed".to_string(),
+                    )));
+                }
+            }
+            AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::P384)) => {
                 let ecc = EcKey::public_key_from_pem(self.pkey.trim().as_bytes())
                     .expect("failed to create ECC from public key PEM");
                 let ecc = PKey::from_ec_key(ecc).expect("failed to create PKey from ECC");
@@ -302,13 +323,39 @@ impl KeyHandle for YubiKeyProvider {
                     .verify(signature)
                     .expect("failed to verify signature")
                 {
-                    //keine ahnung ob das funktioniert
                     return Result::Ok(true);
                 } else {
                     return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
                         "Signature verification failed".to_string(),
                     )));
                 }
+            }
+            AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::P256)) => {
+                let ecc = EcKey::public_key_from_pem(self.pkey.trim().as_bytes())
+                    .expect("failed to create ECC from public key PEM");
+                let ecc = PKey::from_ec_key(ecc).expect("failed to create PKey from ECC");
+
+                let mut verifier = Verifier::new(MessageDigest::sha256(), &ecc)
+                    .expect("failed to create verifier");
+                verifier
+                    .update(data)
+                    .map_err(|_| "failed to update verifier")
+                    .unwrap();
+                if verifier
+                    .verify(signature)
+                    .expect("failed to verify signature")
+                {
+                    return Result::Ok(true);
+                } else {
+                    return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
+                        "Signature verification failed".to_string(),
+                    )));
+                }
+            }
+            _ => {
+                return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
+                    "Key Algorithm not supported".to_string(),
+                )));
             }
         }
     }
