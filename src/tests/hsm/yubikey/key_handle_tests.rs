@@ -49,7 +49,7 @@ fn test_sign_and_verify_ecc_256() {
         .expect("Failed to initialize module");
     provider
         .create_key("test_ecc_key", config)
-        .expect("Failed to create ECDSA key");
+        .expect("Failed to create ECC key");
 
     let data = b"Hello, World!";
     let signature = provider.sign_data(data).expect("Failed to sign data");
@@ -71,7 +71,7 @@ fn test_sign_and_verify_ecc_384() {
         .expect("Failed to initialize module");
     provider
         .create_key("test_ecc_key", config)
-        .expect("Failed to create ECDSA key");
+        .expect("Failed to create ECC key");
 
     let data = b"Hello, World!";
     let signature = provider.sign_data(data).expect("Failed to sign data");
