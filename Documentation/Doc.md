@@ -50,7 +50,8 @@ Our project aims to address this critical need by developing a comprehensive sol
 ## Architecture
 
 ### Component Diagram
-![Komponentendiagramm](../Documentation/BSP.jpg)
+
+![component diagram](images/component diagram.jpg)
 
 ### Explanation
 
