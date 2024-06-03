@@ -73,6 +73,14 @@ impl KeyHandle for YubiKeyProvider {
             )));
         }
         match key_algo {
+            /*
+            AsymmetricEncryption::Rsa(KeyBits::Bits1024) => {
+                // TODO, doesn´t work yet
+            }
+            AsymmetricEncryption::Rsa(KeyBits::Bits2048) => {
+                // TODO, doesn´t work yet
+            }
+            */
             AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::P256)) => {
                 // Sign data
                 let signature = piv::sign_data(
@@ -115,9 +123,6 @@ impl KeyHandle for YubiKeyProvider {
                     ))),
                 }
             }
-            /*Rsa => {
-                // TODO, doesn´t work yet
-            }*/
             _ => {
                 return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
                     "Key Algorithm not supported".to_string(),
@@ -143,7 +148,7 @@ impl KeyHandle for YubiKeyProvider {
         let mut yubikey = yubikey.lock().unwrap();
         let encrypted_data = general_purpose::STANDARD.decode(encrypted_data).unwrap();
         let input: &[u8] = &encrypted_data;
-        let mut decrypted: Result<Zeroizing<Vec<u8>>, &str> = Ok(Zeroizing::new(Vec::new()));
+        let decrypted: Result<Zeroizing<Vec<u8>>, &str>;
         let key_algo = self.key_algo.unwrap();
 
         match key_algo {
@@ -165,12 +170,16 @@ impl KeyHandle for YubiKeyProvider {
                 )
                 .map_err(|_| "Failed to decrypt data");
             }
+            // The Yubikey do not support decryption with ECC:
+            // https://docs.yubico.com/yesdk/users-manual/application-piv/apdu/auth-decrypt.html
+            /*
             AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::P256)) => {
-                // TODO, not tested, might work
+
             }
             AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::P384)) => {
-                // TODO, not tested, might work
+
             }
+            */
             _ => {
                 return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
                     "Key Algorithm not supported".to_string(),
@@ -226,7 +235,8 @@ impl KeyHandle for YubiKeyProvider {
     #[instrument]
     fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         match self.key_algo.unwrap() {
-            AsymmetricEncryption::Rsa(_) => {
+            AsymmetricEncryption::Rsa(KeyBits::Bits1024)
+            | AsymmetricEncryption::Rsa(KeyBits::Bits2048) => {
                 let rsa = Rsa::public_key_from_pem(self.pkey.trim().as_bytes())
                     .map_err(|_| "failed to create RSA from public key PEM");
                 let mut encrypted_data = vec![0; rsa.clone().unwrap().size() as usize];
@@ -241,9 +251,11 @@ impl KeyHandle for YubiKeyProvider {
                     Err(err) => return Err(SecurityModuleError::Hsm("Failed to encrypt data")),
                 } */
             }
-            AsymmetricEncryption::Ecc(_) => Err(SecurityModuleError::Hsm(
-                HsmError::DeviceSpecific("Unsupported feature".to_string()),
-            )),
+            _ => {
+                return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
+                    "Key Algorithm not supported".to_string(),
+                )));
+            }
         }
     }
 
@@ -263,7 +275,8 @@ impl KeyHandle for YubiKeyProvider {
     #[instrument]
     fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, SecurityModuleError> {
         match self.key_algo.unwrap() {
-            AsymmetricEncryption::Rsa(KeyBits::Bits1024) => {
+            AsymmetricEncryption::Rsa(KeyBits::Bits1024)
+            | AsymmetricEncryption::Rsa(KeyBits::Bits2048) => {
                 let rsa = Rsa::public_key_from_pem(self.pkey.trim().as_bytes())
                     .expect("failed to create RSA from public key PEM");
                 let key_pkey = PKey::from_rsa(rsa).unwrap();
@@ -285,51 +298,9 @@ impl KeyHandle for YubiKeyProvider {
                     )));
                 }
             }
-            AsymmetricEncryption::Rsa(KeyBits::Bits2048) => {
-                let rsa = Rsa::public_key_from_pem(self.pkey.trim().as_bytes())
-                    .expect("failed to create RSA from public key PEM");
-                let key_pkey = PKey::from_rsa(rsa).unwrap();
 
-                let mut verifier = Verifier::new(MessageDigest::sha256(), &key_pkey)
-                    .expect("failed to create verifier");
-                verifier
-                    .update(data)
-                    .map_err(|_| "failed to update verifier")
-                    .unwrap();
-                if verifier
-                    .verify(signature)
-                    .expect("failed to verify signature")
-                {
-                    return Result::Ok(true);
-                } else {
-                    return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
-                        "Signature verification failed".to_string(),
-                    )));
-                }
-            }
-            AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::P384)) => {
-                let ecc = EcKey::public_key_from_pem(self.pkey.trim().as_bytes())
-                    .expect("failed to create ECC from public key PEM");
-                let ecc = PKey::from_ec_key(ecc).expect("failed to create PKey from ECC");
-
-                let mut verifier = Verifier::new(MessageDigest::sha256(), &ecc)
-                    .expect("failed to create verifier");
-                verifier
-                    .update(data)
-                    .map_err(|_| "failed to update verifier")
-                    .unwrap();
-                if verifier
-                    .verify(signature)
-                    .expect("failed to verify signature")
-                {
-                    return Result::Ok(true);
-                } else {
-                    return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
-                        "Signature verification failed".to_string(),
-                    )));
-                }
-            }
-            AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::P256)) => {
+            AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::P256))
+            | AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::P384)) => {
                 let ecc = EcKey::public_key_from_pem(self.pkey.trim().as_bytes())
                     .expect("failed to create ECC from public key PEM");
                 let ecc = PKey::from_ec_key(ecc).expect("failed to create PKey from ECC");

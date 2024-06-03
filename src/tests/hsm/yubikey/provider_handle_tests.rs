@@ -4,6 +4,7 @@ use crate::common::{
         algorithms::{
             encryption::{AsymmetricEncryption, BlockCiphers, EccCurves, EccSchemeAlgorithm},
             hashes::Hash,
+            KeyBits,
         },
         KeyUsage,
     },
@@ -19,7 +20,7 @@ fn test_create_rsa_key_1024() {
     let mut provider = YubiKeyProvider::new(key_id.to_string());
 
     let config = HsmProviderConfig::new(
-        AsymmetricEncryption::Rsa(crate::common::crypto::algorithms::KeyBits::Bits1024),
+        AsymmetricEncryption::Rsa(KeyBits::Bits1024),
         vec![KeyUsage::SignEncrypt],
     );
 
@@ -38,7 +39,7 @@ fn test_create_rsa_key_2048() {
     let mut provider = YubiKeyProvider::new(key_id.to_string());
 
     let config = HsmProviderConfig::new(
-        AsymmetricEncryption::Rsa(crate::common::crypto::algorithms::KeyBits::Bits2048),
+        AsymmetricEncryption::Rsa(KeyBits::Bits2048),
         vec![KeyUsage::SignEncrypt],
     );
 
@@ -58,7 +59,7 @@ fn test_create_ecc_key_256() {
     let mut provider = YubiKeyProvider::new(key_id.to_string());
 
     let config = HsmProviderConfig::new(
-        AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::P256)),
+        AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P256)),
         vec![KeyUsage::SignEncrypt],
     );
     provider
@@ -77,7 +78,7 @@ fn test_create_ecc_key_384() {
     let mut provider = YubiKeyProvider::new(key_id.to_string());
 
     let config = HsmProviderConfig::new(
-        AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::P384)),
+        AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P384)),
         vec![KeyUsage::SignEncrypt],
     );
     provider
@@ -94,7 +95,7 @@ fn test_load_rsa_key() {
     let mut provider = YubiKeyProvider::new(key_id.to_string());
 
     let config = HsmProviderConfig::new(
-        AsymmetricEncryption::Rsa(crate::common::crypto::algorithms::KeyBits::Bits2048),
+        AsymmetricEncryption::Rsa(KeyBits::Bits2048),
         vec![KeyUsage::SignEncrypt],
     );
 
