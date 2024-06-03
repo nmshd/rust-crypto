@@ -51,7 +51,8 @@ The Repository contains a Wrapper that is used to perform cryptographic operatio
 ## Architecture
 
 ### Component Diagram
-![Komponentendiagramm](../Documentation/BSP.jpg)
+
+![component diagram](images/component diagram.jpg)
 
 ### Explanation
 

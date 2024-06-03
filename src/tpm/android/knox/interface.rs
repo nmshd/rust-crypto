@@ -19,16 +19,17 @@ pub mod jni {
 
     use crate::SecurityModuleError;
 
+    /// Contains all methods related to Rust - Java communication and the JNI
     #[derive(Signature, TryIntoJavaValue, IntoJavaValue, TryFromJavaValue)]
-    #[package(com.example.vulcans_1limes)]
+    #[package(com.example.vulcans_1limes)]  //the 1 after the "_" is an escape character for the "_"
     pub struct RustDef<'env: 'borrow, 'borrow> {
         #[instance]
         pub raw: AutoLocal<'env, 'borrow>,
     }
 
     /// This Implementation provides the method declarations that are the interface for the JNI.
-    /// The first part are Rust-methods that can be called from other Java-classes,
-    /// while the second part contains Java-methods that can be called from Rust.
+    /// The first part contains Java-methods that can be called from Rust.
+    /// The second part contains some utility methods.
     ///
     /// All method signatures have to correspond to their counterparts in RustDef.java, with the
     /// same method name and corresponding parameters according to this table:
@@ -53,16 +54,19 @@ pub mod jni {
         //------------------------------------------------------------------------------------------
         // Java methods that can be called from rust
 
-        ///Proof of concept method - shows callback from Rust to a java method
-        ///     DO NOT USE
-        pub fn callback(environment: &JNIEnv) -> () {
+        ///Proof of concept method - shows call from Rust to a java method
+        /// in order to find the signatures of the class and method, use
+        /// `javap -s -p file/path/to/compiled/java/class`
+        ///
+        ///  DO NOT USE THIS METHOD
+        fn callback(environment: &JNIEnv) -> () {
             //This calls a method in Java in the Class RustDef, with the method name "callback"
             //and no arguments
             environment.call_static_method(
-                "com/example/vulcans_limes/RustDef",
-                "callback",
-                "()V",
-                &[],
+                "com/example/vulcans_limes/RustDef", //Class signature
+                "callback", //method name signature
+                "()V", //parameter types of the method
+                &[], //parameters to be passed to the method
             ).expect("Java func call failed");
         }
 
@@ -73,6 +77,8 @@ pub mod jni {
         ///
         /// # Arguments
         /// `key_id` - String that uniquely identifies the key so that it can be retrieved later
+        /// `key_gen_info` - A string that contains all relevant parameters for the key such as the
+        ///  algorithm used, the length of the key, the type of padding, etc.
         pub fn create_key(environment: &JNIEnv, key_id: String, key_gen_info: String) -> Result<(), SecurityModuleError> {
             RustDef::initialize_module(environment)?;
             let result = environment.call_static_method(
@@ -108,9 +114,7 @@ pub mod jni {
         }
 
         /// Loads an existing cryptographic key identified by `key_id`.
-        ///
-        /// This method generates a new cryptographic key within the TPM.
-        ///  The loaded key is associated with the provided `key_id`.
+        /// This key can then be used for cryptographic operations such as encryption or signing.
         ///
         /// # Arguments
         /// `key_id` - String that uniquely identifies the key so that it can be retrieved later
@@ -148,18 +152,10 @@ pub mod jni {
         }
 
 
-        /// Initializes the TPM module and returns a handle for further operations.
+        /// Initializes the TPM module.
         ///
         /// This method initializes the TPM context and prepares it for use. It should be called
         /// before performing any other operations with the TPM.
-        ///
-        /// # Arguments
-        ///
-        /// * `key_id` - A string slice that uniquely identifies the key to be loaded.
-        /// * `key_algorithm` - The asymmetric encryption algorithm used for the key.
-        /// * `sym_algorithm` - An optional symmetric encryption algorithm used with the key.
-        /// * `hash` - An optional hash algorithm used with the key.
-        /// * `key_usages` - A vector of `AppKeyUsage` values specifying the intended usages for the key.
         ///
         /// # Returns
         ///
@@ -438,14 +434,11 @@ pub mod jni {
         /// # Arguments
         /// * `environment` - A reference to the Java environment (`JNIEnv`)
         /// # Returns
-        /// * `Result<(), JniError>` - A Result type representing either success (if no exceptions
-        ///                            are found) or an error of type `JniError`
-        ///                            (if exceptions are found).
+        /// * `Result<(), String>` - A Result type representing either success (if no exceptions
+        ///                            are found) or an error (if exceptions are found).
         /// # Errors
         /// This method may return an error of type `JniError` if:
         /// * Any pending Java exceptions are found in the provided Java environment.
-        /// # Panics
-        /// This method does not panic under normal circumstances.
         pub fn check_java_exceptions(environment: &JNIEnv) -> Result<(), String> {
             if environment.exception_check().unwrap_or(true) {
                 let _ = environment.exception_describe();

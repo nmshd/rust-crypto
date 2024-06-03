@@ -1,17 +1,23 @@
-use super::{KnoxProvider};
+use tracing::instrument;
+
 use crate::{
     common::{error::SecurityModuleError, traits::key_handle::KeyHandle},
     tpm::android::knox::interface::jni::RustDef
 };
-use tracing::instrument;
 
-/// Provides cryptographic operations for asymmetric keys on Windows,
-/// such as signing, encryption, decryption, and signature verification.
+use super::KnoxProvider;
+
+/// Implements the `Provider` trait, providing cryptographic operations
+/// such as signing, encryption, decryption, and signature verification for the TPM Knox Vault.
+///
+/// This implementation is specific to Samsung Knox Vault and uses the Android Keystore API for all cryptographic operations
+/// In theory, this should also work for other TPMs on Android phones, but it is only tested with Samsung Knox Vault
 impl KeyHandle for KnoxProvider {
-    /// Signs data using the cryptographic key.
+    /// Signs data using the previously loaded cryptographic key.
     ///
     /// This method hashes the input data using SHA-256 and then signs the hash.
-    /// It leverages the NCryptSignHash function from the Windows CNG API.
+    /// The algorithm used for signing is determined by the currently loaded key.
+    /// If no key is loaded, an Error is returned.
     ///
     /// # Arguments
     ///
@@ -25,10 +31,9 @@ impl KeyHandle for KnoxProvider {
         RustDef::sign_data(&self.get_env()?, data)
     }
 
-    /// Decrypts data encrypted with the corresponding public key.
-    ///
-    /// Utilizes the NCryptDecrypt function from the Windows CNG API.
-    ///
+    /// Decrypts the data with the currently loaded key.
+    /// The algorithm used for decryption is determined by the currently loaded key.
+    /// If no key is loaded, an Error is returned.
     /// # Arguments
     ///
     /// * `encrypted_data` - The data to be decrypted.
@@ -41,10 +46,9 @@ impl KeyHandle for KnoxProvider {
         RustDef::decrypt_data(&self.get_env()?, encrypted_data)
     }
 
-    /// Encrypts data with the cryptographic key.
-    ///
-    /// Uses the NCryptEncrypt function from the Windows CNG API.
-    ///
+    /// Encrypts the data with the currently loaded key.
+    /// The algorithm used for Encryption is determined by the currently loaded key.
+    /// If no key is loaded, an Error is returned.
     /// # Arguments
     ///
     /// * `data` - The data to be encrypted.
@@ -59,9 +63,9 @@ impl KeyHandle for KnoxProvider {
 
     /// Verifies a signature against the provided data.
     ///
-    /// This method hashes the input data using SHA-256 and then verifies the signature.
-    /// It relies on the NCryptVerifySignature function from the Windows CNG API.
-    ///
+    /// This method hashes the input data using SHA-256 and then verifies the signature with the currently loaded key.
+    /// The algorithm used for verification is determined by the currently loaded key.
+    /// If no key is loaded, an Error is returned.
     /// # Arguments
     ///
     /// * `data` - The original data associated with the signature.
