@@ -510,6 +510,18 @@ fn get_free_slot(yubikey: &mut YubiKey) -> Result<RetiredSlotId, SecurityModuleE
     Ok(slot_id)
 }
 
+/// Converts a `RetiredSlotId` to its corresponding u32 value.
+///
+/// This method converts a `RetiredSlotId` to its corresponding u32 value,
+/// which is required for slot operations on the YubiKey device.
+///
+/// # Arguments
+///
+/// * `slot` - The `RetiredSlotId` to be converted.
+///
+/// # Returns
+///
+/// The corresponding u32 value of the `RetiredSlotId`.
 fn get_reference_u32slot(slot: RetiredSlotId) -> u32 {
     let mut output: u32 = SLOTSU32[0];
     for i in 0..19 {
