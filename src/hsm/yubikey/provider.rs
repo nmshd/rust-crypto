@@ -98,7 +98,7 @@ impl Provider for YubiKeyProvider {
             let key_algo = self.key_algo.clone().unwrap();
 
             let mut usage: &str = "";
-            let mut slot: u32 = 1;
+            let slot: u32;
             let key_usages = self.key_usages.clone().unwrap();
             let slot_id;
 
@@ -302,7 +302,7 @@ impl Provider for YubiKeyProvider {
 
             let data = output;
             match parse_slot_data(&data) {
-                Ok((key_name, slot, usage, public_key)) => {
+                Ok((key_name, _, usage, public_key)) => {
                     if key_name == key_id.to_string() {
                         let mut vector = Vec::new();
                         self.slot_id = Some(SLOTS[i - 10]);
@@ -373,44 +373,6 @@ impl Provider for YubiKeyProvider {
             )));
         }
     }
-
-    // Halbfertiger Code, kann benutzt werden wenn PIN-Abfrage in App implementiert wird
-    /*
-    #[instrument]
-    fn initialize_module(
-        &mut self,
-        key_algorithm: AsymmetricEncryption,
-        sym_algorithm: Option<BlockCiphers>,
-        hash: Option<Hash>,
-        key_usage: Vec<KeyUsage>,
-        input: &str,
-    ) -> Result<device, SecurityModuleError> {
-        // Opens a connection to the yubikey device
-        loop {
-            let yubikey = YubiKey::open();
-            if yubikey.is_ok() {
-                let verify = device.verify_pin(input);
-                if verify.is_ok() {
-                    //successful login
-                    return device;
-                } else {
-                    let count = device.get_pin_retries().unwrap();
-                    // TODO: Implement PUK handling
-                    if count == 0 {
-                        return yubiKey::Error::PinLocked;
-                        /*  let puk;
-                        let pin_neu;
-                        let change_puk = device.unblock_pin(puk.as_ref(), pin_neu.as_ref());
-                        if change_puk.is_ok() {
-                            return device;
-                            */
-                    }
-                    return yubikey::Errror::WrongPin;
-                }
-            }
-        }
-    }
-    */
 }
 
 /// Saves the key object to the YubiKey device.
@@ -560,3 +522,41 @@ fn get_reference_u32slot(slot: RetiredSlotId) -> u32 {
     }
     output
 }
+
+// Halbfertiger Code, kann benutzt werden wenn PIN-Abfrage in App implementiert wird
+/*
+#[instrument]
+fn initialize_module(
+    &mut self,
+    key_algorithm: AsymmetricEncryption,
+    sym_algorithm: Option<BlockCiphers>,
+    hash: Option<Hash>,
+    key_usage: Vec<KeyUsage>,
+    input: &str,
+) -> Result<device, SecurityModuleError> {
+    // Opens a connection to the yubikey device
+    loop {
+        let yubikey = YubiKey::open();
+        if yubikey.is_ok() {
+            let verify = device.verify_pin(input);
+            if verify.is_ok() {
+                //successful login
+                return device;
+            } else {
+                let count = device.get_pin_retries().unwrap();
+                // TODO: Implement PUK handling
+                if count == 0 {
+                    return yubiKey::Error::PinLocked;
+                    /*  let puk;
+                    let pin_neu;
+                    let change_puk = device.unblock_pin(puk.as_ref(), pin_neu.as_ref());
+                    if change_puk.is_ok() {
+                        return device;
+                        */
+                }
+                return yubikey::Errror::WrongPin;
+            }
+        }
+    }
+}
+*/
