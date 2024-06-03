@@ -49,27 +49,4 @@ impl YubiKeyProvider {
             key_algo: None,
         }
     }
-    /*
-        pub struct KeyHandle {
-            pub (super) yubikey: YubiKey,
-            pub (super) key_algorithm: String,
-            pub (super) pkey: String,
-        }
-
-        impl KeyHandle for YubiKeyProvider {
-
-            #[instrument]
-            fn new(yubikey: YubiKey, key_algorithm: String, pkey: String) -> Self {
-                Self {
-                    key_id,
-                    yubikey: None,
-                    key_algorithm: None,
-                    key_usages: None,
-                    slot_id: None,
-                    pkey: None,
-                }
-            }
-        // Add YubiKey specific methods here
-    }
-    */
 }
