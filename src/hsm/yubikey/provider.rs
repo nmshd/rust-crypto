@@ -163,7 +163,7 @@ impl Provider for YubiKeyProvider {
                         self.slot_id = Some(slot_id);
                         self.pkey = pkey;
 
-                        usage = "encrypt";
+                        usage = "SignEncrypt";
                     }
                     AsymmetricEncryption::Rsa(KeyBits::Bits2048) => {
                         let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
@@ -172,7 +172,7 @@ impl Provider for YubiKeyProvider {
                         self.slot_id = Some(slot_id);
                         self.pkey = pkey;
 
-                        usage = "encrypt";
+                        usage = "SignEncrypt";
                     }
                     AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::P256)) => {
                         let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
@@ -181,7 +181,7 @@ impl Provider for YubiKeyProvider {
                         self.slot_id = Some(slot_id);
                         self.pkey = pkey;
 
-                        usage = "sign";
+                        usage = "SignEncrypt";
                     }
                     AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::P384)) => {
                         let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
@@ -190,7 +190,7 @@ impl Provider for YubiKeyProvider {
                         self.slot_id = Some(slot_id);
                         self.pkey = pkey;
 
-                        usage = "sign";
+                        usage = "SignEncrypt";
                     }
                     _ => {
                         return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
@@ -208,7 +208,7 @@ impl Provider for YubiKeyProvider {
                             self.slot_id = Some(slot_id);
                             self.pkey = pkey;
 
-                            usage = "encrypt";
+                            usage = "Decrypt";
                         }
                         AsymmetricEncryption::Rsa(KeyBits::Bits2048) => {
                             let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
@@ -217,7 +217,7 @@ impl Provider for YubiKeyProvider {
                             self.slot_id = Some(slot_id);
                             self.pkey = pkey;
 
-                            usage = "encrypt";
+                            usage = "Decrypt";
                         }
                         AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::P256)) => {
                             // TODO, not tested, might work
@@ -307,11 +307,11 @@ impl Provider for YubiKeyProvider {
                         let mut vector = Vec::new();
                         self.slot_id = Some(SLOTS[i - 10]);
                         self.key_usages = match usage.as_str() {
-                            "sign" | "encrypt" => {
+                            "SignEncrypt" => {
                                 vector.push(KeyUsage::SignEncrypt);
                                 Some(vector)
                             }
-                            "decrypt" => {
+                            "Decrypt" => {
                                 vector.push(KeyUsage::Decrypt);
                                 Some(vector)
                             }
@@ -480,7 +480,7 @@ fn parse_slot_data(data: &[u8]) -> Result<(String, String, String, String), Secu
 /// A `Result` that, on failure, returns the first free slot.
 /// On Success, it returns that no more free slots are available.
 fn get_free_slot(yubikey: &mut YubiKey) -> Result<RetiredSlotId, SecurityModuleError> {
-    let mut end = false;
+    let mut end;
     let mut slot_id: RetiredSlotId = SLOTS[0];
     for i in 10..19 {
         let data = yubikey.fetch_object(SLOTSU32[i]);
