@@ -14,17 +14,18 @@ import CryptoKit
      
     A 'SEKeyPair' containing the public and private keys on success, or a 'SecureEnclaveError' on failure.
     **/
-    func create_key(privateKeyName: String ) throws -> SEKeyPair? {
+    func create_key(keyID: String, algo: CFString, keySize: String ) throws -> SEKeyPair? {
         let accessControl = createAccessControlObject()
         
         let privateKeyParams: [String: Any] = [
-            kSecAttrLabel as String: privateKeyName,
+            kSecAttrLabel as String: keyID,
             kSecAttrIsPermanent as String: true,
             kSecAttrAccessControl as String: accessControl,
         ]
         let params: [String: Any] = [
-            kSecAttrKeyType as String: kSecAttrKeyTypeRSA,
-            kSecAttrKeySizeInBits as String: 256,
+            // kSecAttrKeyType as String: kSecAttrKeyTypeECSECPrimeRandom,
+            kSecAttrKeyType as String: algo, 
+            kSecAttrKeySizeInBits as String: keySize,
             kSecAttrTokenID as String: kSecAttrTokenIDSecureEnclave,
             kSecPrivateKeyAttrs as String: privateKeyParams
         ]
@@ -41,7 +42,7 @@ import CryptoKit
         let keyPair = SEKeyPair(publicKey: publicKey, privateKey: privateKeyReference)
         
         do{
-            try storeKey_Keychain(privateKeyName, privateKeyReference)
+            try storeKey_Keychain(keyID, privateKeyReference)
         }catch{
             SecureEnclaveError.runtimeError("\(error)")
         }
@@ -60,10 +61,21 @@ import CryptoKit
 
     A String representing the private and public key.
     **/
-    func rustcall_create_key(privateKeyName: RustString) -> String {
-    // Add-Error-Case: If an Secure Enclave Processor does not exist.
+    func rustcall_create_key(key_id: RustString, key_algorithm_type: RustString) -> String {
+        // For Secure Enclave is only ECC supported
+        let ecc_algo = String(key_algorithm_type.toString().split(separator: ";")[0])
+        let keySize = String(key_algorithm_type.toString().split(separator:";")[1])
+        var algorithm = "" as CFString;
+
+        // Switch Case implement
+        if ecc_algo == "kSecAttrKeyTypeECDSA"{
+            algorithm = kSecAttrKeyTypeECDSA; 
+        }else{
+            return "\((SecureEnclaveError.runtimeError("Error: Algorithm is not supported")))"
+        }
+
         do{
-            let keyPair = try create_key(privateKeyName: privateKeyName.toString())
+            let keyPair = try create_key(keyID: key_id.toString(), algo: algorithm, keySize: keySize)
             return ("Private Key: "+String((keyPair?.privateKey.hashValue)!) + "\nPublic Key: " + String((keyPair?.publicKey.hashValue)!))
         }catch{
             return ("\(error)")

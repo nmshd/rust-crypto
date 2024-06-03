@@ -4,7 +4,7 @@ pub mod ffi {
     extern "Swift" {
         //Provider operations
         fn initializeModule() -> bool;
-        fn rustcall_create_key(privateKeyName: String) -> String;
+        fn rustcall_create_key(key_id: String, key_algorithm_type: String) -> String;
         fn rustcall_load_key(keyID: String) -> String;
 
         //Keyhandle operations
@@ -23,9 +23,8 @@ pub mod ffi {
 pub mod provider {
     use crate::ffi;
 
-    pub fn rust_crypto_call_create_key() -> String {
-        // ffi::rustcall_create_key("3344".to_string());
-        todo!();
+    pub fn rust_crypto_call_create_key(key_id: String, key_algorithm_type: String) -> String {
+        ffi::rustcall_create_key(key_id, key_algorithm_type)
     }
 
     pub fn rust_crypto_call_load_key() -> String {

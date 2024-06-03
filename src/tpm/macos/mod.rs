@@ -7,7 +7,7 @@ use crate::common::{crypto::{
 }, traits::module_provider_config::ProviderConfig};
 use std::fmt::{Debug, Formatter, Result};
 use std::any::Any;
-
+use security_framework::key::Algorithm::{}; 
 // use super::TpmConfig; 
 
 pub mod key_handle;
@@ -36,7 +36,6 @@ impl TpmProvider {
 
 #[derive(Clone)]
 pub struct SecureEnclaveConfig {
-    // pub mode: EncryptionMethod,
     pub key_algorithm: Option<AsymmetricEncryption>,
     pub sym_alogorithm: Option<BlockCiphers>,
 }
@@ -45,7 +44,7 @@ impl SecureEnclaveConfig{
     pub fn new(key_algorithm: Option<AsymmetricEncryption>, sym_alogorithm: Option<BlockCiphers>) -> SecureEnclaveConfig {
         Self {
             key_algorithm, 
-            sym_alogorithm
+            sym_alogorithm: None
         }
     }
 }
@@ -63,5 +62,20 @@ impl Debug for SecureEnclaveConfig {
 impl ProviderConfig for SecureEnclaveConfig {
     fn as_any(&self) -> &dyn Any {
         self
+    }
+}
+
+// Convert Algorithms
+
+pub enum kSecAttrKeyType{
+    kSecAttrKeyTypeRSA, 
+}
+
+impl From<AsymmetricEncryption> for kSecAttrKeyType {
+    fn from(value: AsymmetricEncryption) -> Self {
+        match value {
+            AsymmetricEncryption::Rsa(_) => kSecAttrKeyType::kSecAttrKeyTypeRSA ,
+            AsymmetricEncryption::Ecc(_) => todo!(),
+        }
     }
 }

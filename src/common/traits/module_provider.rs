@@ -1,3 +1,5 @@
+use std::any::Any;
+
 use super::{key_handle::KeyHandle, module_provider_config::ProviderConfig};
 use crate::common::error::SecurityModuleError;
 use std::fmt::Debug;
@@ -29,7 +31,7 @@ pub trait Provider: Send + Sync + KeyHandle + Debug {
     fn create_key(
         &mut self,
         key_id: &str,
-        config: Box<dyn ProviderConfig>,
+        config: Box<dyn Any>,
     ) -> Result<(), SecurityModuleError>;
 
     /// Loads an existing cryptographic key identified by `key_id`.
