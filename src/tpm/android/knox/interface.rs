@@ -1,5 +1,6 @@
 use robusta_jni::bridge;
 
+
 #[bridge]
 pub mod jni {
     #[allow(unused_imports)] //the bridge import is marked as unused, but if removed the compiler throws an error
@@ -19,6 +20,8 @@ pub mod jni {
 
     use crate::SecurityModuleError;
 
+    const CLASS_SIGNATURE: &str = "com/example/vulcans_limes/RustDef";
+
     /// Contains all methods related to Rust - Java communication and the JNI
     #[derive(Signature, TryIntoJavaValue, IntoJavaValue, TryFromJavaValue)]
     #[package(com.example.vulcans_1limes)]  //the 1 after the "_" is an escape character for the "_"
@@ -26,6 +29,7 @@ pub mod jni {
         #[instance]
         pub raw: AutoLocal<'env, 'borrow>,
     }
+
 
     /// This Implementation provides the method declarations that are the interface for the JNI.
     /// The first part contains Java-methods that can be called from Rust.
@@ -63,7 +67,7 @@ pub mod jni {
             //This calls a method in Java in the Class RustDef, with the method name "callback"
             //and no arguments
             environment.call_static_method(
-                "com/example/vulcans_limes/RustDef", //Class signature
+                CLASS_SIGNATURE, //Class signature
                 "callback", //method name signature
                 "()V", //parameter types of the method
                 &[], //parameters to be passed to the method
@@ -82,7 +86,7 @@ pub mod jni {
         pub fn create_key(environment: &JNIEnv, key_id: String, key_gen_info: String) -> Result<(), SecurityModuleError> {
             RustDef::initialize_module(environment)?;
             let result = environment.call_static_method(
-                "com/example/vulcans_limes/RustDef",
+                CLASS_SIGNATURE,
                 "create_key",
                 "(Ljava/lang/String;Ljava/lang/String;)V",
                 &[JValue::from(environment.new_string(key_id).unwrap()),
@@ -121,7 +125,7 @@ pub mod jni {
         pub fn load_key(environment: &JNIEnv, key_id: String) -> Result<(), SecurityModuleError> {
             RustDef::initialize_module(environment)?;
             let result = environment.call_static_method(
-                "com/example/vulcans_limes/RustDef",
+                CLASS_SIGNATURE,
                 "load_key",
                 "(Ljava/lang/String;)V",
                 &[JValue::from(environment.new_string(key_id).unwrap())],
@@ -165,7 +169,7 @@ pub mod jni {
         pub fn initialize_module(environment: &JNIEnv)
                                  -> Result<(), SecurityModuleError> {
             let result = environment.call_static_method(
-                "com/example/vulcans_limes/RustDef",
+                CLASS_SIGNATURE,
                 "initialize_module",
                 "()V",
                 &[],
@@ -202,7 +206,7 @@ pub mod jni {
         /// or an `Error` on failure.
         pub fn sign_data(environment: &JNIEnv, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
             let result = environment.call_static_method(
-                "com/example/vulcans_limes/RustDef",
+                CLASS_SIGNATURE,
                 "sign_data",
                 "([B)[B",
                 &[JValue::from(environment.byte_array_from_slice(data).unwrap())],
@@ -253,7 +257,7 @@ pub mod jni {
         /// or an `Error` on failure to determine the validity.
         pub fn verify_signature(environment: &JNIEnv, data: &[u8], signature: &[u8]) -> Result<bool, SecurityModuleError> {
             let result = environment.call_static_method(
-                "com/example/vulcans_limes/RustDef",
+                CLASS_SIGNATURE,
                 "verify_signature",
                 "([B[B)Z",
                 &[JValue::from(environment.byte_array_from_slice(data).unwrap()),
@@ -303,7 +307,7 @@ pub mod jni {
         /// or an `Error` on failure.
         pub fn encrypt_data(environment: &JNIEnv, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
             let result = environment.call_static_method(
-                "com/example/vulcans_limes/RustDef",
+                CLASS_SIGNATURE,
                 "encrypt_data",
                 "([B)[B",
                 &[JValue::from(environment.byte_array_from_slice(data).unwrap())],
@@ -354,7 +358,7 @@ pub mod jni {
         /// or an `Error` on failure.
         pub fn decrypt_data(environment: &JNIEnv, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
             let result = environment.call_static_method(
-                "com/example/vulcans_limes/RustDef",
+                CLASS_SIGNATURE,
                 "decrypt_data",
                 "([B)[B",
                 &[JValue::from(environment.byte_array_from_slice(data).unwrap())],
