@@ -1,5 +1,3 @@
-use std::sync::Arc;
-use serde_json::json;
 #[allow(unused_imports)]
 use crate::{
     common::{
@@ -14,13 +12,10 @@ use crate::{
     },
    // tpm::linux::TpmProvider,
 };
-use crate::common::crypto::algorithms::encryption::SymmetricMode;
-use crate::common::crypto::algorithms::hashes::Sha2Bits;
-use crate::common::crypto::algorithms::KeyBits;
+
 use crate::common::traits::module_provider_config::ProviderConfig;
 use crate::nks::hcvault::NksProvider;
 use crate::nks::NksConfig;
-use crate::SecurityModuleError;
 
     #[test]
     fn test_sign_and_verify_rsa() {

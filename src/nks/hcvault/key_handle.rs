@@ -1,38 +1,27 @@
-use super::NksProvider;
-use base64::{decode, engine::general_purpose, Engine};
-use std::error::Error;
-use std::fs;
-use std::fs::File;
-use std::io::Read;
-use tracing::instrument;
+use arrayref::array_ref;
+use base64::Engine;
+use base64::prelude::BASE64_STANDARD;
+use ed25519_dalek::{Signature, Signer as EdSigner, SigningKey, Verifier, VerifyingKey};
+use openssl::hash::MessageDigest;
+use openssl::pkey::PKey;
+use openssl::rsa::{Padding, Rsa};
+use openssl::sign::{Signer as RSASigner, Verifier as RSAVerifier};
+use sodiumoxide::crypto::box_;
+use x25519_dalek::{
+    StaticSecret as X25519StaticSecret, StaticSecret,
+};
 
 //TODO use CAL once it can compile
 use crate::common::{
     crypto::algorithms::encryption::AsymmetricEncryption, error::SecurityModuleError,
     traits::key_handle::KeyHandle,
 };
-
-use arrayref::array_ref;
-use base64::prelude::BASE64_STANDARD;
-use ed25519_dalek::{Signature, Signer as EdSigner, SigningKey, Verifier, VerifyingKey};
-//use ed25519_dalek::{Signature, Signer, SigningKey, Verifier, VerifyingKey};
-use openssl::hash::MessageDigest;
-use openssl::pkey::PKey;
-use openssl::pkey::{Private, Public};
-use openssl::rsa::{Padding, Rsa};
-use openssl::sign::{Signer as RSASigner, Verifier as RSAVerifier};
-use reqwest::Url;
-use serde_json::{json, Value};
-use sodiumoxide::crypto::sign;
-use sodiumoxide::crypto::{box_, scalarmult, secretbox};
-
-use crate::nks::NksConfig;
-use crate::SecurityModuleError::InitializationError;
-use x25519_dalek::{
-    PublicKey as X25519PublicKey, PublicKey, StaticSecret as X25519StaticSecret, StaticSecret,
-};
 use crate::common::crypto::algorithms::encryption::{EccCurves, EccSchemeAlgorithm};
 use crate::common::crypto::algorithms::hashes::*;
+use crate::nks::NksConfig;
+use crate::SecurityModuleError::InitializationError;
+
+use super::NksProvider;
 
 impl KeyHandle for NksProvider {
     /// Signs the given data using the configured key and algorithm.
@@ -51,11 +40,11 @@ impl KeyHandle for NksProvider {
             let data = _data;
             let hash = nks_config.hash;
 
-            if (self.private_key.is_empty() || data.is_empty()) {
+            if self.private_key.is_empty() || data.is_empty() {
                 return Err(InitializationError("Private key is empty".to_string()));
             } else {
                 match key_algorithm {
-                    AsymmetricEncryption::Rsa(key_bits) => {
+                    AsymmetricEncryption::Rsa(..) => {
                         // RSA signing method
                         let private_key_pem = self.private_key.as_bytes();
                         let rsa = Rsa::private_key_from_pem(private_key_pem)
@@ -128,7 +117,7 @@ impl KeyHandle for NksProvider {
             ));
         } else {
             match key_algorithm {
-                AsymmetricEncryption::Rsa(rsa) => {
+                AsymmetricEncryption::Rsa(..) => {
                     // RSA decryption method
                     let rsa = Rsa::private_key_from_pem(&self.private_key.as_bytes())
                         .map_err(|_| SecurityModuleError::KeyError)?;
@@ -146,7 +135,7 @@ impl KeyHandle for NksProvider {
 
                     Ok(decrypted_data.to_vec())
                 }
-                AsymmetricEncryption::Ecc(ecdh) => {
+                AsymmetricEncryption::Ecc(..) => {
                     let public_key_bytes = BASE64_STANDARD
                         .decode(self.public_key.as_bytes())
                         .expect("Invalid public key base64");
@@ -208,7 +197,7 @@ impl KeyHandle for NksProvider {
             ));
         } else {
             match key_algorithm {
-                AsymmetricEncryption::Rsa(rsa) => {
+                AsymmetricEncryption::Rsa(..) => {
                     // RSA encryption method
                     let rsa = Rsa::public_key_from_pem(&self.public_key.as_bytes())
                         .map_err(|_| SecurityModuleError::KeyError)?;
@@ -221,7 +210,7 @@ impl KeyHandle for NksProvider {
                         })?;
                     Ok(encrypted_data)
                 }
-                AsymmetricEncryption::Ecc(ecdh) => {
+                AsymmetricEncryption::Ecc(..) => {
                     let public_key_bytes = BASE64_STANDARD
                         .decode(self.public_key.as_bytes())
                         .expect("Invalid public key base64");
@@ -277,7 +266,7 @@ impl KeyHandle for NksProvider {
                 ));
             } else {
                 match key_algorithm {
-                    AsymmetricEncryption::Rsa(rsa) => {
+                    AsymmetricEncryption::Rsa(..) => {
                         // RSA signature verification method
                         let public_key_pem = self.public_key.as_bytes();
                         let rsa = Rsa::public_key_from_pem(public_key_pem)
@@ -307,7 +296,7 @@ impl KeyHandle for NksProvider {
                             .verify(signature)
                             .map_err(|_| SecurityModuleError::VerificationFailed)?)
                     }
-                    AsymmetricEncryption::Ecc(ecdsa) => {
+                    AsymmetricEncryption::Ecc(..) => {
                         // ECC signature verification method
                         let signature_sig = Signature::from_slice(signature)
                             .map_err(|_| SecurityModuleError::InvalidSignature)?;

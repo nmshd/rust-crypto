@@ -1,6 +1,6 @@
 use std::any::Any;
 use std::sync::Arc;
-use crate::common::crypto::algorithms::encryption::{AsymmetricEncryption, BlockCiphers};
+use crate::common::crypto::algorithms::encryption::{AsymmetricEncryption};
 use crate::common::crypto::algorithms::hashes::Hash;
 use crate::common::crypto::KeyUsage;
 use crate::common::traits::module_provider_config::ProviderConfig;
@@ -25,14 +25,14 @@ pub struct NksConfig {
     pub key_usages: Vec<KeyUsage>,
 }
 
-impl ProviderConfig for crate::nks::NksConfig {
+impl ProviderConfig for NksConfig {
     /// Returns a reference to `self` as a trait object.
     fn as_any(&self) -> &dyn Any {
         self
     }
 }
 
-impl crate::nks::NksConfig {
+impl NksConfig {
     /// Creates a new `NksConfig` instance wrapped in an `Arc`.
     ///
     /// # Parameters

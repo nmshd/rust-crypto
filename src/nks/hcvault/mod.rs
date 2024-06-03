@@ -9,18 +9,12 @@
 //     },
 //     KeyUsage,
 // };
-use std::sync::{Arc, Mutex};
-use reqwest::Url;
-use serde_json::json;
+use std::sync::Arc;
+
+use crate::common::traits::module_provider_config::ProviderConfig;
 
 pub mod key_handle;
 pub mod provider;
-
-use crate::common::crypto::algorithms::encryption::{AsymmetricEncryption, BlockCiphers};
-use crate::common::crypto::algorithms::hashes::Hash;
-use crate::common::crypto::KeyUsage;
-use crate::common::traits::module_provider_config::ProviderConfig;
-use crate::nks::NksConfig;
 
 /// A nks-based cryptographic provider for managing cryptographic keys and performing
 /// cryptographic operations.
