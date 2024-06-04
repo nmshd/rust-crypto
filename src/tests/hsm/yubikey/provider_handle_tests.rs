@@ -64,7 +64,7 @@ use crate::hsm::HsmProviderConfig;
 #[cfg(feature = "yubi")]
 #[test]
 fn test_create_rsa_key_1024() {
-    let key_id = "test_rsa_keysdasdsa";
+    let key_id = "TimUwe123";
     let mut provider = YubiKeyProvider::new(key_id.to_string());
     let config = HsmProviderConfig::new(
         AsymmetricEncryption::Rsa(KeyBits::Bits1024),
@@ -156,7 +156,7 @@ fn test_create_ecc_key_384() {
 // Test for loading RSA keys
 #[test]
 fn test_load_rsa_key() {
-    let key_id = "test_rsa_key";
+    let key_id = "KlausKai";
     let mut provider = YubiKeyProvider::new(key_id.to_string());
 
     let config = HsmProviderConfig::new(
@@ -171,7 +171,7 @@ fn test_load_rsa_key() {
 
     // load RSA-key
     provider
-        .load_key("test_rsa_key", config)
+        .load_key(&key_id, config)
         .expect("Failed to load RSA key");
 }
 

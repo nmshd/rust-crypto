@@ -289,7 +289,7 @@ impl Provider for YubiKeyProvider {
     ) -> Result<(), SecurityModuleError> {
         let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
         let mut found = false;
-        for i in 10..19 {
+        for i in 10..20 {
             let _ = yubikey.verify_pin("123456".as_ref());
             let _ = yubikey.authenticate(MgmKey::default());
             let data = yubikey.fetch_object(SLOTSU32[i]);
@@ -512,7 +512,7 @@ fn get_free_slot(yubikey: &mut YubiKey) -> Result<RetiredSlotId, SecurityModuleE
         }
         let data = output;
         match parse_slot_data(&data) {
-            Ok(_) => {
+            Ok((_, _, _, _)) => {
                 continue;
             }
             Err(_) => {
