@@ -7,8 +7,6 @@ use crate::common::{crypto::{
 }, traits::module_provider_config::ProviderConfig};
 use std::fmt::{Debug, Formatter, Result};
 use std::any::Any;
-use security_framework::key::Algorithm::{}; 
-// use super::TpmConfig; 
 
 pub mod key_handle;
 pub mod provider;
@@ -67,15 +65,15 @@ impl ProviderConfig for SecureEnclaveConfig {
 
 // Convert Algorithms
 
-pub enum kSecAttrKeyType{
-    kSecAttrKeyTypeRSA, 
-}
+// pub enum kSecAttrKeyType{
+//     kSecAttrKeyTypeRSA, 
+// }
 
-impl From<AsymmetricEncryption> for kSecAttrKeyType {
-    fn from(value: AsymmetricEncryption) -> Self {
-        match value {
-            AsymmetricEncryption::Rsa(_) => kSecAttrKeyType::kSecAttrKeyTypeRSA ,
-            AsymmetricEncryption::Ecc(_) => todo!(),
-        }
-    }
-}
+// impl From<AsymmetricEncryption> for kSecAttrKeyType {
+//     fn from(value: AsymmetricEncryption) -> Self {
+//         match value {
+//             AsymmetricEncryption::Rsa(_) => kSecAttrKeyType::kSecAttrKeyTypeRSA ,
+//             AsymmetricEncryption::Ecc(_) => todo!(),
+//         }
+//     }
+// }

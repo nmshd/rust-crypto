@@ -14,11 +14,16 @@ impl KeyHandle for TpmProvider {
     fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         let _string_data = String::from_utf8(data.to_vec())
             .map_err(|_| SecurityModuleError::SigningError("Data conversion error".to_string()))?;
-        let signed_data = apple_secure_enclave_bindings::keyhandle::rust_crypto_call_sign_data();
+        
+        let key_id = &self.key_id; 
+        
+        // Debug
+        println!("SignData: Send to Swift key_id {} | {}", key_id, _string_data); 
+        let signed_data = apple_secure_enclave_bindings::keyhandle::rust_crypto_call_sign_data(key_id.clone(), _string_data);
 
-        // The FFI bridge always returns strings by design.
-        // Therefore, we need to search for the case-insensitive string "error".
-        // If "error" is found, we return an error to the function.
+        // Debug 
+        println!("SignData: Recieved from Swift: {}", signed_data); 
+
         if Regex::new("(?i)error")
             .unwrap()
             .is_match(signed_data.as_str())
@@ -79,17 +84,21 @@ impl KeyHandle for TpmProvider {
 
     #[instrument]
     fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, SecurityModuleError> {
-        let _string_data = String::from_utf8(data.to_vec()).map_err(|_| {
+        let string_data = String::from_utf8(data.to_vec()).map_err(|_| {
             SecurityModuleError::SignatureVerificationError("Data conversion error".to_string())
         })?;
-        let _string_signature = String::from_utf8(signature.to_vec()).map_err(|_| {
-            SecurityModuleError::SignatureVerificationError(
-                "Signature conversion error".to_string(),
-            )
+
+        let string_signature = String::from_utf8(signature.to_vec()).map_err(|_| {
+            SecurityModuleError::SignatureVerificationError("Signature conversion error".to_string(),)
         })?;
 
+        let key_id = &self.key_id;  
+
+        // Debug 
+        println!("VerifyData: Send to Swift key_id {} | string_data {} | string_signature {} ",key_id.clone(), string_data, string_signature);
+
         let verification_result =
-            apple_secure_enclave_bindings::keyhandle::rust_crypto_call_verify_signature();
+            apple_secure_enclave_bindings::keyhandle::rust_crypto_call_verify_signature(key_id.clone(), string_data, string_signature);
 
         // The FFI bridge always returns strings by design.
         // If not "true" or "false" is found, we expect an error from the function

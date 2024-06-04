@@ -3,7 +3,7 @@ extern crate apple_secure_enclave_bindings;
 use crate::
     common::{
         crypto::{
-            algorithms::{encryption::{AsymmetricEncryption, EccCurves, EccSchemeAlgorithm}, KeyBits},
+            algorithms::{encryption::{AsymmetricEncryption, BlockCiphers, EccCurves, EccSchemeAlgorithm, SymmetricMode}, KeyBits},
             KeyUsage,
          },
         error::SecurityModuleError,
@@ -26,9 +26,9 @@ impl Provider for TpmProvider {
         _config: Box<dyn Any>,
     ) -> Result<(), SecurityModuleError> {
         let config = *_config.downcast::<SecureEnclaveConfig>().map_err(|_| SecurityModuleError::InitializationError(("Failed to initialize config").to_owned()))?; 
-
+        let key_algorithm_type; 
         if config.sym_alogorithm.is_none() && config.key_algorithm.is_some(){
-            let key_algorithm_type = match config.key_algorithm.expect("Hello") {
+            key_algorithm_type = match config.key_algorithm.expect("Hello") {
                 AsymmetricEncryption::Rsa(key_bits) => {
                     match key_bits{
                         KeyBits::Bits1024 => todo!(),
@@ -48,26 +48,50 @@ impl Provider for TpmProvider {
                     match ecc_scheme_algo {
                         EccSchemeAlgorithm::EcDsa(ecc_curve) => {
                             match ecc_curve{
+                                // P256,P384,P521 are deprecated please use Secp256k1 instead
                                 EccCurves::P256 => "kSecAttrKeyTypeECDSA;256".to_string(),
+                                EccCurves::P384 => "kSecAttrKeyTypeECDSA;384".to_string(),
+                                // EccCurves::P521 => "kSecAttrKeyTypeECDSA;521".to_string(), // Not available
+                                EccCurves::Secp256k1 => "kSecAttrKeyTypeECSECPrimeRandom;256".to_string(), 
                                 _ => {return Err(CreateKeyError("Algorithm is not supported".to_string()))}
                             }
                         }
                         _ => {return Err(CreateKeyError("Algorithm is not supported".to_string()))} 
                     }
                 }
+                _ => {return Err(CreateKeyError("Algorithm is not supported".to_string()))} 
             }; 
             println!("Algorithm {}", key_algorithm_type); 
+
             let keypair = apple_secure_enclave_bindings::provider::rust_crypto_call_create_key(self.key_id.clone(), key_algorithm_type);
-            
+
             if Regex::new("(?i)error").unwrap().is_match(keypair.as_str()) {
                 Err(SecurityModuleError::CreateKeyError(keypair.to_string()))
             } else {
                 println!("Generated KeyPair:{}", keypair);
                 Ok(())
             }
-        }else{
+            
+        }
+        // else if config.sym_alogorithm.is_some() && config.key_algorithm.is_none(){
+        //     key_algorithm_type = match config.sym_alogorithm.expect(""){
+        //         BlockCiphers::Aes(symmetric_mode::Gcm, KeyBits) => {
+        //             match symmetric_mode {
+        //                 KeyBits::Bits1024 => ""
+        //             }
+        //         }
+        //         BlockCiphers::TripleDes(_) => todo!(),
+        //         BlockCiphers::Des => todo!(),
+        //         BlockCiphers::Rc2(_) => todo!(),
+        //         BlockCiphers::Camellia(_, _) => todo!(),
+        //     }
+            
+        // }
+        else{
             return Err(CreateKeyError("Algorithm is not supported".to_string()))
         }
+
+        
 
 
         

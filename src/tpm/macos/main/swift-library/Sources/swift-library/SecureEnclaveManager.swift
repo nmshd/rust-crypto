@@ -68,12 +68,16 @@ import CryptoKit
         var algorithm = "" as CFString;
 
         // Switch Case implement
-        if ecc_algo == "kSecAttrKeyTypeECDSA"{
-            algorithm = kSecAttrKeyTypeECDSA; 
-        }else{
+        switch ecc_algo{
+            case "kSecAttrKeyTypeECDSA": 
+                algorithm = kSecAttrKeyTypeECDSA
+            case "kSecAttrKeyTypeECSECPrimeRandom": 
+                algorithm = kSecAttrKeyTypeECSECPrimeRandom
+        default:
             return "\((SecureEnclaveError.runtimeError("Error: Algorithm is not supported")))"
-        }
 
+        }
+        
         do{
             let keyPair = try create_key(keyID: key_id.toString(), algo: algorithm, keySize: keySize)
             return ("Private Key: "+String((keyPair?.privateKey.hashValue)!) + "\nPublic Key: " + String((keyPair?.publicKey.hashValue)!))
@@ -269,8 +273,8 @@ import CryptoKit
 
     A String representing the signed data.
     **/
-    func rustcall_sign_data(data: RustString, privateKeyName: RustString) -> String{
-        let privateKeyName_string = privateKeyName.toString()
+    func rustcall_sign_data(key_id: RustString, data: RustString) -> String{
+        let privateKeyName_string = key_id.toString()
         let data_cfdata = data.toString().data(using: String.Encoding.utf8)! as CFData
 
         do {
@@ -333,9 +337,9 @@ import CryptoKit
 
     A String if the data could have been verified with the signature.
     **/
-    func rustcall_verify_data(data: RustString, signature: RustString, publicKeyName: RustString) -> String{
+    func rustcall_verify_data(key_id: RustString, data: RustString, signature: RustString) -> String{
         do{
-            let publicKeyName_string = publicKeyName.toString()
+            let publicKeyName_string = key_id.toString()
             let data_string = data.toString()
             let signature_string = signature.toString()
 

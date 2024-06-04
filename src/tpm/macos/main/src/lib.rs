@@ -10,8 +10,8 @@ pub mod ffi {
         //Keyhandle operations
         fn rustcall_encrypt_data(data: String, publicKeyName: String) -> String;
         fn rustcall_decrypt_data(data: String, privateKeyName: String) -> String;
-        fn rustcall_sign_data(data: String, privateKeyName: String) -> String;
-        fn rustcall_verify_data(data: String, signature: String, publicKeyName: String) -> String;
+        fn rustcall_sign_data(key_id: String, data: String) -> String;
+        fn rustcall_verify_data(key_id: String, data: String, signature: String) -> String;
     }
 }
 
@@ -28,7 +28,6 @@ pub mod provider {
     }
 
     pub fn rust_crypto_call_load_key() -> String {
-        // ffi::rustcall_load_key("3344".to_string());
         todo!();
     }
 
@@ -38,6 +37,7 @@ pub mod provider {
 }
 
 pub mod keyhandle {
+    use crate::ffi;
     pub fn rust_crypto_call_encrypt_data() -> String {
         todo!();
     }
@@ -46,11 +46,11 @@ pub mod keyhandle {
         todo!();
     }
 
-    pub fn rust_crypto_call_sign_data() -> String {
-        todo!();
+    pub fn rust_crypto_call_sign_data(key_id: String, data: String) -> String {
+        ffi::rustcall_sign_data(key_id, data)
     }
 
-    pub fn rust_crypto_call_verify_signature() -> String {
-        todo!();
+    pub fn rust_crypto_call_verify_signature(key_id: String, string_data: String, string_signature: String) -> String {
+        ffi::rustcall_verify_data(key_id, string_data, string_signature)
     }
 }
