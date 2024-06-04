@@ -57,7 +57,7 @@ impl KeyHandle for YubiKeyProvider {
         let mut hasher = Sha256::new();
         hasher.update(data);
         let data = hasher.finalize();
-        let data: &[u8] = &data;
+        let mut data: &[u8] = &data;
 
         //TODO After PIN input implementation in App, insert code for re-authentication
         let verify = yubikey.verify_pin("123456".as_ref());
@@ -73,99 +73,51 @@ impl KeyHandle for YubiKeyProvider {
             )));
         }
 
+        let signature: Result<Zeroizing<Vec<u8>>, yubikey::Error>;
+        let mut vec_data: Vec<u8> = create_digest_info(data).unwrap();
+        let algorithm_id: AlgorithmId;
+
         match key_algo {
             AsymmetricEncryption::Rsa(KeyBits::Bits1024) => {
-                let data = create_digest_info(data).unwrap();
-                let data = apply_pkcs1v15_padding(&data, 128);
-                let signature = piv::sign_data(
-                    &mut yubikey,
-                    data.as_slice(),
-                    AlgorithmId::Rsa1024,
-                    SlotId::Retired(self.slot_id.unwrap()),
-                );
-                match signature {
-                    Ok(buffer) => {
-                        let signature = general_purpose::STANDARD.encode(&buffer);
-                        let signature = general_purpose::STANDARD
-                            .decode(signature)
-                            .expect("Failed to decode signature");
-                        Ok(signature)
-                    }
-                    Err(err) => Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
-                        err.to_string(),
-                    ))),
-                }
+                algorithm_id = AlgorithmId::Rsa1024;
+                vec_data = apply_pkcs1v15_padding(&vec_data, 128);
+                data = &vec_data.as_slice();
             }
             AsymmetricEncryption::Rsa(KeyBits::Bits2048) => {
-                let data = create_digest_info(data).unwrap();
-                let data = apply_pkcs1v15_padding(&data, 256);
-                let signature = piv::sign_data(
-                    &mut yubikey,
-                    data.as_slice(),
-                    AlgorithmId::Rsa2048,
-                    SlotId::Retired(self.slot_id.unwrap()),
-                );
-                match signature {
-                    Ok(buffer) => {
-                        let signature = general_purpose::STANDARD.encode(&buffer);
-                        let signature = general_purpose::STANDARD
-                            .decode(signature)
-                            .expect("Failed to decode signature");
-                        Ok(signature)
-                    }
-                    Err(err) => Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
-                        err.to_string(),
-                    ))),
-                }
+                algorithm_id = AlgorithmId::Rsa2048;
+                vec_data = apply_pkcs1v15_padding(&vec_data, 256);
+                data = vec_data.as_slice();
             }
 
             AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P256)) => {
-                // Sign data
-                let signature = piv::sign_data(
-                    &mut yubikey,
-                    data,
-                    AlgorithmId::EccP256,
-                    SlotId::Retired(self.slot_id.unwrap()),
-                );
-                match signature {
-                    Ok(buffer) => {
-                        let signature = general_purpose::STANDARD.encode(&buffer);
-                        let signature = general_purpose::STANDARD
-                            .decode(signature)
-                            .expect("Failed to decode signature");
-                        Ok(signature)
-                    }
-                    Err(err) => Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
-                        err.to_string(),
-                    ))),
-                }
+                algorithm_id = AlgorithmId::EccP256;
             }
             AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P384)) => {
-                // Sign data
-                let signature = piv::sign_data(
-                    &mut yubikey,
-                    data,
-                    AlgorithmId::EccP384,
-                    SlotId::Retired(self.slot_id.unwrap()),
-                );
-                match signature {
-                    Ok(buffer) => {
-                        let signature = general_purpose::STANDARD.encode(&buffer);
-                        let signature = general_purpose::STANDARD
-                            .decode(signature)
-                            .expect("Failed to decode signature");
-                        Ok(signature)
-                    }
-                    Err(err) => Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
-                        err.to_string(),
-                    ))),
-                }
+                algorithm_id = AlgorithmId::EccP384;
             }
             _ => {
                 return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
                     "Key Algorithm not supported".to_string(),
                 )));
             }
+        }
+        signature = piv::sign_data(
+            &mut yubikey,
+            data,
+            algorithm_id,
+            SlotId::Retired(self.slot_id.unwrap()),
+        );
+        match signature {
+            Ok(buffer) => {
+                let signature = general_purpose::STANDARD.encode(&buffer);
+                let signature = general_purpose::STANDARD
+                    .decode(signature)
+                    .expect("Failed to decode signature");
+                Ok(signature)
+            }
+            Err(err) => Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
+                err.to_string(),
+            ))),
         }
     }
 
