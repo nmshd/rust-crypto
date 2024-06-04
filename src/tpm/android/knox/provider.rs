@@ -101,7 +101,7 @@ impl Provider for KnoxProvider {
             };
         } else if asym_alg.is_none() && sym_alg.is_some() {
             key_algo = match sym_alg.expect("Already checked") {
-                BlockCiphers::Des => { String::from("DESede;CBC;PKCS7Padding") }
+                BlockCiphers::Des => { String::from("DESede;168;CBC;PKCS7Padding") }
 
                 BlockCiphers::Aes(block, bitslength) => {
                     let mut rv = String::from("AES;");

@@ -39,14 +39,15 @@
     - [Source Documents](#source-documents)
     - [Research Documents](#research-documents)
 
-## Introduction
-In today's digital era, safeguarding sensitive data on mobile devices is paramount. Our project focuses on enhancing data security by developing a wrapper for the Crypto Abstraction Layer. This wrapper enables access to a Hardware Security Module (HSM) through Samsung Knox Vault. By securely storing encryption keys within the HSM, we ensure robust protection for data stored on Samsung devices.
+### Introduction
+This project is part of a student development project at [Hochschule Mannheim (HSMA)](https://www.english.hs-mannheim.de/the-university.html). The project goal is provided by j&s-soft GmbH as part of their open-source project [enmeshed](https://github.com/nmshd).
 
 ### Problem Description
-In today's digital age, the security of data stored on mobile devices is of paramount importance. Sensitive information, whether personal or professional, is frequently stored on smartphones, making them a prime target for cyber threats. Ensuring the confidentiality, integrity, and accessibility of this data requires robust encryption and secure key management solutions.
+The enmeshed app from j&s-soft GmbH currently secures cryptographic keys in the software. This leads to security vulnerabilities and points of attack. To prevent this, hardware security modules are to be used on which the cryptographic keys are to be securely stored so that they cannot be retrieved even on compressed devices.
+Our team was tasked with implementing a solution to this problem in the sub-project for Samsung's secure element, the Knox Vault.
 
 ### Product Description
-Our project aims to address this critical need by developing a comprehensive solution for encrypting data stored on mobile devices. Specifically, our task is to write a wrapper for the proposed Crypto Abstraction Layer to access a specific hardware security module (HSM) on Samsung devices using Samsung Knox Vault. This solution ensures that encryption keys are securely stored and managed within the HSM, providing an added layer of security for the encrypted data.
+The Repository contains a Wrapper that is used to perform cryptographic operations for mobile applications in a Secure Element (SE) on Android devices. Specifically, this project is focused on Samsung Knox Vault as the SE. The interface to the mobile application is provided in Rust, while the communication with the SE will be done using the Android Keystore system.
 ## Architecture
 
 ### Component Diagram
@@ -67,6 +68,7 @@ communicate between the Rust- and Java parts of the wrapper by calling Java meth
 the Rust environment and passing parameters that way. The JNI is provided by Oracle and tied directly into the JDK.
 To find out more about how the exact communication works, check the [JNI Implementation](#JNI-Implementation).
 - **KeyStore API**
+  The [Android Keystore system](https://developer.android.com/privacy-and-security/keystore) manages the handling of cryptographic keys for us. With the help of other APIs, we can use the keys to encrypt and decrypt data, as well as sign and verify it.
 
 ## Installation Guide
 
