@@ -97,7 +97,7 @@ impl Provider for YubiKeyProvider {
             self.key_usages = Some(hsm_config.key_usage.clone());
             let key_algo = self.key_algo.clone().unwrap();
 
-            let mut usage: &str = "";
+            let usage: &str;
             let slot: u32;
             let key_usages = self.key_usages.clone().unwrap();
             let slot_id;
@@ -199,53 +199,38 @@ impl Provider for YubiKeyProvider {
                     }
                 },
 
-                KeyUsage::Decrypt => {
-                    match key_algo {
-                        AsymmetricEncryption::Rsa(KeyBits::Bits1024) => {
-                            let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
-                            let (slot_id, pkey) =
-                                generate_key(&mut yubikey, AlgorithmId::Rsa1024, slot_id).unwrap();
-                            self.slot_id = Some(slot_id);
-                            self.pkey = pkey;
+                KeyUsage::Decrypt => match key_algo {
+                    AsymmetricEncryption::Rsa(KeyBits::Bits1024) => {
+                        let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
+                        let (slot_id, pkey) =
+                            generate_key(&mut yubikey, AlgorithmId::Rsa1024, slot_id).unwrap();
+                        self.slot_id = Some(slot_id);
+                        self.pkey = pkey;
 
-                            usage = "Decrypt";
-                        }
-                        AsymmetricEncryption::Rsa(KeyBits::Bits2048) => {
-                            let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
-                            let (slot_id, pkey) =
-                                generate_key(&mut yubikey, AlgorithmId::Rsa2048, slot_id).unwrap();
-                            self.slot_id = Some(slot_id);
-                            self.pkey = pkey;
-
-                            usage = "Decrypt";
-                        }
-                        AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P256)) => {
-                            // TODO, not tested, might work.
-                            let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
-                            let (slot_id, pkey) =
-                                generate_key(&mut yubikey, AlgorithmId::EccP256, slot_id).unwrap();
-                            self.slot_id = Some(slot_id);
-                            self.pkey = pkey;
-
-                            usage = "Decrypt";
-                        }
-                        AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P384)) => {
-                            // TODO, not tested, might work.
-                            let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
-                            let (slot_id, pkey) =
-                                generate_key(&mut yubikey, AlgorithmId::EccP256, slot_id).unwrap();
-                            self.slot_id = Some(slot_id);
-                            self.pkey = pkey;
-
-                            usage = "Decrypt";
-                        }
-                        _ => {
-                            return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
-                                "Key Algorithm not supported".to_string(),
-                            )));
-                        }
+                        usage = "Decrypt";
                     }
-                }
+                    AsymmetricEncryption::Rsa(KeyBits::Bits2048) => {
+                        let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
+                        let (slot_id, pkey) =
+                            generate_key(&mut yubikey, AlgorithmId::Rsa2048, slot_id).unwrap();
+                        self.slot_id = Some(slot_id);
+                        self.pkey = pkey;
+
+                        usage = "Decrypt";
+                    }
+
+                    // The Yubikey does not support decryption with ECC, so it is not useful to generate one, see:
+                    // https://docs.yubico.com/yesdk/users-manual/application-piv/apdu/auth-decrypt.html
+                    /*
+                    AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P256)) => {}
+                    AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P384)) => {}
+                    */
+                    _ => {
+                        return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
+                            "Key Algorithm not supported".to_string(),
+                        )));
+                    }
+                },
 
                 _ => {
                     return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
