@@ -69,7 +69,14 @@ communicate between the Rust- and Java parts of the wrapper by calling Java meth
 the Rust environment and passing parameters that way. The JNI is provided by Oracle and tied directly into the JDK.
 To find out more about how the exact communication works, check the [JNI Implementation](#JNI-Implementation).
 - **KeyStore API**
-  The [Android Keystore system](https://developer.android.com/privacy-and-security/keystore) manages the handling of cryptographic keys for us. With the help of other APIs, we can use the keys to encrypt and decrypt data, as well as sign and verify it.
+
+The [Android Keystore system](https://developer.android.com/privacy-and-security/keystore) handles the cryptographic keys for us. We went with this over the Knox SDK because it's a better fit for our needs, and even Samsung recommends it in their [Knox Vault Whitepaper](https://image-us.samsung.com/SamsungUS/samsungbusiness/solutions/topics/iot/071421/Knox-Whitepaper-v1.5-20210709.pdf). After more research, it also seemed like the best way to achieve the project goal in the limited time we had.
+
+With the Keystore and other APIs, we can use the keys to encrypt and decrypt data, as well as sign and verify it. The API also helps us solve the problem from j&s-soft, as we can enforce generated cryptographic keys to be saved in the Knox Vault (or any other strongbox).
+
+The Knox Vault doesn't support all the cryptographic algorithms enabled by the Keystore and other APIs. As we couldn't find any detailed documentation about what the Knox Vault supports, we had to test it out by trial and error. You can see all the algorithms that have passed our tests in the [Supported Algorithms](#supported-algorithms) section.
+
+You can find out more about the KeyStore API and other APIs that are normally used with it in the following repository: [Android-Security-Reference](https://github.com/doridori/Android-Security-Reference/blob/master/framework/keystore.md). It also has some useful general info about security on Android.
 
 ## Installation Guide
 
