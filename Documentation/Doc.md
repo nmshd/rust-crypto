@@ -68,7 +68,14 @@ communicate between the Rust- and Java parts of the wrapper by calling Java meth
 the Rust environment and passing parameters that way. The JNI is provided by Oracle and tied directly into the JDK.
 To find out more about how the exact communication works, check the [JNI Implementation](#JNI-Implementation).
 - **KeyStore API**
-  The [Android Keystore system](https://developer.android.com/privacy-and-security/keystore) manages the handling of cryptographic keys for us. With the help of other APIs, we can use the keys to encrypt and decrypt data, as well as sign and verify it.
+  The [Android Keystore system](https://developer.android.com/privacy-and-security/keystore) manages the handling of cryptographic keys for us. We chose this over the Knox SDK, as it directly suits our needs, and even Samsung recommends it in their [Knox Vault Whitepaper](https://image-us.samsung.com/SamsungUS/samsungbusiness/solutions/topics/iot/071421/Knox-Whitepaper-v1.5-20210709.pdf). As well as after more research, it also seemed to be the most fitting way to achieve the project goal in the limited time we had.
+
+  With the help of the Keystore and other APIs, we can use the keys to encrypt and decrypt data, as well as sign and verify it. The API also helps us solve the problem from j&s-soft, as we can enforce generated cryptographic keys to be saved in the Knox Vault (or any other Strongbox).
+
+  The Knox Vault doesn't support all the cryptographic algorithms enabled by the Keystore and other API's, and as we found no precise documentation about what Knox Vault supports, we had to test by trial and error. To view all the algorithms that have successfully passed our tests, take a look at [Supported Algorithms](#supported-algorithms)
+
+  More information about the KeyStore API and other API's that are normally used with it can be found in the following repository:  [Android-Security-Reference](https://github.com/doridori/Android-Security-Reference/blob/master/framework/keystore.md).
+  It also contains good general information about security on Android.
 
 ## Installation Guide
 
