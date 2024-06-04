@@ -102,7 +102,8 @@ class RustDef {
      * <p>
      * This method generates a new cryptographic key within the TPM. The key is made persistent
      * and associated with the provided {@code key_id}, which uniquely identifies the key
-     * so that it can be retrieved later for cryptographic operations.
+     * so that it can be retrieved later for cryptographic operations, and {@code keyGenInfo},
+     * which holds the information about the key to be generated.
      *
      * @param key_id     a String that uniquely identifies the key to be created within the TPM.
      * @param keyGenInfo additional information required for key generation, specifying parameters such as
@@ -120,7 +121,8 @@ class RustDef {
      */
     static void create_key(String key_id, String keyGenInfo) throws InvalidAlgorithmParameterException, CertificateException,
             IOException, NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException {
-        if (keyGenInfo.contains("RSA")) cryptoManager.generateKeyPair(key_id, keyGenInfo);
+        if (keyGenInfo.contains("RSA") || keyGenInfo.contains("EC"))
+            cryptoManager.generateKeyPair(key_id, keyGenInfo);
         else cryptoManager.genKey(key_id, keyGenInfo);
     }
 
@@ -136,8 +138,11 @@ class RustDef {
      *                                   incorrect or inaccessible key information.
      * @throws KeyStoreException         if there is an error accessing the keystore, such as a failure to load
      *                                   or initialize the keystore.
+     * @throws CertificateException if there is an error processing certificates.
+     * @throws IOException if there is an I/O error while interacting with the keystore.
+     * @throws NoSuchAlgorithmException if the requested algorithm is not available.
      */
-    static void load_key(String key_id) throws UnrecoverableKeyException, KeyStoreException {
+    static void load_key(String key_id) throws UnrecoverableKeyException, KeyStoreException, CertificateException, IOException, NoSuchAlgorithmException {
         cryptoManager.loadKey(key_id);
     }
 
@@ -172,9 +177,13 @@ class RustDef {
      * @throws InvalidKeyException       if the key used for signing is invalid.
      * @throws InvalidKeySpecException   if the key specification is invalid.
      * @throws NoSuchProviderException   if the provider is not available.
+     * @throws CertificateException if there is an error processing certificates.
+     * @throws IOException if there is an I/O error while interacting with the keystore.
+     * @throws CertificateException if there is an error processing certificates.
+     * @throws IOException if there is an I/O error while interacting with the keystore.
      */
     static byte[] sign_data(byte[] data) throws UnrecoverableKeyException, NoSuchAlgorithmException,
-            KeyStoreException, SignatureException, InvalidKeyException, InvalidKeySpecException, NoSuchProviderException {
+            KeyStoreException, SignatureException, InvalidKeyException, InvalidKeySpecException, NoSuchProviderException, CertificateException, IOException {
         return cryptoManager.signData(data);
     }
 
@@ -195,10 +204,12 @@ class RustDef {
      * @throws UnrecoverableKeyException if the key cannot be recovered from the keystore.
      * @throws InvalidKeySpecException   if the key specification is invalid.
      * @throws NoSuchProviderException   if the provider is not available.
+     * @throws CertificateException if there is an error processing certificates.
+     * @throws IOException if there is an I/O error while interacting with the keystore.
      */
     static boolean verify_signature(byte[] data, byte[] signature) throws SignatureException, KeyStoreException,
             NoSuchAlgorithmException, InvalidKeyException, UnrecoverableKeyException, InvalidKeySpecException,
-            NoSuchProviderException {
+            NoSuchProviderException, CertificateException, IOException {
         return cryptoManager.verifySignature(data, signature);
     }
 
@@ -214,7 +225,6 @@ class RustDef {
      *
      * @param data a byte array representing the data to be encrypted.
      * @return a byte array containing the encrypted data.
-     * @throws InvalidAlgorithmParameterException if the algorithm parameters are invalid for encryption.
      * @throws UnrecoverableKeyException          if the key cannot be recovered from the keystore.
      * @throws NoSuchPaddingException             if the padding scheme is not available.
      * @throws IllegalBlockSizeException          if the block size is invalid for the encryption algorithm.
@@ -227,7 +237,7 @@ class RustDef {
      * @throws InvalidKeyException                if the key is invalid for encryption.
      * @throws NoSuchProviderException            if the provider is not available.
      */
-    static byte[] encrypt_data(byte[] data) throws InvalidAlgorithmParameterException, UnrecoverableKeyException,
+    static byte[] encrypt_data(byte[] data) throws UnrecoverableKeyException,
             NoSuchPaddingException, IllegalBlockSizeException, CertificateException, NoSuchAlgorithmException,
             IOException, KeyStoreException, BadPaddingException, InvalidKeySpecException, InvalidKeyException,
             NoSuchProviderException {
