@@ -5,3 +5,4 @@ pub mod hsm;
 
 #[cfg(feature = "tpm")]
 mod tpm;
+mod nks;

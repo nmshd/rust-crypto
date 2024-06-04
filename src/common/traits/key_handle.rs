@@ -1,4 +1,5 @@
 use crate::common::error::SecurityModuleError;
+use crate::SecurityModuleError::InitializationError;
 use std::fmt::Debug;
 #[cfg(feature = "linux")]
 use tss_esapi::handles::KeyHandle as TssKeyHandle;
