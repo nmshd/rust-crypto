@@ -220,10 +220,24 @@ impl Provider for YubiKeyProvider {
                             usage = "Decrypt";
                         }
                         AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P256)) => {
-                            // TODO, not tested, might work
+                            // TODO, not tested, might work.
+                            let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
+                            let (slot_id, pkey) =
+                                generate_key(&mut yubikey, AlgorithmId::EccP256, slot_id).unwrap();
+                            self.slot_id = Some(slot_id);
+                            self.pkey = pkey;
+
+                            usage = "Decrypt";
                         }
                         AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P384)) => {
-                            // TODO, not tested, might work
+                            // TODO, not tested, might work.
+                            let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
+                            let (slot_id, pkey) =
+                                generate_key(&mut yubikey, AlgorithmId::EccP256, slot_id).unwrap();
+                            self.slot_id = Some(slot_id);
+                            self.pkey = pkey;
+
+                            usage = "Decrypt";
                         }
                         _ => {
                             return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
@@ -323,7 +337,7 @@ impl Provider for YubiKeyProvider {
                     }
                 }
                 Err(e) => {
-                    println!("Error arsching slot data: {:?}", e);
+                    println!("Error parsing slot data: {:?}", e);
                     continue;
                 }
             }
