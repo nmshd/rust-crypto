@@ -38,15 +38,13 @@ impl KeyHandle for TpmProvider {
 
     #[instrument]
     fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
-        let _string_data = String::from_utf8(encrypted_data.to_vec()).map_err(|_| {
+        let string_data = String::from_utf8(encrypted_data.to_vec()).map_err(|_| {
             SecurityModuleError::DecryptionError("Data conversion error".to_string())
         })?;
-        let decrypted_data =
-            apple_secure_enclave_bindings::keyhandle::rust_crypto_call_decrypt_data();
 
-        // The FFI bridge always returns strings by design.
-        // Therefore, we need to search for the case-insensitive string "error".
-        // If "error" is found, we return an error to the function.
+        let decrypted_data =
+            apple_secure_enclave_bindings::keyhandle::rust_crypto_call_decrypt_data(self.key_id.to_string(), string_data);
+
         if Regex::new("(?i)error")
             .unwrap()
             .is_match(decrypted_data.as_str())
@@ -61,15 +59,20 @@ impl KeyHandle for TpmProvider {
 
     #[instrument]
     fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
-        let _string_data = String::from_utf8(data.to_vec()).map_err(|_| {
+        let string_data = String::from_utf8(data.to_vec()).map_err(|_| {
             SecurityModuleError::EncryptionError("Data conversion error".to_string())
         })?;
-        let encrypted_data =
-            apple_secure_enclave_bindings::keyhandle::rust_crypto_call_encrypt_data();
+        let key_id = &self.key_id;
 
-        // The FFI bridge always returns strings by design.
-        // Therefore, we need to search for the case-insensitive string "error".
-        // If "error" is found, we return an error to the function.
+        //Debug
+        println!("EncryptData: Send to Swift key_id: {} | data: {}", key_id.clone(), string_data); 
+
+        let encrypted_data =
+            apple_secure_enclave_bindings::keyhandle::rust_crypto_call_encrypt_data(key_id.to_string(), string_data);
+
+        //Debug 
+        println!("EncryptData: Recieved from Swift data: {}", encrypted_data); 
+        
         if Regex::new("(?i)error")
             .unwrap()
             .is_match(encrypted_data.as_str())

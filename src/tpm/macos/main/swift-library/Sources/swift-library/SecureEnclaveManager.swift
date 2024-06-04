@@ -143,9 +143,9 @@ import CryptoKit
 
     A String representing the encrypted data.
     **/
-    func rustcall_encrypt_data(data: RustString, publicKeyName: RustString) -> String {
+    func rustcall_encrypt_data(key_id: RustString, data: RustString) -> String {
         do{
-            let privateKey: SecKey = try load_key(key_id: publicKeyName.toString())!
+            let privateKey: SecKey = try load_key(key_id: key_id.toString())!
             let publicKey = getPublicKeyFromPrivateKey(privateKey: privateKey)
             let encryptedData: Data = try encrypt_data(data: data.toString().data(using: String.Encoding.utf8)!, publicKeyName: publicKey!)
             let encryptedData_string = encryptedData.base64EncodedString()
@@ -195,19 +195,19 @@ import CryptoKit
 
     A String representing the decrypted data.
     **/
-    func rustcall_decrypt_data(data: RustString, privateKeyName: RustString) -> String{
+    func rustcall_decrypt_data(key_id: RustString, data: RustString) -> String{
         do{
             guard let data = Data(base64Encoded: data.toString())
             else {
                 return ("Invalid base64 input")
             }
                                     
-            guard let decrypted_value = String(data: try decrypt_data(data: data, privateKey: load_key(key_id: privateKeyName.toString())!), encoding: .utf8)
+            guard let decrypted_value = String(data: try decrypt_data(data: data, privateKey: load_key(key_id: key_id.toString())!), encoding: .utf8)
             else {
                 return ("Error converting decrypted data to string")
             }
             
-            return ("Successful decrypted: \(data) in \(decrypted_value)")
+            return ("\(decrypted_value)")
         } catch {
             return ("Fehler: \(error)")
         }
