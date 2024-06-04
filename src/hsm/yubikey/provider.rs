@@ -90,6 +90,12 @@ impl Provider for YubiKeyProvider {
     /// The generated Public Key will be stored in the Yubikey as Object with futher information
     /// A `Result` that, on success, contains `Ok()`.
     /// On failure, it returns a `yubikey::Error`.
+    ///
+    /// # Errors
+    /// Stick throws Error, if all Slots are used. We have coded a method to get all stored keys,
+    /// so that the user can see which slots are used.
+    /// We also coded a method, which can remove any stored key from the Yubikey.
+
     #[instrument]
     fn create_key(
         &mut self,
@@ -109,7 +115,7 @@ impl Provider for YubiKeyProvider {
             if !(self.load_key(key_id, config).is_ok()) {
                 let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
                 let _ = yubikey.verify_pin("123456".as_ref());
-                let _ = yubikey.authenticate(MgmKey::default());
+                let _ = yubikey.authenticate(MgmKey::new(self.management_key.unwrap()).unwrap());
                 match get_free_slot(&mut yubikey) {
                     Ok(free) => {
                         slot_id = free;
@@ -128,9 +134,6 @@ impl Provider for YubiKeyProvider {
                 slot_id: RetiredSlotId,
             ) -> Result<(RetiredSlotId, String), SecurityModuleError> {
                 let pkey: String;
-
-                let _ = yubikey.verify_pin("123456".as_ref());
-                let _ = yubikey.authenticate(MgmKey::default());
 
                 let gen_key = piv::generate(
                     &mut yubikey,
@@ -249,7 +252,7 @@ impl Provider for YubiKeyProvider {
             slot = get_reference_u32slot(self.slot_id.unwrap());
 
             let _ = yubikey.verify_pin("123456".as_ref());
-            let _ = yubikey.authenticate(MgmKey::default());
+            let _ = yubikey.authenticate(MgmKey::new(self.management_key.unwrap()).unwrap());
 
             match save_key_object(&mut yubikey, usage, key_id, slot, &pkey) {
                 Ok(_) => Ok(()),
@@ -291,7 +294,7 @@ impl Provider for YubiKeyProvider {
         let mut found = false;
         for i in 10..20 {
             let _ = yubikey.verify_pin("123456".as_ref());
-            let _ = yubikey.authenticate(MgmKey::default());
+            let _ = yubikey.authenticate(MgmKey::new(self.management_key.unwrap()).unwrap());
             let data = yubikey.fetch_object(SLOTSU32[i]);
             let mut output: Vec<u8> = Vec::new();
             match data {
@@ -370,8 +373,11 @@ impl Provider for YubiKeyProvider {
                 )));
             }
         }
+        // Hier muesste die Pin Eingabe und die Managementkey Eingabe implementiert werden. Ist aktuell hardcoded.
+        self.pin = "123456".to_string();
+        self.management_key = Some(*MgmKey::default().as_ref());
 
-        let verify = yubikey.verify_pin("123456".as_ref());
+        let verify = yubikey.verify_pin(self.pin.as_ref());
         match verify {
             Ok(_) => {
                 self.yubikey = Some(Arc::new(Mutex::new(yubikey)));
@@ -496,7 +502,7 @@ fn parse_slot_data(data: &[u8]) -> Result<(String, String, String, String), Secu
 /// A `Result` that, on failure, returns the first free slot.
 /// On Success, it returns that no more free slots are available.
 fn get_free_slot(yubikey: &mut YubiKey) -> Result<RetiredSlotId, SecurityModuleError> {
-    let mut end;
+    let mut end = false;
     let mut slot_id: RetiredSlotId = SLOTS[0];
     let mut counter = 0;
     for i in 10..20 {
@@ -511,15 +517,19 @@ fn get_free_slot(yubikey: &mut YubiKey) -> Result<RetiredSlotId, SecurityModuleE
             }
         }
         let data = output;
-        match parse_slot_data(&data) {
-            Ok((_, _, _, _)) => {
-                continue;
-            }
-            Err(_) => {
-                slot_id = SLOTS[i - 10];
-                end = true;
-            }
+        println!("{:?}", data);
+        let parsed = parse_slot_data(&data);
+        if !parsed.is_ok() {
+            slot_id = SLOTS[i - 10];
+            end = true;
         }
+        // match parsed {
+        //     Ok(_) => {
+        //         continue;
+        //     }
+        //     Err(_) => {
+
+        // }
         if end {
             break;
         }
@@ -529,7 +539,6 @@ fn get_free_slot(yubikey: &mut YubiKey) -> Result<RetiredSlotId, SecurityModuleE
         Ok(slot_id)
     } else {
         let list = list_all_slots(yubikey);
-        println!("Key-Liste:\n\n{:?}", list);
 
         return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
             "No more free slots available".to_string(),
@@ -592,26 +601,35 @@ fn list_all_slots(yubikey: &mut YubiKey) -> Result<Vec<String>, SecurityModuleEr
     Ok(output)
 }
 
-/*
+/// Clears a slot on the YubiKey device.
+/// # Arguments
+/// * `yubikey` - The YubiKey device to clear the slot on.
+/// * `slot` - The slot to clear. If `None`, all slots are cleared.
+/// Needs improvement, as it is problematic to iterate effectively over all slots.
+
 fn clear_slot(yubikey: &mut YubiKey, slot: Option<u32>) {
     match slot {
         Some(address) => {
             remv(yubikey, address);
         }
         None => {
-            for address in RETIRED_SLOT {
-            remv(yubikey, address);
+            //for address in RETIRED_SLOT {
+            //remv(yubikey, address);
         }
     }
 }
-*/
-//}
+
+/// Removes an object from the YubiKey device.
+/// # Arguments
+/// * `yubikey` - The YubiKey device to remove the object from.
+/// * `address` - The address of the object to remove.
 
 fn remv(yubikey: &mut YubiKey, address: u32) {
     let mut empty_vec: Vec<u8> = Vec::new();
     let empty_slice: &mut [u8] = &mut empty_vec[..];
     yubikey.save_object(address, empty_slice);
 }
+
 // Halbfertiger Code, kann benutzt werden wenn PIN-Abfrage in App implementiert wird
 /*
 #[instrument]

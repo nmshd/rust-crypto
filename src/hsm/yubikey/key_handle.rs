@@ -66,7 +66,7 @@ impl KeyHandle for YubiKeyProvider {
                 "PIN verification failed".to_string(),
             )));
         }
-        let auth = yubikey.authenticate(MgmKey::default());
+        let auth = yubikey.authenticate(MgmKey::new(self.management_key.unwrap()).unwrap());
         if !auth.is_ok() {
             return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
                 "Authentication  failed".to_string(),

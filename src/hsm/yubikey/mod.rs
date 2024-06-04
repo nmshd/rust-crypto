@@ -22,6 +22,8 @@ pub struct YubiKeyProvider {
     pub(super) key_usages: Option<Vec<KeyUsage>>,
     pub(super) key_algo: Option<AsymmetricEncryption>,
     pub(super) yubikey: Option<Arc<Mutex<YubiKey>>>,
+    pub(super) pin: String,
+    pub(super) management_key: Option<[u8; 24]>,
 }
 
 impl YubiKeyProvider {
@@ -42,6 +44,8 @@ impl YubiKeyProvider {
             key_usages: None,
             key_algo: None,
             yubikey: None,
+            pin: String::new(),
+            management_key: None,
         }
     }
 }
