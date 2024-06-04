@@ -64,9 +64,8 @@ use crate::hsm::HsmProviderConfig;
 #[cfg(feature = "yubi")]
 #[test]
 fn test_create_rsa_key_1024() {
-    let key_id = "test_rsa_key";
+    let key_id = "test_rsa_keysdasdsa";
     let mut provider = YubiKeyProvider::new(key_id.to_string());
-
     let config = HsmProviderConfig::new(
         AsymmetricEncryption::Rsa(KeyBits::Bits1024),
         vec![KeyUsage::SignEncrypt],
@@ -161,7 +160,7 @@ fn test_load_rsa_key() {
     let mut provider = YubiKeyProvider::new(key_id.to_string());
 
     let config = HsmProviderConfig::new(
-        AsymmetricEncryption::Rsa(KeyBits::Bits2048),
+        AsymmetricEncryption::Rsa(KeyBits::Bits1024),
         vec![KeyUsage::SignEncrypt],
     );
 

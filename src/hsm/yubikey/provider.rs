@@ -99,7 +99,7 @@ impl Provider for YubiKeyProvider {
         if let Some(hsm_config) = config.as_any().downcast_ref::<HsmProviderConfig>() {
             self.key_algo = Some(hsm_config.key_algorithm);
             self.key_usages = Some(hsm_config.key_usage.clone());
-            let key_algo = self.key_algo.clone().unwrap();
+            let key_algo = self.key_algo.clone().expect("No Key Algortihm found");
 
             let usage: &str;
             let slot: u32;
@@ -358,22 +358,31 @@ impl Provider for YubiKeyProvider {
     /// On failure, it returns a Yubikey based `Error`.
     #[instrument]
     fn initialize_module(&mut self) -> Result<(), SecurityModuleError> {
-        let mut yubikey = YubiKey::open().map_err(|_| Error::NotFound).unwrap();
+        let yubi = YubiKey::open().map_err(|_| Error::NotFound);
+        let mut yubikey: YubiKey;
+        match yubi {
+            Ok(yubi) => {
+                yubikey = yubi;
+            }
+            Err(err) => {
+                return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
+                    err.to_string(),
+                )));
+            }
+        }
 
-        let verify = yubikey
-            .verify_pin("123456".as_ref())
-            .map_err(|_| Error::WrongPin {
-                tries: yubikey.get_pin_retries().unwrap(),
-            });
+        let verify = yubikey.verify_pin("123456".as_ref());
+        match verify {
+            Ok(_) => {
+                self.yubikey = Some(Arc::new(Mutex::new(yubikey)));
 
-        self.yubikey = Some(Arc::new(Mutex::new(yubikey)));
-
-        if verify.is_ok() {
-            return Ok(());
-        } else {
-            return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
-                "Failed to verify PIN, retries: {}".to_string(),
-            )));
+                Ok(())
+            }
+            Err(err) => {
+                return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
+                    err.to_string(),
+                )));
+            }
         }
     }
 }
@@ -489,6 +498,7 @@ fn parse_slot_data(data: &[u8]) -> Result<(String, String, String, String), Secu
 fn get_free_slot(yubikey: &mut YubiKey) -> Result<RetiredSlotId, SecurityModuleError> {
     let mut end;
     let mut slot_id: RetiredSlotId = SLOTS[0];
+    let mut counter = 0;
     for i in 10..19 {
         let data = yubikey.fetch_object(SLOTSU32[i]);
         let mut output: Vec<u8> = Vec::new();
@@ -513,8 +523,15 @@ fn get_free_slot(yubikey: &mut YubiKey) -> Result<RetiredSlotId, SecurityModuleE
         if end {
             break;
         }
+        counter += 1;
     }
-    Ok(slot_id)
+    if counter <= 10 {
+        Ok(slot_id)
+    } else {
+        return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
+            "No more free slots available".to_string(),
+        )));
+    }
 }
 
 /// Converts a `RetiredSlotId` to its corresponding u32 value.
