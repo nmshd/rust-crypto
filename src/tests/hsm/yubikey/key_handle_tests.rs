@@ -69,7 +69,7 @@ use crate::hsm::{yubikey::YubiKeyProvider, HsmProviderConfig};
 fn test_sign_and_verify_rsa_1024() {
     // Initialization of YubiKeyProvider and configuration of HsmProviderConfig
     // omitted for brevity; please refer to the individual test implementations
-    let mut provider = YubiKeyProvider::new("test_rsa_key".to_string());
+    let mut provider = YubiKeyProvider::new("test_sv_1024".to_string());
 
     let config = HsmProviderConfig::new(
         AsymmetricEncryption::Rsa(KeyBits::Bits1024),
@@ -80,7 +80,7 @@ fn test_sign_and_verify_rsa_1024() {
         .initialize_module()
         .expect("Failed to initialize module");
     provider
-        .create_key("test_rsa_key", config)
+        .create_key("test_sv_1024", config)
         .expect("Failed to create RSA key");
 
     let data = b"Hello, World!";
@@ -92,7 +92,7 @@ fn test_sign_and_verify_rsa_1024() {
 // Test for signing and verifying RSA data with a 2048-bit key
 #[test]
 fn test_sign_and_verify_rsa_2048() {
-    let mut provider = YubiKeyProvider::new("test_rsa_key_2048".to_string());
+    let mut provider = YubiKeyProvider::new("test_sv_2048".to_string());
 
     let config = HsmProviderConfig::new(
         AsymmetricEncryption::Rsa(KeyBits::Bits2048),
@@ -103,7 +103,7 @@ fn test_sign_and_verify_rsa_2048() {
         .initialize_module()
         .expect("Failed to initialize module");
     provider
-        .create_key("test_rsa_key", config)
+        .create_key("test_sv_2048", config)
         .expect("Failed to create RSA key");
 
     let data = b"Hello, World!";
@@ -115,7 +115,7 @@ fn test_sign_and_verify_rsa_2048() {
 // Test for signing and verifying ECC data with a 256-bit key
 #[test]
 fn test_sign_and_verify_ecc_256() {
-    let mut provider = YubiKeyProvider::new("test_ecc_key".to_string());
+    let mut provider = YubiKeyProvider::new("test_ecc_256".to_string());
 
     let config = HsmProviderConfig::new(
         AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P256)),
@@ -126,7 +126,7 @@ fn test_sign_and_verify_ecc_256() {
         .initialize_module()
         .expect("Failed to initialize module");
     provider
-        .create_key("test_ecc_key", config)
+        .create_key("test_ecc_256", config)
         .expect("Failed to create ECC key");
 
     let data = b"Hello, World!";
@@ -138,7 +138,7 @@ fn test_sign_and_verify_ecc_256() {
 // Test for signing and verifying ECC data with a 384-bit key
 #[test]
 fn test_sign_and_verify_ecc_384() {
-    let mut provider = YubiKeyProvider::new("test_ecc_key_384".to_string());
+    let mut provider = YubiKeyProvider::new("test_ecc_384".to_string());
 
     let config = HsmProviderConfig::new(
         AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P384)),
@@ -149,7 +149,7 @@ fn test_sign_and_verify_ecc_384() {
         .initialize_module()
         .expect("Failed to initialize module");
     provider
-        .create_key("test_ecc_key", config)
+        .create_key("test_ecc_384", config)
         .expect("Failed to create ECC key");
 
     let data = b"Hello, World!";
