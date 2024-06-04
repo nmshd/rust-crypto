@@ -160,15 +160,11 @@ impl KeyHandle for YubiKeyProvider {
                 )
                 .map_err(|_| "Failed to decrypt data");
             }
-            // The Yubikey do not support decryption with ECC:
+            // The Yubikey do not support decryption with ECC, see:
             // https://docs.yubico.com/yesdk/users-manual/application-piv/apdu/auth-decrypt.html
             /*
-            AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P256)) => {
-
-            }
-            AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P384)) => {
-
-            }
+            AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P256)) => {}
+            AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P384)) => {}
             */
             _ => {
                 return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
