@@ -499,7 +499,7 @@ fn get_free_slot(yubikey: &mut YubiKey) -> Result<RetiredSlotId, SecurityModuleE
     let mut end;
     let mut slot_id: RetiredSlotId = SLOTS[0];
     let mut counter = 0;
-    for i in 10..19 {
+    for i in 10..20 {
         let data = yubikey.fetch_object(SLOTSU32[i]);
         let mut output: Vec<u8> = Vec::new();
         match data {
