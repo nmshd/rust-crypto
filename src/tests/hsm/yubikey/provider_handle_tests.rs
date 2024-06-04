@@ -43,6 +43,8 @@
 /// The expected behavior for each test case is successful key creation or loading without
 /// encountering any errors. Any failures during key creation or loading are considered test
 /// failures and will be reported accordingly.
+///
+/// Please use **cargo test --features yubi -- --test-threads=1** for successful testing due to parallelization issues
 #[allow(unused_imports)]
 use crate::common::{
     crypto::{

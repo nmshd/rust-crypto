@@ -323,7 +323,7 @@ impl Provider for YubiKeyProvider {
                     }
                 }
                 Err(e) => {
-                    println!("Error parsing slot data: {:?}", e);
+                    println!("Error arsching slot data: {:?}", e);
                     continue;
                 }
             }
