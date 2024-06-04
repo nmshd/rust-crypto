@@ -37,6 +37,8 @@ pub enum TpmType {
 #[derive(Eq, Hash, PartialEq, Clone, Debug)]
 #[cfg(feature = "android")]
 pub enum AndroidTpmType {
+    /// Android Provider using the Android Keystore API
+    Keystore,
     /// Represents the Samsung Knox security platform with TPM functionalities.
     Knox,
 }
@@ -124,9 +126,14 @@ impl TpmInstance {
             }
             #[cfg(feature = "android")]
             TpmType::Android(tpm_type) => match tpm_type {
+
                 AndroidTpmType::Knox => Arc::new(Mutex::new(
                     crate::tpm::android::knox::KnoxProvider::new(),
                 )),
+                AndroidTpmType::Keystore => Arc::new(Mutex::new(
+                    crate::tpm::android::AndroidProvider::new(key_id),
+                )),
+
             },
             TpmType::None => todo!(),
         }
