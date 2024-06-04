@@ -1,7 +1,6 @@
-use std::any::Any;
 use super::key_handle::KeyHandle;
 use crate::common::error::SecurityModuleError;
-use std::fmt::Debug;
+use std::{any::Any, fmt::Debug};
 
 /// Defines the interface for a security module provider.
 ///
@@ -27,11 +26,10 @@ pub trait Provider: Send + Sync + KeyHandle + Debug {
     ///
     /// A `Result` that, on success, contains `Ok(())`, indicating that the key was created successfully.
     /// On failure, it returns a `SecurityModuleError`.
-    fn create_key(
-        &mut self,
-        key_id: &str,
-        config: Box<dyn Any>,
-    ) -> Result<(), SecurityModuleError>;
+
+    fn create_key(&mut self, key_id: &str, config: Box<dyn Any>)
+        -> Result<(), SecurityModuleError>;
+
 
     /// Loads an existing cryptographic key identified by `key_id`.
     ///
@@ -47,11 +45,8 @@ pub trait Provider: Send + Sync + KeyHandle + Debug {
     ///
     /// A `Result` that, on success, contains `Ok(())`, indicating that the key was loaded successfully.
     /// On failure, it returns a `SecurityModuleError`.
-    fn load_key(
-        &mut self,
-        key_id: &str,
-        config: Box<dyn Any>,
-    ) -> Result<(), SecurityModuleError>;
+
+    fn load_key(&mut self, key_id: &str, config: Box<dyn Any>) -> Result<(), SecurityModuleError>;
 
     /// Initializes the security module and returns a handle for further operations.
     ///
