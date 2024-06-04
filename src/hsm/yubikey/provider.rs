@@ -525,9 +525,12 @@ fn get_free_slot(yubikey: &mut YubiKey) -> Result<RetiredSlotId, SecurityModuleE
         }
         counter += 1;
     }
-    if counter <= 10 {
+    if counter <= 9 {
         Ok(slot_id)
     } else {
+        let list = list_all_slots(yubikey);
+        println!("Key-Liste:\n\n{:?}", list);
+
         return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
             "No more free slots available".to_string(),
         )));
@@ -548,7 +551,7 @@ fn get_free_slot(yubikey: &mut YubiKey) -> Result<RetiredSlotId, SecurityModuleE
 /// The corresponding u32 value of the `RetiredSlotId`.
 fn get_reference_u32slot(slot: RetiredSlotId) -> u32 {
     let mut output: u32 = SLOTSU32[0];
-    for i in 0..19 {
+    for i in 0..20 {
         if SLOTS[i] == slot {
             output = SLOTSU32[i + 10];
             break;
@@ -559,6 +562,56 @@ fn get_reference_u32slot(slot: RetiredSlotId) -> u32 {
     output
 }
 
+fn list_all_slots(yubikey: &mut YubiKey) -> Result<Vec<String>, SecurityModuleError> {
+    let mut output: Vec<String> = Vec::new();
+    for i in 10..20 {
+        let data = yubikey.fetch_object(SLOTSU32[i]);
+        let mut temp_vec: Vec<u8> = Vec::new();
+        match data {
+            Ok(data) => {
+                temp_vec = data.to_vec();
+            }
+            Err(err) => {
+                println!("Error: {:?}", err);
+            }
+        }
+        let data = temp_vec;
+        match parse_slot_data(&data) {
+            Ok((key_name, slot, usage, pkey)) => {
+                let output_string = format!(
+                    "Key Name: {}, Slot: {}, Usage: {}, Public-Key: {}\n",
+                    key_name, slot, usage, pkey
+                );
+                output.push(output_string);
+            }
+            Err(e) => {
+                println!("Error parsing slot data: {:?}", e);
+            }
+        }
+    }
+    Ok(output)
+}
+
+/*
+fn clear_slot(yubikey: &mut YubiKey, slot: Option<u32>) {
+    match slot {
+        Some(address) => {
+            remv(yubikey, address);
+        }
+        None => {
+            for address in RETIRED_SLOT {
+            remv(yubikey, address);
+        }
+    }
+}
+*/
+//}
+
+fn remv(yubikey: &mut YubiKey, address: u32) {
+    let mut empty_vec: Vec<u8> = Vec::new();
+    let empty_slice: &mut [u8] = &mut empty_vec[..];
+    yubikey.save_object(address, empty_slice);
+}
 // Halbfertiger Code, kann benutzt werden wenn PIN-Abfrage in App implementiert wird
 /*
 #[instrument]
