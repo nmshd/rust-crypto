@@ -44,6 +44,8 @@ const SLOTS: [RetiredSlotId; 20] = [
     RetiredSlotId::R20,
 ];
 
+/// IDs/addresses for read/write objects operations;
+/// see https://developers.yubico.com/yubico-piv-tool/Actions/read_write_objects.html
 const SLOTSU32: [u32; 20] = [
     0x005f_c10d,
     0x005f_c10e,
@@ -80,6 +82,8 @@ impl Provider for YubiKeyProvider {
     ///
     /// # Arguments
     ///
+    /// * `key_id` - A string slice that uniquely identifies the key for later usage.
+    /// * `config` - A boxed `ProviderConfig` containing configuration details for key-generating
     ///
     /// # Returns
     ///
@@ -381,7 +385,10 @@ impl Provider for YubiKeyProvider {
 /// belongs to a private key which is stored in a other Slot.
 ///
 /// # Arguments
-/// 'usage' - The key usage of the key object to be stored.
+/// * 'usage' - The key usage of the key object to be stored.
+/// * 'key_id' - A string slice that uniquely identifies the key for later usage.
+/// * 'slot_id' - An address where an object will be stored must be given.
+/// * 'pkey' - The public key which is intended to be stored.
 ///
 /// # Returns
 ///
@@ -436,6 +443,7 @@ fn save_key_object(
 ///
 /// # Arguments
 ///
+///* 'data' - This array reference contains important information, it provides: the key name, the slot where it is stored, the usage and the public key itself
 ///
 /// # Returns
 ///
@@ -472,7 +480,7 @@ fn parse_slot_data(data: &[u8]) -> Result<(String, String, String, String), Secu
 /// This method goes through the available slots on the YubiKey and returns the first free slot
 ///
 /// # Arguments
-///
+/// The method takes a Yubikey device as an input
 ///
 /// # Returns
 ///
