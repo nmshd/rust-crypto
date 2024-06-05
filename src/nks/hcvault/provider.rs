@@ -53,21 +53,15 @@ impl Provider for NksProvider {
         let mut key_length: Option<KeyBits> = None;
         if let Some(nks_config) = config.as_any().downcast_ref::<NksConfig>() {
             let runtime = Runtime::new().unwrap();
-            let get_and_save_keypair_result = runtime.block_on(get_and_save_key_pair(
-                &*nks_config.nks_token.clone(),
-                key_id,
-                match &nks_config.key_algorithm {
-                    Some(AsymmetricEncryption::Rsa(rsa)) => {
-                        key_length = Some(*rsa);
-                        "rsa"
-                    },
-                    Some(AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::Curve25519))) => "ecdh",
-                    Some(AsymmetricEncryption::Ecc(_)) => "ecdsa",
-                    None => "none",
+            let get_and_save_keypair_result = runtime.block_on(get_and_save_key_pair(&*nks_config.nks_token.clone(), key_id, match &nks_config.key_algorithm {
+                Some(AsymmetricEncryption::Rsa(rsa)) => {
+                    key_length = Some(*rsa);
+                    "rsa"
                 },
-                key_length,
-                Url::parse(&nks_config.nks_address).unwrap()
-            ));
+                Some(AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::Curve25519))) => "ecdh",
+                Some(AsymmetricEncryption::Ecc(_)) => "ecdsa",
+                None => "none",
+            }, key_length, Url::parse(&nks_config.nks_address).unwrap(), None));
             match key_length {
                 Some(kb) => println!("XXXXX Key length: {}", u32::from(kb)),
                 None => println!("XXXXX Key length: None"),
@@ -351,14 +345,17 @@ async fn get_and_save_key_pair(
     key_type: &str,
     key_length: Option<KeyBits>,
     nks_address: Url,
+    cyphertype: Option<String>,
 ) -> Result<(String, String), Box<dyn std::error::Error>> {
     let key_length_u32 = key_length.map(|kb| u32::from(kb));
-    let response = get_and_save_key_pair_request(token, key_name, key_type, nks_address, key_length_u32).await?;
+    let cyphertype_str = cyphertype.unwrap_or_else(|| "".to_string());
+    let response = get_and_save_key_pair_request(token, key_name, key_type, nks_address, key_length_u32, &cyphertype_str).await?;
 
     let status = response.status(); // Clone the status here
     let response_text = response.text().await?;
     if !status.is_success() {
         let response_json: Value = serde_json::from_str(&response_text)?;
+        println!("Response JSON: {}", response_json.to_string());
         if let Some(message) = response_json.get("message") {
             if message.as_str().unwrap() == format!("Key with ID {} already exists.", key_name) {
                 return Err(format!("A key with name {} already exists.", key_name).into());
@@ -427,6 +424,7 @@ async fn get_and_save_key_pair_request(
     key_type: &str,
     nks_address: Url,
     length: Option<u32>,
+    cyphertype: &str,
 ) -> Result<reqwest::Response, Box<dyn std::error::Error>> {
     let client = reqwest::Client::builder()
         .danger_accept_invalid_certs(true)
@@ -436,12 +434,14 @@ async fn get_and_save_key_pair_request(
             "token": token,
             "name": key_name,
             "type": key_type,
-            "length": len
+            "length": len,
+            "ciphertype": cyphertype
         }),
         None => json!({
             "token": token,
             "name": key_name,
-            "type": key_type
+            "type": key_type,
+            "ciphertype": cyphertype
         }),
     };
     let api_url = nks_address.join("generateAndSaveKeyPair");
