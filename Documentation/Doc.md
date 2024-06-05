@@ -55,55 +55,21 @@ The Repository contains a Wrapper that is used to perform cryptographic operatio
 
 ![component diagram](images/component_diagram.jpg)
 
-### Explanation
-## Summary
-
-This project offers a comprehensive solution for cryptographic operations in Android and Rust, ensuring security and efficiency. The `CryptoManager`, `RustDef`, and `interface.rs` modules work together to ensure cryptographic keys are securely generated, stored, and used, while providing seamless integration between Java and Rust.
 
 ## Components
-### 1. Component Diagram
 
 The component diagram illustrates the relationships and interactions between the different classes and modules of the project. Here are the main components:
 
-- **CryptoManager**: Responsible for key generation, storage, encryption, and decryption in the Android environment.
-- **RustDef**: Acts as a bridge between Java and Rust, ensuring cryptographic functions implemented in Rust can be called from Java.
-- **interface.rs**: Contains the Rust implementation of cryptographic functions and exposes them to the Java environment.
-
-### 2. CryptoManager.java
-
+- **CryptoManager**:
 The `CryptoManager` class handles cryptographic operations within the Android environment. It provides functions for generating and storing symmetric and asymmetric keys in the Android Keystore, as well as for encrypting and decrypting data. Additionally, it enables signing and verifying data using keys stored in the Keystore.
 
-**Key Functions:**
-- `genKey(String key_id, String keyGenInfo)`: Generates a new symmetric key and stores it in the Android Keystore.
-- `encryptData(byte[] data)`: Encrypts the given data.
-- `decryptData(byte[] encryptedData)`: Decrypts the given encrypted data.
-- `generateKeyPair(String key_id, String keyGenInfo)`: Generates a new asymmetric key pair and stores it in the Android Keystore.
-- `signData(byte[] data)`: Signs the given data.
-- `verifySignature(byte[] data, byte[] signedBytes)`: Verifies the signature of the given data.
 
-### 3. RustDef.java
-
+- **RustDef**: 
 The `RustDef` class defines the interface to the cryptographic functions implemented in Rust. It loads the native library and declares the native methods implemented in Rust.
 
-**Key Functions:**
-- `getName()`: Retrieves the name of the project.
-- `encryptMessage(String message)`: Encrypts a message using the Rust library.
-- `decryptMessage(String encryptedMessage)`: Decrypts a message using the Rust library.
 
-### 4. interface.rs
-
+- **interface.rs**:
 This module contains the implementation of cryptographic functions in Rust and exposes them to the Java environment. The functions in `interface.rs` are designed to perform cryptographic operations efficiently and securely, providing an interface for use in Android applications.
-
-**Key Functions:**
-- `get_name() -> &'static str`: Returns the name of the project.
-- `encrypt_message(message: &str) -> Result<String, Box<dyn Error>>`: Encrypts a message.
-- `decrypt_message(encrypted_message: &str) -> Result<String, Box<dyn Error>>`: Decrypts a message.
-
-## Usage
-
-To integrate this project into your own, ensure all dependencies are correctly set up, including the Rust libraries and Android Keystore configuration. Follow the method calls provided in the classes and modules to utilize the cryptographic functions in your application.
-
-### Abstraction Layer
 
 ### Libraries
 
