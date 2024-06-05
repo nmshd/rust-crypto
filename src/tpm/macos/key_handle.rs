@@ -1,28 +1,27 @@
-use super::TpmProvider;
+extern crate apple_secure_enclave_bindings;
+use super::SecureEnclaveProvider;
 use crate::{
-    common::{error::SecurityModuleError, traits::key_handle::KeyHandle},
-    // tpm::core::error::TpmError,
+    common::{error::SecurityModuleError, traits::key_handle::KeyHandle}, tpm::macos::provider::convert_sign_algorithms,
 };
 use tracing::instrument;
-
-extern crate apple_secure_enclave_bindings;
-
 use regex::Regex;
 
-impl KeyHandle for TpmProvider {
+impl KeyHandle for SecureEnclaveProvider {
     #[instrument]
     fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         let _string_data = String::from_utf8(data.to_vec())
             .map_err(|_| SecurityModuleError::SigningError("Data conversion error".to_string()))?;
         
         let key_id = &self.key_id; 
-        
-        // Debug
-        println!("SignData: Send to Swift key_id {} | {}", key_id, _string_data); 
-        let signed_data = apple_secure_enclave_bindings::keyhandle::rust_crypto_call_sign_data(key_id.clone(), _string_data);
+        let config = self.config.as_ref().ok_or(SecurityModuleError::InitializationError(("Failed to initialize config").to_owned()))?;
+        let algo = convert_sign_algorithms(config.clone()); 
 
-        // Debug 
-        println!("SignData: Recieved from Swift: {}", signed_data); 
+        // Debug TODO
+        println!("\nSignData: Send to Swift | key_id: {} | StringData: {} | Algorithm: {}", key_id, _string_data, algo); 
+        let signed_data = apple_secure_enclave_bindings::keyhandle::rust_crypto_call_sign_data(key_id.clone(), _string_data, algo);
+
+        // Debug TODO
+        println!("\nSignData: Recieved from Swift: {}", signed_data); 
 
         if Regex::new("(?i)error")
             .unwrap()
@@ -64,14 +63,14 @@ impl KeyHandle for TpmProvider {
         })?;
         let key_id = &self.key_id;
 
-        //Debug
-        println!("EncryptData: Send to Swift key_id: {} | data: {}", key_id.clone(), string_data); 
+        //Debug TODO
+        println!("\nEncryptData: Send to Swift | key_id: {} | data: {}", key_id.clone(), string_data); 
 
         let encrypted_data =
             apple_secure_enclave_bindings::keyhandle::rust_crypto_call_encrypt_data(key_id.to_string(), string_data);
 
-        //Debug 
-        println!("EncryptData: Recieved from Swift data: {}", encrypted_data); 
+        //Debug TODO
+        println!("\nEncryptData: Recieved from Swift data: {}", encrypted_data); 
         
         if Regex::new("(?i)error")
             .unwrap()
@@ -96,12 +95,14 @@ impl KeyHandle for TpmProvider {
         })?;
 
         let key_id = &self.key_id;  
+        let config = self.config.as_ref().ok_or(SecurityModuleError::InitializationError(("Failed to initialize config").to_owned()))?;
+        let algo = convert_sign_algorithms(config.clone()); 
 
-        // Debug 
-        println!("VerifyData: Send to Swift key_id {} | string_data {} | string_signature {} ",key_id.clone(), string_data, string_signature);
+        // Debug TODO
+        println!("VerifyData: Send to Swift | key_id: {} | string_data: {} | string_signature: {} ",key_id.clone(), string_data, string_signature);
 
         let verification_result =
-            apple_secure_enclave_bindings::keyhandle::rust_crypto_call_verify_signature(key_id.clone(), string_data, string_signature);
+            apple_secure_enclave_bindings::keyhandle::rust_crypto_call_verify_signature(key_id.clone(), string_data, string_signature, algo);
 
         // The FFI bridge always returns strings by design.
         // If not "true" or "false" is found, we expect an error from the function

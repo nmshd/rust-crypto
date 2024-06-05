@@ -1,4 +1,4 @@
-use crate::{common::traits::module_provider::Provider, tpm::macos::TpmProvider};
+use crate::{common::traits::module_provider::Provider, tpm::macos::SecureEnclaveProvider};
 #[cfg(feature = "linux")]
 use crate::tpm::linux::TpmProvider;
 #[cfg(feature = "win")]
@@ -117,7 +117,7 @@ impl TpmInstance {
             }
             #[cfg(feature = "macos")]
             TpmType::MacOs => {
-                let instance = TpmProvider::new(key_id);
+                let instance = SecureEnclaveProvider::new(key_id);
                 Arc::new(Mutex::new(instance))
             },
             #[cfg(feature = "linux")]
