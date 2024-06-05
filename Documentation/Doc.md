@@ -10,7 +10,7 @@
     - [Libraries](#libraries)
 3. [Installation Guide](#installation-guide)
     - [Required Software](#required-software)
-4. [Implementations](#implementations)
+4. [Comprehensive Overview](#comprehensive-overview)
     - [Supported Devices](#supported-devices)
     - [Devices We Tested On](#devices-we-tested-on)
     - [Performance](#performance)
@@ -169,19 +169,71 @@ The easiest way to do that is by specifying the library path when building like 
 
 With that, you should have everything complete and compiled the project from scratch.
 
-## Implementations
+## Comprehensive Overview
 
 ### Supported Devices
+This wrapper should work for all Android devices equiped with a SE, but the focus for our group is specifically on smartphones using Samsung Knox Vault. Therefore, testing will only be done using a Samsung smartphone, and in case there are incompatibilities between device manufacturers, Samsung will take priority. An up-to-date list of devices equipped with Knox Vault can be found [here](https://www.samsungknox.com/en/knox-platform/supported-devices) after selecting Knox Vault in the filter options. As of April 2024, the following devices are equipped with Knox Vault:
 
-### Devices We Tested On
+Smartphones 
+- Samsung Galaxy A 35 / A55 
+- Samsung Galaxy S 22 / S23 / S 24
+  - the plus / ultra versions as well
+- Samsung Galaxy Z Flip 3 / 4 / 5
+- Samsung Galaxy Z Fold 3 / 4 / 5
+- Samsung Galaxy X Cover 7 (Enterprise Edition) 
+
+Tablets 
+- Galaxy Tab S 8 / S 9
+  - the plus, ultra, FE and 5G versions as well
+- Galaxy Tab Active 5 (Enterprise Edition)
+  - the 5G version as well
+
+We have received a Samsung S22 from j&s-soft and have used this device for testing purposes througout the project.
 
 ### Performance
+After an extensive performance test, we can conclude that data encryption using AES-256-CBC on the Knox Vault Chip occurs at a rate of approximately 0.11 MB/s. The test showed a variance of 0.58 s².
 
 ### Feature List
+Our project supports the following features:
+
+- **Saving keys in the strongbox**: All generated keys are stored securely within the strongbox.
+-   **Encrypt and Decrypt Data**: Utilizing symmetric encryption, our system ensures data confidentiality through encryption and decryption mechanisms.
+-   **Sign and Verify Data**: We provide functionality for both symmetric and asymmetric signing and verification, ensuring data integrity and authenticity.
+
+In the following chapter, you will find detailed information on the supported algorithms.
 
 ### Supported Algorithms
+We have provided a list of the supported Algorithms of our project:
+
+| Algorithm Type    | Details                                      |
+|-------------------|----------------------------------------------|
+| **RSA**           | RSA;512;SHA-256;PKCS1                       |
+|                   | RSA;1024;SHA-256;PKCS1                      |
+|                   | RSA;2048;SHA-256;PKCS1                      |
+|                   | RSA;3072;SHA-256;PKCS1                      |
+|                   | RSA;4096;SHA-256;PKCS1                      |
+|                   | RSA;8192;SHA-256;PKCS1                      |
+| **ECC**           | EC;secp256r1;SHA-256                        |
+|                   | EC;secp384r1;SHA-256                        |
+|                   | EC;secp521r1;SHA-256                        |
+| **3DES** | DESede;168;CBC;PKCS7Padding                 |
+| **AES**           | AES;128;GCM;NoPadding                       |
+|                   | AES;128;CBC;PKCS7Padding                    |
+|                   | AES;128;CTR;NoPadding                       |
+|                   | AES;192;GCM;NoPadding                       |
+|                   | AES;192;CBC;PKCS7Padding                    |
+|                   | AES;192;CTR;NoPadding                       |
+|                   | AES;256;GCM;NoPadding                       |
+|                   | AES;256;CBC;PKCS7Padding                    |
+|                   | AES;256;CTR;NoPadding                       |
+
 
 ### Out of Scope
+In order to finish this project in the given time, we decided to
+mark the following as out of scope:
+- tablets
+- attestation
+- asmmetric encryption / decryption
 
 ## Implementation
 
