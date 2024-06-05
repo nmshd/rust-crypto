@@ -5,7 +5,6 @@ use std::path::Path;
 use std::str::FromStr;
 use std::string::String;
 use reqwest::Url;
-use serde::Deserialize;
 use serde_json::{json, Value};
 use super::{NksProvider};
 use tracing::instrument;
@@ -57,13 +56,14 @@ impl Provider for NksProvider {
             let get_and_save_keypair_result = runtime.block_on(get_and_save_key_pair(
                 &*nks_config.nks_token.clone(),
                 key_id,
-                match nks_config.key_algorithm.clone() {
-                    AsymmetricEncryption::Rsa(rsa) => {
-                        key_length = Some(rsa);
+                match &nks_config.key_algorithm {
+                    Some(AsymmetricEncryption::Rsa(rsa)) => {
+                        key_length = Some(*rsa);
                         "rsa"
                     },
-                    AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::Curve25519)) => "ecdh",
-                    AsymmetricEncryption::Ecc(_) => "ecdsa",
+                    Some(AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::Curve25519))) => "ecdh",
+                    Some(AsymmetricEncryption::Ecc(_)) => "ecdsa",
+                    None => "none",
                 },
                 key_length,
                 Url::parse(&nks_config.nks_address).unwrap()
@@ -83,12 +83,13 @@ impl Provider for NksProvider {
                         nks_config.key_algorithm.clone(),
                         nks_config.hash.clone(),
                         nks_config.key_usages.clone(),
+                        nks_config.key_algorithm_sym.clone(),
                     );
                     self.config = Some(config);
                     //save token in token.json for persistence
                     let token_data = json!({
-                     "user_token": new_token.clone()
-                     });
+                 "user_token": new_token.clone()
+                 });
                     fs::write("token.json", token_data.to_string()).expect("Error writing to token.json");
                     Ok(())
                 }
@@ -101,7 +102,6 @@ impl Provider for NksProvider {
             println!("Failed to downcast to NksConfig");
             Err(SecurityModuleError::NksError)
         }
-
     }
 
     /// Loads an existing cryptographic key identified by `key_id` from the NksProvider.
@@ -217,6 +217,7 @@ impl Provider for NksProvider {
                 nks_config.key_algorithm.clone(),
                 nks_config.hash.clone(),
                 nks_config.key_usages.clone(),
+                nks_config.key_algorithm_sym.clone(),
             );
             self.config = Some(config);
             //save token in token.json for persistence

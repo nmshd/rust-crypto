@@ -8,7 +8,7 @@ use crate::{
             },
             KeyUsage,
         },
-        traits::module_provider::Provider
+        traits::module_provider::Provider,
     },
     nks::hcvault::NksProvider,
 };
@@ -33,8 +33,8 @@ fn test_create_rsa_key() {
     } else {
         println!("Failed to downcast to NksConfig");
     }
-
 }
+
 #[test]
 fn test_create_ecdsa_key() {
     let mut provider = NksProvider::new("test_key".to_string());
@@ -52,7 +52,6 @@ fn test_create_ecdsa_key() {
     } else {
         println!("Failed to downcast to NksConfig");
     }
-
 }
 
 #[test]
@@ -150,33 +149,36 @@ fn test_load_ecdh_key() {
 /// ```
 /// let config = get_config("rsa").unwrap();
 /// ```
-pub fn get_config(key_type: &str) -> Option<Arc<dyn ProviderConfig+Send+Sync>> {
+pub fn get_config(key_type: &str) -> Option<Arc<dyn ProviderConfig + Send + Sync>> {
     match key_type {
         "rsa" => Some(NksConfig::new(
             "".to_string(),
-            "https://localhost:5000/".to_string(),
-            AsymmetricEncryption::Rsa(2048.into()),
+            "https://141.19.143.81:5000/".to_string(),
+            Option::from(AsymmetricEncryption::Rsa(2048.into())),
             Hash::Sha2(256.into()),
             vec![
                 KeyUsage::ClientAuth,
                 KeyUsage::Decrypt,
                 KeyUsage::SignEncrypt,
                 KeyUsage::CreateX509,
-            ]
+            ],
+            None,
         )),
         "ecdsa" => Some(NksConfig::new(
             "".to_string(),
-            "https://localhost:5000/".to_string(),
-            AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::Curve25519)),
+            "https://141.19.143.81:5000/".to_string(),
+            Option::from(AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::Curve25519))),
             Hash::Sha2(Sha2Bits::Sha256),
             vec![KeyUsage::SignEncrypt, KeyUsage::ClientAuth],
+            None,
         )),
         "ecdh" => Some(NksConfig::new(
             "".to_string(),
-            "https://localhost:5000/".to_string(),
-            AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::Curve25519)),
+            "https://141.19.143.81:5000/".to_string(),
+            Option::from(AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::Curve25519))),
             Hash::Sha2(384.into()),
             vec![KeyUsage::Decrypt],
+            None,
         )),
         _ => None,
     }

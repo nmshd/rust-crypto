@@ -1,6 +1,6 @@
 use std::any::Any;
 use std::sync::Arc;
-use crate::common::crypto::algorithms::encryption::{AsymmetricEncryption};
+use crate::common::crypto::algorithms::encryption::{AsymmetricEncryption, BlockCiphers};
 use crate::common::crypto::algorithms::hashes::Hash;
 use crate::common::crypto::KeyUsage;
 use crate::common::traits::module_provider_config::ProviderConfig;
@@ -11,18 +11,19 @@ pub mod hcvault;
 pub mod core;
 
 /// Configuration for NKS (Network Key Storage).
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct NksConfig {
     /// The NKS token used for authentication.
     pub nks_token: String,
-    /// The address of the NKS server.
+    /// The address of the Nks server.
     pub nks_address: String,
     /// The algorithm used for asymmetric encryption.
-    pub key_algorithm: AsymmetricEncryption,
+    pub key_algorithm: Option<AsymmetricEncryption>,
     /// The hash algorithm to be used.
     pub hash: Hash,
     /// A list of key usages specifying the intended use of the keys.
     pub key_usages: Vec<KeyUsage>,
+    pub key_algorithm_sym: Option<BlockCiphers>,
 }
 
 impl ProviderConfig for NksConfig {
@@ -48,16 +49,18 @@ impl NksConfig {
     pub fn new(
         nks_token: String,
         nks_address: String,
-        key_algorithm: AsymmetricEncryption,
+        key_algorithm_asym: Option<AsymmetricEncryption>,
         hash: Hash,
         key_usages: Vec<KeyUsage>,
+        key_algorithm_sym: Option<BlockCiphers>,
     ) -> Arc<dyn ProviderConfig + Send + Sync> {
         Arc::new(Self {
             nks_token,
             nks_address,
-            key_algorithm,
+            key_algorithm: key_algorithm_asym,
             hash,
             key_usages,
+            key_algorithm_sym,
         })
     }
 }

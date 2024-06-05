@@ -35,7 +35,7 @@ impl KeyHandle for NksProvider {
     #[tracing::instrument]
     fn sign_data(&self, _data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         if let Some(nks_config) = self.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>() {
-            let key_algorithm = nks_config.key_algorithm;
+            let key_algorithm = &nks_config.key_algorithm;
             let data = _data;
             let hash = nks_config.hash;
 
@@ -43,7 +43,7 @@ impl KeyHandle for NksProvider {
                 return Err(InitializationError("Private key is empty".to_string()));
             } else {
                 match key_algorithm {
-                    AsymmetricEncryption::Rsa(..) => {
+                    Some(AsymmetricEncryption::Rsa(..)) => {
                         // RSA signing method
                         let private_key_pem = self.private_key.as_bytes();
                         let rsa = Rsa::private_key_from_pem(private_key_pem)
@@ -72,7 +72,7 @@ impl KeyHandle for NksProvider {
                             .sign_to_vec()
                             .map_err(|_| SecurityModuleError::SigningFailed)
                     }
-                    AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::Curve25519)) => {
+                    Some(AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::Curve25519))) => {
                         // ECC signing method
                         let static_secret = decode_base64_private_key(self.private_key.as_str());
                         let signing_key = SigningKey::from_bytes(&static_secret.to_bytes());
@@ -115,8 +115,8 @@ impl KeyHandle for NksProvider {
                 "Private key or encrypted data is empty".to_string(),
             ));
         } else {
-            match key_algorithm {
-                AsymmetricEncryption::Rsa(..) => {
+            match &key_algorithm {
+                Some(AsymmetricEncryption::Rsa(..)) => {
                     // RSA decryption method
                     let rsa = Rsa::private_key_from_pem(&self.private_key.as_bytes())
                         .map_err(|_| SecurityModuleError::KeyError)?;
@@ -134,7 +134,7 @@ impl KeyHandle for NksProvider {
 
                     Ok(decrypted_data.to_vec())
                 }
-                AsymmetricEncryption::Ecc(..) => {
+                Some(AsymmetricEncryption::Ecc(..)) => {
                     let public_key_bytes = BASE64_STANDARD
                         .decode(self.public_key.as_bytes())
                         .expect("Invalid public key base64");
@@ -164,7 +164,7 @@ impl KeyHandle for NksProvider {
 
                     Ok(decrypted_message)
                 }
-                _ => Err(SecurityModuleError::UnsupportedAlgorithm),
+                None => Err(SecurityModuleError::UnsupportedAlgorithm),
             }
         }
     }
@@ -195,8 +195,8 @@ impl KeyHandle for NksProvider {
                 "Private key or data is empty".to_string(),
             ));
         } else {
-            match key_algorithm {
-                AsymmetricEncryption::Rsa(..) => {
+            match &key_algorithm {
+                Some(AsymmetricEncryption::Rsa(..)) => {
                     // RSA encryption method
                     let rsa = Rsa::public_key_from_pem(&self.public_key.as_bytes())
                         .map_err(|_| SecurityModuleError::KeyError)?;
@@ -209,7 +209,7 @@ impl KeyHandle for NksProvider {
                         })?;
                     Ok(encrypted_data)
                 }
-                AsymmetricEncryption::Ecc(..) => {
+                Some(AsymmetricEncryption::Ecc(..)) => {
                     let public_key_bytes = BASE64_STANDARD
                         .decode(self.public_key.as_bytes())
                         .expect("Invalid public key base64");
@@ -232,7 +232,7 @@ impl KeyHandle for NksProvider {
                     result.extend_from_slice(&encrypted_message);
                     Ok(result)
                 }
-                _ => Err(SecurityModuleError::UnsupportedAlgorithm),
+                None => Err(SecurityModuleError::UnsupportedAlgorithm),
             }
         }
     }
@@ -254,7 +254,7 @@ impl KeyHandle for NksProvider {
         _signature: &[u8],
     ) -> Result<bool, SecurityModuleError> {
         if let Some(nks_config) = self.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>() {
-            let key_algorithm = nks_config.key_algorithm;
+            let key_algorithm = &nks_config.key_algorithm;
             let data = _data;
             let signature = _signature;
             let hash = nks_config.hash;
@@ -265,14 +265,12 @@ impl KeyHandle for NksProvider {
                 ));
             } else {
                 match key_algorithm {
-                    AsymmetricEncryption::Rsa(..) => {
+                    Some(AsymmetricEncryption::Rsa(..)) => {
                         // RSA signature verification method
                         let public_key_pem = self.public_key.as_bytes();
                         let rsa = Rsa::public_key_from_pem(public_key_pem)
                             .map_err(|_| SecurityModuleError::KeyError)?;
                         let pkey = PKey::from_rsa(rsa).map_err(|_| SecurityModuleError::KeyError)?;
-                        let mut verifier = RSAVerifier::new(MessageDigest::sha256(), &pkey)
-                            .map_err(|_| SecurityModuleError::VerificationFailed)?;
                         let mut verifier = match hash {
                             Hash::Sha1 => RSAVerifier::new(MessageDigest::sha1(), &pkey),
                             Hash::Sha2(Sha2Bits::Sha224) => RSAVerifier::new(MessageDigest::sha224(), &pkey),
@@ -295,7 +293,7 @@ impl KeyHandle for NksProvider {
                             .verify(signature)
                             .map_err(|_| SecurityModuleError::VerificationFailed)?)
                     }
-                    AsymmetricEncryption::Ecc(..) => {
+                    Some(AsymmetricEncryption::Ecc(..)) => {
                         // ECC signature verification method
                         let signature_sig = Signature::from_slice(signature)
                             .map_err(|_| SecurityModuleError::InvalidSignature)?;
@@ -311,7 +309,7 @@ impl KeyHandle for NksProvider {
                             Err(_) => Err(SecurityModuleError::VerificationFailed),
                         }
                     }
-                    _ => Err(SecurityModuleError::UnsupportedAlgorithm),
+                    None => Err(SecurityModuleError::UnsupportedAlgorithm),
                 }
             }
         } else {
