@@ -32,11 +32,11 @@ import CryptoKit
         
         var error: Unmanaged<CFError>?
         guard let privateKeyReference = SecKeyCreateRandomKey(params as CFDictionary, &error) else {
-            throw SecureEnclaveError.runtimeError("Error generating a new public-private key pair. \(String(describing: error))")
+            throw SecureEnclaveError.runtimeError("A new public-private key pair could not be generated. \(String(describing: error))")
         }
         
         guard let publicKey = getPublicKeyFromPrivateKey(privateKey: privateKeyReference) else {
-            throw SecureEnclaveError.runtimeError("Error getting the public key from the private one.")
+            throw SecureEnclaveError.runtimeError("Public key could not be received from the private key.")
         }
         
         let keyPair = SEKeyPair(publicKey: publicKey, privateKey: privateKeyReference)
@@ -44,7 +44,7 @@ import CryptoKit
         do{
             try storeKey_Keychain(keyID, privateKeyReference)
         }catch{
-            SecureEnclaveError.runtimeError("\(error)")
+            SecureEnclaveError.runtimeError("The key could not be stored successfully into the keychain. \(String(describing: error))")
         }
         return keyPair
     }
@@ -82,7 +82,7 @@ import CryptoKit
             let keyPair = try create_key(keyID: key_id.toString(), algo: algorithm, keySize: keySize)
             return ("Private Key: "+String((keyPair?.privateKey.hashValue)!) + "\nPublic Key: " + String((keyPair?.publicKey.hashValue)!))
         }catch{
-            return ("\(error)")
+            return ("Error: \(String(describing: error))")
         }
     }
     
@@ -123,7 +123,7 @@ import CryptoKit
         let result = SecKeyCreateEncryptedData(publicKeyName, algorithm, data as CFData, &error)
         
         if result == nil {
-            throw SecureEnclaveError.runtimeError("Error encrypting data. \(String(describing: error))")
+            throw SecureEnclaveError.runtimeError("Data could not be encrypted. \(String(describing: error))")
         }
         
         return result! as Data
@@ -151,7 +151,7 @@ import CryptoKit
             let encryptedData_string = encryptedData.base64EncodedString()
             return ("\(encryptedData_string)")
         }catch{
-            return ("\(error)")
+            return ("Error: \(String(describing: error))")
         }
 
     }
@@ -176,7 +176,7 @@ import CryptoKit
         let result = SecKeyCreateDecryptedData(privateKey, algorithm, data as CFData, &error)
         
         if result == nil {
-            throw SecureEnclaveError.runtimeError("Error decrypting data. \(String(describing: error))")
+            throw SecureEnclaveError.runtimeError("Data could not be decrypted. \(String(describing: error))")
         }
         
         return result! as Data
@@ -199,7 +199,7 @@ import CryptoKit
         do{
             guard let data = Data(base64Encoded: data.toString())
             else {
-                return ("Invalid base64 input")
+                return ("Error: Invalid base64 input")
             }
                                     
             guard let decrypted_value = String(data: try decrypt_data(data: data, privateKey: load_key(key_id: key_id.toString())!), encoding: .utf8)
@@ -209,7 +209,7 @@ import CryptoKit
             
             return ("\(decrypted_value)")
         } catch {
-            return ("Fehler: \(error)")
+            return ("Error: \(String(describing: error))")
         }
     }
     
@@ -248,13 +248,13 @@ import CryptoKit
     func sign_data(data: CFData, privateKeyReference: SecKey) throws -> CFData? {
         let sign_algorithm = SecKeyAlgorithm.ecdsaSignatureMessageX962SHA256;
         if !SecKeyIsAlgorithmSupported(privateKeyReference, SecKeyOperationType.sign, sign_algorithm){
-            throw SecureEnclaveError.runtimeError("Algorithm is not supported")
+            throw SecureEnclaveError.runtimeError("Algorithm is not supported.")
         }
         
         var error: Unmanaged<CFError>?
         guard let signed_data = SecKeyCreateSignature(privateKeyReference, sign_algorithm, data as CFData, &error)
         else{
-            throw SecureEnclaveError.runtimeError("Data couldn´t be signed: \(String(describing: error))")
+            throw SecureEnclaveError.runtimeError("Data could not be signed: \(String(describing: error))")
         }
         return signed_data
     }
@@ -282,7 +282,7 @@ import CryptoKit
             let signed_data = try ((sign_data(data: data_cfdata, privateKeyReference: privateKeyReference))! as Data) 
             return signed_data.base64EncodedString(options: [])
         }catch{
-            return "\(error)"
+            return "Error: \(String(describing: error))"
         }
     }
     
@@ -344,7 +344,7 @@ import CryptoKit
             let signature_string = signature.toString()
 
             guard let publicKey = getPublicKeyFromPrivateKey(privateKey: try load_key(key_id: publicKeyName_string)!)else{
-                throw SecureEnclaveError.runtimeError("Error getting PublicKey from PrivateKey)")
+                return("Error: Public key could not be received from the private key")
             }
             let status = try verify_signature(publicKey: publicKey, data: data_string, signature: signature_string)
             
@@ -355,7 +355,7 @@ import CryptoKit
             }
 
         }catch{
-            return "\(error)"
+            return "Error: \(String(describing: error))"
         }
     }
     
@@ -395,7 +395,7 @@ import CryptoKit
         var item: CFTypeRef?
         let status = SecItemCopyMatching(query as CFDictionary, &item)
         guard status == errSecSuccess else {
-            throw SecureEnclaveError.runtimeError("Couldn´t find the key")
+            throw SecureEnclaveError.runtimeError("Key could not be found.")
         }
         return (item as! SecKey)
     }
@@ -415,11 +415,11 @@ import CryptoKit
     func rustcall_load_key(keyID: RustString) -> String {
         do {
             guard let key = try load_key(key_id: keyID.toString()) else {
-                return "Key not found."
+                return "Error: Key not found."
             }
             return "\(key.hashValue)"
         } catch {
-            return "\(error)"
+            return "Error: \(String(describing: error))"
         }
     }
     
@@ -447,7 +447,7 @@ import CryptoKit
         let status = SecItemAdd(addquery as CFDictionary, nil)
         guard status == errSecSuccess
         else {
-            throw SecureEnclaveError.runtimeError("Failed to store Key in the Keychain")
+            throw SecureEnclaveError.runtimeError("Failed to store Key in the Keychain.")
         }
     }
     
@@ -469,10 +469,10 @@ import CryptoKit
             var publicKey: P256.KeyAgreement.PublicKey?
             do{
                 guard initialized else{
-                    throw SecureEnclaveError.runtimeError("Did not initailze any Module")
+                    throw SecureEnclaveError.runtimeError("Error: Did not initailze any module")
                 }
                 guard SecureEnclave.isAvailable else {
-                    throw SecureEnclaveError.runtimeError("Secure Enclave is not Available on this Device")
+                    throw SecureEnclaveError.runtimeError("Error: Secure Enclave is not available on this device")
                 }  
             }catch{
                 return false
