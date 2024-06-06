@@ -169,6 +169,7 @@ if you already have a project combining Rust and Java, you can skip this section
 
 <details open> 
 <summary><strong>Integrating this Repo into your project</strong></summary>
+	
 - fork this Repo and integrate it into the project you created as a submodule. This can be done with
 	```
 	git submodule add <Link to your forked Repo>
