@@ -63,6 +63,7 @@ pub mod jni {
         /// `javap -s -p file/path/to/compiled/java/class`
         ///
         ///  DO NOT USE THIS METHOD
+        #[allow(dead_code)]
         fn callback(environment: &JNIEnv) -> () {
             //This calls a method in Java in the Class RustDef, with the method name "callback"
             //and no arguments
