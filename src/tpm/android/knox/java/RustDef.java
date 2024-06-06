@@ -1,4 +1,4 @@
-package com.example.vulcans_limes;
+package tpm.android.knox.java;
 
 
 import java.io.IOException;
@@ -66,10 +66,7 @@ class RustDef {
      */
     static native ArrayList<String> special(ArrayList<Integer> input1, int input2);
 
-    /**
-     * Proof of concept method - shows callback from Rust to a java method
-     * ONLY USE FOR TESTING
-     */
+
     static native String callRust();
 
     static native byte[] demoEncrypt(byte[] data);
@@ -82,7 +79,7 @@ class RustDef {
 
     static native byte[] demoSign(byte[] data);
 
-    static native boolean demoVerify(byte[] data);
+    static native boolean demoVerify(byte[] data, byte[] signed_data);
 
     static native void demoLoad(String key_id);
 

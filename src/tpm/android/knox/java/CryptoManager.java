@@ -1,6 +1,5 @@
 package tpm.android.knox.java;
 
-import android.os.Build;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyInfo;
 import android.security.keystore.KeyProperties;
@@ -11,21 +10,18 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.KeyFactory;
-import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.security.spec.ECGenParameterSpec;
 import java.security.spec.InvalidKeySpecException;
-import java.util.Arrays;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -37,6 +33,11 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 
+/**
+ * This class provides all the methods we need for communication with the keystore and cryptographic systems.
+ * It loads the keystore, generates and loads keys, encrypts and decrypts and signs and verifies.
+ *
+ */
 public class CryptoManager {
     private static final String ANDROID_KEY_STORE = "AndroidKeyStore";
     private final KeyStore keyStore;
