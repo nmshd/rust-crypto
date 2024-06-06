@@ -349,6 +349,14 @@ MIT License
 <details open>
 <summary><strong>Source Documents</strong></summary> 
 
+  [Samsung Knox Whitepaper](https://image-us.samsung.com/SamsungUS/samsungbusiness/solutions/topics/iot/071421/Knox-Whitepaper-v1.5-20210709.pdf): Hold information about Samsung Knox, but also about the Knox Vault feature.
+  
+  [Android Keystore system](https://developer.android.com/privacy-and-security/keystore): Holds information about the Keystore system, how to use the Android keystore, as well as leading to other Android developer documents.
+  
+  [Robusta](https://github.com/giovanniberti/robusta/tree/master): The library we use for easier communication between Rust and Java.
+  
+  [Java Native Interface (JNI)](https://docs.oracle.com/javase/8/docs/technotes/guides/jni/): Needed for the communication between Rust and Java, Robusta makes using this interface easier for us.
+  
 </details>
 
 <details open>
@@ -356,8 +364,16 @@ MIT License
 
 </details>
 
+<details open>
+<summary><strong>Further reading</strong></summary> 
+	
+[j&s-soft GmbH](https://www.js-soft.com/en/)
 
+[enmeshed](https://github.com/nmshd)
 
+[Hochschule Mannheim (HSMA)](https://www.english.hs-mannheim.de/the-university.html)
+
+</details>
 
 
 
