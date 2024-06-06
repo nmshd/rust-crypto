@@ -37,7 +37,7 @@ The Repository contains a Wrapper that is used to perform cryptographic operatio
 8. [References](#references)
     - [Source Documents](#source-documents)
     - [Research Documents](#research-documents)
-<!-- ######################################################################################### Section1 ################################################################################################################################## -->
+
 ## Comprehensive Overview
 
 ### Supported Devices
@@ -103,7 +103,7 @@ mark the following as out of scope:
 - tablets
 - attestation
 - asmmetric encryption / decryption
-<!-- ######################################################################################### Section2 ################################################################################################################################## -->
+
 ## Installation Guide  
   
 ### Required Software  
@@ -168,9 +168,9 @@ Afterward, you can compile your Java code. You will need to specify the location
   
 With that, you should have everything complete and compiled the project from scratch.  
 
-<!-- ######################################################################################### Section3 ################################################################################################################################## -->
+
 ## Usage
-<!-- ######################################################################################### Section4 ################################################################################################################################## -->
+
 ## Architecture
 
 ### Component Diagram
@@ -212,7 +212,7 @@ The Knox Vault doesn't support all the cryptographic algorithms enabled by the K
 
 You can find out more about the KeyStore API and other APIs that are normally used with it in the following repository: [Android-Security-Reference](https://github.com/doridori/Android-Security-Reference/blob/master/framework/keystore.md). It also has some useful general info about security on Android.
 
-<!-- ######################################################################################### Section5 ################################################################################################################################## -->
+
 ## Implementation
 
 ### Code
@@ -269,7 +269,7 @@ Example:
 
 ### Rustdoc
 
-<!-- ######################################################################################### Section6 ################################################################################################################################## -->
+
 ## Next Steps  
 This chapter is all about looking to the future and thinking about how we can take this project in new directions.
 ### Ideas for our wrapper
@@ -282,7 +282,7 @@ This chapter is all about looking to the future and thinking about how we can ta
 - As the security modules are not built on performance, they take some time to encrypt and decrypt data. So creating derived keys for encryption and decryption outside of the security module will speed this process up immensely. The drawback however, could be security vulnerability.
 - Implementing some kind of attestation, if possible, so the enmeshed app knows its communicating with a security module, and which security module. (e.g. for our case the Google attestation service)
 - A method that lists and returns all the capabilities/supported algorithms the wrapper and security module provide.
-<!-- ######################################################################################### Section7 ################################################################################################################################## -->
+
 ## Open Source Project
 
 ### License
@@ -292,7 +292,7 @@ MIT License
 ### Issue Guide
 
 ### Pull Request Guide
-<!-- ######################################################################################### Section8 ################################################################################################################################## -->
+
 ## References
 
 ### Source Documents
