@@ -1,94 +1,109 @@
-## Table of Contents
+<h1 style="text-align: center; font-size: 3em;">Documentation</h1>
 
-1. [Introduction](#introduction)
-    - [Problem Description](#problem-description)
-    - [Product Description](#product-description)
-2. [Architecture](#architecture)
-    - [Component Diagram](#component-diagram)
-    - [Explanation](#explanation)
-    - [Libraries](#libraries)
-3. [Installation Guide](#installation-guide)
-    - [Required Software](#required-software)
-4. [Comprehensive Overview](#comprehensive-overview)
+### Introduction
+This project is part of a student development project at [Hochschule Mannheim (HSMA)](https://www.english.hs-mannheim.de/the-university.html). The project goal is provided by j&s-soft GmbH as part of their open-source project [enmeshed](https://github.com/nmshd).
+
+### Problem Description
+The enmeshed app from j&s-soft GmbH currently secures cryptographic keys in the software. This leads to security vulnerabilities and points of attack. To prevent this, hardware security modules are to be used on which the cryptographic keys are to be securely stored so that they cannot be retrieved even on compressed devices. Our team was tasked with implementing a solution to this problem in the subproject for Samsung's secure element, the Knox Vault.
+
+### Product Description
+The Repository contains a Wrapper that is used to perform cryptographic operations for mobile applications in a Secure Element (SE) on Android devices. Specifically, this project is focused on Samsung Knox Vault as the SE. The interface to the mobile application is provided in Rust, while the communication
+
+## Table of Contents
+1. [Comprehensive Overview](#comprehensive-overview)
     - [Supported Devices](#supported-devices)
     - [Devices We Tested On](#devices-we-tested-on)
     - [Performance](#performance)
     - [Feature List](#feature-list)
     - [Supported Algorithms](#supported-algorithms)
     - [Out of Scope](#out-of-scope)
+2. [Installation Guide](#installation-guide)
+    - [Required Software](#required-software)
+3. [Usage](#usage)
+    - [Code Examples](#code-examples)
+4. [Architecture](#architecture)
+    - [Component Diagram](#component-diagram)
+    - [Explanation](#explanation)
+    - [Libraries](#libraries)
 5. [Implementation](#implementation)
-    - [Code](#code)
    - [Connection Documentation](#JNI-Implementation)
     - [Javadoc](#javadoc)
     - [Rustdoc](#rustdoc)
-6. [Example Usage with Our Custom App](#example-usage-with-our-custom-app)
-    - [Code Examples](#code-examples)
-7. [Risk Management](#risk-management)
-    - [Retrospective](#retrospective)
-    - [Risk Identification](#risk-identification)
-8. [Next Steps](#next-steps)
+6. [Next Steps](#next-steps)
     - [Ideas](#ideas)
     - [What Could Be Done](#what-could-be-done)
     - [What Can Be Improved](#what-can-be-improved)
-9. [Open Source Project](#open-source-project)
-    - [License](#license)
-    - [Issue Guide](#issue-guide)
-    - [Pull Request Guide](#pull-request-guide)
-10. [References](#references)
+7. [Open Source Project](#open-source-project)
+8. [References](#references)
     - [Source Documents](#source-documents)
     - [Research Documents](#research-documents)
+<!-- ######################################################################################### Section1 ################################################################################################################################## -->
+## Comprehensive Overview
 
-### Introduction
-This project is part of a student development project at [Hochschule Mannheim (HSMA)](https://www.english.hs-mannheim.de/the-university.html). The project goal is provided by j&s-soft GmbH as part of their open-source project [enmeshed](https://github.com/nmshd).
+### Supported Devices
+This wrapper should work for all Android devices equiped with a SE, but the focus for our group is specifically on smartphones using Samsung Knox Vault. Therefore, testing will only be done using a Samsung smartphone, and in case there are incompatibilities between device manufacturers, Samsung will take priority. An up-to-date list of devices equipped with Knox Vault can be found [here](https://www.samsungknox.com/en/knox-platform/supported-devices) after selecting Knox Vault in the filter options. As of April 2024, the following devices are equipped with Knox Vault:
 
-### Problem Description
-The enmeshed app from j&s-soft GmbH currently secures cryptographic keys in the software. This leads to security vulnerabilities and points of attack. To prevent this, hardware security modules are to be used on which the cryptographic keys are to be securely stored so that they cannot be retrieved even on compressed devices.
-Our team was tasked with implementing a solution to this problem in the subproject for Samsung's secure element, the
-Knox Vault.
+Smartphones 
+- Samsung Galaxy A 35 / A55 
+- Samsung Galaxy S 22 / S23 / S 24
+  - the plus / ultra versions as well
+- Samsung Galaxy Z Flip 3 / 4 / 5
+- Samsung Galaxy Z Fold 3 / 4 / 5
+- Samsung Galaxy X Cover 7 (Enterprise Edition) 
 
-### Product Description
-The Repository contains a Wrapper that is used to perform cryptographic operations for mobile applications in a Secure Element (SE) on Android devices. Specifically, this project is focused on Samsung Knox Vault as the SE. The interface to the mobile application is provided in Rust, while the communication with the SE will be done using the Android Keystore system.
-## Architecture
+Tablets 
+- Galaxy Tab S 8 / S 9
+  - the plus, ultra, FE and 5G versions as well
+- Galaxy Tab Active 5 (Enterprise Edition)
+  - the 5G version as well
 
-### Component Diagram
+We have received a Samsung S22 from j&s-soft and have used this device for testing purposes througout the project.
 
-![component diagram](images/component_diagram.jpg)
+### Performance
+After an extensive performance test, we can conclude that data encryption using AES-256-CBC on the Knox Vault Chip occurs at a rate of approximately 0.11 MB/s. The test showed a variance of 0.58 s².
+
+### Feature List
+Our project supports the following features:
+
+- **Saving keys in the strongbox**: All generated keys are stored securely within the strongbox.
+-   **Encrypt and Decrypt Data**: Utilizing symmetric encryption, our system ensures data confidentiality through encryption and decryption mechanisms.
+-   **Sign and Verify Data**: We provide functionality for both symmetric and asymmetric signing and verification, ensuring data integrity and authenticity.
+
+In the following chapter, you will find detailed information on the supported algorithms.
+
+### Supported Algorithms
+We have provided a list of the supported Algorithms of our project:
+
+| Algorithm Type    | Details                                      |
+|-------------------|----------------------------------------------|
+| **RSA**           | RSA;512;SHA-256;PKCS1                       |
+|                   | RSA;1024;SHA-256;PKCS1                      |
+|                   | RSA;2048;SHA-256;PKCS1                      |
+|                   | RSA;3072;SHA-256;PKCS1                      |
+|                   | RSA;4096;SHA-256;PKCS1                      |
+|                   | RSA;8192;SHA-256;PKCS1                      |
+| **ECC**           | EC;secp256r1;SHA-256                        |
+|                   | EC;secp384r1;SHA-256                        |
+|                   | EC;secp521r1;SHA-256                        |
+| **3DES** | DESede;168;CBC;PKCS7Padding                 |
+| **AES**           | AES;128;GCM;NoPadding                       |
+|                   | AES;128;CBC;PKCS7Padding                    |
+|                   | AES;128;CTR;NoPadding                       |
+|                   | AES;192;GCM;NoPadding                       |
+|                   | AES;192;CBC;PKCS7Padding                    |
+|                   | AES;192;CTR;NoPadding                       |
+|                   | AES;256;GCM;NoPadding                       |
+|                   | AES;256;CBC;PKCS7Padding                    |
+|                   | AES;256;CTR;NoPadding                       |
 
 
-## Components
-
-The component diagram illustrates the relationships and interactions between the different classes and modules of the project. Here are the main components:
-
-- **CryptoManager**:
-The `CryptoManager` class handles cryptographic operations within the Android environment. It provides functions for generating and storing symmetric and asymmetric keys in the Android Keystore, as well as for encrypting and decrypting data. Additionally, it enables signing and verifying data using keys stored in the Keystore.
-
-
-- **RustDef**: 
-The `RustDef` class defines the interface to the cryptographic functions implemented in Rust. It loads the native library and declares the native methods implemented in Rust.
-
-
-- **interface.rs**:
-This module contains the implementation of cryptographic functions in Rust and exposes them to the Java environment. The functions in `interface.rs` are designed to perform cryptographic operations efficiently and securely, providing an interface for use in Android applications.
-
-### Libraries
-
-- #### JNI
-
-The Java Native Interface (JNI) is a foreign-function interface (FFI) that supports
-cross-communication between Java and native languages such as C or Rust. We use it to
-communicate between the Rust- and Java parts of the wrapper by calling Java methods from
-the Rust environment and passing parameters that way. The JNI is provided by Oracle and tied directly into the JDK.
-To find out more about how the exact communication works, check the [JNI Implementation](#JNI-Implementation).
-- **KeyStore API**
-
-The [Android Keystore system](https://developer.android.com/privacy-and-security/keystore) handles the cryptographic keys for us. We went with this over the Knox SDK because it's a better fit for our needs, and even Samsung recommends it in their [Knox Vault Whitepaper](https://image-us.samsung.com/SamsungUS/samsungbusiness/solutions/topics/iot/071421/Knox-Whitepaper-v1.5-20210709.pdf). After more research, it also seemed like the best way to achieve the project goal in the limited time we had.
-
-With the Keystore and other APIs, we can use the keys to encrypt and decrypt data, as well as sign and verify it. The API also helps us solve the problem from j&s-soft, as we can enforce generated cryptographic keys to be saved in the Knox Vault (or any other strongbox).
-
-The Knox Vault doesn't support all the cryptographic algorithms enabled by the Keystore and other APIs. As we couldn't find any detailed documentation about what the Knox Vault supports, we had to test it out by trial and error. You can see all the algorithms that have passed our tests in the [Supported Algorithms](#supported-algorithms) section.
-
-You can find out more about the KeyStore API and other APIs that are normally used with it in the following repository: [Android-Security-Reference](https://github.com/doridori/Android-Security-Reference/blob/master/framework/keystore.md). It also has some useful general info about security on Android.
-
+### Out of Scope
+In order to finish this project in the given time, we decided to
+mark the following as out of scope:
+- tablets
+- attestation
+- asmmetric encryption / decryption
+<!-- ######################################################################################### Section2 ################################################################################################################################## -->
 ## Installation Guide
 
 ### Required Software
@@ -167,73 +182,51 @@ The easiest way to do that is by specifying the library path when building like 
     .\gradlew -D java.library.path=app/src/main/jniLibs installDebug
 
 With that, you should have everything complete and compiled the project from scratch.
+<!-- ######################################################################################### Section3 ################################################################################################################################## -->
+## Usage
+<!-- ######################################################################################### Section4 ################################################################################################################################## -->
+## Architecture
 
-## Comprehensive Overview
+### Component Diagram
 
-### Supported Devices
-This wrapper should work for all Android devices equiped with a SE, but the focus for our group is specifically on smartphones using Samsung Knox Vault. Therefore, testing will only be done using a Samsung smartphone, and in case there are incompatibilities between device manufacturers, Samsung will take priority. An up-to-date list of devices equipped with Knox Vault can be found [here](https://www.samsungknox.com/en/knox-platform/supported-devices) after selecting Knox Vault in the filter options. As of April 2024, the following devices are equipped with Knox Vault:
-
-Smartphones 
-- Samsung Galaxy A 35 / A55 
-- Samsung Galaxy S 22 / S23 / S 24
-  - the plus / ultra versions as well
-- Samsung Galaxy Z Flip 3 / 4 / 5
-- Samsung Galaxy Z Fold 3 / 4 / 5
-- Samsung Galaxy X Cover 7 (Enterprise Edition) 
-
-Tablets 
-- Galaxy Tab S 8 / S 9
-  - the plus, ultra, FE and 5G versions as well
-- Galaxy Tab Active 5 (Enterprise Edition)
-  - the 5G version as well
-
-We have received a Samsung S22 from j&s-soft and have used this device for testing purposes througout the project.
-
-### Performance
-After an extensive performance test, we can conclude that data encryption using AES-256-CBC on the Knox Vault Chip occurs at a rate of approximately 0.11 MB/s. The test showed a variance of 0.58 s².
-
-### Feature List
-Our project supports the following features:
-
-- **Saving keys in the strongbox**: All generated keys are stored securely within the strongbox.
--   **Encrypt and Decrypt Data**: Utilizing symmetric encryption, our system ensures data confidentiality through encryption and decryption mechanisms.
--   **Sign and Verify Data**: We provide functionality for both symmetric and asymmetric signing and verification, ensuring data integrity and authenticity.
-
-In the following chapter, you will find detailed information on the supported algorithms.
-
-### Supported Algorithms
-We have provided a list of the supported Algorithms of our project:
-
-| Algorithm Type    | Details                                      |
-|-------------------|----------------------------------------------|
-| **RSA**           | RSA;512;SHA-256;PKCS1                       |
-|                   | RSA;1024;SHA-256;PKCS1                      |
-|                   | RSA;2048;SHA-256;PKCS1                      |
-|                   | RSA;3072;SHA-256;PKCS1                      |
-|                   | RSA;4096;SHA-256;PKCS1                      |
-|                   | RSA;8192;SHA-256;PKCS1                      |
-| **ECC**           | EC;secp256r1;SHA-256                        |
-|                   | EC;secp384r1;SHA-256                        |
-|                   | EC;secp521r1;SHA-256                        |
-| **3DES** | DESede;168;CBC;PKCS7Padding                 |
-| **AES**           | AES;128;GCM;NoPadding                       |
-|                   | AES;128;CBC;PKCS7Padding                    |
-|                   | AES;128;CTR;NoPadding                       |
-|                   | AES;192;GCM;NoPadding                       |
-|                   | AES;192;CBC;PKCS7Padding                    |
-|                   | AES;192;CTR;NoPadding                       |
-|                   | AES;256;GCM;NoPadding                       |
-|                   | AES;256;CBC;PKCS7Padding                    |
-|                   | AES;256;CTR;NoPadding                       |
+![component diagram](images/component_diagram.jpg)
 
 
-### Out of Scope
-In order to finish this project in the given time, we decided to
-mark the following as out of scope:
-- tablets
-- attestation
-- asmmetric encryption / decryption
+## Components
 
+The component diagram illustrates the relationships and interactions between the different classes and modules of the project. Here are the main components:
+
+- **CryptoManager**:
+The `CryptoManager` class handles cryptographic operations within the Android environment. It provides functions for generating and storing symmetric and asymmetric keys in the Android Keystore, as well as for encrypting and decrypting data. Additionally, it enables signing and verifying data using keys stored in the Keystore.
+
+
+- **RustDef**: 
+The `RustDef` class defines the interface to the cryptographic functions implemented in Rust. It loads the native library and declares the native methods implemented in Rust.
+
+
+- **interface.rs**:
+This module contains the implementation of cryptographic functions in Rust and exposes them to the Java environment. The functions in `interface.rs` are designed to perform cryptographic operations efficiently and securely, providing an interface for use in Android applications.
+
+### Libraries
+
+- #### JNI
+
+The Java Native Interface (JNI) is a foreign-function interface (FFI) that supports
+cross-communication between Java and native languages such as C or Rust. We use it to
+communicate between the Rust- and Java parts of the wrapper by calling Java methods from
+the Rust environment and passing parameters that way. The JNI is provided by Oracle and tied directly into the JDK.
+To find out more about how the exact communication works, check the [JNI Implementation](#JNI-Implementation).
+- **KeyStore API**
+
+The [Android Keystore system](https://developer.android.com/privacy-and-security/keystore) handles the cryptographic keys for us. We went with this over the Knox SDK because it's a better fit for our needs, and even Samsung recommends it in their [Knox Vault Whitepaper](https://image-us.samsung.com/SamsungUS/samsungbusiness/solutions/topics/iot/071421/Knox-Whitepaper-v1.5-20210709.pdf). After more research, it also seemed like the best way to achieve the project goal in the limited time we had.
+
+With the Keystore and other APIs, we can use the keys to encrypt and decrypt data, as well as sign and verify it. The API also helps us solve the problem from j&s-soft, as we can enforce generated cryptographic keys to be saved in the Knox Vault (or any other strongbox).
+
+The Knox Vault doesn't support all the cryptographic algorithms enabled by the Keystore and other APIs. As we couldn't find any detailed documentation about what the Knox Vault supports, we had to test it out by trial and error. You can see all the algorithms that have passed our tests in the [Supported Algorithms](#supported-algorithms) section.
+
+You can find out more about the KeyStore API and other APIs that are normally used with it in the following repository: [Android-Security-Reference](https://github.com/doridori/Android-Security-Reference/blob/master/framework/keystore.md). It also has some useful general info about security on Android.
+
+<!-- ######################################################################################### Section5 ################################################################################################################################## -->
 ## Implementation
 
 ### Code
@@ -290,16 +283,7 @@ Example:
 
 ### Rustdoc
 
-## Example Usage with Our Custom App
-
-### Code Examples
-
-## Risk Management
-
-### Retrospective
-
-### Risk Identification
-
+<!-- ######################################################################################### Section6 ################################################################################################################################## -->
 ## Next Steps
 
 ### Ideas
@@ -308,6 +292,7 @@ Example:
 
 ### What Can Be Improved
 
+<!-- ######################################################################################### Section7 ################################################################################################################################## -->
 ## Open Source Project
 
 ### License
@@ -317,9 +302,21 @@ MIT License
 ### Issue Guide
 
 ### Pull Request Guide
-
+<!-- ######################################################################################### Section8 ################################################################################################################################## -->
 ## References
 
 ### Source Documents
 
 ### Research Documents
+
+
+
+
+
+
+
+
+
+
+
+
