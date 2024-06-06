@@ -65,6 +65,7 @@ use crate::hsm::{yubikey::YubiKeyProvider, HsmProviderConfig};
 // compatibility of the system across various configurations and key sizes.
 
 //Test for signing and verifying RSA data with 1024-bit key
+#[cfg(feature = "yubi")]
 #[test]
 fn test_sign_and_verify_rsa_1024() {
     // Initialization of YubiKeyProvider and configuration of HsmProviderConfig
@@ -80,7 +81,7 @@ fn test_sign_and_verify_rsa_1024() {
         .initialize_module()
         .expect("Failed to initialize module");
     provider
-        .create_key("test_sv_1024", config)
+        .create_key("test_rsa_key_1024", config)
         .expect("Failed to create RSA key");
 
     let data = b"Hello, World!";
@@ -90,6 +91,7 @@ fn test_sign_and_verify_rsa_1024() {
 }
 
 // Test for signing and verifying RSA data with a 2048-bit key
+#[cfg(feature = "yubi")]
 #[test]
 fn test_sign_and_verify_rsa_2048() {
     let mut provider = YubiKeyProvider::new("test_sv_2048".to_string());
@@ -103,7 +105,7 @@ fn test_sign_and_verify_rsa_2048() {
         .initialize_module()
         .expect("Failed to initialize module");
     provider
-        .create_key("test_sv_2048", config)
+        .create_key("test_rsa_key_2048", config)
         .expect("Failed to create RSA key");
 
     let data = b"Hello, World!";
@@ -113,6 +115,7 @@ fn test_sign_and_verify_rsa_2048() {
 }
 
 // Test for signing and verifying ECC data with a 256-bit key
+#[cfg(feature = "yubi")]
 #[test]
 fn test_sign_and_verify_ecc_256() {
     let mut provider = YubiKeyProvider::new("test_ecc_256".to_string());
@@ -126,7 +129,7 @@ fn test_sign_and_verify_ecc_256() {
         .initialize_module()
         .expect("Failed to initialize module");
     provider
-        .create_key("test_ecc_256", config)
+        .create_key("test_ecc_key_256", config)
         .expect("Failed to create ECC key");
 
     let data = b"Hello, World!";
@@ -136,26 +139,77 @@ fn test_sign_and_verify_ecc_256() {
 }
 
 // Test for signing and verifying ECC data with a 384-bit key
+#[cfg(feature = "yubi")]
 #[test]
 fn test_sign_and_verify_ecc_384() {
     let mut provider = YubiKeyProvider::new("test_ecc_384".to_string());
 
     let config = HsmProviderConfig::new(
         AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P384)),
-        vec![KeyUsage::SignEncrypt],
+        vec![KeyUsage::SignEncrypt, KeyUsage::Decrypt],
     );
 
     provider
         .initialize_module()
         .expect("Failed to initialize module");
     provider
-        .create_key("test_ecc_384", config)
+        .create_key("test_ecc_key_384", config)
         .expect("Failed to create ECC key");
 
     let data = b"Hello, World!";
     let signature = provider.sign_data(data).expect("Failed to sign data");
 
     assert!(provider.verify_signature(data, &signature).unwrap());
+}
+
+#[cfg(feature = "yubi")]
+#[test]
+fn test_encrypt_and_decrypt_rsa_1024() {
+    let mut provider = YubiKeyProvider::new("test_enc_dec_1024".to_string());
+    let config = HsmProviderConfig::new(
+        AsymmetricEncryption::Rsa(KeyBits::Bits1024),
+        vec![KeyUsage::SignEncrypt, KeyUsage::Decrypt],
+    );
+
+    provider
+        .initialize_module()
+        .expect("Failed to initialize module");
+    provider
+        .create_key("test_rsa_key_1024", config)
+        .expect("Failed to create RSA key");
+
+    let data = b"Hello, World!";
+    let encrypted_data = provider.encrypt_data(data).expect("Failed to encrypt data");
+    let decrypted_data = provider
+        .decrypt_data(&encrypted_data)
+        .expect("Failed to decrypt data");
+
+    assert_eq!(data, decrypted_data.as_slice());
+}
+
+#[cfg(feature = "yubi")]
+#[test]
+fn test_encrypt_and_decrypt_rsa_2048() {
+    let mut provider = YubiKeyProvider::new("test_enc_dec_2048".to_string());
+    let config = HsmProviderConfig::new(
+        AsymmetricEncryption::Rsa(KeyBits::Bits2048),
+        vec![KeyUsage::SignEncrypt, KeyUsage::Decrypt],
+    );
+
+    provider
+        .initialize_module()
+        .expect("Failed to initialize module");
+    provider
+        .create_key("test_rsa_key_2048", config)
+        .expect("Failed to create RSA key");
+
+    let data = b"Hello, World!";
+    let encrypted_data = provider.encrypt_data(data).expect("Failed to encrypt data");
+    let decrypted_data = provider
+        .decrypt_data(&encrypted_data)
+        .expect("Failed to decrypt data");
+
+    assert_eq!(data, decrypted_data.as_slice());
 }
 
 /*
