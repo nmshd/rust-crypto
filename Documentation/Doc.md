@@ -141,8 +141,8 @@ if you already have a project combining Rust and Java, you can skip this section
 
 - create a new Android studio project (or use an existing one), that fits your needs for the Android/Java side of your project
 - create a new folder `rust` in your project files that has the same parent folder as `app`
-- Create a `Cargo.toml` file in that folder with the following content: TODO: Link
-- create a `lib.rs` file in the same folder with the following content:  TODO: Link
+- Create a `Cargo.toml` file in that folder with the following content: [´Cargo.toml´](Documentation/resources/Cargo.toml)
+- create a `lib.rs` file in the same folder with the following content:  [´lib.rs´](Documentation/resources/lib.rs)
 - adjust the package marker for the `RustDef` struct in `lib.rs` on line 14 to contain the correct java package
 
 ###  Integrating this Repo into your project
