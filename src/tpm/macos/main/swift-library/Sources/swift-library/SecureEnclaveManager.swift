@@ -14,7 +14,7 @@ import CryptoKit
      
     A 'SEKeyPair' containing the public and private keys on success, or a 'SecureEnclaveError' on failure.
     **/
-    func create_key(keyID: String, algo: CFString, keySize: String ) throws -> SEKeyPair? {
+    func create_key(keyID: String, algorithm: CFString, keySize: String ) throws -> SEKeyPair? {
         let accessControl = createAccessControlObject()
         
         let privateKeyParams: [String: Any] = [
@@ -24,7 +24,7 @@ import CryptoKit
         ]
         let params: [String: Any] = [
             // kSecAttrKeyType as String: kSecAttrKeyTypeECSECPrimeRandom,
-            kSecAttrKeyType as String: algo, 
+            kSecAttrKeyType as String: algorithm, 
             kSecAttrKeySizeInBits as String: keySize,
             kSecAttrTokenID as String: kSecAttrTokenIDSecureEnclave,
             kSecPrivateKeyAttrs as String: privateKeyParams
@@ -45,7 +45,7 @@ import CryptoKit
             try storeKey_Keychain(keyID, privateKeyReference)
         }catch{
             // TODO: Programm stürzt ab
-            SecureEnclaveError.CreateKeyError("The key could not be stored successfully into the keychain. \(String(describing: error))")
+            throw SecureEnclaveError.CreateKeyError("The key could not be stored successfully into the keychain. \(String(describing: error))")
         }
         return keyPair
     }
@@ -64,12 +64,12 @@ import CryptoKit
     **/
     func rustcall_create_key(key_id: RustString, key_algorithm_type: RustString) -> String {
         // For Secure Enclave is only ECC supported
-        let ecc_algo = String(key_algorithm_type.toString().split(separator: ";")[0])
+        let ecc_algorithm = String(key_algorithm_type.toString().split(separator: ";")[0])
         let keySize = String(key_algorithm_type.toString().split(separator:";")[1])
         var algorithm: CFString;
 
         // Switch Case implement
-        switch ecc_algo{
+        switch ecc_algorithm{
             case "kSecAttrKeyTypeECDSA": 
                 algorithm = kSecAttrKeyTypeECDSA
             case "kSecAttrKeyTypeECSECPrimeRandom": 
@@ -79,7 +79,7 @@ import CryptoKit
         }
         
         do{
-            let keyPair = try create_key(keyID: key_id.toString(), algo: algorithm, keySize: keySize)
+            let keyPair = try create_key(keyID: key_id.toString(), algorithm: algorithm, keySize: keySize)
             return ("Private Key: "+String((keyPair?.privateKey.hashValue)!) + "\nPublic Key: " + String((keyPair?.publicKey.hashValue)!))
         }catch{
             return ("Error: \(String(describing: error))")
@@ -174,11 +174,9 @@ import CryptoKit
         let algorithm: SecKeyAlgorithm = SecKeyAlgorithm.eciesEncryptionCofactorVariableIVX963SHA256AESGCM
         var error: Unmanaged<CFError>?
         let result = SecKeyCreateDecryptedData(privateKey, algorithm, data as CFData, &error)
-        
         if result == nil {
             throw SecureEnclaveError.DecryptionError("Data could not be decrypted. \(String(describing: error))")
         }
-        
         return result! as Data
     }
 
@@ -273,14 +271,14 @@ import CryptoKit
 
     A String representing the signed data.
     **/
-    func rustcall_sign_data(key_id: RustString, data: RustString, algo: RustString) -> String{
+    func rustcall_sign_data(key_id: RustString, data: RustString, algorithm: RustString) -> String{
         let privateKeyName_string = key_id.toString()
         let data_cfdata = data.toString().data(using: String.Encoding.utf8)! as CFData
 
         do {
-            let appple_algo_enum = try convert_sign_algo(algo: algo)
+            let appple_algorithm_enum = try convert_sign_algorithm(algorithm: algorithm)
             let privateKeyReference = try load_key(key_id: privateKeyName_string)!
-            let signed_data = try ((sign_data(data: data_cfdata, privateKeyReference: privateKeyReference, algorithm: appple_algo_enum))! as Data) 
+            let signed_data = try ((sign_data(data: data_cfdata, privateKeyReference: privateKeyReference, algorithm: appple_algorithm_enum))! as Data) 
             return signed_data.base64EncodedString(options: [])
         }catch{
             return "Error: \(String(describing: error))"
@@ -303,8 +301,8 @@ import CryptoKit
      
     A boolean if the signature is valid on success, or a 'SecureEnclaveError' on failure.
     **/
-    func verify_signature(publicKey: SecKey, data: String, signature: String, algo: SecKeyAlgorithm) throws -> Bool {
-        let sign_algorithm = algo
+    func verify_signature(publicKey: SecKey, data: String, signature: String, sign_algorithm: SecKeyAlgorithm) throws -> Bool {
+        let sign_algorithm = sign_algorithm
         guard Data(base64Encoded: signature) != nil else{
             throw SecureEnclaveError.SignatureVerificationError("Invalid message to verify")
         }
@@ -338,17 +336,17 @@ import CryptoKit
 
     A String if the data could have been verified with the signature.
     **/
-    func rustcall_verify_data(key_id: RustString, data: RustString, signature: RustString, algo: RustString) -> String {
+    func rustcall_verify_data(key_id: RustString, data: RustString, signature: RustString, algorithm: RustString) -> String {
         do{
             let publicKeyName_string = key_id.toString()
             let data_string = data.toString()
             let signature_string = signature.toString()
-            let appple_algo_enum = try convert_sign_algo(algo: algo)
+            let appple_algorithm_enum = try convert_sign_algorithm(algorithm: algorithm)
 
             guard let publicKey = getPublicKeyFromPrivateKey(privateKey: try load_key(key_id: publicKeyName_string)!)else{
                 throw SecureEnclaveError.SignatureVerificationError("Public key could not be received from the private key")
             }
-            let status = try verify_signature(publicKey: publicKey, data: data_string, signature: signature_string, algo: appple_algo_enum)
+            let status = try verify_signature(publicKey: publicKey, data: data_string, signature: signature_string, sign_algorithm: appple_algorithm_enum)
             
             if status == true{
                 return "true"
@@ -421,9 +419,9 @@ import CryptoKit
 
     A String representing the private key as a String.
     **/
-    func rustcall_load_key(keyID: RustString) -> String {
+    func rustcall_load_key(key_id: RustString) -> String {
         do {
-            guard let key = try load_key(key_id: keyID.toString()) else {
+            guard let key = try load_key(key_id: key_id.toString()) else {
                 return "Key not found."
             }
             return "\(key.hashValue)"
@@ -471,9 +469,9 @@ import CryptoKit
      
     A boolean if the module has been inizializes correctly on success, or a 'SecureEnclaveError' on failure.
     **/
-    func initializeModule() -> Bool  {
+    func initialize_module() -> Bool  {
         if #available(macOS 10.15, *) {
-            var initialized: Bool = true
+            let initialized: Bool = true
             //Warnings
             // var privateKey: P256.KeyAgreement.PrivateKey?
             // var publicKey: P256.KeyAgreement.PublicKey?
@@ -494,46 +492,46 @@ import CryptoKit
         return true
     }
 
-    func convert_sign_algo(algo: RustString) throws -> SecKeyAlgorithm{
-        let algo = algo.toString().split(separator: ";")
-        let appple_algo_enum: SecKeyAlgorithm; 
+    func convert_sign_algorithm(algorithm: RustString) throws -> SecKeyAlgorithm{
+        let algorithm = algorithm.toString().split(separator: ";")
+        let appple_algorithm_enum: SecKeyAlgorithm; 
         
-        switch algo[1] {
+        switch algorithm[1] {
             case "SHA1": 
-                appple_algo_enum = SecKeyAlgorithm.ecdsaSignatureMessageX962SHA1
+                appple_algorithm_enum = SecKeyAlgorithm.ecdsaSignatureMessageX962SHA1
             case "SHA224": 
-                appple_algo_enum = SecKeyAlgorithm.ecdsaSignatureMessageX962SHA224
+                appple_algorithm_enum = SecKeyAlgorithm.ecdsaSignatureMessageX962SHA224
             case "SHA256": 
-                appple_algo_enum = SecKeyAlgorithm.ecdsaSignatureMessageX962SHA256
+                appple_algorithm_enum = SecKeyAlgorithm.ecdsaSignatureMessageX962SHA256
             case "SHA384":
-                appple_algo_enum = SecKeyAlgorithm.ecdsaSignatureMessageX962SHA384
+                appple_algorithm_enum = SecKeyAlgorithm.ecdsaSignatureMessageX962SHA384
             case "SHA512": 
-                appple_algo_enum = SecKeyAlgorithm.ecdsaSignatureMessageX962SHA512
+                appple_algorithm_enum = SecKeyAlgorithm.ecdsaSignatureMessageX962SHA512
             default: 
                 throw SecureEnclaveError.SigningError("Algorithm is not supported")
         }
 
-        return appple_algo_enum
+        return appple_algorithm_enum
     }
 
-    func convert_encrypt_algo(algo: RustString) throws -> SecKeyAlgorithm{
-        let algo = algo.toString().split(separator: ";")
-        let appple_algo_enum: SecKeyAlgorithm; 
+    func convert_encrypt_algorithm(algorithm: RustString) throws -> SecKeyAlgorithm{
+        let algorithm = algorithm.toString().split(separator: ";")
+        let appple_algorithm_enum: SecKeyAlgorithm; 
         
-        switch algo[1] {
+        switch algorithm[1] {
             case "SHA1": 
-                appple_algo_enum = SecKeyAlgorithm.eciesEncryptionStandardX963SHA1AESGCM
+                appple_algorithm_enum = SecKeyAlgorithm.eciesEncryptionStandardX963SHA1AESGCM
             case "SHA224": 
-                appple_algo_enum = SecKeyAlgorithm.eciesEncryptionStandardX963SHA224AESGCM
+                appple_algorithm_enum = SecKeyAlgorithm.eciesEncryptionStandardX963SHA224AESGCM
             case "SHA256": 
-                appple_algo_enum = SecKeyAlgorithm.eciesEncryptionStandardX963SHA256AESGCM
+                appple_algorithm_enum = SecKeyAlgorithm.eciesEncryptionStandardX963SHA256AESGCM
             case "SHA384":
-                appple_algo_enum = SecKeyAlgorithm.eciesEncryptionStandardX963SHA384AESGCM
+                appple_algorithm_enum = SecKeyAlgorithm.eciesEncryptionStandardX963SHA384AESGCM
             case "SHA512": 
-                appple_algo_enum = SecKeyAlgorithm.eciesEncryptionStandardX963SHA512AESGCM
+                appple_algorithm_enum = SecKeyAlgorithm.eciesEncryptionStandardX963SHA512AESGCM
             default: 
                 throw SecureEnclaveError.EncryptionError("Algorithm is not supported")
         }
 
-        return appple_algo_enum
+        return appple_algorithm_enum
     }
