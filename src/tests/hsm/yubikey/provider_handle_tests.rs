@@ -219,7 +219,7 @@ fn test_load_ecc_key_256() {
 
     // load ECC-key
     provider
-        .load_key("test_ecc_key", config)
+        .load_key(key_id, config)
         .expect("Failed to load ECC key");
 }
 
@@ -243,6 +243,6 @@ fn test_load_ecc_key_384() {
 
     // load ECC-key
     provider
-        .load_key("test_ecc_key", config)
+        .load_key(key_id, config)
         .expect("Failed to load ECC key");
 }
