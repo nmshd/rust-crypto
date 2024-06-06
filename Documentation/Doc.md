@@ -6,7 +6,6 @@
 2. [Architecture](#architecture)
     - [Component Diagram](#component-diagram)
     - [Explanation](#explanation)
-    - [Abstraction Layer](#abstraction-layer)
     - [Libraries](#libraries)
 3. [Installation Guide](#installation-guide)
     - [Required Software](#required-software)
