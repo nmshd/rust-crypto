@@ -111,10 +111,11 @@ impl Provider for YubiKeyProvider {
             let slot: u32;
             let key_usages = self.key_usages.clone().unwrap();
             let slot_id;
+            let algorithm: AlgorithmId;
 
             if !(self.load_key(key_id, config).is_ok()) {
                 let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
-                let _ = yubikey.verify_pin("123456".as_ref());
+                let _ = yubikey.verify_pin(self.pin.as_ref());
                 let _ = yubikey.authenticate(MgmKey::new(self.management_key.unwrap()).unwrap());
                 match get_free_slot(&mut yubikey) {
                     Ok(free) => {
@@ -161,97 +162,91 @@ impl Provider for YubiKeyProvider {
                 Ok((slot_id, pkey))
             }
 
-            match *key_usages.get(0).unwrap() {
-                KeyUsage::SignEncrypt => match key_algo {
-                    AsymmetricEncryption::Rsa(KeyBits::Bits1024) => {
-                        let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
-                        let (slot_id, pkey) =
-                            generate_key(&mut yubikey, AlgorithmId::Rsa1024, slot_id).unwrap();
-                        self.slot_id = Some(slot_id);
-                        self.pkey = pkey;
-
-                        usage = "SignEncrypt";
+            match key_algo {
+                AsymmetricEncryption::Rsa(curve) => {
+                    match curve {
+                        KeyBits::Bits1024 => algorithm = AlgorithmId::Rsa1024,
+                        KeyBits::Bits2048 => algorithm = AlgorithmId::Rsa2048,
+                        _ => {
+                            return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
+                                "Key Algorithm not supported".to_string(),
+                            )));
+                        }
                     }
-                    AsymmetricEncryption::Rsa(KeyBits::Bits2048) => {
-                        let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
-                        let (slot_id, pkey) =
-                            generate_key(&mut yubikey, AlgorithmId::Rsa2048, slot_id).unwrap();
-                        self.slot_id = Some(slot_id);
-                        self.pkey = pkey;
-
-                        usage = "SignEncrypt";
+                    let mut counter = 0;
+                    let mut end = false;
+                    for i in 0..key_usages.len() {
+                        match key_usages.get(i).unwrap() {
+                            KeyUsage::SignEncrypt => {
+                                usage = format!("{}SignEncrypt", usage).as_str()
+                            }
+                            KeyUsage::Decrypt => usage = format!("{}Decrypt", usage).as_str(),
+                            _ => {
+                                return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
+                                    "Key Usage not supported".to_string(),
+                                )));
+                            }
+                        }
+                        if counter == key_usages.len() {
+                            end = true;
+                        }
+                        if !end {
+                            usage = format!("{}+", usage).as_str();
+                        }
                     }
-                    AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P256)) => {
-                        let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
-                        let (slot_id, pkey) =
-                            generate_key(&mut yubikey, AlgorithmId::EccP256, slot_id).unwrap();
-                        self.slot_id = Some(slot_id);
-                        self.pkey = pkey;
-
-                        usage = "SignEncrypt";
+                }
+                AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(curve)) => {
+                    match curve {
+                        EccCurves::P256 => algorithm = AlgorithmId::EccP256,
+                        EccCurves::P384 => algorithm = AlgorithmId::EccP384,
+                        _ => {
+                            return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
+                                "Key Algorithm not supported".to_string(),
+                            )));
+                        }
                     }
-                    AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P384)) => {
-                        let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
-                        let (slot_id, pkey) =
-                            generate_key(&mut yubikey, AlgorithmId::EccP384, slot_id).unwrap();
-                        self.slot_id = Some(slot_id);
-                        self.pkey = pkey;
+                    let mut counter = 0;
+                    let mut end = false;
+                    for i in 0..key_usages.len() {
+                        match key_usages.get(i).unwrap() {
+                            KeyUsage::SignEncrypt => {
+                                usage = "SignEncrypt";
+                            }
+                            // The Yubikey does not support decryption with ECC, so it is not useful to generate one, see:
+                            // https://docs.yubico.com/yesdk/users-manual/application-piv/apdu/auth-decrypt.html
+                            KeyUsage::Decrypt => {}
 
-                        usage = "SignEncrypt";
+                            _ => {
+                                return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
+                                    "Key Usage not supported".to_string(),
+                                )));
+                            }
+                        }
+                        if counter == key_usages.len() {
+                            end = true;
+                        }
+                        if !end {
+                            usage = format!("{}+", usage).as_str();
+                        }
                     }
-                    _ => {
-                        return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
-                            "Key Algorithm not supported".to_string(),
-                        )));
-                    }
-                },
-
-                KeyUsage::Decrypt => match key_algo {
-                    AsymmetricEncryption::Rsa(KeyBits::Bits1024) => {
-                        let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
-                        let (slot_id, pkey) =
-                            generate_key(&mut yubikey, AlgorithmId::Rsa1024, slot_id).unwrap();
-                        self.slot_id = Some(slot_id);
-                        self.pkey = pkey;
-
-                        usage = "Decrypt";
-                    }
-                    AsymmetricEncryption::Rsa(KeyBits::Bits2048) => {
-                        let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
-                        let (slot_id, pkey) =
-                            generate_key(&mut yubikey, AlgorithmId::Rsa2048, slot_id).unwrap();
-                        self.slot_id = Some(slot_id);
-                        self.pkey = pkey;
-
-                        usage = "Decrypt";
-                    }
-
-                    // The Yubikey does not support decryption with ECC, so it is not useful to generate one, see:
-                    // https://docs.yubico.com/yesdk/users-manual/application-piv/apdu/auth-decrypt.html
-                    /*
-                    AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P256)) => {}
-                    AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P384)) => {}
-                    */
-                    _ => {
-                        return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
-                            "Key Algorithm not supported".to_string(),
-                        )));
-                    }
-                },
-
+                }
                 _ => {
                     return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
-                        "Key Usage not supported".to_string(),
+                        "Key Algorithm not supported".to_string(),
                     )));
                 }
             }
 
             let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
+            let (slot_id, pkey) =
+                generate_key(&mut yubikey, AlgorithmId::Rsa1024, slot_id).unwrap();
+            self.slot_id = Some(slot_id);
+            self.pkey = pkey;
 
             let pkey = self.pkey.clone();
             slot = get_reference_u32slot(self.slot_id.unwrap());
 
-            let _ = yubikey.verify_pin("123456".as_ref());
+            let _ = yubikey.verify_pin(self.pin.as_ref());
             let _ = yubikey.authenticate(MgmKey::new(self.management_key.unwrap()).unwrap());
 
             match save_key_object(&mut yubikey, usage, key_id, slot, &pkey) {
@@ -293,7 +288,7 @@ impl Provider for YubiKeyProvider {
         let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
         let mut found = false;
         for i in 10..20 {
-            let _ = yubikey.verify_pin("123456".as_ref());
+            let _ = yubikey.verify_pin(self.pin.as_ref());
             let _ = yubikey.authenticate(MgmKey::new(self.management_key.unwrap()).unwrap());
             let data = yubikey.fetch_object(SLOTSU32[i]);
             let mut output: Vec<u8> = Vec::new();
@@ -309,20 +304,22 @@ impl Provider for YubiKeyProvider {
             let data = output;
             match parse_slot_data(&data) {
                 Ok((key_name, _, usage, public_key)) => {
+                    let parts = usage.split('+');
                     if key_name == key_id.to_string() {
                         let mut vector = Vec::new();
                         self.slot_id = Some(SLOTS[i - 10]);
-                        self.key_usages = match usage.as_str() {
-                            "SignEncrypt" => {
-                                vector.push(KeyUsage::SignEncrypt);
-                                Some(vector)
-                            }
-                            "Decrypt" => {
-                                vector.push(KeyUsage::Decrypt);
-                                Some(vector)
-                            }
-                            _ => continue,
-                        };
+                        for part in parts {
+                            match part {
+                                "SignEncrypt" => {
+                                    vector.push(KeyUsage::SignEncrypt);
+                                }
+                                "Decrypt" => {
+                                    vector.push(KeyUsage::Decrypt);
+                                }
+                                _ => continue,
+                            };
+                        }
+                        self.key_usages = Some(vector);
                         self.pkey = public_key;
                         found = true;
                         break;
