@@ -329,6 +329,7 @@ This chapter is all about looking to the future and thinking about how we can ta
 - As the security modules are not built on performance, they take some time to encrypt and decrypt data. So creating derived keys for encryption and decryption outside of the security module will speed this process up immensely. The drawback however, could be security vulnerability.
 - Implementing some kind of attestation, if possible, so the enmeshed app knows its communicating with a security module, and which security module. (e.g. for our case the Google attestation service)
 - A method that lists and returns all the capabilities/supported algorithms the wrapper and security module provide.
+- a method that returns metadata about the loaded key like usages, algorithm, etc.
 </details>
 
 
