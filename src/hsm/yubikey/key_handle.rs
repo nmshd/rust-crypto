@@ -232,10 +232,6 @@ impl KeyHandle for YubiKeyProvider {
                     .public_encrypt(data, &mut encrypted_data, Padding::PKCS1)
                     .map_err(|_| "failed to encrypt data");
                 Ok(encrypted_data)
-                /*   match encrypted_data {
-                    Ok(buffer) => buffer,
-                    Err(err) => return Err(SecurityModuleError::Hsm("Failed to encrypt data")),
-                } */
             }
             _ => {
                 return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
