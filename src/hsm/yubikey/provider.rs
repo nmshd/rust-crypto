@@ -10,12 +10,13 @@ use crate::common::{
     error::SecurityModuleError,
     traits::module_provider::Provider,
 };
-use crate::hsm::{core::error::HsmError, HsmProviderConfig, ProviderConfig};
+use crate::hsm::{core::error::HsmError, HsmProviderConfig};
 use ::yubikey::{
     piv::{self, AlgorithmId, RetiredSlotId, SlotId},
     Error, YubiKey,
 };
 use base64::{engine::general_purpose, Engine};
+use std::any::Any;
 use std::sync::{Arc, Mutex};
 use tracing::instrument;
 use x509_cert::der::Encode;
@@ -100,14 +101,14 @@ impl Provider for YubiKeyProvider {
     fn create_key(
         &mut self,
         key_id: &str,
-        config: Box<dyn ProviderConfig>,
+        config: Box<dyn Any>,
     ) -> Result<(), SecurityModuleError> {
-        if let Some(hsm_config) = config.as_any().downcast_ref::<HsmProviderConfig>() {
+        if let Some(hsm_config) = config.downcast_ref::<HsmProviderConfig>() {
             self.key_algo = Some(hsm_config.key_algorithm);
             self.key_usages = Some(hsm_config.key_usage.clone());
             let key_algo = self.key_algo.clone().expect("No Key Algortihm found");
 
-            let usage: &str;
+            let mut usage: String = String::new();
             let slot: u32;
             let key_usages = self.key_usages.clone().unwrap();
             let slot_id;
@@ -178,9 +179,9 @@ impl Provider for YubiKeyProvider {
                     for i in 0..key_usages.len() {
                         match key_usages.get(i).unwrap() {
                             KeyUsage::SignEncrypt => {
-                                usage = format!("{}SignEncrypt", usage).as_str()
+                                usage = format!("{}SignEncrypt", usage);
                             }
-                            KeyUsage::Decrypt => usage = format!("{}Decrypt", usage).as_str(),
+                            KeyUsage::Decrypt => usage = format!("{}Decrypt", usage),
                             _ => {
                                 return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
                                     "Key Usage not supported".to_string(),
@@ -191,8 +192,9 @@ impl Provider for YubiKeyProvider {
                             end = true;
                         }
                         if !end {
-                            usage = format!("{}+", usage).as_str();
+                            usage = format!("{}+", usage);
                         }
+                        counter = counter + 1;
                     }
                 }
                 AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(curve)) => {
@@ -210,7 +212,7 @@ impl Provider for YubiKeyProvider {
                     for i in 0..key_usages.len() {
                         match key_usages.get(i).unwrap() {
                             KeyUsage::SignEncrypt => {
-                                usage = "SignEncrypt";
+                                usage = format!("{}SignEncrypt", usage);
                             }
                             // The Yubikey does not support decryption with ECC, so it is not useful to generate one, see:
                             // https://docs.yubico.com/yesdk/users-manual/application-piv/apdu/auth-decrypt.html
@@ -226,8 +228,9 @@ impl Provider for YubiKeyProvider {
                             end = true;
                         }
                         if !end {
-                            usage = format!("{}+", usage).as_str();
+                            usage = format!("{}+", usage);
                         }
+                        counter = counter + 1;
                     }
                 }
                 _ => {
@@ -238,8 +241,7 @@ impl Provider for YubiKeyProvider {
             }
 
             let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
-            let (slot_id, pkey) =
-                generate_key(&mut yubikey, AlgorithmId::Rsa1024, slot_id).unwrap();
+            let (slot_id, pkey) = generate_key(&mut yubikey, algorithm, slot_id).unwrap();
             self.slot_id = Some(slot_id);
             self.pkey = pkey;
 
@@ -249,7 +251,7 @@ impl Provider for YubiKeyProvider {
             let _ = yubikey.verify_pin(self.pin.as_ref());
             let _ = yubikey.authenticate(MgmKey::new(self.management_key.unwrap()).unwrap());
 
-            match save_key_object(&mut yubikey, usage, key_id, slot, &pkey) {
+            match save_key_object(&mut yubikey, usage.as_str(), key_id, slot, &pkey) {
                 Ok(_) => Ok(()),
                 Err(err) => {
                     return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
@@ -280,11 +282,7 @@ impl Provider for YubiKeyProvider {
     /// A `Result` that, on success, contains `Ok(())`, indicating that the key was loaded successfully.
     /// On failure, it returns a `SecurityModuleError`.
     #[instrument]
-    fn load_key(
-        &mut self,
-        key_id: &str,
-        config: Box<dyn ProviderConfig>,
-    ) -> Result<(), SecurityModuleError> {
+    fn load_key(&mut self, key_id: &str, config: Box<dyn Any>) -> Result<(), SecurityModuleError> {
         let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
         let mut found = false;
         for i in 10..20 {
