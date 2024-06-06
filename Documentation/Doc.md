@@ -270,14 +270,18 @@ Example:
 ### Rustdoc
 
 <!-- ######################################################################################### Section6 ################################################################################################################################## -->
-## Next Steps
-
-### Ideas
-
-### What Could Be Done
-
-### What Can Be Improved
-
+## Next Steps  
+This chapter is all about looking to the future and thinking about how we can take this project in new directions.
+### Ideas for our wrapper
+- Check out how many keys the Knox Vault can store and document the result, as apparently the Keystore API does not limit how many keys can be stored. This theoretically means the only limit is the available data storage the Vault has for keys.
+- Improve the encrypt and decrypt methods so they can use asymmetric keys. 
+- Implement a modular key usage handling system. The system should take the information about the key usages when the key gets created, and create it with these specific purposes (e.g. encrypt, decrypt, sign, verify, key lifetime, limited key usages)
+- Have a broader spectrum of devices to test on. Knox Vault should technically not be different on the current devices, though in the future that might change. Newer security modules might provide more cryptographic algorithms or performance in the future.
+- Obtain a reference to the JavaVM without having to pass it to the crypto layer.
+### Ideas for the crypto layer
+- As the security modules are not built on performance, they take some time to encrypt and decrypt data. So creating derived keys for encryption and decryption outside of the security module will speed this process up immensely. The drawback however, could be security vulnerability.
+- Implementing some kind of attestation, if possible, so the enmeshed app knows its communicating with a security module, and which security module. (e.g. for our case the Google attestation service)
+- A method that lists and returns all the capabilities/supported algorithms the wrapper and security module provide.
 <!-- ######################################################################################### Section7 ################################################################################################################################## -->
 ## Open Source Project
 
