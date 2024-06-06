@@ -59,13 +59,13 @@ pub mod jni {
         }
 
         pub fn init2(
-            mut self,
+            &self,
             env: &'borrow JNIEnv<'env>,
             opmode: i32,
             key: Key,
             params: JObject,
-        ) -> JniResult<Self> {
-            let result = env.call_method(
+        ) -> JniResult<()> {
+            env.call_method(
                 self.raw.as_obj(),
                 "init",
                 "(ILjava/security/Key;Ljava/security/AlgorithmParameters;)V",
@@ -75,8 +75,16 @@ pub mod jni {
                     JValue::Object(params),
                 ],
             )?;
-            self.raw = AutoLocal::new(env, result.l()?);
-            Ok(self)
+            Ok(())
+        }
+
+        pub fn getIV(&self, env: &JNIEnv) -> JniResult<Vec<u8>> {
+            let output = env.call_method(self.raw.as_obj(), "getIV", "()[B", &[])?;
+
+            let output_array = output.l()?.into_inner() as jbyteArray;
+            let output_vec = env.convert_byte_array(output_array).unwrap();
+
+            Ok(output_vec)
         }
 
         /// Performs the final operation of the Cipher, processing any remaining data.

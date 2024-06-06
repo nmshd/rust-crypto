@@ -1,3 +1,8 @@
+use std::{
+    fs::File,
+    io::{Read, Write},
+};
+
 use crate::{
     common::{
         crypto::algorithms::{
@@ -73,9 +78,9 @@ pub fn get_sym_block_mode(mode: SymmetricMode) -> Result<String, SecurityModuleE
 
 pub fn get_padding(mode: EncryptionMode) -> Result<String, SecurityModuleError> {
     Ok(match mode {
-        EncryptionMode::Sym(BlockCiphers::Aes(_, _)) => "PKCS5Padding",
+        EncryptionMode::Sym(BlockCiphers::Aes(_, _)) => "PKCS7Padding",
         EncryptionMode::ASym { algo: _, digest: _ } => "PKCS1Padding",
-        _ => "PKCS1Padding",
+        _ => "NoPadding",
     }
     .to_owned())
 }
@@ -193,4 +198,33 @@ pub fn get_signature_algorithm(mode: EncryptionMode) -> Result<String, SecurityM
             Ok(format!("{part2}with{part1}"))
         }
     }
+}
+
+pub fn get_iv_len(cipher: BlockCiphers) -> Result<usize, SecurityModuleError> {
+    Ok(match cipher {
+        BlockCiphers::Aes(mode, _) => match mode {
+            SymmetricMode::Gcm => 12,
+            SymmetricMode::Ccm => 16,
+            SymmetricMode::Ecb => 16,
+            SymmetricMode::Cbc => 16,
+            SymmetricMode::Cfb => 16,
+            SymmetricMode::Ofb => 16,
+            SymmetricMode::Ctr => 16,
+        },
+        BlockCiphers::TripleDes(_) => 8,
+        BlockCiphers::Des | BlockCiphers::Rc2(_) | BlockCiphers::Camellia(_, _) => {
+            return Err(TpmError::UnsupportedOperation("not supported".to_owned()).into())
+        }
+    })
+}
+
+pub fn store_iv(mut data: Vec<u8>, mut iv: Vec<u8>) -> Vec<u8> {
+    iv.append(&mut data);
+    return iv;
+}
+
+pub fn load_iv(data: &[u8], iv_size: usize) -> (Vec<u8>, Vec<u8>) {
+    let iv = Vec::from(&data[0..iv_size]);
+    let data = Vec::from(&data[iv_size..]);
+    (data, iv)
 }
