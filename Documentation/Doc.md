@@ -203,7 +203,7 @@ With that, you should have everything complete and compiled the project from scr
 <details open>
   <summary><strong>Component Diagram</strong></summary> 
 
-![component diagram](images/component_diagram.jpg)
+![component diagram](resources/component_diagram.jpg)
 </details>
 
 <details open>
