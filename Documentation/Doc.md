@@ -38,75 +38,90 @@ The Repository contains a Wrapper that is used to perform cryptographic operatio
     - [Source Documents](#source-documents)
     - [Research Documents](#research-documents)
 
+
 ## Comprehensive Overview
 
-### Supported Devices
-This wrapper should work for all Android devices equiped with a SE, but the focus for our group is specifically on smartphones using Samsung Knox Vault. Therefore, testing will only be done using a Samsung smartphone, and in case there are incompatibilities between device manufacturers, Samsung will take priority. An up-to-date list of devices equipped with Knox Vault can be found [here](https://www.samsungknox.com/en/knox-platform/supported-devices) after selecting Knox Vault in the filter options. As of April 2024, the following devices are equipped with Knox Vault:
+<details open>
+  <summary><strong>Supported Devices</strong></summary>
 
-Smartphones 
-- Samsung Galaxy A 35 / A55 
-- Samsung Galaxy S 22 / S23 / S 24
-  - the plus / ultra versions as well
-- Samsung Galaxy Z Flip 3 / 4 / 5
-- Samsung Galaxy Z Fold 3 / 4 / 5
-- Samsung Galaxy X Cover 7 (Enterprise Edition) 
+  This wrapper should work for all Android devices equiped with a SE, but the focus for our group is specifically on smartphones using Samsung Knox Vault. Therefore, testing will only be done using a Samsung smartphone, and in case there are incompatibilities between device manufacturers, Samsung will take priority. An up-to-date list of devices equipped with Knox Vault can be found [here](https://www.samsungknox.com/en/knox-platform/supported-devices) after selecting Knox Vault in the filter options. As of April 2024, the following devices are equipped with Knox Vault:
 
-Tablets 
-- Galaxy Tab S 8 / S 9
-  - the plus, ultra, FE and 5G versions as well
-- Galaxy Tab Active 5 (Enterprise Edition)
-  - the 5G version as well
+  Smartphones 
+  - Samsung Galaxy A 35 / A55 
+  - Samsung Galaxy S 22 / S23 / S 24
+    - the plus / ultra versions as well
+  - Samsung Galaxy Z Flip 3 / 4 / 5
+  - Samsung Galaxy Z Fold 3 / 4 / 5
+  - Samsung Galaxy X Cover 7 (Enterprise Edition) 
 
-We have received a Samsung S22 from j&s-soft and have used this device for testing purposes througout the project.
+  Tablets 
+  - Galaxy Tab S 8 / S 9
+    - the plus, ultra, FE and 5G versions as well
+  - Galaxy Tab Active 5 (Enterprise Edition)
+    - the 5G version as well
 
-### Performance
-After an extensive performance test, we can conclude that data encryption using AES-256-CBC on the Knox Vault Chip occurs at a rate of approximately 0.11 MB/s. The test showed a variance of 0.58 s².
+  We have received a Samsung S22 from j&s-soft and have used this device for testing purposes througout the project.
+</details>
 
-### Feature List
-Our project supports the following features:
+<details open>
+  <summary><strong>Performance</strong></summary>
 
-- **Saving keys in the strongbox**: All generated keys are stored securely within the strongbox.
--   **Encrypt and Decrypt Data**: Utilizing symmetric encryption, our system ensures data confidentiality through encryption and decryption mechanisms.
--   **Sign and Verify Data**: We provide functionality for both symmetric and asymmetric signing and verification, ensuring data integrity and authenticity.
+  After an extensive performance test, we can conclude that data encryption using AES-256-CBC on the Knox Vault Chip occurs at a rate of approximately 0.11 MB/s. The test showed a variance of 0.58 s².
+</details>
 
-In the following chapter, you will find detailed information on the supported algorithms.
+<details open>
+  <summary><strong>Feature List</strong></summary>
 
-### Supported Algorithms
+  Our project supports the following features:
+
+  - **Saving keys in the strongbox**: All generated keys are stored securely within the strongbox.
+  - **Encrypt and Decrypt Data**: Utilizing symmetric encryption, our system ensures data confidentiality through encryption and decryption mechanisms.
+  - **Sign and Verify Data**: We provide functionality for both symmetric and asymmetric signing and verification, ensuring data integrity and authenticity.
+
+  In the following chapter, you will find detailed information on the supported algorithms.
+</details>
+
+<details open>
+  <summary><strong>Supported Algorithms</strong></summary>
+
 We have provided a list of the supported Algorithms of our project:
 
-| Algorithm Type    | Details                                      |
-|-------------------|----------------------------------------------|
-| **RSA**           | RSA;512;SHA-256;PKCS1                       |
-|                   | RSA;1024;SHA-256;PKCS1                      |
-|                   | RSA;2048;SHA-256;PKCS1                      |
-|                   | RSA;3072;SHA-256;PKCS1                      |
-|                   | RSA;4096;SHA-256;PKCS1                      |
-|                   | RSA;8192;SHA-256;PKCS1                      |
-| **ECC**           | EC;secp256r1;SHA-256                        |
-|                   | EC;secp384r1;SHA-256                        |
-|                   | EC;secp521r1;SHA-256                        |
-| **3DES** | DESede;168;CBC;PKCS7Padding                 |
-| **AES**           | AES;128;GCM;NoPadding                       |
-|                   | AES;128;CBC;PKCS7Padding                    |
-|                   | AES;128;CTR;NoPadding                       |
-|                   | AES;192;GCM;NoPadding                       |
-|                   | AES;192;CBC;PKCS7Padding                    |
-|                   | AES;192;CTR;NoPadding                       |
-|                   | AES;256;GCM;NoPadding                       |
-|                   | AES;256;CBC;PKCS7Padding                    |
-|                   | AES;256;CTR;NoPadding                       |
+  | Algorithm Type    | Details                                      |
+  |-------------------|----------------------------------------------|
+  | **RSA**           | RSA;512;SHA-256;PKCS1                       |
+  |                   | RSA;1024;SHA-256;PKCS1                      |
+  |                   | RSA;2048;SHA-256;PKCS1                      |
+  |                   | RSA;3072;SHA-256;PKCS1                      |
+  |                   | RSA;4096;SHA-256;PKCS1                      |
+  |                   | RSA;8192;SHA-256;PKCS1                      |
+  | **ECC**           | EC;secp256r1;SHA-256                        |
+  |                   | EC;secp384r1;SHA-256                        |
+  |                   | EC;secp521r1;SHA-256                        |
+  | **3DES**          | DESede;168;CBC;PKCS7Padding                 |
+  | **AES**           | AES;128;GCM;NoPadding                       |
+  |                   | AES;128;CBC;PKCS7Padding                    |
+  |                   | AES;128;CTR;NoPadding                       |
+  |                   | AES;192;GCM;NoPadding                       |
+  |                   | AES;192;CBC;PKCS7Padding                    |
+  |                   | AES;192;CTR;NoPadding                       |
+  |                   | AES;256;GCM;NoPadding                       |
+  |                   | AES;256;CBC;PKCS7Padding                    |
+  |                   | AES;256;CTR;NoPadding                       |
+</details>
 
+<details open>
+  <summary><strong>Out of Scope</strong></summary>
 
-### Out of Scope
-In order to finish this project in the given time, we decided to
-mark the following as out of scope:
-- tablets
-- attestation
-- asmmetric encryption / decryption
+  In order to finish this project in the given time, we decided to mark the following as out of scope:
+  - tablets
+  - attestation
+  - asmmetric encryption / decryption
+</details>
 
 ## Installation Guide  
   
-### Required Software  
+<details open>
+  <summary><strong>Required Software</strong></summary> 
   
 If you want to build this project on your own from the source code, these tools are necessary:  
   
@@ -116,13 +131,17 @@ If you want to build this project on your own from the source code, these tools 
 - You will need the Android NDK (Native Development Kit) to build and run the project. The NDK can be installed from within Android Studio: Go to Settings > Languages & Frameworks > Android SDK > SDK Tools and select and install the NDK.  
 - Cargo and [cargo-ndk](https://docs.rs/crate/cargo-ndk/3.5.4) are necessary to compile the Rust code in a format usable by Android. Cargo should already be installed by RustUp, cargo-ndk can be installed with `cargo install cargo-ndk`.  
 - You will need to configure cargo further by using this command: `rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android` (The "linux" in this command refers to the phone architecture, not your development machine. You can use this command on Windows as well). This will make cargo compile your Rust code in a format suitable for Android architectures  
-  
-### Installing Android Studio + RustRover  
+</details> 
+
+<details open> 
+<summary><strong>Installing Android Studio + RustRover</strong></summary>  
   
 The easiest way to install both IDEs is to use the [JetBrains Toolbox](https://www.jetbrains.com/de-de/toolbox-app/), where you can install both IDEs with a single click each.  
 Alternatively you can also refer to the [Android CodeLab guide](https://developer.android.com/codelabs/basic-android-kotlin-compose-install-android-studio#0), and the [RustRover download page](https://www.jetbrains.com/rust/nextversion/). After installing RustRover, you will need to install RustUp in order to compile Rust code.  
-  
-### First Test in Android Studio  
+</details>
+
+<details open>  
+<summary><strong>First Test in Android Studio </strong></summary> 
   
 The goal of this section is to test Android Studio and run a "Hello World"-App on a real device to confirm that the connection between the computer and phone is working. We will use a USB connection to get the app onto the device, although Wi-Fi should also be possible. This step is not strictly necessary, but eliminates a possible source of error later on.  
   
@@ -134,8 +153,10 @@ The goal of this section is to test Android Studio and run a "Hello World"-App o
 - in Android Studio, go to "Running Devices" (on the top right by default), click on the plus sign and select your phone  
 - the screen of your phone will be mirrored inside Android Studio  
 - build and run your application and open it on the phone  
+</details>
 
-### Creating a project combining Rust and Java
+<details open> 
+<summary><strong>Creating a project combining Rust and Java</strong></summary>
 
 if you already have a project combining Rust and Java, you can skip this section. Otherwise, here is a quick guide for a minimal Project combining the two using [Robusta](https://github.com/giovanniberti/robusta/tree/master).
 
@@ -144,8 +165,11 @@ if you already have a project combining Rust and Java, you can skip this section
 - Create a `Cargo.toml` file in that folder with the following content: [`Cargo.toml`](resources/Cargo.toml)
 - create a `lib.rs` file in the same folder with the following content:  [`lib.rs`](resources/lib.rs)
 - adjust the package marker for the `RustDef` struct in `lib.rs` on line 14 to contain the correct java package
+</details>
 
-###  Integrating this Repo into your project
+<details open> 
+<summary><strong>Integrating this Repo into your project</strong></summary>
+	
 - fork this Repo and integrate it into the project you created as a submodule. This can be done with
 	```
 	git submodule add <Link to your forked Repo>
@@ -153,8 +177,10 @@ if you already have a project combining Rust and Java, you can skip this section
 	```
 - The two files `CryptoManager.java` and `RustDef.java` in [`src/tpm/android/knox/java`](https://github.com/cep-sose2024/rust-crypto-knox/tree/main/src/tpm/android/knox/java) will need to be moved to the other Java files in your project. By default, this is something like `src/main/java/com/example/example_project`.
 - Adjust the `const CLASS_SIGNATURE`  in [`src/tpm/android/knox/interface.rs`](https://github.com/cep-sose2024/rust-crypto-knox/blob/main/src/tpm/android/knox/interface.rs) to match the package that you put `RustDef.java` into. For the example above, that would be `const CLASS_SIGNATURE: &str = "com/example/example_project/RustDef";`  
+</details>
 
-### Building and running the project
+<details open>
+<summary><strong>Building and running the project</strong></summary>
   
 Now you are ready to compile everything. The following command will compile all your Rust code into a dynamic library (`.so`) that can be used by your android app. You will need to run this command within your `rust` folder
   
@@ -167,18 +193,22 @@ Afterward, you can compile your Java code. You will need to specify the location
     .\gradlew -D java.library.path=app/src/main/jniLibs installDebug  
   
 With that, you should have everything complete and compiled the project from scratch.  
-
+</details>
 
 ## Usage
+<details open>
+  <summary><strong>Knox config</strong></summary> 
+</details>
 
 ## Architecture
+<details open>
+  <summary><strong>Component Diagram</strong></summary> 
 
-### Component Diagram
+![component diagram](resources/component_diagram.jpg)
+</details>
 
-![component diagram](images/component_diagram.jpg)
-
-
-## Components
+<details open>
+<summary><strong>Components</strong></summary> 
 
 The component diagram illustrates the relationships and interactions between the different classes and modules of the project. Here are the main components:
 
@@ -192,8 +222,10 @@ The `RustDef` class defines the interface to the cryptographic functions impleme
 
 - **interface.rs**:
 This module contains the implementation of cryptographic functions in Rust and exposes them to the Java environment. The functions in `interface.rs` are designed to perform cryptographic operations efficiently and securely, providing an interface for use in Android applications.
+</details>
 
-### Libraries
+<details open>
+<summary><strong>Libraries</strong></summary> 
 
 - #### JNI
 
@@ -211,13 +243,11 @@ With the Keystore and other APIs, we can use the keys to encrypt and decrypt dat
 The Knox Vault doesn't support all the cryptographic algorithms enabled by the Keystore and other APIs. As we couldn't find any detailed documentation about what the Knox Vault supports, we had to test it out by trial and error. You can see all the algorithms that have passed our tests in the [Supported Algorithms](#supported-algorithms) section.
 
 You can find out more about the KeyStore API and other APIs that are normally used with it in the following repository: [Android-Security-Reference](https://github.com/doridori/Android-Security-Reference/blob/master/framework/keystore.md). It also has some useful general info about security on Android.
-
+</details>
 
 ## Implementation
-
-### Code
-
-### JNI-Implementation
+<details open>
+<summary><strong>JNI-Implementation</strong></summary> 
 
 The basic premise of our JNI connection is to have a `JavaVM` passed to the Rust Code. With this reference we are able
 to call methods provided by the [JNI crate](https://crates.io/crates/jni). Those allow us to call Java functions and
@@ -264,40 +294,68 @@ Example:
     "(Ljava/lang/String;Ljava/lang/String;)V",  
     &[JValue::from(jnienv.new_string(key_id).unwrap()),  
       JValue::from(jnienv.new_string(key_gen_info).unwrap())]);
+</details>
 
-### Javadoc
+<details open>
+<summary><strong>Javadoc</strong></summary> 
 
-### Rustdoc
+</details>
+
+<details open>
+<summary><strong>Rustdoc</strong></summary> 
+
+</details>
 
 
-## Next Steps  
+## Next Steps
 This chapter is all about looking to the future and thinking about how we can take this project in new directions.
-### Ideas for our wrapper
+<details open>
+<summary><strong>Ideas for our wrapper</strong></summary> 
 - Check out how many keys the Knox Vault can store and document the result, as apparently the Keystore API does not limit how many keys can be stored. This theoretically means the only limit is the available data storage the Vault has for keys.
 - Improve the encrypt and decrypt methods so they can use asymmetric keys. 
 - Implement a modular key usage handling system. The system should take the information about the key usages when the key gets created, and create it with these specific purposes (e.g. encrypt, decrypt, sign, verify, key lifetime, limited key usages)
 - Have a broader spectrum of devices to test on. Knox Vault should technically not be different on the current devices, though in the future that might change. Newer security modules might provide more cryptographic algorithms or performance in the future.
 - Obtain a reference to the JavaVM without having to pass it to the crypto layer.
-### Ideas for the crypto layer
+</details>
+
+<details open>
+<summary><strong>Ideas for the crypto layer</strong></summary> 
 - As the security modules are not built on performance, they take some time to encrypt and decrypt data. So creating derived keys for encryption and decryption outside of the security module will speed this process up immensely. The drawback however, could be security vulnerability.
 - Implementing some kind of attestation, if possible, so the enmeshed app knows its communicating with a security module, and which security module. (e.g. for our case the Google attestation service)
 - A method that lists and returns all the capabilities/supported algorithms the wrapper and security module provide.
+</details>
+
 
 ## Open Source Project
 
-### License
+<details open>
+<summary><strong>License</strong></summary> 
 MIT License
 [LICENSE](https://github.com/cep-sose2024/rust-crypto-knox/blob/4989f3eb36552537e00fe58cbd29fa95312a6892/LICENSE)
+</details>
 
-### Issue Guide
+<details open>
+<summary><strong>Issue Guide</strong></summary> 
 
-### Pull Request Guide
+</details>
+
+<details open>
+<summary><strong>Pull Request Guide</strong></summary> 
+
+</details>
+
 
 ## References
+<details open>
+<summary><strong>Source Documents</strong></summary> 
 
-### Source Documents
+</details>
 
-### Research Documents
+<details open>
+<summary><strong>Research Documents</strong></summary> 
+
+</details>
+
 
 
 
