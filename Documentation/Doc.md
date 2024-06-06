@@ -1,4 +1,4 @@
-<h1 style="text-align: center; font-size: 3em;">Documentation</h1>
+# Documentation
 
 ### Introduction
 This project is part of a student development project at [Hochschule Mannheim (HSMA)](https://www.english.hs-mannheim.de/the-university.html). The project goal is provided by j&s-soft GmbH as part of their open-source project [enmeshed](https://github.com/nmshd).
@@ -104,84 +104,70 @@ mark the following as out of scope:
 - attestation
 - asmmetric encryption / decryption
 <!-- ######################################################################################### Section2 ################################################################################################################################## -->
-## Installation Guide
+## Installation Guide  
+  
+### Required Software  
+  
+If you want to build this project on your own from the source code, these tools are necessary:  
+  
+- Android Studio is an IDE specifically for Android app development. While not strictly necessary, having it will make all further steps easier. This guide will assume that you are using it.  
+- If you plan on modifying the Rust code, it might be smart to also have RustRover installed, since there is no Rust plugin for Android Studio.  
+- RustUp is the easiest way to install Rust and Cargo. Installation is easiest from within RustRover: After starting to create a new project, there will be a button below the toolchain location selection. Pressing it will install RustUp. Alternatively you can also install RustUp directly from [their page](https://rustup.rs/).  
+- You will need the Android NDK (Native Development Kit) to build and run the project. The NDK can be installed from within Android Studio: Go to Settings > Languages & Frameworks > Android SDK > SDK Tools and select and install the NDK.  
+- Cargo and [cargo-ndk](https://docs.rs/crate/cargo-ndk/3.5.4) are necessary to compile the Rust code in a format usable by Android. Cargo should already be installed by RustUp, cargo-ndk can be installed with `cargo install cargo-ndk`.  
+- You will need to configure cargo further by using this command: `rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android` (The "linux" in this command refers to the phone architecture, not your development machine. You can use this command on Windows as well). This will make cargo compile your Rust code in a format suitable for Android architectures  
+  
+### Installing Android Studio + RustRover  
+  
+The easiest way to install both IDEs is to use the [JetBrains Toolbox](https://www.jetbrains.com/de-de/toolbox-app/), where you can install both IDEs with a single click each.  
+Alternatively you can also refer to the [Android CodeLab guide](https://developer.android.com/codelabs/basic-android-kotlin-compose-install-android-studio#0), and the [RustRover download page](https://www.jetbrains.com/rust/nextversion/). After installing RustRover, you will need to install RustUp in order to compile Rust code.  
+  
+### First Test in Android Studio  
+  
+The goal of this section is to test Android Studio and run a "Hello World"-App on a real device to confirm that the connection between the computer and phone is working. We will use a USB connection to get the app onto the device, although Wi-Fi should also be possible. This step is not strictly necessary, but eliminates a possible source of error later on.  
+  
+- make sure that USB debugging is enabled on the phone. Refer to [this guide](https://developer.android.com/studio/debug/dev-options) if necessary  
+- install the proper driver for your smartphone on your PC / Laptop according to [this list](https://developer.android.com/studio/run/oem-usb#Drivers)  
+- Open a new project in Android Studio and select Phone/Tablet on the left and use "Empty Activity" as the template  
+- plug your phone into your PC / Laptop with a USB cable capable of transmitting data  
+- you should be able to see your phone's storage in your file explorer  
+- in Android Studio, go to "Running Devices" (on the top right by default), click on the plus sign and select your phone  
+- the screen of your phone will be mirrored inside Android Studio  
+- build and run your application and open it on the phone  
 
-### Required Software
+### Creating a project combining Rust and Java
 
-If you want to build your this project on your own from our source code, these tools are necessary:
+if you already have a project combining Rust and Java, you can skip this section. Otherwise, here is a quick guide for a minimal Project combining the two using [Robusta](https://github.com/giovanniberti/robusta/tree/master).
 
-- Android Studio is an IDE specifically for Android app development. While not strictly necessary, having it will make
-  all further steps easier. This guide will assume that you are using it.
-- If you plan on modifying the Rust code, it might be smart to also have RustRover installed, since there is no Rust
-  plugin for Android Studio.
-- RustUp is the easiest way to install Rust and Cargo. Installation is easiest from within RustRover: After starting to
-  create a new project, there will be a button below the toolchain location selection. Pressing it will install RustUp.
-  Alternatively you can also install RustUp directly from [their page](https://rustup.rs/).
-- You will need the Android NDK (Native Development Kit) to build and run the project. The NDK can be installed from
-  within Android Studio: Go to Settings > Languages & Frameworks > Android SDK > SDK Tools and select and install the
-  NDK.
-- Cargo and [cargo-ndk](https://docs.rs/crate/cargo-ndk/3.5.4) are necessary to compile the Rust code in a format usable
-  by Android. Cargo should already be installed by RustUp, cargo-ndk can be installed with `cargo install cargo-ndk`.
-- You will need to configure cargo further by using this
-  command: `rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android` (The "linux" in this
-  command refers to the phone architecture, not your development machine. You can use this command on Windows as well)
-  This will make cargo compile your Rust code in a format suitable for Android architectures
+- create a new Android studio project (or use an existing one), that fits your needs for the Android/Java side of your project
+- create a new folder `rust` in your project files that has the same parent folder as `app`
+- Create a `Cargo.toml` file in that folder with the following content: TODO: Link
+- create a `lib.rs` file in the same folder with the following content:  TODO: Link
+- adjust the package marker for the `RustDef` struct in `lib.rs` on line 14 to contain the correct java package
 
-### Installing Android Studio + RustRover
-
-The easiest way to install both IDEs is to use the [JetBrains Toolbox](https://www.jetbrains.com/de-de/toolbox-app/),
-where you can install both IDEs with a single click each.
-Alternatively you can also refer to
-the [Android CodeLab guide](https://developer.android.com/codelabs/basic-android-kotlin-compose-install-android-studio#0),
-and the [RustRover download page](https://www.jetbrains.com/rust/nextversion/).
-After installing RustRover, you will need to install RustUp in order to compile Rust code.
-
-### First Test in Android Studio
-
-The goal of this section is to test Android Studio and run a "Hello World"-App on a real device to confirm that the
-connection between the computer and phone is working. We will use a USB connection to get the app onto the device,
-although Wi-Fi should also be possible. This step is not strictly necessary, but eliminates a possible source of error
-later on.
-
-- make sure that USB debugging is enabled on the phone. Refer
-  to [this guide](https://developer.android.com/studio/debug/dev-options) if necessary
-- install the proper driver for your smartphone on your PC / Laptop according
-  to [this list](https://developer.android.com/studio/run/oem-usb#Drivers)
-- Open a new project in Android Studio and select Phone/Tablet on the left and use "Empty Activity" as the template
-- plug your phone into your PC / Laptop with a USB cable capable of transmitting data
-- you should be able to see your phone's storage in your file explorer
-- in Android Studio, go to "Running Devices" (on the top right by default), click on the plus sign and select your phone
-- the screen of your phone will be mirrored inside Android Studio
-- build and run your application and open it on the phone
+###  Integrating this Repo into your project
+- fork this Repo and integrate it into the project you created as a submodule. This can be done with
+	```
+	git submodule add <Link to your forked Repo>
+	git submodlue update --init --recursive
+	```
+- The two files `CryptoManager.java` and `RustDef.java` in [`src/tpm/android/knox/java`](https://github.com/cep-sose2024/rust-crypto-knox/tree/main/src/tpm/android/knox/java) will need to be moved to the other Java files in your project. By default, this is something like `src/main/java/com/example/example_project`.
+- Adjust the `const CLASS_SIGNATURE`  in [`src/tpm/android/knox/interface.rs`](https://github.com/cep-sose2024/rust-crypto-knox/blob/main/src/tpm/android/knox/interface.rs) to match the package that you put `RustDef.java` into. For the example above, that would be `const CLASS_SIGNATURE: &str = "com/example/example_project/RustDef";`  
 
 ### Building and running the project
+  
+Now you are ready to compile everything. The following command will compile all your Rust code into a dynamic library (`.so`) that can be used by your android app. You will need to run this command within your `rust` folder
+  
+    cargo ndk -t armeabi-v7a -t arm64-v8a -o ../app/src/main/jniLibs build  
+  
+After completing that step, check the directory specified in the command (`app/src/main/jniLibs` in this example). You should find two files `libexampleproject.so` in a sub directory. If so, then the last step was successful. Now you will  need to adjust which library Java is looking for. This can be found in `RustDef.java` in line 57.  Set the string there to the same as the name of your package in the `rust/Cargo.toml` that you created for your main project.
+  
+Afterward, you can compile your Java code. You will need to specify the location that the compiled Rust library is in.  The easiest way to do that is by specifying the library path when running gradle like this:  
+  
+    .\gradlew -D java.library.path=app/src/main/jniLibs installDebug  
+  
+With that, you should have everything complete and compiled the project from scratch.  
 
-To prepare your project, you will need to create a new Android Studio project (or use an existing one). The two
-files `CryptoManager.java` and `RustDef.java`
-in [`src/tpm/android/knox/java`](https://github.com/cep-sose2024/rust-crypto-knox/tree/main/src/tpm/android/knox/java)
-will need to be moved to the other Java files in your project. By default, this is something
-like `src/main/java/com/example/example_project`. You will also need to adjust the `const CLASS_SIGNATURE`
-in [`src/tpm/android/knox/interface.rs`](https://github.com/cep-sose2024/rust-crypto-knox/blob/main/src/tpm/android/knox/interface.rs)
-to match the package that you put `RustDef.java` into. For the example above, that would
-be `const CLASS_SIGNATURE: &str = "com/example/example_project/RustDef";`
-
-Now you are ready to compile everything for the first time. The following command will compile all your Rust code into a
-dynamic library (`.so`) that can be used by your android app.
-
-    cargo ndk -t armeabi-v7a -t arm64-v8a -o app/src/main/jniLibs build
-
-After completing that step, check the directory specified in the command (`app/src/main/jniLibs` in this example). You
-should find two files `libexampleproject.so` in a subdirectory. If so, then the last step was successful. Now you will
-need to adjust which library Java is looking for to your Project name. This can be found in `RustDef.java` in line 57.
-Set the string there to the same as the name of the `.so` files without the "lib" in the
-beginning ( `System.loadLibrary("exampleproject");` for this example).
-
-Afterward, you can compile your Java code. You will need to specify the location that the compiled Rust library is in.
-The easiest way to do that is by specifying the library path when building like this:
-
-    .\gradlew -D java.library.path=app/src/main/jniLibs installDebug
-
-With that, you should have everything complete and compiled the project from scratch.
 <!-- ######################################################################################### Section3 ################################################################################################################################## -->
 ## Usage
 <!-- ######################################################################################### Section4 ################################################################################################################################## -->
