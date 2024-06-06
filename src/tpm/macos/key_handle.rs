@@ -17,11 +17,11 @@ impl KeyHandle for SecureEnclaveProvider {
         let algo = convert_sign_algorithms(config.clone()); 
 
         // Debug TODO
-        println!("\nSignData: Send to Swift | key_id: {} | StringData: {} | Algorithm: {}", key_id, _string_data, algo); 
+        // println!("\nSignData: Send to Swift | key_id: {} | StringData: {} | Algorithm: {}", key_id, _string_data, algo); 
         let signed_data = apple_secure_enclave_bindings::keyhandle::rust_crypto_call_sign_data(key_id.clone(), _string_data, algo);
 
         // Debug TODO
-        println!("\nSignData: Recieved from Swift: {}", signed_data); 
+        // println!("\nSignData: Recieved from Swift: {}", signed_data); 
 
         if Regex::new("(?i)error")
             .unwrap()
@@ -64,13 +64,13 @@ impl KeyHandle for SecureEnclaveProvider {
         let key_id = &self.key_id;
 
         //Debug TODO
-        println!("\nEncryptData: Send to Swift | key_id: {} | data: {}", key_id.clone(), string_data); 
+        // println!("\nEncryptData: Send to Swift | key_id: {} | data: {}", key_id.clone(), string_data); 
 
         let encrypted_data =
             apple_secure_enclave_bindings::keyhandle::rust_crypto_call_encrypt_data(key_id.to_string(), string_data);
 
         //Debug TODO
-        println!("\nEncryptData: Recieved from Swift data: {}", encrypted_data); 
+        // println!("\nEncryptData: Recieved from Swift data: {}", encrypted_data); 
         
         if Regex::new("(?i)error")
             .unwrap()
@@ -99,7 +99,7 @@ impl KeyHandle for SecureEnclaveProvider {
         let algo = convert_sign_algorithms(config.clone()); 
 
         // Debug TODO
-        println!("VerifyData: Send to Swift | key_id: {} | string_data: {} | string_signature: {} ",key_id.clone(), string_data, string_signature);
+        // println!("VerifyData: Send to Swift | key_id: {} | string_data: {} | string_signature: {} ",key_id.clone(), string_data, string_signature);
 
         let verification_result =
             apple_secure_enclave_bindings::keyhandle::rust_crypto_call_verify_signature(key_id.clone(), string_data, string_signature, algo);

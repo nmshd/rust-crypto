@@ -45,8 +45,8 @@ impl Provider for SecureEnclaveProvider {
                 _ => {return Err(CreateKeyError("Algorithm is not supported".to_string()))} 
             };
 
-            //Debug TODO
-            println!("Algorithm {}", key_algorithm_type); 
+            // Debug TODO
+            // println!("Algorithm {}", key_algorithm_type); 
 
             let keypair = apple_secure_enclave_bindings::provider::rust_crypto_call_create_key(self.key_id.clone(), key_algorithm_type);
 
@@ -71,7 +71,7 @@ impl Provider for SecureEnclaveProvider {
     ) -> Result<(), SecurityModuleError> {
         let config = *_config.downcast::<SecureEnclaveConfig>().map_err(|_| SecurityModuleError::InitializationError(("Failed to initialize config").to_owned()))?; 
         
-        self.set_config(config);
+        let _ = self.set_config(config);
 
         let load_key = apple_secure_enclave_bindings::provider::rust_crypto_call_load_key(_key_id.to_string());
 
