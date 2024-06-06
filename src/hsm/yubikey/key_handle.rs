@@ -60,7 +60,7 @@ impl KeyHandle for YubiKeyProvider {
         let mut data: &[u8] = &data;
 
         //TODO After PIN input implementation in App, insert code for re-authentication
-        let verify = yubikey.verify_pin("123456".as_ref());
+        let verify = yubikey.verify_pin(self.pin.as_ref());
         if !verify.is_ok() {
             return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
                 "PIN verification failed".to_string(),
