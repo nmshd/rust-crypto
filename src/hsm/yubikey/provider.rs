@@ -596,11 +596,13 @@ fn list_all_slots(yubikey: &mut YubiKey) -> Result<Vec<String>, SecurityModuleEr
     Ok(output)
 }
 
+/*
 /// Clears a slot on the YubiKey device.
 /// # Arguments
 /// * `yubikey` - The YubiKey device to clear the slot on.
 /// * `slot` - The slot to clear. If `None`, all slots are cleared.
 /// Needs improvement, as it is problematic to iterate effectively over all slots.
+
 
 fn clear_slot(yubikey: &mut YubiKey, slot: Option<u32>) {
     match slot {
@@ -624,7 +626,7 @@ fn remv(yubikey: &mut YubiKey, address: u32) {
     let empty_slice: &mut [u8] = &mut empty_vec[..];
     yubikey.save_object(address, empty_slice);
 }
-
+*/
 // Halbfertiger Code, kann benutzt werden wenn PIN-Abfrage in App implementiert wird
 /*
 #[instrument]
