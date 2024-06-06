@@ -136,8 +136,7 @@ impl KeyHandle for YubiKeyProvider {
     fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         let yubikey = self.yubikey.as_ref().unwrap();
         let mut yubikey = yubikey.lock().unwrap();
-        let encrypted_data = general_purpose::STANDARD.decode(encrypted_data).unwrap();
-        let input: &[u8] = &encrypted_data;
+
         let decrypted: Result<Zeroizing<Vec<u8>>, &str>;
         let key_algo = self.key_algo.unwrap();
 
@@ -145,7 +144,7 @@ impl KeyHandle for YubiKeyProvider {
             AsymmetricEncryption::Rsa(KeyBits::Bits1024) => {
                 decrypted = piv::decrypt_data(
                     &mut yubikey,
-                    input,
+                    encrypted_data,
                     piv::AlgorithmId::Rsa1024,
                     piv::SlotId::Retired(self.slot_id.unwrap()),
                 )
@@ -154,7 +153,7 @@ impl KeyHandle for YubiKeyProvider {
             AsymmetricEncryption::Rsa(KeyBits::Bits2048) => {
                 decrypted = piv::decrypt_data(
                     &mut yubikey,
-                    input,
+                    encrypted_data,
                     piv::AlgorithmId::Rsa2048,
                     piv::SlotId::Retired(self.slot_id.unwrap()),
                 )
