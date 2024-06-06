@@ -246,9 +246,3 @@ fn test_load_ecc_key_384() {
         .load_key("test_ecc_key", config)
         .expect("Failed to load ECC key");
 }
-
-#[cfg(feature = "yubi")]
-#[test]
-fn test_list_slots() {
-    let mut provider = YubiKeyProvider::new("list_test".to_string());
-}

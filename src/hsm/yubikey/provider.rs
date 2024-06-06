@@ -533,7 +533,7 @@ fn get_free_slot(yubikey: &mut YubiKey) -> Result<RetiredSlotId, SecurityModuleE
     if counter <= 9 {
         Ok(slot_id)
     } else {
-        let list = list_all_slots(yubikey);
+        let _ = list_all_slots(yubikey);
 
         return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
             "No more free slots available".to_string(),
