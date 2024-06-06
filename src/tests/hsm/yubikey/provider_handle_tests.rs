@@ -64,7 +64,7 @@ use crate::hsm::HsmProviderConfig;
 #[cfg(feature = "yubi")]
 #[test]
 fn test_create_rsa_key_1024() {
-    let key_id = "TimUwe1234";
+    let key_id = "test_rsa_key_1024";
     let mut provider = YubiKeyProvider::new(key_id.to_string());
     let config = HsmProviderConfig::new(
         AsymmetricEncryption::Rsa(KeyBits::Bits1024),
@@ -86,8 +86,8 @@ fn test_create_rsa_key_1024() {
 #[cfg(feature = "yubi")]
 #[test]
 fn test_create_rsa_key_2048() {
-    let key_id = "test_rsa_key";
-    let mut provider = YubiKeyProvider::new(key_id.to_string());
+    let key_id = "test_rsa_key_2048";
+    let mut provider: YubiKeyProvider = YubiKeyProvider::new(key_id.to_string());
 
     let config = HsmProviderConfig::new(
         AsymmetricEncryption::Rsa(KeyBits::Bits2048),
@@ -109,7 +109,7 @@ fn test_create_rsa_key_2048() {
 #[cfg(feature = "yubi")]
 #[test]
 fn test_create_ecc_key_256() {
-    let key_id = "test_ecc_key";
+    let key_id = "test_ecc_key_256";
 
     let mut provider = YubiKeyProvider::new(key_id.to_string());
 
@@ -133,7 +133,7 @@ fn test_create_ecc_key_256() {
 #[cfg(feature = "yubi")]
 #[test]
 fn test_create_ecc_key_384() {
-    let key_id = "test_ecc_key";
+    let key_id = "test_ecc_key_384";
 
     let mut provider = YubiKeyProvider::new(key_id.to_string());
 
@@ -156,8 +156,31 @@ fn test_create_ecc_key_384() {
 // Test for loading RSA keys
 #[cfg(feature = "yubi")]
 #[test]
-fn test_load_rsa_key() {
-    let key_id = "KlausKai";
+fn test_load_rsa_key_1024() {
+    let key_id = "test_rsa_key_1024";
+    let mut provider = YubiKeyProvider::new(key_id.to_string());
+
+    let config = HsmProviderConfig::new(
+        AsymmetricEncryption::Rsa(KeyBits::Bits1024),
+        vec![KeyUsage::SignEncrypt],
+    );
+
+    // initialize HSM-module
+    provider
+        .initialize_module()
+        .expect("Failed to initialize module");
+
+    // load RSA-key
+    provider
+        .load_key(&key_id, config)
+        .expect("Failed to load RSA key");
+}
+
+// Test for loading RSA keys
+#[cfg(feature = "yubi")]
+#[test]
+fn test_load_rsa_key_2048() {
+    let key_id = "test_rsa_key_2048";
     let mut provider = YubiKeyProvider::new(key_id.to_string());
 
     let config = HsmProviderConfig::new(
@@ -179,8 +202,8 @@ fn test_load_rsa_key() {
 // Test to load an ECC key
 #[cfg(feature = "yubi")]
 #[test]
-fn test_load_ecc_key() {
-    let key_id = "test_ecc_key";
+fn test_load_ecc_key_256() {
+    let key_id = "test_ecc_key_256";
 
     let mut provider = YubiKeyProvider::new(key_id.to_string());
 
@@ -199,6 +222,31 @@ fn test_load_ecc_key() {
         .load_key("test_ecc_key", config)
         .expect("Failed to load ECC key");
 }
+
+// Test to load an ECC key
+#[cfg(feature = "yubi")]
+#[test]
+fn test_load_ecc_key_384() {
+    let key_id = "test_ecc_key_384";
+
+    let mut provider = YubiKeyProvider::new(key_id.to_string());
+
+    let config = HsmProviderConfig::new(
+        AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P256)),
+        vec![KeyUsage::SignEncrypt],
+    );
+
+    // initialize HSM-module
+    provider
+        .initialize_module()
+        .expect("Failed to initialize module");
+
+    // load ECC-key
+    provider
+        .load_key("test_ecc_key", config)
+        .expect("Failed to load ECC key");
+}
+
 #[cfg(feature = "yubi")]
 #[test]
 fn test_list_slots() {
