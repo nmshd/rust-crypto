@@ -4,10 +4,10 @@
 This project is part of a student development project at [Hochschule Mannheim (HSMA)](https://www.english.hs-mannheim.de/the-university.html). The project goal is provided by j&s-soft GmbH as part of their open-source project [enmeshed](https://github.com/nmshd).
 
 ### Problem Description
-The enmeshed app from j&s-soft GmbH currently secures cryptographic keys in the software. This leads to security vulnerabilities and points of attack. To prevent this, hardware security modules are to be used on which the cryptographic keys are to be securely stored so that they cannot be retrieved even on compressed devices. Our team was tasked with implementing a solution to this problem in the subproject for Samsung's secure element, the Knox Vault.
+The enmeshed app from j&s-soft GmbH currently secures cryptographic keys in the software. This leads to security vulnerabilities and points of attack. To prevent this, hardware security modules are to be used on which the cryptographic keys are to be securely stored so that they cannot be retrieved even on compromized devices. Our team was tasked with implementing a solution to this problem in the subproject for Samsung's secure element, the Knox Vault.
 
 ### Product Description
-The Repository contains a Wrapper that is used to perform cryptographic operations for mobile applications in a Secure Element (SE) on Android devices. Specifically, this project is focused on Samsung Knox Vault as the SE. The interface to the mobile application is provided in Rust, while the communication
+This Repository contains a Wrapper that is used to perfom cryptogrphic operations for mobile applications in a Secure Element (SE) on Android devices. Specifically, this project is focused on Samsung Knox Vault as the SE. The interface to the mobile application is provided in Rust, while the communication with the SE will be done using the Android Keychain API.
 
 ## Table of Contents
 1. [Comprehensive Overview](#comprehensive-overview)
@@ -16,7 +16,6 @@ The Repository contains a Wrapper that is used to perform cryptographic operatio
     - [Performance](#performance)
     - [Feature List](#feature-list)
     - [Supported Algorithms](#supported-algorithms)
-    - [Out of Scope](#out-of-scope)
 2. [Installation Guide](#installation-guide)
     - [Required Software](#required-software)
 3. [Usage](#usage)
@@ -60,7 +59,7 @@ The Repository contains a Wrapper that is used to perform cryptographic operatio
   - Galaxy Tab Active 5 (Enterprise Edition)
     - the 5G version as well
 
-  We have received a Samsung S22 from j&s-soft and have used this device for testing purposes througout the project.
+  We have received a Samsung S22 from j&s-soft and have used this device for testing purposes throughout the project.
 </details>
 
 <details open>
@@ -76,7 +75,7 @@ The Repository contains a Wrapper that is used to perform cryptographic operatio
 
   - **Saving keys in the strongbox**: All generated keys are stored securely within the strongbox.
   - **Encrypt and Decrypt Data**: Utilizing symmetric encryption, our system ensures data confidentiality through encryption and decryption mechanisms.
-  - **Sign and Verify Data**: We provide functionality for both symmetric and asymmetric signing and verification, ensuring data integrity and authenticity.
+  - **Sign and Verify Data**: We provide functionality for asymmetric signing and verification, ensuring data integrity and authenticity.
 
   In the following chapter, you will find detailed information on the supported algorithms.
 </details>
@@ -109,14 +108,6 @@ We have provided a list of the supported Algorithms of our project:
   |                   | AES;256;CTR;NoPadding                       |
 </details>
 
-<details open>
-  <summary><strong>Out of Scope</strong></summary>
-
-  In order to finish this project in the given time, we decided to mark the following as out of scope:
-  - tablets
-  - attestation
-  - asmmetric encryption / decryption
-</details>
 
 ## Installation Guide  
   
@@ -137,40 +128,39 @@ If you want to build this project on your own from the source code, these tools 
 <summary><strong>Installing Android Studio + RustRover</strong></summary>  
   
 The easiest way to install both IDEs is to use the [JetBrains Toolbox](https://www.jetbrains.com/de-de/toolbox-app/), where you can install both IDEs with a single click each.  
-Alternatively you can also refer to the [Android CodeLab guide](https://developer.android.com/codelabs/basic-android-kotlin-compose-install-android-studio#0), and the [RustRover download page](https://www.jetbrains.com/rust/nextversion/). After installing RustRover, you will need to install RustUp in order to compile Rust code.  
-</details>
+Alternatively you can also refer to the [Android CodeLab guide](https://developer.android.com/codelabs/basic-android-kotlin-compose-install-android-studio#0), and the [RustRover download page](https://www.jetbrains.com/rust/nextversion/).
 
 <details open>  
-<summary><strong>First Test in Android Studio </strong></summary> 
+<summary><strong>First test in Android Studio </strong></summary> 
   
 The goal of this section is to test Android Studio and run a "Hello World"-App on a real device to confirm that the connection between the computer and phone is working. We will use a USB connection to get the app onto the device, although Wi-Fi should also be possible. This step is not strictly necessary, but eliminates a possible source of error later on.  
   
-- make sure that USB debugging is enabled on the phone. Refer to [this guide](https://developer.android.com/studio/debug/dev-options) if necessary  
-- install the proper driver for your smartphone on your PC / Laptop according to [this list](https://developer.android.com/studio/run/oem-usb#Drivers)  
-- Open a new project in Android Studio and select Phone/Tablet on the left and use "Empty Activity" as the template  
-- plug your phone into your PC / Laptop with a USB cable capable of transmitting data  
-- you should be able to see your phone's storage in your file explorer  
-- in Android Studio, go to "Running Devices" (on the top right by default), click on the plus sign and select your phone  
-- the screen of your phone will be mirrored inside Android Studio  
-- build and run your application and open it on the phone  
+- Make sure that USB debugging is enabled on the phone. Refer to [this guide](https://developer.android.com/studio/debug/dev-options) if necessary. 
+- Install the proper driver for your smartphone on your PC / Laptop according to [this list](https://developer.android.com/studio/run/oem-usb#Drivers).  
+- Open a new project in Android Studio and select Phone/Tablet on the left and use "Empty Activity" as the template.  
+- Plug your phone into your PC / Laptop with a USB cable capable of transmitting data.  
+- You should be able to see your phone's storage in your file explorer.  
+- In Android Studio, go to "Running Devices" (on the top right by default), click on the plus sign and select your phone.  
+- The screen of your phone will be mirrored inside Android Studio.  
+- Build and run your application and open it on the phone.  
 </details>
 
 <details open> 
 <summary><strong>Creating a project combining Rust and Java</strong></summary>
 
-if you already have a project combining Rust and Java, you can skip this section. Otherwise, here is a quick guide for a minimal Project combining the two using [Robusta](https://github.com/giovanniberti/robusta/tree/master).
+If you already have a project combining Rust and Java, you can skip this section. Otherwise, here is a quick guide for a minimal Project combining the two using [Robusta](https://github.com/giovanniberti/robusta/tree/master).
 
-- create a new Android studio project (or use an existing one), that fits your needs for the Android/Java side of your project
-- create a new folder `rust` in your project files that has the same parent folder as `app`
-- Create a `Cargo.toml` file in that folder with the following content: [`Cargo.toml`](resources/Cargo.toml)
-- create a `lib.rs` file in the same folder with the following content:  [`lib.rs`](resources/lib.rs)
-- adjust the package marker for the `RustDef` struct in `lib.rs` on line 14 to contain the correct java package
+- Create a new Android studio project (or use an existing one), that fits your needs for the Android/Java side of your project.
+- Create a new folder `rust` in your project files that has the same parent folder as `app`.
+- Create a `Cargo.toml` file in that folder with the following content: [`Cargo.toml`](resources/Cargo.toml).
+- Create a `lib.rs` file in the same folder with the following content:  [`lib.rs`](resources/lib.rs).
+- Adjust the package marker for the `RustDef` struct in `lib.rs` on line 14 to contain the correct java package.
 </details>
 
 <details open> 
 <summary><strong>Integrating this Repo into your project</strong></summary>
 	
-- fork this Repo and integrate it into the project you created as a submodule. This can be done with
+- Fork this Repo and integrate it into the project you created as a submodule. This can be done with:
 	```
 	git submodule add <Link to your forked Repo>
 	git submodlue update --init --recursive
@@ -182,13 +172,13 @@ if you already have a project combining Rust and Java, you can skip this section
 <details open>
 <summary><strong>Building and running the project</strong></summary>
   
-Now you are ready to compile everything. The following command will compile all your Rust code into a dynamic library (`.so`) that can be used by your android app. You will need to run this command within your `rust` folder
+Now you are ready to compile everything. The following command will compile all your Rust code into a dynamic library (`.so`) that can be used by your android app. You will need to run this command within your `rust` folder:
   
     cargo ndk -t armeabi-v7a -t arm64-v8a -o ../app/src/main/jniLibs build  
   
 After completing that step, check the directory specified in the command (`app/src/main/jniLibs` in this example). You should find two files `libexampleproject.so` in a sub directory. If so, then the last step was successful. Now you will  need to adjust which library Java is looking for. This can be found in `RustDef.java` in line 57.  Set the string there to the same as the name of your package in the `rust/Cargo.toml` that you created for your main project.
   
-Afterward, you can compile your Java code. You will need to specify the location that the compiled Rust library is in.  The easiest way to do that is by specifying the library path when running gradle like this:  
+Afterwards, you can compile your Java code. You will need to specify the location that the compiled Rust library is in.  The easiest way to do that is by specifying the library path when running gradle like this:  
   
     .\gradlew -D java.library.path=app/src/main/jniLibs installDebug  
   
@@ -287,11 +277,11 @@ The `CryptoManager` class handles cryptographic operations within the Android en
 
 
 - **RustDef**: 
-The `RustDef` class defines the interface to the cryptographic functions implemented in Rust. It loads the native library and declares the native methods implemented in Rust.
+The `RustDef` class defines the interface to the cryptographic functions implemented in Rust. It loads the native library.
 
 
 - **interface.rs**:
-This module contains the implementation of cryptographic functions in Rust and exposes them to the Java environment. The functions in `interface.rs` are designed to perform cryptographic operations efficiently and securely, providing an interface for use in Android applications.
+`interface.rs` serves as the interface between the Rust implementation and the Java side, acting as the counterpart to `RustDef.java`. It facilitates seamless communication between Rust and Java, allowing for the invocation of Rust functions from Java code. This enables developers to leverage the robust cryptographic capabilities implemented in Rust within their Android applications.
 </details>
 
 <details open>
@@ -306,9 +296,9 @@ the Rust environment and passing parameters that way. The JNI is provided by Ora
 To find out more about how the exact communication works, check the [JNI Implementation](#JNI-Implementation).
 - **KeyStore API**
 
-The [Android Keystore system](https://developer.android.com/privacy-and-security/keystore) handles the cryptographic keys for us. We went with this over the Knox SDK because it's a better fit for our needs, and even Samsung recommends it in their [Knox Vault Whitepaper](https://image-us.samsung.com/SamsungUS/samsungbusiness/solutions/topics/iot/071421/Knox-Whitepaper-v1.5-20210709.pdf). After more research, it also seemed like the best way to achieve the project goal in the limited time we had.
+The [Android Keystore system](https://developer.android.com/privacy-and-security/keystore) handles the cryptographic keys for us. We went with this over the Knox SDK because it's a better fit for our needs, and even Samsung recommends it in their [Knox Vault Whitepaper](https://image-us.samsung.com/SamsungUS/samsungbusiness/solutions/topics/iot/071421/Knox-Whitepaper-v1.5-20210709.pdf).
 
-With the Keystore and other APIs, we can use the keys to encrypt and decrypt data, as well as sign and verify it. The API also helps us solve the problem from j&s-soft, as we can enforce generated cryptographic keys to be saved in the Knox Vault (or any other strongbox).
+With the Keystore and related APIs, we can use keys to encrypt and decrypt data, as well as sign and verify it. The API also helps us solve the central requirenment from j&s-soft, as we can enforce generated cryptographic keys to be saved in the Knox Vault (or any other strongbox).
 
 The Knox Vault doesn't support all the cryptographic algorithms enabled by the Keystore and other APIs. As we couldn't find any detailed documentation about what the Knox Vault supports, we had to test it out by trial and error. You can see all the algorithms that have passed our tests in the [Supported Algorithms](#supported-algorithms) section.
 
@@ -369,26 +359,26 @@ Example:
 <details open>
 <summary><strong>Javadoc</strong></summary> 
 	
-All used Java code is documented [here](JavaDoc/index.html)
+All used Java code is documented [here](JavaDoc/index.html).
 
 </details>
 
 <details open>
 <summary><strong>Rustdoc</strong></summary> 
 	
-All used Rust code is documented [here](RustDoc/crypto_layer/index.html)
+All used Rust code is documented [here](RustDoc/crypto_layer/index.html).
 
 </details>
 
 
 ## Next Steps
-This chapter is all about looking to the future and thinking about how we can take this project in new directions.
+This chapter is all about looking to the future and thinking about how to take this project in new directions.
 <details open>
 <summary><strong>Ideas for our wrapper</strong></summary> 
 	
 - Check out how many keys the Knox Vault can store and document the result, as apparently the Keystore API does not limit how many keys can be stored. This theoretically means the only limit is the available data storage the Vault has for keys.
 - Improve the encrypt and decrypt methods so they can use asymmetric keys. 
-- Implement a modular key usage handling system. The system should take the information about the key usages when the key gets created, and create it with these specific purposes (e.g. encrypt, decrypt, sign, verify, key lifetime, limited key usages)
+- Implement a modular key usage handling system. The system should take the information about the key usages when the key gets created, and create it with these specific purposes (e.g. encrypt, decrypt, sign, verify, key lifetime, limited key usages).
 - Have a broader spectrum of devices to test on. Knox Vault should technically not be different on the current devices, though in the future that might change. Newer security modules might provide more cryptographic algorithms or performance in the future.
 - Obtain a reference to the JavaVM without having to pass it to the crypto layer.
 </details>
@@ -396,7 +386,7 @@ This chapter is all about looking to the future and thinking about how we can ta
 <details open>
 <summary><strong>Ideas for the crypto layer</strong></summary> 
 	
-- As the security modules are not built on performance, they take some time to encrypt and decrypt data. So creating derived keys for encryption and decryption outside of the security module will speed this process up immensely. The drawback however, could be security vulnerability.
+- Encryption and Decryption in Knox Vault is very slow. So creating derived keys for encryption and decryption outside of the security module will speed this process up immensely. The drawback however, this comes with security considerations.
 - Implementing some kind of attestation, if possible, so the enmeshed app knows its communicating with a security module, and which security module. (e.g. for our case the Google attestation service)
 - A method that lists and returns all the capabilities/supported algorithms the wrapper and security module provide.
 - a method that returns metadata about the loaded key like usages, algorithm, etc.
@@ -423,34 +413,21 @@ MIT License
 
 
 ## References
-<details open>
-<summary><strong>Source Documents</strong></summary> 
-
-  [Samsung Knox Whitepaper](https://image-us.samsung.com/SamsungUS/samsungbusiness/solutions/topics/iot/071421/Knox-Whitepaper-v1.5-20210709.pdf): Hold information about Samsung Knox, but also about the Knox Vault feature.
+[Samsung Knox Whitepaper](https://image-us.samsung.com/SamsungUS/samsungbusiness/solutions/topics/iot/071421/Knox-Whitepaper-v1.5-20210709.pdf): Hold information about Samsung Knox, but also about the Knox Vault feature.
   
-  [Android Keystore system](https://developer.android.com/privacy-and-security/keystore): Holds information about the Keystore system, how to use the Android keystore, as well as leading to other Android developer documents.
+[Android Keystore system](https://developer.android.com/privacy-and-security/keystore): Holds information about the Keystore system, how to use the Android keystore, as well as leading to other Android developer documents.
   
-  [Robusta](https://github.com/giovanniberti/robusta/tree/master): The library we use for easier communication between Rust and Java.
+[Robusta](https://github.com/giovanniberti/robusta/tree/master): The library we use for easier communication between Rust and Java.
   
-  [Java Native Interface (JNI)](https://docs.oracle.com/javase/8/docs/technotes/guides/jni/): Needed for the communication between Rust and Java, Robusta makes using this interface easier for us.
+[Java Native Interface (JNI)](https://docs.oracle.com/javase/8/docs/technotes/guides/jni/): Needed for the communication between Rust and Java, Robusta makes using this interface easier for us.
   
-</details>
-
-<details open>
-<summary><strong>Research Documents</strong></summary> 
-
-</details>
-
-<details open>
-<summary><strong>Further reading</strong></summary> 
-	
 [j&s-soft GmbH](https://www.js-soft.com/en/)
 
 [enmeshed](https://github.com/nmshd)
 
 [Hochschule Mannheim (HSMA)](https://www.english.hs-mannheim.de/the-university.html)
 
-</details>
+
 
 
 
