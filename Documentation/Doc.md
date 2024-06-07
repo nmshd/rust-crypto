@@ -343,14 +343,13 @@ MIT License
 </details>
 
 <details open>
-<summary><strong>Issue Guide</strong></summary> 
+<summary><strong>Contribution Guide</strong></summary>
+
+[Contribution](https://github.com/nmshd/.github/tree/main)
 
 </details>
 
-<details open>
-<summary><strong>Pull Request Guide</strong></summary> 
 
-</details>
 
 
 ## References
