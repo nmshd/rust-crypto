@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["key_handle","log_config","module_provider","module_provider_config"]};
