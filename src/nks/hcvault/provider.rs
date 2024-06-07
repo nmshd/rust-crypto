@@ -19,7 +19,7 @@ use crate::common::{
     error::SecurityModuleError,
     traits::module_provider::Provider,
 };
-use crate::common::crypto::algorithms::encryption::{BlockCiphers, EccCurves, EccSchemeAlgorithm};
+use crate::common::crypto::algorithms::encryption::{BlockCiphers, EccCurves, EccSchemeAlgorithm, SymmetricMode};
 use crate::common::crypto::algorithms::KeyBits;
 use crate::common::traits::module_provider_config::ProviderConfig;
 use crate::nks::NksConfig;
@@ -61,12 +61,22 @@ impl Provider for NksProvider {
                 },
                 Some(AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::Curve25519))) => "ecdh",
                 Some(AsymmetricEncryption::Ecc(_)) => "ecdsa",
-                Some(BlockCiphers::Aes(mode,length)) => {
-                    key_length = Some(*length);
-                    cyphertype = Some(*mode);
-                    "aes"
+                None => match &nks_config.key_algorithm_sym {
+                    Some(BlockCiphers::Aes(mode,length)) => {
+                        key_length = Some(*length);
+                        cyphertype = Some(match mode {
+                            SymmetricMode::Cbc => "Cbc".to_string(),
+                            SymmetricMode::Cfb => "Cfb".to_string(),
+                            SymmetricMode::Ctr => "Ctr".to_string(),
+                            SymmetricMode::Ecb => "Ecb".to_string(),
+                            SymmetricMode::Ofb => "Ofb".to_string(),
+                            SymmetricMode::Gcm => "Gcm".to_string(),
+                            SymmetricMode::Ccm => "Ccm".to_string(),
+                        });
+                        "aes"
+                    },
+                    _ => "none",
                 },
-                None => "none",
             }, key_length, Url::parse(&nks_config.nks_address).unwrap(), cyphertype));
             match key_length {
                 Some(kb) => println!("XXXXX Key length: {}", u32::from(kb)),
