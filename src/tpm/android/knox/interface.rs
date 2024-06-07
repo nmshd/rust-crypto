@@ -82,8 +82,14 @@ pub mod jni {
         ///
         /// # Arguments
         /// `key_id` - String that uniquely identifies the key so that it can be retrieved later
-        /// `key_gen_info` - A string that contains all relevant parameters for the key such as the
-        ///  algorithm used, the length of the key, the type of padding, etc.
+        ///
+        /// `key_gen_info` - A string that contains all relevant parameters for the key. Expected format depends on the algorithm:
+        ///
+        ///  RSA: "KEY_ALGORITHM;KEY_SIZE;HASH;PADDING",
+        ///
+        ///  EC: "KEY_ALGORITHM;CURVE;HASH"
+        ///
+        ///  AES + DES: KEY_ALGORITHM;KEY_SIZE;BLOCK_MODE;PADDING"
         pub fn create_key(environment: &JNIEnv, key_id: String, key_gen_info: String) -> Result<(), SecurityModuleError> {
             RustDef::initialize_module(environment)?;
             let result = environment.call_static_method(
@@ -95,26 +101,13 @@ pub mod jni {
             );
             let _ = Self::check_java_exceptions(&environment);
             return match result {
-                Ok(..) => Ok(()),
-                Err(e) => {
-                    match e {
-                        Error::WrongJValueType(_, _) => {
-                            Err(SecurityModuleError::InitializationError(
-                                String::from("Failed to create key: Wrong Arguments passed")
-                            ))
-                        }
-                        Error::JavaException => {
-                            Err(SecurityModuleError::InitializationError(
-                                String::from("Failed to create key: Some exception occurred in Java. Check console for details")
-                            ))
-                        }
-                        _ => {
-                            Err(SecurityModuleError::InitializationError(
-                                String::from("Failed to call Java methods")
-                            ))
-                        }
-                    }
-                }
+                Ok(_) => Ok(()),
+                Err(Error::WrongJValueType(_, _)) => Err(SecurityModuleError::InitializationError(
+                    String::from("Failed to create key: Wrong Arguments passed"))),
+                Err(Error::JavaException) => Err(SecurityModuleError::InitializationError(
+                    String::from("Failed to create key: Some exception occurred in Java. Check console for details"))),
+                Err(_) => Err(SecurityModuleError::InitializationError(
+                    String::from("Failed to call Java methods"))),
             };
         }
 
@@ -133,26 +126,13 @@ pub mod jni {
             );
             let _ = Self::check_java_exceptions(&environment);
             return match result {
-                Ok(..) => Ok(()),
-                Err(e) => {
-                    match e {
-                        Error::WrongJValueType(_, _) => {
-                            Err(SecurityModuleError::InitializationError(
-                                String::from("Failed to load key: Wrong Arguments passed")
-                            ))
-                        }
-                        Error::JavaException => {
-                            Err(SecurityModuleError::InitializationError(
-                                String::from("Failed to load key: Some exception occurred in Java. Check console for details")
-                            ))
-                        }
-                        _ => {
-                            Err(SecurityModuleError::InitializationError(
-                                String::from("Failed to call Java methods")
-                            ))
-                        }
-                    }
-                }
+                Ok(_) => Ok(()),
+                Err(Error::WrongJValueType(_, _)) => Err(SecurityModuleError::InitializationError(
+                    String::from("Failed to load key: Wrong Arguments passed"))),
+                Err(Error::JavaException) => Err(SecurityModuleError::InitializationError(
+                    String::from("Failed to load key: Some exception occurred in Java. Check console for details"))),
+                Err(_) => Err(SecurityModuleError::InitializationError(
+                    String::from("Failed to call Java methods"))),
             };
         }
 
@@ -177,21 +157,11 @@ pub mod jni {
             );
             let _ = Self::check_java_exceptions(&environment);
             return match result {
-                Ok(..) => Ok(()),
-                Err(e) => {
-                    match e {
-                        Error::JavaException => {
-                            Err(SecurityModuleError::InitializationError(
-                                String::from("Failed to initialise Module: Some exception occurred in Java. Check console for details")
-                            ))
-                        }
-                        _ => {
-                            Err(SecurityModuleError::InitializationError(
-                                String::from("Failed to call Java methods")
-                            ))
-                        }
-                    }
-                }
+                Ok(_) => Ok(()),
+                Err(Error::JavaException) => Err(SecurityModuleError::InitializationError(
+                    String::from("Failed to initialise Module: Some exception occurred in Java. Check console for details"))),
+                Err(_) => Err(SecurityModuleError::InitializationError(
+                    String::from("Failed to call Java methods"))),
             };
         }
 
@@ -217,31 +187,17 @@ pub mod jni {
                 Ok(value) => {
                     let vector = Self::convert_to_Vec_u8(environment, value);
                     match vector {
-                        Ok(v) => { Ok(v) }
-                        Err(_) => {Err(SecurityModuleError::SigningError(
-                            String::from("Failed to convert return type to rust-compatible format")
-                        ))}
+                        Ok(v) => Ok(v),
+                        Err(_) => Err(SecurityModuleError::SigningError(
+                            String::from("Failed to convert return type to rust-compatible format"))),
                     }
                 },
-                Err(e) => {
-                    match e {
-                        Error::WrongJValueType(_, _) => {
-                            Err(SecurityModuleError::SigningError(
-                                String::from("Failed to sign data: Wrong Arguments passed")
-                            ))
-                        }
-                        Error::JavaException => {
-                            Err(SecurityModuleError::SigningError(
-                                String::from("Failed to sign data: Some exception occurred in Java. Check console for details")
-                            ))
-                        }
-                        _ => {
-                            Err(SecurityModuleError::SigningError(
-                                String::from("Failed to call Java methods")
-                            ))
-                        }
-                    }
-                }
+                Err(Error::WrongJValueType(_, _)) => Err(SecurityModuleError::SigningError(
+                    String::from("Failed to sign data: Wrong Arguments passed"))),
+                Err(Error::JavaException) => Err(SecurityModuleError::SigningError(
+                    String::from("Failed to sign data: Some exception occurred in Java. Check console for details"))),
+                Err(_) => Err(SecurityModuleError::SigningError(
+                    String::from("Failed to call Java methods"))),
             };
         }
 
@@ -266,33 +222,17 @@ pub mod jni {
             );
             let _ = Self::check_java_exceptions(&environment);
             return match result {
-                Ok(res) => {
-                    match res.z() {
-                        Ok(value) => { Ok(value) }
-                        Err(_) => { Err(SecurityModuleError::SignatureVerificationError(
-                            String::from("Failed to convert return type to rust-compatible format")
-                        )) }
-                    }
-                }
-                Err(e) => {
-                    match e {
-                        Error::WrongJValueType(_, _) => {
-                            Err(SecurityModuleError::SignatureVerificationError(
-                                String::from("Failed to verify signature: Wrong Arguments passed")
-                            ))
-                        }
-                        Error::JavaException => {
-                            Err(SecurityModuleError::SignatureVerificationError(
-                                String::from("Failed to verify signature: Some exception occurred in Java. Check console for details")
-                            ))
-                        }
-                        _ => {
-                            Err(SecurityModuleError::SignatureVerificationError(
-                                String::from("Failed to call Java methods")
-                            ))
-                        }
-                    }
-                }
+                Ok(res) => match res.z() {
+                    Ok(value) => Ok(value),
+                    Err(_) => Err(SecurityModuleError::SignatureVerificationError(
+                        String::from("Failed to convert return type to rust-compatible format"))),
+                },
+                Err(Error::WrongJValueType(_, _)) => Err(SecurityModuleError::SignatureVerificationError(
+                    String::from("Failed to verify signature: Wrong Arguments passed"))),
+                Err(Error::JavaException) => Err(SecurityModuleError::SignatureVerificationError(
+                    String::from("Failed to verify signature: Some exception occurred in Java. Check console for details"))),
+                Err(_) => Err(SecurityModuleError::SignatureVerificationError(
+                    String::from("Failed to call Java methods"))),
             };
         }
 
@@ -318,31 +258,17 @@ pub mod jni {
                 Ok(value) => {
                     let vector = Self::convert_to_Vec_u8(environment, value);
                     match vector {
-                        Ok(v) => { Ok(v) }
-                        Err(_) => {Err(SecurityModuleError::EncryptionError(
-                            String::from("Failed to convert return type to rust-compatible format")
-                        ))}
+                        Ok(v) => Ok(v),
+                        Err(_) => Err(SecurityModuleError::EncryptionError(
+                            String::from("Failed to convert return type to rust-compatible format"))),
                     }
                 },
-                Err(e) => {
-                    match e {
-                        Error::WrongJValueType(_, _) => {
-                            Err(SecurityModuleError::EncryptionError(
-                                String::from("Failed to encrypt data: Wrong Arguments passed")
-                            ))
-                        }
-                        Error::JavaException => {
-                            Err(SecurityModuleError::EncryptionError(
-                                String::from("Failed to encrypt data: Some exception occurred in Java. Check console for details")
-                            ))
-                        }
-                        _ => {
-                            Err(SecurityModuleError::EncryptionError(
-                                String::from("Failed to call Java methods")
-                            ))
-                        }
-                    }
-                }
+                Err(Error::WrongJValueType(_, _)) => Err(SecurityModuleError::EncryptionError(
+                    String::from("Failed to encrypt data: Wrong Arguments passed"))),
+                Err(Error::JavaException) => Err(SecurityModuleError::EncryptionError(
+                    String::from("Failed to encrypt data: Some exception occurred in Java. Check console for details"))),
+                Err(_) => Err(SecurityModuleError::EncryptionError(
+                    String::from("Failed to call Java methods"))),
             };
         }
 
@@ -369,31 +295,17 @@ pub mod jni {
                 Ok(value) => {
                     let vector = Self::convert_to_Vec_u8(environment, value);
                     match vector {
-                        Ok(v) => { Ok(v) }
-                        Err(_) => {Err(SecurityModuleError::DecryptionError(
-                            String::from("Failed to convert return type to rust-compatible format")
-                        ))}
+                        Ok(v) => Ok(v),
+                        Err(_) => Err(SecurityModuleError::DecryptionError(
+                            String::from("Failed to convert return type to rust-compatible format"))),
                     }
                 },
-                Err(e) => {
-                    match e {
-                        Error::WrongJValueType(_, _) => {
-                            Err(SecurityModuleError::DecryptionError(
-                                String::from("Failed to decrypt data: Wrong Arguments passed")
-                            ))
-                        }
-                        Error::JavaException => {
-                            Err(SecurityModuleError::DecryptionError(
-                                String::from("Failed to decrypt data: Some exception occurred in Java. Check console for details")
-                            ))
-                        }
-                        _ => {
-                            Err(SecurityModuleError::DecryptionError(
-                                String::from("Failed to call Java methods")
-                            ))
-                        }
-                    }
-                }
+                Err(Error::WrongJValueType(_, _)) => Err(SecurityModuleError::DecryptionError(
+                    String::from("Failed to decrypt data: Wrong Arguments passed"))),
+                Err(Error::JavaException) => Err(SecurityModuleError::DecryptionError(
+                    String::from("Failed to decrypt data: Some exception occurred in Java. Check console for details"))),
+                Err(_) => Err(SecurityModuleError::DecryptionError(
+                    String::from("Failed to call Java methods"))),
             };
         }
 
@@ -419,19 +331,16 @@ pub mod jni {
         /// Ensure that the `JValue` passed is indeed a `jbyteArray` to avoid undefined behavior or unexpected errors.
         fn convert_to_Vec_u8(environment: &JNIEnv, result: JValue) -> Result<Vec<u8>, String> {
             Self::check_java_exceptions(environment)?;
-            let output_array = result.l();
-            let jobj;
-            match output_array {
-                Ok(o) => { jobj = o; }
-                Err(_) => { return Err(String::from("Type conversion from JValue to JObject failed")); }
-            }
-            let jobj = jobj.into_inner() as jbyteArray;
-            let output_vec = environment.convert_byte_array(jobj);
+            let jobj = result
+                .l()
+                .map_err(|_| String::from("Type conversion from JValue to JObject failed"))?
+                .into_inner() as jbyteArray;
+
+            let output_vec = environment
+                .convert_byte_array(jobj)
+                .map_err(|_| String::from("Conversion from jbyteArray to Vec<u8> failed"))?;
             Self::check_java_exceptions(environment)?;
-            match output_vec {
-                Ok(v) => { Ok(v) }
-                Err(_) => { Err(String::from("Conversion from jbyteArray to Vec<u8> failed")) }
-            }
+            Ok(output_vec)
         }
 
         /// Checks for any pending Java exceptions in the provided Java environment (`JNIEnv`).
