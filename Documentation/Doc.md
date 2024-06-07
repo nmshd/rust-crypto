@@ -300,13 +300,15 @@ Example:
 
 <details open>
 <summary><strong>Javadoc</strong></summary> 
-All used Java code is documented [here](/JavaDoc/index.html)
+	
+All used Java code is documented [here](JavaDoc/index.html)
 
 </details>
 
 <details open>
 <summary><strong>Rustdoc</strong></summary> 
-All used Rust code is documented [here](/RustDoc/crypto_layer/index.html)
+	
+All used Rust code is documented [here](RustDoc/crypto_layer/index.html)
 
 </details>
 
