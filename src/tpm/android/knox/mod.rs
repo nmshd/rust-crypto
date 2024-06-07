@@ -58,11 +58,11 @@ impl KnoxProvider {
     /// a JNIEnv on success to be used for JNI method calls.
     /// If the KnoxConfig has not been loaded yet or contains an invalid JavaVM, an error is returned
     fn get_env(&self) -> Result<JNIEnv, SecurityModuleError> {
-        if self.config.is_none() { return Err(SecurityModuleError::InitializationError(String::from("No key loaded"))) }
+        if self.config.is_none() { return Err(SecurityModuleError::InitializationError(String::from("No key loaded"))); }
         let conf = self.config
             .as_ref()
             .ok_or(
-            SecurityModuleError::InitializationError(String::from("failed to store config data")))?;
+                SecurityModuleError::InitializationError(String::from("failed to store config data")))?;
         conf.vm
             .get_env()
             .map_err(|_| SecurityModuleError::InitializationError(String::from("failed to retrieve JNIEnv")))
@@ -70,9 +70,9 @@ impl KnoxProvider {
 
     ///Converts the config parameter to a KnoxConfig
     fn downcast_config(config: Box<dyn Any>) -> Result<KnoxConfig, SecurityModuleError> {
-        *config
+        Ok(*config
             .downcast::<KnoxConfig>()
-            .map_err(|err| SecurityModuleError::InitializationError(format!("wrong config provided: {:?}", err)))
+            .map_err(|err| SecurityModuleError::InitializationError(format!("wrong config provided: {:?}", err)))?)
     }
 }
 
@@ -83,7 +83,7 @@ impl KnoxProvider {
 pub struct KnoxConfig {
     pub key_algorithm: Option<AsymmetricEncryption>,
     pub sym_algorithm: Option<BlockCiphers>,
-    pub vm: JavaVM
+    pub vm: JavaVM,
 }
 
 /// implements the debug trait for KnoxConfig for logging
@@ -111,14 +111,14 @@ impl KnoxConfig {
     /// Otherwise, load_key() or create_key() will return an Error.
     /// The last needed parameter is a JavaVM that is needed to call the Android KeystoreAPI
     pub fn new(
-         key_algorithm: Option<AsymmetricEncryption>,
-         sym_algorithm: Option<BlockCiphers>,
-         vm: JavaVM
+        key_algorithm: Option<AsymmetricEncryption>,
+        sym_algorithm: Option<BlockCiphers>,
+        vm: JavaVM,
     ) -> Result<KnoxConfig, SecurityModuleError> {
         if (key_algorithm.is_none() && sym_algorithm.is_none()) ||
-           (key_algorithm.is_some() && sym_algorithm.is_some()){
+            (key_algorithm.is_some() && sym_algorithm.is_some()) {
             return Err(SecurityModuleError::InitializationError(
-                String::from("Either sym_algorithm OR key_algorithm must be Some(_)")))
+                String::from("Either sym_algorithm OR key_algorithm must be Some(_)")));
         }
         Ok(Self {
             key_algorithm,
