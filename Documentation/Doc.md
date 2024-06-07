@@ -87,23 +87,23 @@ We have provided a list of the supported Algorithms of our project:
 
   | Algorithm Type    | Details                                      |
   |-------------------|----------------------------------------------|
-  | **RSA**           | RSA;512;SHA-256;PKCS1                       |
-  |                   | RSA;1024;SHA-256;PKCS1                      |
-  |                   | RSA;2048;SHA-256;PKCS1                      |
-  |                   | RSA;3072;SHA-256;PKCS1                      |
-  |                   | RSA;4096;SHA-256;PKCS1                      |
-  |                   | RSA;8192;SHA-256;PKCS1                      |
-  | **ECC**           | EC;secp256r1;SHA-256                        |
-  |                   | EC;secp384r1;SHA-256                        |
-  |                   | EC;secp521r1;SHA-256                        |
-  | **3DES**          | DESede;168;CBC;PKCS7Padding                 |
-  | **AES**           | AES;128;GCM;NoPadding                       |
-  |                   | AES;128;CBC;PKCS7Padding                    |
-  |                   | AES;128;CTR;NoPadding                       |
-  |                   | AES;192;GCM;NoPadding                       |
-  |                   | AES;192;CBC;PKCS7Padding                    |
-  |                   | AES;192;CTR;NoPadding                       |
-  |                   | AES;256;GCM;NoPadding                       |
+  | **RSA**           | 512;SHA-256;PKCS1                       |
+  |                   | 1024;SHA-256;PKCS1                      |
+  |                   | 2048;SHA-256;PKCS1                      |
+  |                   | 3072;SHA-256;PKCS1                      |
+  |                   | 4096;SHA-256;PKCS1                      |
+  |                   | 8192;SHA-256;PKCS1                      |
+  | **ECC**           | secp256r1;SHA-256                        |
+  |                   | secp384r1;SHA-256                        |
+  |                   | secp521r1;SHA-256                        |
+  | **3DES**          | 168;CBC;PKCS7Padding                 |
+  | **AES**           | 128;GCM;NoPadding                       |
+  |                   | 128;CBC;PKCS7Padding                    |
+  |                   | 128;CTR;NoPadding                       |
+  |                   | 192;GCM;NoPadding                       |
+  |                   | 192;CBC;PKCS7Padding                    |
+  |                   | 192;CTR;NoPadding                       |
+  |                   | 256;GCM;NoPadding                       |
   |                   | AES;256;CBC;PKCS7Padding                    |
   |                   | AES;256;CTR;NoPadding                       |
 </details>
@@ -188,75 +188,68 @@ With that, you should have everything complete and compiled the project from scr
 ## Usage
 <details open>
   <summary><strong>Knox config</strong></summary> 
-The create_key method is used to create a new cryptographic key identified by a unique key_id. This method communicates with a Java function to generate the key within a Trusted Platform Module (TPM) and to persistently store this key.
 
-
+Example of how to create a provider and initialize module:
 ```rust
-//Method-Signature and parameter
-pub fn create_key(environment: &JNIEnv, key_id: String, key_gen_info: String) -> Result<(), String>
+let instance = SecModules::get_instance(  
+    "test_key".to_owned(),  
+    SecurityModule::Tpm(TpmType::Android(AndroidTpmType::Knox)),  
+    None).unwrap();  
+let mut module = instance.lock().unwrap();
 ```
-- `environment:` A reference to the JNI (Java Native Interface) environment, which is used for calling Java methods from Rust.
-- `key_id:` A unique string that identifies the key to be created.
-- `key_gen_info:` A character string that contains additional information about the key generation.
-  
-> [!NOTE]
-> - When calling the method, you must ensure that you provide the correct parameters: key_id and key_gen_info.
-> - key_id should be a unique identifier for the generated key.
-> - key_gen_info could contain additional information that is relevant for the generation of the key.
-
+To create a key, first you will have to decide which algorithm to use, then set a unique alias for the key. Finally, you can create a key. Here is an example of how that could look like:
 ```rust
-//Calling the Java method
-let result = environment.call_static_method(
-    "com/example/vulcans_limes/RustDef",
-    "create_key",
-    "(Ljava/lang/String;Ljava/lang/String;)V",
-    &[JValue::from(environment.new_string(key_id).unwrap()),
-        JValue::from(environment.new_string(key_gen_info).unwrap())],
-);
+let sym_key = Aes(SymmetricMode::Cbc, Bits128); //Key to be used for symmetric encryption  
+let asym_key = Rsa(Bits2048); //Key to be used for asymmetric encryption
 
+// creating a symmetric key
+let keyname: &str = "sym_key";  
+let config = Box::new(KnoxConfig::new(None,  
+                                      Some(sym_key),  
+                                      environment.get_java_vm().unwrap())  
+    .expect("Failed to create KnoxConfig"));  
+let result = module.create_key(keyname, config);
+
+// creating an asymmetric key
+let keyname: &str = &format!("Asym{}", "asym_key");  
+let config = Box::new(KnoxConfig::new(Some(asym_key),  
+                                      None,  
+                                      environment.get_java_vm().unwrap()));  
+module.create_key(keyname, config)
 ```
-- `call_static_method` calls a static Java method (`create_key`), which is defined in the RustDef class.
-- The method expects two character strings as parameters (`key_id` and `key_gen_info`), which are converted to JValue. 
-
+So now that we know how to create keys, let us look at examples of how to use them.
+First, we will need to load a key to be used.  
 ```rust
-//Check for Java exceptions
-let _ = Self::check_java_exceptions(environment);
+// loading a symmetric key
+let config = Box::new(KnoxConfig::new(None,  
+                                      Some(sym_key),  
+                                      environment.get_java_vm().unwrap()));  
+module.load_key(keyname, config)  
+// loading an asymmetric key
+let config = Box::new(KnoxConfig::new(Some(asym_key),  
+                                      None,  
+                                      environment.get_java_vm().unwrap()));  
+module.load_key(keyname, config)
 ```
-- This line checks whether an exception has occurred during the Java method call.
-
+Now that we loaded the key, we can use encrypt & decrypt, or sign & verify. Here is an example:
 ```rust
-//Processing the result
-return match result {
-    Ok(..) => Ok(()),
-    Err(e) => {
-        match e {
-            Error::WrongJValueType(_, _) => {
-                Err(
-                    String::from("Failed to create key: Wrong Arguments passed")
-                )
-            }
-            Error::JavaException => {
-                Err(
-                    String::from("Failed to create key: Some exception occurred in Java. Check console for details")
-                )
-            }
-            _ => {
-                Err(
-                    String::from("Failed to call Java methods")
-                )
-            }
-        }
-    }
-};
+let clear_data: &[u8] = &[1, 0, 255]; //Data to be symmetrically encrypted  
+let sign_data: &[u8] = &[1, 0, 255]; //Data to be signed by the asym key
 
+// after loading a symmetric key, we can encrypt or decrypt
+let enc_data = module.encrypt_data(clear_data)
+let dec_data = module.decrypt_data(&enc_data)
+
+// after loading an asymmetric key, we can sign or verify
+let verify_data = module.sign_data(sign_data)
+let result_verify = module.verify_signature(&sign_data, &verify_data)
 ```
+
 - If the method call is successful `(Ok(..))`, `Ok(())` is returned.
-- In the event of an error `(Err(e))`, the exact error is examined and a corresponding error message is returned:
-- `Error::WrongJValueType:` The arguments passed have the wrong type.
-- `Error::JavaException:` An exception has occurred in the Java method.
-- Other errors lead to a general error message.
+- In the event of an error `(Err(e))`, the exact error is examined and a corresponding error message is returned.
 
 </details>
+
 
  
 
