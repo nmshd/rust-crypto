@@ -198,9 +198,73 @@ With that, you should have everything complete and compiled the project from scr
 ## Usage
 <details open>
   <summary><strong>Knox config</strong></summary> 
+The create_key method is used to create a new cryptographic key identified by a unique key_id. This method communicates with a Java function to generate the key within a Trusted Platform Module (TPM) and to persistently store this key.
+
+
+```rust
+//Method-Signature and parameter
+pub fn create_key(environment: &JNIEnv, key_id: String, key_gen_info: String) -> Result<(), String>
+```
+- `environment:` A reference to the JNI (Java Native Interface) environment, which is used for calling Java methods from Rust.
+- `key_id:` A unique string that identifies the key to be created.
+- `key_gen_info:` A character string that contains additional information about the key generation.
+
+
+```rust
+//Calling the Java method
+let result = environment.call_static_method(
+    "com/example/vulcans_limes/RustDef",
+    "create_key",
+    "(Ljava/lang/String;Ljava/lang/String;)V",
+    &[JValue::from(environment.new_string(key_id).unwrap()),
+        JValue::from(environment.new_string(key_gen_info).unwrap())],
+);
+
+```
+- `call_static_method` calls a static Java method (`create_key`), which is defined in the RustDef class.
+- The method expects two character strings as parameters (`key_id` and `key_gen_info`), which are converted to JValue. 
+
+```rust
+//Check for Java exceptions
+let _ = Self::check_java_exceptions(environment);
+```
+- This line checks whether an exception has occurred during the Java method call.
+
+```rust
+//Processing the result
+return match result {
+    Ok(..) => Ok(()),
+    Err(e) => {
+        match e {
+            Error::WrongJValueType(_, _) => {
+                Err(
+                    String::from("Failed to create key: Wrong Arguments passed")
+                )
+            }
+            Error::JavaException => {
+                Err(
+                    String::from("Failed to create key: Some exception occurred in Java. Check console for details")
+                )
+            }
+            _ => {
+                Err(
+                    String::from("Failed to call Java methods")
+                )
+            }
+        }
+    }
+};
+
+```
+- If the method call is successful `(Ok(..))`, `Ok(())` is returned.
+- In the event of an error `(Err(e))`, the exact error is examined and a corresponding error message is returned:
+- `Error::WrongJValueType:` The arguments passed have the wrong type.
+- `Error::JavaException:` An exception has occurred in the Java method.
+- Other errors lead to a general error message.
+
+</details>
 
  
-</details>
 
 ## Architecture
 <details open>
