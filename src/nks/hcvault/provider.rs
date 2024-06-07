@@ -19,7 +19,7 @@ use crate::common::{
     error::SecurityModuleError,
     traits::module_provider::Provider,
 };
-use crate::common::crypto::algorithms::encryption::{EccCurves, EccSchemeAlgorithm};
+use crate::common::crypto::algorithms::encryption::{BlockCiphers, EccCurves, EccSchemeAlgorithm};
 use crate::common::crypto::algorithms::KeyBits;
 use crate::common::traits::module_provider_config::ProviderConfig;
 use crate::nks::NksConfig;
@@ -51,6 +51,7 @@ impl Provider for NksProvider {
     #[instrument]
     fn create_key(&mut self, key_id: &str, config: Box<dyn ProviderConfig>) -> Result<(), SecurityModuleError> {
         let mut key_length: Option<KeyBits> = None;
+        let mut cyphertype: Option<String> = None;
         if let Some(nks_config) = config.as_any().downcast_ref::<NksConfig>() {
             let runtime = Runtime::new().unwrap();
             let get_and_save_keypair_result = runtime.block_on(get_and_save_key_pair(&*nks_config.nks_token.clone(), key_id, match &nks_config.key_algorithm {
@@ -60,8 +61,13 @@ impl Provider for NksProvider {
                 },
                 Some(AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::Curve25519))) => "ecdh",
                 Some(AsymmetricEncryption::Ecc(_)) => "ecdsa",
+                Some(BlockCiphers::Aes(mode,length)) => {
+                    key_length = Some(*length);
+                    cyphertype = Some(*mode);
+                    "aes"
+                },
                 None => "none",
-            }, key_length, Url::parse(&nks_config.nks_address).unwrap(), None));
+            }, key_length, Url::parse(&nks_config.nks_address).unwrap(), cyphertype));
             match key_length {
                 Some(kb) => println!("XXXXX Key length: {}", u32::from(kb)),
                 None => println!("XXXXX Key length: None"),
