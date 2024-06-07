@@ -115,3 +115,30 @@ fn test_encrypt_and_decrypt_ecdh() {
         .expect("Failed to decrypt data");
     assert_eq!(data, decrypted_data.as_slice())
 }
+
+#[test]
+fn test_encrypt_and_decrypt_aes() {
+    let mut provider = NksProvider::new("aes".to_string());
+
+    provider.config = Some(crate::tests::nks::provider_handle_tests::get_config("aes").unwrap());
+
+    provider
+        .initialize_module()
+        .expect("Failed to initialize module");
+
+    if let Some(nks_config) = provider.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>() {
+        provider
+            .load_key("test_aes_key", Box::new(nks_config.clone()))
+            .expect("Failed to load AES key");
+    } else {
+        println!("Failed to downcast to NksConfig");
+    }
+
+
+    let data = b"Hello, World!";
+    let encrypted_data = provider.encrypt_data(data).expect("Failed to encrypt data");
+    let decrypted_data = provider
+        .decrypt_data(&encrypted_data)
+        .expect("Failed to decrypt data");
+    assert_eq!(data, decrypted_data.as_slice())
+}

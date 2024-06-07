@@ -226,7 +226,7 @@ pub fn get_config(key_type: &str) -> Option<Arc<dyn ProviderConfig + Send + Sync
             None,
             Hash::Sha2(384.into()),
             vec![KeyUsage::Decrypt],
-            Option::from(BlockCiphers::Aes(SymmetricMode::Gcm, KeyBits::Bits128)),
+            Option::from(BlockCiphers::Aes(SymmetricMode::Gcm, KeyBits::Bits256)),
         )),
         _ => None,
     }

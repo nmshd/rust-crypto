@@ -6,6 +6,8 @@ use openssl::hash::MessageDigest;
 use openssl::pkey::PKey;
 use openssl::rsa::{Padding, Rsa};
 use openssl::sign::{Signer as RSASigner, Verifier as RSAVerifier};
+use openssl::symm::{Cipher, Crypter, Mode};
+use openssl::base64 as openssl_base64;
 use sodiumoxide::crypto::box_;
 use x25519_dalek::{
     StaticSecret as X25519StaticSecret, StaticSecret,
@@ -15,7 +17,7 @@ use crate::common::{
     crypto::algorithms::encryption::AsymmetricEncryption, error::SecurityModuleError,
     traits::key_handle::KeyHandle,
 };
-use crate::common::crypto::algorithms::encryption::{EccCurves, EccSchemeAlgorithm};
+use crate::common::crypto::algorithms::encryption::{BlockCiphers, EccCurves, EccSchemeAlgorithm, SymmetricMode};
 use crate::common::crypto::algorithms::hashes::*;
 use crate::nks::NksConfig;
 use crate::SecurityModuleError::InitializationError;
@@ -99,15 +101,16 @@ impl KeyHandle for NksProvider {
     /// A `Result` containing the decrypted data as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
     #[tracing::instrument]
     fn decrypt_data(&self, _encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
-        // Determine the key algorithm based on the key or some other means
-        let key_algorithm = self
+        let config = self
             .config
             .as_ref()
             .unwrap()
             .as_any()
             .downcast_ref::<NksConfig>()
-            .unwrap()
-            .key_algorithm;
+            .unwrap();
+
+        let key_algorithm = config.key_algorithm;
+        let key_algorithm_sym = config.key_algorithm_sym;
         let encrypted_data = _encrypted_data;
 
         if self.private_key.is_empty() || encrypted_data.is_empty() {
@@ -164,7 +167,49 @@ impl KeyHandle for NksProvider {
 
                     Ok(decrypted_message)
                 }
-                None => Err(SecurityModuleError::UnsupportedAlgorithm),
+                None => match &key_algorithm_sym {
+                    Some(BlockCiphers::Aes(mode, length)) => {
+                        // AES decryption method
+                        match mode {
+                            SymmetricMode::Gcm => {
+                                let cipher = Cipher::aes_256_gcm();
+                                let key = openssl_base64::decode_block(&self.private_key).unwrap();
+                                let mut crypter = Crypter::new(cipher, Mode::Decrypt, &key, Some(&[0u8; 12])).unwrap();
+                                let mut decrypted_data = vec![0; _encrypted_data.len() + cipher.block_size()];
+                                let count = crypter.update(_encrypted_data, &mut decrypted_data).unwrap();
+                                let rest = crypter.finalize(&mut decrypted_data[count..]).unwrap();
+                                decrypted_data.truncate(count + rest);
+                                Ok(decrypted_data)
+                            }/*
+                            SymmetricMode::Ccm => {
+                                // AES CCM encryption
+                                // ...
+                            }
+                            SymmetricMode::Ecb => {
+                                // AES ECB encryption
+                                // ...
+                            }
+                            SymmetricMode::Cbc => {
+                                // AES CBC encryption
+                                // ...
+                            }
+                            SymmetricMode::Cfb => {
+                                // AES CFB encryption
+                                // ...
+                            }
+                            SymmetricMode::Ofb => {
+                                // AES OFB encryption
+                                // ...
+                            }
+                            SymmetricMode::Ctr => {
+                                // AES CTR encryption
+                                // ...
+                            }*/
+                            _ => Err(SecurityModuleError::UnsupportedAlgorithm),
+                        }
+                    }
+                    _ => Err(SecurityModuleError::UnsupportedAlgorithm),
+                },
             }
         }
     }
@@ -180,14 +225,16 @@ impl KeyHandle for NksProvider {
     /// A `Result` containing the encrypted data as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
     #[tracing::instrument]
     fn encrypt_data(&self, _data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
-        let key_algorithm = self
+        let config = self
             .config
             .as_ref()
             .unwrap()
             .as_any()
             .downcast_ref::<NksConfig>()
-            .unwrap()
-            .key_algorithm;
+            .unwrap();
+
+        let key_algorithm = config.key_algorithm;
+        let key_algorithm_sym = config.key_algorithm_sym;
         let data = _data;
 
         if self.private_key.is_empty() || data.is_empty() {
@@ -232,7 +279,50 @@ impl KeyHandle for NksProvider {
                     result.extend_from_slice(&encrypted_message);
                     Ok(result)
                 }
-                None => Err(SecurityModuleError::UnsupportedAlgorithm),
+                None => match &key_algorithm_sym {
+                    Some(BlockCiphers::Aes(mode, length)) => {
+                        // AES encryption method
+                        match mode {
+                            SymmetricMode::Gcm => {
+                                // AES GCM encryption
+                                let cipher = Cipher::aes_256_gcm();
+                                let key = openssl_base64::decode_block(&self.private_key).unwrap();
+                                let mut crypter = Crypter::new(cipher, Mode::Encrypt, &key, Some(&[0u8; 12])).unwrap();
+                                let mut encrypted_data = vec![0; _data.len() + cipher.block_size()];
+                                let count = crypter.update(_data, &mut encrypted_data).unwrap();
+                                let rest = crypter.finalize(&mut encrypted_data[count..]).unwrap();
+                                encrypted_data.truncate(count + rest);
+                                Ok(encrypted_data)
+                            }/*
+                            SymmetricMode::Ccm => {
+                                // AES CCM encryption
+                                // ...
+                            }
+                            SymmetricMode::Ecb => {
+                                // AES ECB encryption
+                                // ...
+                            }
+                            SymmetricMode::Cbc => {
+                                // AES CBC encryption
+                                // ...
+                            }
+                            SymmetricMode::Cfb => {
+                                // AES CFB encryption
+                                // ...
+                            }
+                            SymmetricMode::Ofb => {
+                                // AES OFB encryption
+                                // ...
+                            }
+                            SymmetricMode::Ctr => {
+                                // AES CTR encryption
+                                // ...
+                            }*/
+                            _ => Err(SecurityModuleError::UnsupportedAlgorithm),
+                        }
+                    }
+                    _ => Err(SecurityModuleError::UnsupportedAlgorithm),
+                },
             }
         }
     }
