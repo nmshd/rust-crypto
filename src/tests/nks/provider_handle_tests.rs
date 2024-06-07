@@ -12,7 +12,9 @@ use crate::{
     },
     nks::hcvault::NksProvider,
 };
+use crate::common::crypto::algorithms::encryption::{BlockCiphers, SymmetricMode};
 use crate::common::crypto::algorithms::hashes::Sha2Bits;
+use crate::common::crypto::algorithms::KeyBits;
 use crate::common::traits::module_provider_config::ProviderConfig;
 use crate::nks::NksConfig;
 
@@ -68,6 +70,25 @@ fn test_create_ecdh_key() {
         provider
             .create_key("test_ecdh_key", Box::new(nks_config.clone()))
             .expect("Failed to create ECDH key");
+    } else {
+        println!("Failed to downcast to NksConfig");
+    }
+}
+
+#[test]
+fn test_create_aes_key() {
+    let mut provider = NksProvider::new("test_key".to_string());
+
+    provider.config = Some(get_config("aes").unwrap());
+
+    provider
+        .initialize_module()
+        .expect("Failed to initialize module");
+
+    if let Some(nks_config) = provider.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>() {
+        provider
+            .create_key("test_aes_key", Box::new(nks_config.clone()))
+            .expect("Failed to create AES key");
     } else {
         println!("Failed to downcast to NksConfig");
     }
@@ -179,6 +200,14 @@ pub fn get_config(key_type: &str) -> Option<Arc<dyn ProviderConfig + Send + Sync
             Hash::Sha2(384.into()),
             vec![KeyUsage::Decrypt],
             None,
+        )),
+        "aes" => Some(NksConfig::new(
+            "".to_string(),
+            "https://localhost:5000/".to_string(),
+            None,
+            Hash::Sha2(384.into()),
+            vec![KeyUsage::Decrypt],
+            Option::from(BlockCiphers::Aes(SymmetricMode::Gcm, KeyBits::Bits128)),
         )),
         _ => None,
     }
