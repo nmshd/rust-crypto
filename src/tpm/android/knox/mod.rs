@@ -59,18 +59,20 @@ impl KnoxProvider {
     /// If the KnoxConfig has not been loaded yet or contains an invalid JavaVM, an error is returned
     fn get_env(&self) -> Result<JNIEnv, SecurityModuleError> {
         if self.config.is_none() { return Err(SecurityModuleError::InitializationError(String::from("No key loaded"))) }
-        let conf = self.config.as_ref().ok_or(
+        let conf = self.config
+            .as_ref()
+            .ok_or(
             SecurityModuleError::InitializationError(String::from("failed to store config data")))?;
-        let env = conf.vm.get_env().unwrap();
-        Ok(env)
+        conf.vm
+            .get_env()
+            .map_err(|_| SecurityModuleError::InitializationError(String::from("failed to retrieve JNIEnv")))
     }
 
     ///Converts the config parameter to a KnoxConfig
     fn downcast_config(config: Box<dyn Any>) -> Result<KnoxConfig, SecurityModuleError> {
-        let config = *config
+        *config
             .downcast::<KnoxConfig>()
-            .map_err(|err| SecurityModuleError::InitializationError(format!("wrong config provided: {:?}", err)))?;
-        Ok(config)
+            .map_err(|err| SecurityModuleError::InitializationError(format!("wrong config provided: {:?}", err)))
     }
 }
 
@@ -108,16 +110,20 @@ impl KnoxConfig {
     /// At any time, either a key_algorithm OR a sym_algorithm must be supplied, not both.
     /// Otherwise, load_key() or create_key() will return an Error.
     /// The last needed parameter is a JavaVM that is needed to call the Android KeystoreAPI
-    #[allow(clippy::new_ret_no_self)]
     pub fn new(
          key_algorithm: Option<AsymmetricEncryption>,
          sym_algorithm: Option<BlockCiphers>,
          vm: JavaVM
-    ) -> KnoxConfig {
-        Self {
+    ) -> Result<KnoxConfig, SecurityModuleError> {
+        if (key_algorithm.is_none() && sym_algorithm.is_none()) ||
+           (key_algorithm.is_some() && sym_algorithm.is_some()){
+            return Err(SecurityModuleError::InitializationError(
+                String::from("Either sym_algorithm OR key_algorithm must be Some(_)")))
+        }
+        Ok(Self {
             key_algorithm,
             sym_algorithm,
             vm,
-        }
+        })
     }
 }
