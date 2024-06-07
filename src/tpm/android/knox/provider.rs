@@ -33,7 +33,7 @@ use crate::{
 impl Provider for KnoxProvider {
     /// Creates a new cryptographic key identified by `key_id`.
     ///
-    /// This method creates a persisted cryptographic key using the specified algorithm
+    /// This method creates a persistent cryptographic key using the specified algorithm
     /// and identifier, making it retrievable for future operations. The key is created
     /// and stored in Knox Vault. This method also loads the key for further usage, therefore it is
     /// not necessary to load a key after creating it.
