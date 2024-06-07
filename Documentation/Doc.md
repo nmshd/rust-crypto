@@ -208,7 +208,11 @@ pub fn create_key(environment: &JNIEnv, key_id: String, key_gen_info: String) ->
 - `environment:` A reference to the JNI (Java Native Interface) environment, which is used for calling Java methods from Rust.
 - `key_id:` A unique string that identifies the key to be created.
 - `key_gen_info:` A character string that contains additional information about the key generation.
-
+  
+> [!NOTE]
+> - When calling the method, you must ensure that you provide the correct parameters: key_id and key_gen_info.
+> - key_id should be a unique identifier for the generated key.
+> - key_gen_info could contain additional information that is relevant for the generation of the key.
 
 ```rust
 //Calling the Java method
