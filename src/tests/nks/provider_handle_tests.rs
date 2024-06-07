@@ -151,6 +151,25 @@ fn test_load_ecdh_key() {
     }
 }
 
+#[test]
+fn test_load_aes_key() {
+    let mut provider = NksProvider::new("test_key".to_string());
+
+    provider.config = Some(get_config("aes").unwrap());
+
+    provider
+        .initialize_module()
+        .expect("Failed to initialize module");
+
+    if let Some(nks_config) = provider.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>() {
+        provider
+            .load_key("test_aes_key", Box::new(nks_config.clone()))
+            .expect("Failed to load AES key");
+    } else {
+        println!("Failed to downcast to NksConfig");
+    }
+}
+
 /// Returns a configuration object for the NksProvider based on the provided key type.
 ///
 /// This function creates a new NksConfig object with predefined settings for the
