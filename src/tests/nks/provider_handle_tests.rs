@@ -78,20 +78,22 @@ fn test_create_ecdh_key() {
 #[test]
 fn test_create_aes_key() {
     for &key_size in &[KeyBits::Bits128, KeyBits::Bits192, KeyBits::Bits256] {
-        let mut provider = NksProvider::new("test_key".to_string());
+        for &aes_mode in &["aes_gcm", "aes_ccm"] {
+            let mut provider = NksProvider::new("test_key".to_string());
 
-        provider.config = Some(get_config("aes", Some(key_size)).unwrap());
+            provider.config = Some(get_config(aes_mode, Some(key_size)).unwrap());
 
-        provider
-            .initialize_module()
-            .expect("Failed to initialize module");
-
-        if let Some(nks_config) = provider.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>() {
             provider
-                .create_key(&format!("test_aes_key_{}", key_size as u8), Box::new(nks_config.clone()))
-                .expect("Failed to create AES key");
-        } else {
-            println!("Failed to downcast to NksConfig");
+                .initialize_module()
+                .expect("Failed to initialize module");
+
+            if let Some(nks_config) = provider.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>() {
+                provider
+                    .create_key(&format!("test_{}_key_{}", aes_mode, key_size as u8), Box::new(nks_config.clone()))
+                    .expect("Failed to create AES key");
+            } else {
+                println!("Failed to downcast to NksConfig");
+            }
         }
     }
 }
@@ -156,20 +158,22 @@ fn test_load_ecdh_key() {
 #[test]
 fn test_load_aes_key() {
     for &key_size in &[KeyBits::Bits128, KeyBits::Bits192, KeyBits::Bits256] {
-        let mut provider = NksProvider::new("test_key".to_string());
+        for &aes_mode in &["aes_gcm", "aes_ccm"] {
+            let mut provider = NksProvider::new("test_key".to_string());
 
-        provider.config = Some(get_config("aes", Some(key_size)).unwrap());
+            provider.config = Some(get_config(aes_mode, Some(key_size)).unwrap());
 
-        provider
-            .initialize_module()
-            .expect("Failed to initialize module");
-
-        if let Some(nks_config) = provider.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>() {
             provider
-                .load_key(&format!("test_aes_key_{}", key_size as u8), Box::new(nks_config.clone()))
-                .expect("Failed to load AES key");
-        } else {
-            println!("Failed to downcast to NksConfig");
+                .initialize_module()
+                .expect("Failed to initialize module");
+
+            if let Some(nks_config) = provider.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>() {
+                provider
+                    .load_key(&format!("test_{}_key_{}", aes_mode, key_size as u8), Box::new(nks_config.clone()))
+                    .expect("Failed to load AES key");
+            } else {
+                println!("Failed to downcast to NksConfig");
+            }
         }
     }
 }
@@ -224,15 +228,26 @@ pub fn get_config(key_type: &str, key_size: Option<KeyBits>) -> Option<Arc<dyn P
             vec![KeyUsage::Decrypt],
             None,
         )),
-        "aes" => {
+        "aes_gcm" => {
             let key_size = key_size.unwrap_or(KeyBits::Bits256); // Default to 256 bits if no size is provided
             Some(NksConfig::new(
                 "".to_string(),
                 "https://localhost:5000/".to_string(),
                 None,
                 Hash::Sha2(256.into()),
-                vec![KeyUsage::SignEncrypt, KeyUsage::ClientAuth],
+                vec![KeyUsage::Decrypt],
                 Some(BlockCiphers::Aes(SymmetricMode::Gcm, key_size)),
+            ))
+        },
+        "aes_ccm" => {
+            let key_size = key_size.unwrap_or(KeyBits::Bits256); // Default to 256 bits if no size is provided
+            Some(NksConfig::new(
+                "".to_string(),
+                "https://localhost:5000/".to_string(),
+                None,
+                Hash::Sha2(256.into()),
+                vec![KeyUsage::Decrypt],
+                Some(BlockCiphers::Aes(SymmetricMode::Ccm, key_size)),
             ))
         },
         _ => None,

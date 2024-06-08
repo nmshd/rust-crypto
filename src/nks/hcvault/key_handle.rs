@@ -205,11 +205,31 @@ impl KeyHandle for NksProvider {
                                 decrypted_data.truncate(count + rest);
 
                                 Ok(decrypted_data)
-                            }/*
-                            SymmetricMode::Ccm => {
-                                // AES CCM encryption
-                                // ...
                             }
+                            SymmetricMode::Ccm => {
+                                // AES CCM decryption
+                                let cipher = match length {
+                                    KeyBits::Bits128 => Cipher::aes_128_ccm(),
+                                    KeyBits::Bits192 => Cipher::aes_192_ccm(),
+                                    KeyBits::Bits256 => Cipher::aes_256_ccm(),
+                                    _ => return Err(SecurityModuleError::UnsupportedAlgorithm),
+                                };
+                                let key = openssl_base64::decode_block(&self.private_key).unwrap();
+
+                                // Split the encrypted data into the nonce and encrypted message
+                                let nonce_end_index = 12; // Nonce is 12 bytes
+                                let (nonce, encrypted_data) = _encrypted_data.split_at(nonce_end_index);
+
+                                let mut crypter = Crypter::new(cipher, Mode::Decrypt, &key, Some(&nonce))
+                                    .map_err(|_| SecurityModuleError::DecryptionError("Failed to create Crypter".to_string()))?;
+                                let mut out = vec![0; encrypted_data.len() + cipher.block_size()];
+                                let count = crypter.update(encrypted_data, &mut out)
+                                    .map_err(|_| SecurityModuleError::DecryptionError("Failed to decrypt data".to_string()))?;
+                                let rest = crypter.finalize(&mut out[count..])
+                                    .map_err(|_| SecurityModuleError::DecryptionError("Failed to finalize decryption".to_string()))?;
+                                out.truncate(count + rest);
+                                Ok(out)
+                            }/*
                             SymmetricMode::Ecb => {
                                 // AES ECB encryption
                                 // ...
@@ -349,11 +369,37 @@ impl KeyHandle for NksProvider {
                                 result.extend_from_slice(&tag);
 
                                 Ok(result)
-                            }/*
+                            }
                             SymmetricMode::Ccm => {
                                 // AES CCM encryption
-                                // ...
-                            }
+                                let cipher = match length {
+                                    KeyBits::Bits128 => Cipher::aes_128_ccm(),
+                                    KeyBits::Bits192 => Cipher::aes_192_ccm(),
+                                    KeyBits::Bits256 => Cipher::aes_256_ccm(),
+                                    _ => return Err(SecurityModuleError::UnsupportedAlgorithm),
+                                };
+                                let key = openssl_base64::decode_block(&self.private_key).unwrap();
+
+                                // Generate a random nonce
+                                let mut rng = rand::thread_rng();
+                                let nonce: [u8; 12] = rng.gen();
+
+                                let mut crypter = Crypter::new(cipher, Mode::Encrypt, &key, Some(&nonce))
+                                    .map_err(|_| SecurityModuleError::EncryptionError("Failed to create Crypter".to_string()))?;
+                                let mut out = vec![0; _data.len() + cipher.block_size()];
+                                let count = crypter.update(_data, &mut out)
+                                    .map_err(|_| SecurityModuleError::EncryptionError("Failed to encrypt data".to_string()))?;
+                                let rest = crypter.finalize(&mut out[count..])
+                                    .map_err(|_| SecurityModuleError::EncryptionError("Failed to finalize encryption".to_string()))?;
+                                out.truncate(count + rest);
+
+                                // Initialize the result vector with the nonce
+                                let mut result = Vec::new();
+                                result.extend_from_slice(&nonce);
+                                result.extend_from_slice(&out);
+
+                                Ok(result)
+                            }/*
                             SymmetricMode::Ecb => {
                                 // AES ECB encryption
                                 // ...

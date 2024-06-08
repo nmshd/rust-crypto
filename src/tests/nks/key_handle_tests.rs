@@ -118,11 +118,11 @@ fn test_encrypt_and_decrypt_ecdh() {
 }
 
 #[test]
-fn test_encrypt_and_decrypt_aes() {
+fn test_encrypt_and_decrypt_aes_gcm() {
     for &key_size in &[KeyBits::Bits128, KeyBits::Bits192, KeyBits::Bits256] {
-        let mut provider = NksProvider::new("aes".to_string());
+        let mut provider = NksProvider::new("aes_gcm".to_string());
 
-        provider.config = Some(crate::tests::nks::provider_handle_tests::get_config("aes", Some(key_size)).unwrap());
+        provider.config = Some(crate::tests::nks::provider_handle_tests::get_config("aes_gcm", Some(key_size)).unwrap());
 
         provider
             .initialize_module()
@@ -130,7 +130,35 @@ fn test_encrypt_and_decrypt_aes() {
 
         if let Some(nks_config) = provider.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>() {
             provider
-                .load_key(&format!("test_aes_key_{}", key_size as u8), Box::new(nks_config.clone()))
+                .load_key(&format!("test_aes_gcm_key_{}", key_size as u8), Box::new(nks_config.clone()))
+                .expect("Failed to load AES key");
+        } else {
+            println!("Failed to downcast to NksConfig");
+        }
+
+        let data = b"Hello, World!";
+        let encrypted_data = provider.encrypt_data(data).expect("Failed to encrypt data");
+        let decrypted_data = provider
+            .decrypt_data(&encrypted_data)
+            .expect("Failed to decrypt data");
+        assert_eq!(data, decrypted_data.as_slice())
+    }
+}
+
+#[test]
+fn test_encrypt_and_decrypt_aes_ccm() {
+    for &key_size in &[KeyBits::Bits128, KeyBits::Bits192, KeyBits::Bits256] {
+        let mut provider = NksProvider::new("aes_ccm".to_string());
+
+        provider.config = Some(crate::tests::nks::provider_handle_tests::get_config("aes_ccm", Some(key_size)).unwrap());
+
+        provider
+            .initialize_module()
+            .expect("Failed to initialize module");
+
+        if let Some(nks_config) = provider.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>() {
+            provider
+                .load_key(&format!("test_aes_ccm_key_{}", key_size as u8), Box::new(nks_config.clone()))
                 .expect("Failed to load AES key");
         } else {
             println!("Failed to downcast to NksConfig");
