@@ -402,6 +402,7 @@ dependencies = [
  "nitrokey",
  "once_cell",
  "openssl",
+ "rand",
  "reqwest",
  "serde",
  "serde_json",

@@ -7,11 +7,12 @@ use openssl::pkey::PKey;
 use openssl::rsa::{Padding, Rsa};
 use openssl::sign::{Signer as RSASigner, Verifier as RSAVerifier};
 use openssl::symm::{Cipher, Crypter, Mode};
-use openssl::base64 as openssl_base64;
+use openssl::{base64 as openssl_base64};
 use sodiumoxide::crypto::box_;
 use x25519_dalek::{
     StaticSecret as X25519StaticSecret, StaticSecret,
 };
+use rand::Rng;
 
 use crate::common::{
     crypto::algorithms::encryption::AsymmetricEncryption, error::SecurityModuleError,
@@ -321,7 +322,10 @@ impl KeyHandle for NksProvider {
                                 println!("data: {:?}", _data);
                                 let cipher = Cipher::aes_256_gcm();
                                 let key = openssl_base64::decode_block(&self.private_key).unwrap();
-                                let nonce = [0u8; 12];
+                                // Generate a random nonce
+                                let mut rng = rand::thread_rng();
+                                let nonce: [u8; 12] = rng.gen();
+
                                 let mut result = Vec::new();
                                 result.extend_from_slice(&nonce);
                                 let mut crypter = Crypter::new(cipher, Mode::Encrypt, &key, Some(&nonce)).unwrap();
