@@ -22,7 +22,7 @@ use crate::nks::NksConfig;
 fn test_create_rsa_key() {
     let mut provider = NksProvider::new("test_key".to_string());
 
-    provider.config = Some(get_config("rsa").unwrap());
+    provider.config = Some(get_config("rsa", None).unwrap());
 
     provider
         .initialize_module()
@@ -41,7 +41,7 @@ fn test_create_rsa_key() {
 fn test_create_ecdsa_key() {
     let mut provider = NksProvider::new("test_key".to_string());
 
-    provider.config = Some(get_config("ecdsa").unwrap());
+    provider.config = Some(get_config("ecdsa", None).unwrap());
 
     provider
         .initialize_module()
@@ -60,7 +60,7 @@ fn test_create_ecdsa_key() {
 fn test_create_ecdh_key() {
     let mut provider = NksProvider::new("test_key".to_string());
 
-    provider.config = Some(get_config("ecdh").unwrap());
+    provider.config = Some(get_config("ecdh", None).unwrap());
 
     provider
         .initialize_module()
@@ -77,20 +77,22 @@ fn test_create_ecdh_key() {
 
 #[test]
 fn test_create_aes_key() {
-    let mut provider = NksProvider::new("test_key".to_string());
+    for &key_size in &[KeyBits::Bits128, KeyBits::Bits192, KeyBits::Bits256] {
+        let mut provider = NksProvider::new("test_key".to_string());
 
-    provider.config = Some(get_config("aes").unwrap());
+        provider.config = Some(get_config("aes", Some(key_size)).unwrap());
 
-    provider
-        .initialize_module()
-        .expect("Failed to initialize module");
-
-    if let Some(nks_config) = provider.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>() {
         provider
-            .create_key("test_aes_key", Box::new(nks_config.clone()))
-            .expect("Failed to create AES key");
-    } else {
-        println!("Failed to downcast to NksConfig");
+            .initialize_module()
+            .expect("Failed to initialize module");
+
+        if let Some(nks_config) = provider.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>() {
+            provider
+                .create_key(&format!("test_aes_key_{}", key_size as u8), Box::new(nks_config.clone()))
+                .expect("Failed to create AES key");
+        } else {
+            println!("Failed to downcast to NksConfig");
+        }
     }
 }
 
@@ -98,7 +100,7 @@ fn test_create_aes_key() {
 fn test_load_rsa_key() {
     let mut provider = NksProvider::new("test_key".to_string());
 
-    provider.config = Some(get_config("rsa").unwrap());
+    provider.config = Some(get_config("rsa", None).unwrap());
 
     provider
         .initialize_module()
@@ -117,7 +119,7 @@ fn test_load_rsa_key() {
 fn test_load_ecdsa_key() {
     let mut provider = NksProvider::new("test_key".to_string());
 
-    provider.config = Some(get_config("ecdsa").unwrap());
+    provider.config = Some(get_config("ecdsa", None).unwrap());
 
     provider
         .initialize_module()
@@ -136,7 +138,7 @@ fn test_load_ecdsa_key() {
 fn test_load_ecdh_key() {
     let mut provider = NksProvider::new("test_key".to_string());
 
-    provider.config = Some(get_config("ecdh").unwrap());
+    provider.config = Some(get_config("ecdh", None).unwrap());
 
     provider
         .initialize_module()
@@ -153,20 +155,22 @@ fn test_load_ecdh_key() {
 
 #[test]
 fn test_load_aes_key() {
-    let mut provider = NksProvider::new("test_key".to_string());
+    for &key_size in &[KeyBits::Bits128, KeyBits::Bits192, KeyBits::Bits256] {
+        let mut provider = NksProvider::new("test_key".to_string());
 
-    provider.config = Some(get_config("aes").unwrap());
+        provider.config = Some(get_config("aes", Some(key_size)).unwrap());
 
-    provider
-        .initialize_module()
-        .expect("Failed to initialize module");
-
-    if let Some(nks_config) = provider.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>() {
         provider
-            .load_key("test_aes_key", Box::new(nks_config.clone()))
-            .expect("Failed to load AES key");
-    } else {
-        println!("Failed to downcast to NksConfig");
+            .initialize_module()
+            .expect("Failed to initialize module");
+
+        if let Some(nks_config) = provider.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>() {
+            provider
+                .load_key(&format!("test_aes_key_{}", key_size as u8), Box::new(nks_config.clone()))
+                .expect("Failed to load AES key");
+        } else {
+            println!("Failed to downcast to NksConfig");
+        }
     }
 }
 
@@ -189,7 +193,7 @@ fn test_load_aes_key() {
 /// ```
 /// let config = get_config("rsa").unwrap();
 /// ```
-pub fn get_config(key_type: &str) -> Option<Arc<dyn ProviderConfig + Send + Sync>> {
+pub fn get_config(key_type: &str, key_size: Option<KeyBits>) -> Option<Arc<dyn ProviderConfig + Send + Sync>> {
     match key_type {
         "rsa" => Some(NksConfig::new(
             "".to_string(),
@@ -220,14 +224,17 @@ pub fn get_config(key_type: &str) -> Option<Arc<dyn ProviderConfig + Send + Sync
             vec![KeyUsage::Decrypt],
             None,
         )),
-        "aes" => Some(NksConfig::new(
-            "".to_string(),
-            "https://localhost:5000/".to_string(),
-            None,
-            Hash::Sha2(384.into()),
-            vec![KeyUsage::Decrypt],
-            Option::from(BlockCiphers::Aes(SymmetricMode::Gcm, KeyBits::Bits256)),
-        )),
+        "aes" => {
+            let key_size = key_size.unwrap_or(KeyBits::Bits256); // Default to 256 bits if no size is provided
+            Some(NksConfig::new(
+                "".to_string(),
+                "https://localhost:5000/".to_string(),
+                None,
+                Hash::Sha2(256.into()),
+                vec![KeyUsage::SignEncrypt, KeyUsage::ClientAuth],
+                Some(BlockCiphers::Aes(SymmetricMode::Gcm, key_size)),
+            ))
+        },
         _ => None,
     }
 }

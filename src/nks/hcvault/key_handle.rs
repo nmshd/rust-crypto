@@ -20,6 +20,7 @@ use crate::common::{
 };
 use crate::common::crypto::algorithms::encryption::{BlockCiphers, EccCurves, EccSchemeAlgorithm, SymmetricMode};
 use crate::common::crypto::algorithms::hashes::*;
+use crate::common::crypto::algorithms::KeyBits;
 use crate::nks::NksConfig;
 use crate::SecurityModuleError::InitializationError;
 
@@ -174,7 +175,13 @@ impl KeyHandle for NksProvider {
                         match mode {
                             SymmetricMode::Gcm => {
                                 // AES GCM decryption
-                                let cipher = Cipher::aes_256_gcm();
+                                // Create the cipher based on the key length
+                                let cipher = match length {
+                                    KeyBits::Bits128 => Cipher::aes_128_gcm(),
+                                    KeyBits::Bits192 => Cipher::aes_192_gcm(),
+                                    KeyBits::Bits256 => Cipher::aes_256_gcm(),
+                                    _ => return Err(SecurityModuleError::UnsupportedAlgorithm),
+                                };
                                 let key = openssl_base64::decode_block(&self.private_key).unwrap();
 
                                 // Split the encrypted data into the nonce, encrypted message, and tag
@@ -303,7 +310,13 @@ impl KeyHandle for NksProvider {
                         match mode {
                             SymmetricMode::Gcm => {
                                 // AES GCM encryption
-                                let cipher = Cipher::aes_256_gcm();
+                                // Create the cipher based on the key length
+                                let cipher = match length {
+                                    KeyBits::Bits128 => Cipher::aes_128_gcm(),
+                                    KeyBits::Bits192 => Cipher::aes_192_gcm(),
+                                    KeyBits::Bits256 => Cipher::aes_256_gcm(),
+                                    _ => return Err(SecurityModuleError::UnsupportedAlgorithm),
+                                };
                                 let key = openssl_base64::decode_block(&self.private_key).unwrap();
 
                                 // Generate a random nonce
