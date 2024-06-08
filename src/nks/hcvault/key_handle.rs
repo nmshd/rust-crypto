@@ -174,12 +174,45 @@ impl KeyHandle for NksProvider {
                             SymmetricMode::Gcm => {
                                 let cipher = Cipher::aes_256_gcm();
                                 let key = openssl_base64::decode_block(&self.private_key).unwrap();
-                                let mut crypter = Crypter::new(cipher, Mode::Decrypt, &key, Some(&[0u8; 12])).unwrap();
-                                let mut decrypted_data = vec![0; _encrypted_data.len() + cipher.block_size()];
-                                let count = crypter.update(_encrypted_data, &mut decrypted_data).unwrap();
+
+                                // Split the encrypted data into the nonce, encrypted message, and tag
+                                let nonce_end_index = 12; // Nonce is 12 bytes
+                                let tag_start_index = _encrypted_data.len() - 16; // Tag is 16 bytes
+                                let (nonce_and_encrypted_data, tag) = _encrypted_data.split_at(tag_start_index);
+                                let (nonce, encrypted_data) = nonce_and_encrypted_data.split_at(nonce_end_index);
+                                println!("nonce: {:?}", nonce);
+                                println!("encrypted_data: {:?}", encrypted_data);
+                                println!("tag: {:?}", tag);
+                                let mut crypter = Crypter::new(cipher, Mode::Decrypt, &key, Some(nonce)).unwrap();
+                                crypter.set_tag(tag).unwrap();
+
+                                let mut decrypted_data = vec![0; encrypted_data.len() + cipher.block_size()];
+                                let count = crypter.update(encrypted_data, &mut decrypted_data).unwrap();
+                                println!("count: {:?}", count);
+                                println!("decrypted data: {:?}", decrypted_data);
+                                println!("output.len: {:?}", decrypted_data.len());
+                                println!("block_size: {:?}", cipher.block_size());
                                 let rest = crypter.finalize(&mut decrypted_data[count..]).unwrap();
                                 decrypted_data.truncate(count + rest);
+
                                 Ok(decrypted_data)
+                                // println!("encrypted data: {:?}", _encrypted_data);
+                                // let cipher = Cipher::aes_256_gcm();
+                                // let key = openssl_base64::decode_block(&self.private_key).unwrap();
+                                // let mut crypter = Crypter::new(cipher, Mode::Decrypt, &key, Some(&[0u8; 12])).unwrap();
+                                // let tag = _encrypted_data.split_off(_encrypted_data.len() - cipher.block_size());
+                                // crypter.set_tag(&tag).unwrap();
+                                // let mut decrypted_data = vec![0; _encrypted_data.len() + cipher.block_size()];
+                                // let data = b"Hello, World!";
+                                // println!("real data: {:?}", data);
+                                // let count = crypter.update(_encrypted_data, &mut decrypted_data).unwrap();
+                                // println!("decrypted data: {:?}", decrypted_data);
+                                // println!("output.len: {:?}", decrypted_data.len());
+                                // println!("block_size: {:?}", cipher.block_size());
+                                // let rest = crypter.finalize(&mut decrypted_data[count..]).unwrap();
+                                // println!("decrypted data: {:?}", decrypted_data);
+                                // decrypted_data.truncate(count + rest);
+                                // Ok(decrypted_data)
                             }/*
                             SymmetricMode::Ccm => {
                                 // AES CCM encryption
@@ -285,14 +318,27 @@ impl KeyHandle for NksProvider {
                         match mode {
                             SymmetricMode::Gcm => {
                                 // AES GCM encryption
+                                println!("data: {:?}", _data);
                                 let cipher = Cipher::aes_256_gcm();
                                 let key = openssl_base64::decode_block(&self.private_key).unwrap();
-                                let mut crypter = Crypter::new(cipher, Mode::Encrypt, &key, Some(&[0u8; 12])).unwrap();
+                                let nonce = [0u8; 12];
+                                let mut result = Vec::new();
+                                result.extend_from_slice(&nonce);
+                                let mut crypter = Crypter::new(cipher, Mode::Encrypt, &key, Some(&nonce)).unwrap();
                                 let mut encrypted_data = vec![0; _data.len() + cipher.block_size()];
                                 let count = crypter.update(_data, &mut encrypted_data).unwrap();
                                 let rest = crypter.finalize(&mut encrypted_data[count..]).unwrap();
                                 encrypted_data.truncate(count + rest);
-                                Ok(encrypted_data)
+                                let mut tag = vec![0; 16];
+                                crypter.get_tag(&mut tag).unwrap();
+                                result.extend_from_slice(&encrypted_data);
+                                result.extend_from_slice(&tag);
+                                println!("tag: {:?}", tag);
+                                println!("encrypted data: {:?}", encrypted_data);
+                                println!("result before truncation: {:?}", result);
+                                // result.truncate(count + rest + tag.len());
+                                // println!("result after truncation: {:?}", result);
+                                Ok(result)
                             }/*
                             SymmetricMode::Ccm => {
                                 // AES CCM encryption
