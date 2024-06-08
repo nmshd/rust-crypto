@@ -1,4 +1,4 @@
-use crate::{common::{crypto::algorithms::{encryption::AsymmetricEncryption, hashes::Hash}, traits::module_provider_config::ProviderConfig}, SecurityModuleError};
+use crate::{common::{crypto::algorithms::{encryption::{AsymmetricEncryption, BlockCiphers}, hashes::Hash}, traits::module_provider_config::ProviderConfig}, SecurityModuleError};
 use anyhow::Result;
 use std::fmt::{Debug, Formatter};
 use std::any::Any;
@@ -33,18 +33,16 @@ impl SecureEnclaveProvider {
 
 #[derive(Clone)]
 pub struct SecureEnclaveConfig {
-    pub key_algorithm: Option<AsymmetricEncryption>, 
     pub asym_algorithm: Option<AsymmetricEncryption>,
-    // pub sym_algorithm: Option<BlockCiphers>, // Not supported by Secure Enclave
+    pub sym_algorithm: Option<BlockCiphers>, // Not supported by Secure Enclave
     pub hash: Option<Hash>
 }
 
 impl SecureEnclaveConfig{
-    pub fn new(key_algorithm: Option<AsymmetricEncryption>, asym_algorithm: Option<AsymmetricEncryption>, hash: Option<Hash>) -> SecureEnclaveConfig {
+    pub fn new(asym_algorithm: Option<AsymmetricEncryption>, hash: Option<Hash>) -> SecureEnclaveConfig {
         Self {
-            key_algorithm, 
             asym_algorithm, 
-            // sym_algorithm: None, // Not supported by Secure Enclave
+            sym_algorithm: None, // Not supported by Secure Enclave
             hash, 
         }
     }

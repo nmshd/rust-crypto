@@ -1,7 +1,7 @@
 extern crate apple_secure_enclave_bindings;
-use super::SecureEnclaveProvider;
+use super::{provider::convert_algorithms, SecureEnclaveProvider};
 use crate::{
-    common::{error::SecurityModuleError, traits::key_handle::KeyHandle}, tpm::macos::provider::convert_sign_algorithms,
+    common::{error::SecurityModuleError, traits::key_handle::KeyHandle}
 };
 use tracing::instrument;
 use regex::Regex;
@@ -14,7 +14,7 @@ impl KeyHandle for SecureEnclaveProvider {
         
         let key_id = &self.key_id; 
         let config = self.config.as_ref().ok_or(SecurityModuleError::InitializationError(("Failed to initialize config").to_owned()))?;
-        let algo = convert_sign_algorithms(config.clone()); 
+        let algo = convert_algorithms(config.clone()); 
 
         // Debug TODO
         // println!("\nSignData: Send to Swift | key_id: {} | StringData: {} | Algorithm: {}", key_id, _string_data, algo); 
@@ -40,9 +40,11 @@ impl KeyHandle for SecureEnclaveProvider {
         let string_data = String::from_utf8(encrypted_data.to_vec()).map_err(|_| {
             SecurityModuleError::DecryptionError("Data conversion error".to_string())
         })?;
+        let config = self.config.as_ref().ok_or(SecurityModuleError::InitializationError(("Failed to initialize config").to_owned()))?;
+        let algorithm = convert_algorithms(config.clone()); 
 
         let decrypted_data =
-            apple_secure_enclave_bindings::keyhandle::rust_crypto_call_decrypt_data(self.key_id.to_string(), string_data);
+            apple_secure_enclave_bindings::keyhandle::rust_crypto_call_decrypt_data(self.key_id.to_string(), string_data, algorithm);
 
         if Regex::new("(?i)error")
             .unwrap()
@@ -62,12 +64,14 @@ impl KeyHandle for SecureEnclaveProvider {
             SecurityModuleError::EncryptionError("Data conversion error".to_string())
         })?;
         let key_id = &self.key_id;
-
+        let config = self.config.as_ref().ok_or(SecurityModuleError::InitializationError(("Failed to initialize config").to_owned()))?;
+        let algorithm = convert_algorithms(config.clone()); 
+        
         //Debug TODO
         // println!("\nEncryptData: Send to Swift | key_id: {} | data: {}", key_id.clone(), string_data); 
 
         let encrypted_data =
-            apple_secure_enclave_bindings::keyhandle::rust_crypto_call_encrypt_data(key_id.to_string(), string_data);
+            apple_secure_enclave_bindings::keyhandle::rust_crypto_call_encrypt_data(key_id.to_string(), string_data, algorithm);
 
         //Debug TODO
         // println!("\nEncryptData: Recieved from Swift data: {}", encrypted_data); 
@@ -96,7 +100,7 @@ impl KeyHandle for SecureEnclaveProvider {
 
         let key_id = &self.key_id;  
         let config = self.config.as_ref().ok_or(SecurityModuleError::InitializationError(("Failed to initialize config").to_owned()))?;
-        let algo = convert_sign_algorithms(config.clone()); 
+        let algo = convert_algorithms(config.clone()); 
 
         // Debug TODO
         // println!("VerifyData: Send to Swift | key_id: {} | string_data: {} | string_signature: {} ",key_id.clone(), string_data, string_signature);
@@ -115,3 +119,4 @@ impl KeyHandle for SecureEnclaveProvider {
         }
     }
 }
+
