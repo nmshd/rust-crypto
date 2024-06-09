@@ -2,7 +2,7 @@ use super::{SecureEnclaveConfig, SecureEnclaveProvider};
 extern crate apple_secure_enclave_bindings;
 use crate::
     common::{
-        crypto::algorithms::{encryption::{AsymmetricEncryption, EccCurves, EccSchemeAlgorithm}, hashes::Hash, KeyBits},
+        crypto::algorithms::{encryption::AsymmetricEncryption, hashes::Hash, KeyBits},
         error::SecurityModuleError,
         traits::module_provider::Provider,
     };
@@ -24,31 +24,17 @@ impl Provider for SecureEnclaveProvider {
         let key_algorithm_type;
 
         if config.asym_algorithm.is_some(){
-            key_algorithm_type = match config.asym_algorithm.expect("No Asymmetric Algorithm given") {
-                AsymmetricEncryption::Ecc(ecc_scheme_algo) => {
-                    match ecc_scheme_algo {
-                        EccSchemeAlgorithm::EcDsa(ecc_curve) => {
-                            match ecc_curve{
-                                // P256,P384,P521 are deprecated recommended to use Secp256k1 instead
-                                EccCurves::P256 => "ECDSA;256".to_string(),
-                                EccCurves::P384 => "ECDSA;384".to_string(),
-                                // EccCurves::P521 => "kSecAttrKeyTypeECDSA;521".to_string(), // Not supported by Secure Enclave
-                                EccCurves::Secp256k1 => "ECC;256".to_string(), 
-                                _ => {return Err(CreateKeyError("Algorithm is not supported".to_string()))}
-                            }
-                        }
-                        _ => {return Err(CreateKeyError("Algorithm is not supported".to_string()))} 
-                    }
-                }
+            key_algorithm_type = match config.asym_algorithm.expect("No Asymmetric Algorithm given.") {
                 AsymmetricEncryption::Rsa(keybits) => {
                     match keybits {
-                        //Works only with SHA1, SHA224
+                        //Works only in combination with SHA1, SHA224
                         KeyBits::Bits512 => "RSA;512".to_string(),
-                        //Works only with SHA256, SHA384
+                        //Works only in combination with SHA256, SHA384
                         KeyBits::Bits1024 => "RSA;1024".to_string(),
-                        _ => {return Err(CreateKeyError("Only Bits512 and Bits1024 are supported".to_string()))}
+                        _ => unimplemented!("With RSA only Keysize of 512 and 1024 are supported"),
                     }
                 }
+                _ => unimplemented!("Only RSA supported"),
             };
 
             // Debug TODO
@@ -80,10 +66,7 @@ impl Provider for SecureEnclaveProvider {
 
         let load_key = apple_secure_enclave_bindings::provider::rust_crypto_call_load_key(_key_id.to_string(), convert_algorithms(config.clone()));
 
-        if Regex::new("(?i)error")
-            .unwrap()
-            .is_match(load_key.as_str())
-        {
+        if Regex::new("(?i)error").unwrap().is_match(load_key.as_str()){
             Err(SecurityModuleError::InitializationError(load_key.to_string()))
         } else {
             Ok(())
@@ -108,10 +91,10 @@ pub fn convert_algorithms(config: SecureEnclaveConfig) -> String {
     let algo; 
     let hash = convert_hash(config.hash.expect("No Hash given"));
 
-    let asym_algorithm_type = match config.asym_algorithm.expect("Invalid Config") {
+    let asym_algorithm_type = match config.asym_algorithm.expect("Invalid config") {
         // Is only Asymmetric-Algorithm which is working at that time
         AsymmetricEncryption::Rsa(_) => "RSA".to_string(), 
-        _ => unimplemented!() ,
+        _ => unimplemented!("Only RSA supported") ,
     };
     
     algo = asym_algorithm_type + ";" + &hash; 
@@ -122,28 +105,6 @@ pub fn convert_algorithms(config: SecureEnclaveConfig) -> String {
     return algo
 }
 
-// pub fn convert_sign_algorithms(config: SecureEnclaveConfig) -> String {
-//     let algo; 
-
-//     let key_algorithm_type = match config.asym_algorithm.expect("Invalid Config") {
-//         // Is only Algorithm which is working at that time
-//         AsymmetricEncryption::Ecc(ecc_scheme_algo) => {
-//             match ecc_scheme_algo {
-//                 EccSchemeAlgorithm::Null => {
-//                     "ecc".to_string()
-//                 }
-//                 _ => unimplemented!()
-//             }
-//         }
-//         _ => unimplemented!()
-//     };
-//     let hash = convert_hash(config.hash.expect("No Hash given")); 
-    
-//     algo = key_algorithm_type + ";" + &hash;  
-
-//     return algo
-// }
-
 pub fn convert_hash(hash: Hash) -> String {
     match hash {
         Hash::Sha1 => "SHA1".to_string(),
@@ -153,10 +114,10 @@ pub fn convert_hash(hash: Hash) -> String {
                 Sha2Bits::Sha256 => "SHA256".to_string(),
                 Sha2Bits::Sha384 => "SHA384".to_string(),
                 Sha2Bits::Sha512 => "SHA512".to_string(),
-                _ => unimplemented!(),            
+                _ => unimplemented!("Only SHA224, SHA256, SHA384, SHA512 supported."),            
             }
         }, 
-        _ => unimplemented!(), 
+        _ => unimplemented!("Only SHA1 and Sha2Bits supported."), 
     }
 }
 

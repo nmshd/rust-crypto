@@ -1,8 +1,6 @@
 extern crate apple_secure_enclave_bindings;
 use super::{provider::convert_algorithms, SecureEnclaveProvider};
-use crate::{
-    common::{error::SecurityModuleError, traits::key_handle::KeyHandle}
-};
+use crate::common::{error::SecurityModuleError, traits::key_handle::KeyHandle};
 use tracing::instrument;
 use regex::Regex;
 
