@@ -412,7 +412,7 @@ import CryptoKit
         let query: [String: Any] = [
             kSecClass as String                 : kSecClassKey,
             kSecAttrApplicationTag as String    : tag,
-            kSecAttrKeyType as String           : kSecAttrKeyTypeRSA,
+            kSecAttrKeyType as String           : algo,
             kSecReturnRef as String             : true
         ]
 
@@ -438,13 +438,22 @@ import CryptoKit
     **/
     func rustcall_load_key(key_id: RustString, key_type: RustString) -> String {
         do {
-            let algorithm = try convert_key_type(key_type: String(key_type.toString().split(separator: ";")[0]))
-            guard let key = try load_key(key_id: key_id.toString(), algo: algorithm) else {
-                return "Key not found."
+            let key_algorithm = try convert_key_type(key_type: String(key_type.toString().split(separator: ";")[0]))
+            let operation_algorithm_encryption = try convert_encrypt_algorithm(algorithm: key_type)
+            let operation_algorithm_signing = try convert_sign_algorithm(algorithm: key_type)
+
+            guard let key = try load_key(key_id: key_id.toString(), algo: key_algorithm) else {
+                return "Key with KeyID \(key_id) could not be found."
             }
+
+            try check_algorithm_support(key: getPublicKeyFromPrivateKey(privateKey: key)!, operation: SecKeyOperationType.encrypt, algorithm: operation_algorithm_encryption)
+            try check_algorithm_support(key: key, operation: SecKeyOperationType.decrypt, algorithm: operation_algorithm_encryption)
+            try check_algorithm_support(key: key, operation: SecKeyOperationType.sign, algorithm: operation_algorithm_signing)
+            try check_algorithm_support(key: getPublicKeyFromPrivateKey(privateKey: key)!, operation: SecKeyOperationType.verify, algorithm: operation_algorithm_signing)
+            
             return "\(key.hashValue)"
         } catch {
-            return "Error: \(String(describing: error))"
+            return "Error: \(key_type.toString()) + \(String(describing: error))"
         }
     }
     
@@ -489,7 +498,7 @@ import CryptoKit
             // print("MacOS 10.15 and higher")
             do{
                 guard SecureEnclave.isAvailable else {
-                    throw SecureEnclaveError.runtimeError("Error: Secure Enclave is unavailable on this device")
+                    throw SecureEnclaveError.runtimeError("Secure Enclave is unavailable on this device")
                 }
                 return true
             }catch{
@@ -502,12 +511,27 @@ import CryptoKit
         }
     }
 
+    func check_algorithm_support(key: SecKey, operation: SecKeyOperationType, algorithm: SecKeyAlgorithm) throws {
+        var operation_string: String; 
+        switch operation{
+            case SecKeyOperationType.encrypt: 
+                operation_string = "encrypt"
+            default: 
+                operation_string = "Noting"
+        }
+        //Key usage is going to be implemented. 
+        if !SecKeyIsAlgorithmSupported(key, operation, algorithm){
+            throw SecureEnclaveError.EncryptionError("Given Keytype and algorithm do not support the \(operation_string) operation. Please choose other keytype or algorithm.")
+        } 
+    }
+
     func convert_key_type(key_type: String) throws -> CFString {
         switch key_type{
-            case "ECDSA": 
-                return kSecAttrKeyTypeECDSA
-            case "ECC": 
-                return kSecAttrKeyTypeECSECPrimeRandom
+            //Maybe supported later with symmetric encryption
+            // case "ECDSA": 
+            //     return kSecAttrKeyTypeECDSA
+            // case "ECC": 
+            //     return kSecAttrKeyTypeECSECPrimeRandom
             case "RSA": 
                 return kSecAttrKeyTypeRSA
             default:
@@ -521,15 +545,15 @@ import CryptoKit
         
         switch algorithm[1] {
             case "SHA1": 
-                apple_algorithm_enum = SecKeyAlgorithm.rsaSignatureDigestPKCS1v15SHA1
+                apple_algorithm_enum = SecKeyAlgorithm.rsaSignatureMessagePSSSHA1
             case "SHA224": 
-                apple_algorithm_enum = SecKeyAlgorithm.rsaSignatureDigestPKCS1v15SHA224
+                apple_algorithm_enum = SecKeyAlgorithm.rsaSignatureMessagePSSSHA224
             case "SHA256": 
-                apple_algorithm_enum = SecKeyAlgorithm.rsaSignatureDigestPKCS1v15SHA256
+                apple_algorithm_enum = SecKeyAlgorithm.rsaSignatureMessagePSSSHA256
             case "SHA384":
-                apple_algorithm_enum = SecKeyAlgorithm.rsaSignatureDigestPKCS1v15SHA384
+                apple_algorithm_enum = SecKeyAlgorithm.rsaSignatureMessagePSSSHA384
             default: 
-                throw SecureEnclaveError.SigningError("Signing Algorithm is not supported.")
+                throw SecureEnclaveError.SigningError("Hash for Signing is not supported")
         }
 
         return apple_algorithm_enum
@@ -550,11 +574,11 @@ import CryptoKit
                 case "SHA384":
                     apple_algorithm_enum = SecKeyAlgorithm.rsaEncryptionOAEPSHA384
                 default: 
-                    throw SecureEnclaveError.EncryptionError("Encrypt-Hash is not supported")
+                    throw SecureEnclaveError.EncryptionError("Hash for Encryption / Decryption is not supported")
             }
             return apple_algorithm_enum
         }else{
-            throw SecureEnclaveError.EncryptionError("Encrypt-Hash and Algorithm uncompatible")
+            throw SecureEnclaveError.EncryptionError("Algorithm for Encrypt / Decrypt not supported")
         }
 
     }
