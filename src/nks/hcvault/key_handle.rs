@@ -280,10 +280,22 @@ impl KeyHandle for NksProvider {
                                 decrypted_data.truncate(count + rest);
                                 Ok(decrypted_data)
                             }
-                            // SymmetricMode::Ofb => {
-                            //     // AES OFB encryption
-                            //     // ...
-                            // }
+                            SymmetricMode::Ofb => {
+                                let cipher = match length {
+                                    KeyBits::Bits128 => Cipher::aes_128_ofb(),
+                                    KeyBits::Bits192 => Cipher::aes_192_ofb(),
+                                    KeyBits::Bits256 => Cipher::aes_256_ofb(),
+                                    _ => return Err(SecurityModuleError::UnsupportedAlgorithm),
+                                };
+                                let key = openssl_base64::decode_block(&self.private_key).unwrap();
+                                let (iv, encrypted_data) = _encrypted_data.split_at(cipher.iv_len().unwrap());
+                                let mut crypter = Crypter::new(cipher, Mode::Decrypt, &key, Some(iv)).unwrap();
+                                let mut decrypted_data = vec![0; encrypted_data.len() + cipher.block_size()];
+                                let count = crypter.update(encrypted_data, &mut decrypted_data).unwrap();
+                                let rest = crypter.finalize(&mut decrypted_data[count..]).unwrap();
+                                decrypted_data.truncate(count + rest);
+                                Ok(decrypted_data)
+                            }
                             SymmetricMode::Ctr => {
                                 let cipher = match length {
                                     KeyBits::Bits128 => Cipher::aes_128_ctr(),
@@ -507,10 +519,25 @@ impl KeyHandle for NksProvider {
                                 result.extend(encrypted_data);
                                 Ok(result)
                             }
-                            // SymmetricMode::Ofb => {
-                            //     // AES OFB encryption
-                            //     // ...
-                            // }
+                            SymmetricMode::Ofb => {
+                                let cipher = match length {
+                                    KeyBits::Bits128 => Cipher::aes_128_ofb(),
+                                    KeyBits::Bits192 => Cipher::aes_192_ofb(),
+                                    KeyBits::Bits256 => Cipher::aes_256_ofb(),
+                                    _ => return Err(SecurityModuleError::UnsupportedAlgorithm),
+                                };
+                                let key = openssl_base64::decode_block(&self.private_key).unwrap();
+                                let mut iv = vec![0; cipher.iv_len().unwrap()];
+                                openssl::rand::rand_bytes(&mut iv).unwrap();
+                                let mut crypter = Crypter::new(cipher, Mode::Encrypt, &key, Some(&iv)).unwrap();
+                                let mut encrypted_data = vec![0; _data.len() + cipher.block_size()];
+                                let count = crypter.update(_data, &mut encrypted_data).unwrap();
+                                let rest = crypter.finalize(&mut encrypted_data[count..]).unwrap();
+                                encrypted_data.truncate(count + rest);
+                                let mut result = iv;
+                                result.extend(encrypted_data);
+                                Ok(result)
+                            }
                             SymmetricMode::Ctr => {
                                 let cipher = match length {
                                     KeyBits::Bits128 => Cipher::aes_128_ctr(),
