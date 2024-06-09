@@ -12,6 +12,7 @@ use crate::{
     },
     // tpm::linux::TpmProvider,
 };
+use crate::common::crypto::algorithms::encryption::SymmetricMode;
 use crate::common::crypto::algorithms::KeyBits;
 
 use crate::nks::hcvault::NksProvider;
@@ -20,7 +21,7 @@ use crate::nks::NksConfig;
 #[test]
 fn test_sign_and_verify_rsa() {
     let mut provider = NksProvider::new("test_key".to_string());
-    provider.config = Some(crate::tests::nks::provider_handle_tests::get_config("rsa", None).unwrap());
+    provider.config = Some(crate::tests::nks::provider_handle_tests::get_config("rsa", None, None).unwrap());
     provider
         .initialize_module()
         .expect("Failed to initialize module");
@@ -42,7 +43,7 @@ fn test_sign_and_verify_rsa() {
 #[test]
 fn test_sign_and_verify_ecdsa() {
     let mut provider = NksProvider::new("test_key".to_string());
-    provider.config = Some(crate::tests::nks::provider_handle_tests::get_config("ecdsa", None).unwrap());
+    provider.config = Some(crate::tests::nks::provider_handle_tests::get_config("ecdsa", None, None).unwrap());
     provider
         .initialize_module()
         .expect("Failed to initialize module");
@@ -67,7 +68,7 @@ fn test_sign_and_verify_ecdsa() {
 fn test_encrypt_and_decrypt_rsa() {
     let mut provider = NksProvider::new("test_key".to_string());
 
-    provider.config = Some(crate::tests::nks::provider_handle_tests::get_config("rsa", None).unwrap());
+    provider.config = Some(crate::tests::nks::provider_handle_tests::get_config("rsa", None, None).unwrap());
 
     provider
         .initialize_module()
@@ -94,7 +95,7 @@ fn test_encrypt_and_decrypt_rsa() {
 fn test_encrypt_and_decrypt_ecdh() {
     let mut provider = NksProvider::new("ecdh".to_string());
 
-    provider.config = Some(crate::tests::nks::provider_handle_tests::get_config("ecdh", None).unwrap());
+    provider.config = Some(crate::tests::nks::provider_handle_tests::get_config("ecdh", None, None).unwrap());
 
     provider
         .initialize_module()
@@ -120,9 +121,10 @@ fn test_encrypt_and_decrypt_ecdh() {
 #[test]
 fn test_encrypt_and_decrypt_aes_gcm() {
     for &key_size in &[KeyBits::Bits128, KeyBits::Bits192, KeyBits::Bits256] {
+        let aes_mode = SymmetricMode::Gcm;
         let mut provider = NksProvider::new("aes_gcm".to_string());
 
-        provider.config = Some(crate::tests::nks::provider_handle_tests::get_config("aes_gcm", Some(key_size)).unwrap());
+        provider.config = Some(crate::tests::nks::provider_handle_tests::get_config("aes", Some(key_size), Some(aes_mode)).unwrap());
 
         provider
             .initialize_module()
@@ -130,7 +132,7 @@ fn test_encrypt_and_decrypt_aes_gcm() {
 
         if let Some(nks_config) = provider.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>() {
             provider
-                .load_key(&format!("test_aes_gcm_key_{}", key_size as u8), Box::new(nks_config.clone()))
+                .load_key(&format!("test_aes_key_{}_{}", aes_mode as u8, key_size as u8), Box::new(nks_config.clone()))
                 .expect("Failed to load AES key");
         } else {
             println!("Failed to downcast to NksConfig");
@@ -148,9 +150,10 @@ fn test_encrypt_and_decrypt_aes_gcm() {
 #[test]
 fn test_encrypt_and_decrypt_aes_ccm() {
     for &key_size in &[KeyBits::Bits128, KeyBits::Bits192, KeyBits::Bits256] {
+        let aes_mode = SymmetricMode::Ccm;
         let mut provider = NksProvider::new("aes_ccm".to_string());
 
-        provider.config = Some(crate::tests::nks::provider_handle_tests::get_config("aes_ccm", Some(key_size)).unwrap());
+        provider.config = Some(crate::tests::nks::provider_handle_tests::get_config("aes", Some(key_size), Some(aes_mode)).unwrap());
 
         provider
             .initialize_module()
@@ -158,7 +161,7 @@ fn test_encrypt_and_decrypt_aes_ccm() {
 
         if let Some(nks_config) = provider.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>() {
             provider
-                .load_key(&format!("test_aes_ccm_key_{}", key_size as u8), Box::new(nks_config.clone()))
+                .load_key(&format!("test_aes_key_{}_{}", aes_mode as u8, key_size as u8), Box::new(nks_config.clone()))
                 .expect("Failed to load AES key");
         } else {
             println!("Failed to downcast to NksConfig");
@@ -176,9 +179,10 @@ fn test_encrypt_and_decrypt_aes_ccm() {
 #[test]
 fn test_encrypt_and_decrypt_aes_ecb() {
     for &key_size in &[KeyBits::Bits128, KeyBits::Bits192, KeyBits::Bits256] {
+        let aes_mode = SymmetricMode::Ecb;
         let mut provider = NksProvider::new("aes_ecb".to_string());
 
-        provider.config = Some(crate::tests::nks::provider_handle_tests::get_config("aes_ecb", Some(key_size)).unwrap());
+        provider.config = Some(crate::tests::nks::provider_handle_tests::get_config("aes", Some(key_size), Some(aes_mode)).unwrap());
 
         provider
             .initialize_module()
@@ -186,7 +190,7 @@ fn test_encrypt_and_decrypt_aes_ecb() {
 
         if let Some(nks_config) = provider.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>() {
             provider
-                .load_key(&format!("test_aes_ecb_key_{}", key_size as u8), Box::new(nks_config.clone()))
+                .load_key(&format!("test_aes_key_{}_{}", aes_mode as u8, key_size as u8), Box::new(nks_config.clone()))
                 .expect("Failed to load AES key");
         } else {
             println!("Failed to downcast to NksConfig");
@@ -204,9 +208,10 @@ fn test_encrypt_and_decrypt_aes_ecb() {
 #[test]
 fn test_encrypt_and_decrypt_aes_cbc() {
     for &key_size in &[KeyBits::Bits128, KeyBits::Bits192, KeyBits::Bits256] {
+        let aes_mode = SymmetricMode::Cbc;
         let mut provider = NksProvider::new("aes_cbc".to_string());
 
-        provider.config = Some(crate::tests::nks::provider_handle_tests::get_config("aes_cbc", Some(key_size)).unwrap());
+        provider.config = Some(crate::tests::nks::provider_handle_tests::get_config("aes", Some(key_size), Some(aes_mode)).unwrap());
 
         provider
             .initialize_module()
@@ -214,7 +219,7 @@ fn test_encrypt_and_decrypt_aes_cbc() {
 
         if let Some(nks_config) = provider.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>() {
             provider
-                .load_key(&format!("test_aes_cbc_key_{}", key_size as u8), Box::new(nks_config.clone()))
+                .load_key(&format!("test_aes_key_{}_{}", aes_mode as u8, key_size as u8), Box::new(nks_config.clone()))
                 .expect("Failed to load AES key");
         } else {
             println!("Failed to downcast to NksConfig");
@@ -232,9 +237,10 @@ fn test_encrypt_and_decrypt_aes_cbc() {
 #[test]
 fn test_encrypt_and_decrypt_aes_ctr() {
     for &key_size in &[KeyBits::Bits128, KeyBits::Bits192, KeyBits::Bits256] {
+        let aes_mode = SymmetricMode::Ctr;
         let mut provider = NksProvider::new("aes_ctr".to_string());
 
-        provider.config = Some(crate::tests::nks::provider_handle_tests::get_config("aes_ctr", Some(key_size)).unwrap());
+        provider.config = Some(crate::tests::nks::provider_handle_tests::get_config("aes", Some(key_size), Some(aes_mode)).unwrap());
 
         provider
             .initialize_module()
@@ -242,7 +248,7 @@ fn test_encrypt_and_decrypt_aes_ctr() {
 
         if let Some(nks_config) = provider.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>() {
             provider
-                .load_key(&format!("test_aes_ctr_key_{}", key_size as u8), Box::new(nks_config.clone()))
+                .load_key(&format!("test_aes_key_{}_{}", aes_mode as u8, key_size as u8), Box::new(nks_config.clone()))
                 .expect("Failed to load AES key");
         } else {
             println!("Failed to downcast to NksConfig");
@@ -260,9 +266,10 @@ fn test_encrypt_and_decrypt_aes_ctr() {
 #[test]
 fn test_encrypt_and_decrypt_aes_cfb() {
     for &key_size in &[KeyBits::Bits128, KeyBits::Bits192, KeyBits::Bits256] {
+        let aes_mode = SymmetricMode::Cfb;
         let mut provider = NksProvider::new("aes_cfb".to_string());
 
-        provider.config = Some(crate::tests::nks::provider_handle_tests::get_config("aes_cfb", Some(key_size)).unwrap());
+        provider.config = Some(crate::tests::nks::provider_handle_tests::get_config("aes", Some(key_size), Some(aes_mode)).unwrap());
 
         provider
             .initialize_module()
@@ -270,7 +277,7 @@ fn test_encrypt_and_decrypt_aes_cfb() {
 
         if let Some(nks_config) = provider.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>() {
             provider
-                .load_key(&format!("test_aes_cfb_key_{}", key_size as u8), Box::new(nks_config.clone()))
+                .load_key(&format!("test_aes_key_{}_{}", aes_mode as u8, key_size as u8), Box::new(nks_config.clone()))
                 .expect("Failed to load AES key");
         } else {
             println!("Failed to downcast to NksConfig");
@@ -288,9 +295,10 @@ fn test_encrypt_and_decrypt_aes_cfb() {
 #[test]
 fn test_encrypt_and_decrypt_aes_ofb() {
     for &key_size in &[KeyBits::Bits128, KeyBits::Bits192, KeyBits::Bits256] {
+        let aes_mode = SymmetricMode::Ofb;
         let mut provider = NksProvider::new("aes_ofb".to_string());
 
-        provider.config = Some(crate::tests::nks::provider_handle_tests::get_config("aes_ofb", Some(key_size)).unwrap());
+        provider.config = Some(crate::tests::nks::provider_handle_tests::get_config("aes", Some(key_size), Some(aes_mode)).unwrap());
 
         provider
             .initialize_module()
@@ -298,7 +306,7 @@ fn test_encrypt_and_decrypt_aes_ofb() {
 
         if let Some(nks_config) = provider.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>() {
             provider
-                .load_key(&format!("test_aes_ofb_key_{}", key_size as u8), Box::new(nks_config.clone()))
+                .load_key(&format!("test_aes_key_{}_{}", aes_mode as u8, key_size as u8), Box::new(nks_config.clone()))
                 .expect("Failed to load AES key");
         } else {
             println!("Failed to downcast to NksConfig");
