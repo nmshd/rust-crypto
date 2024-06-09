@@ -229,11 +229,24 @@ impl KeyHandle for NksProvider {
                                     .map_err(|_| SecurityModuleError::DecryptionError("Failed to finalize decryption".to_string()))?;
                                 out.truncate(count + rest);
                                 Ok(out)
-                            }/*
-                            SymmetricMode::Ecb => {
-                                // AES ECB encryption
-                                // ...
                             }
+                            SymmetricMode::Ecb => {
+                                // AES ECB decryption
+                                let cipher = match length {
+                                    KeyBits::Bits128 => Cipher::aes_128_ecb(),
+                                    KeyBits::Bits192 => Cipher::aes_192_ecb(),
+                                    KeyBits::Bits256 => Cipher::aes_256_ecb(),
+                                    _ => return Err(SecurityModuleError::UnsupportedAlgorithm),
+                                };
+                                let key = openssl_base64::decode_block(&self.private_key).unwrap();
+                                let mut crypter = Crypter::new(cipher, Mode::Decrypt, &key, None).unwrap();
+                                crypter.pad(true);
+                                let mut decrypted_data = vec![0; _encrypted_data.len() + cipher.block_size()];
+                                let count = crypter.update(_encrypted_data, &mut decrypted_data).unwrap();
+                                let rest = crypter.finalize(&mut decrypted_data[count..]).unwrap();
+                                decrypted_data.truncate(count + rest);
+                                Ok(decrypted_data)
+                            }/*
                             SymmetricMode::Cbc => {
                                 // AES CBC encryption
                                 // ...
@@ -399,11 +412,24 @@ impl KeyHandle for NksProvider {
                                 result.extend_from_slice(&out);
 
                                 Ok(result)
-                            }/*
+                            }
                             SymmetricMode::Ecb => {
                                 // AES ECB encryption
-                                // ...
-                            }
+                                let cipher = match length {
+                                    KeyBits::Bits128 => Cipher::aes_128_ecb(),
+                                    KeyBits::Bits192 => Cipher::aes_192_ecb(),
+                                    KeyBits::Bits256 => Cipher::aes_256_ecb(),
+                                    _ => return Err(SecurityModuleError::UnsupportedAlgorithm),
+                                };
+                                let key = openssl_base64::decode_block(&self.private_key).unwrap();
+                                let mut crypter = Crypter::new(cipher, Mode::Encrypt, &key, None).unwrap();
+                                crypter.pad(true); // Enable padding
+                                let mut encrypted_data = vec![0; _data.len() + cipher.block_size()];
+                                let count = crypter.update(_data, &mut encrypted_data).unwrap();
+                                let rest = crypter.finalize(&mut encrypted_data[count..]).unwrap();
+                                encrypted_data.truncate(count + rest);
+                                Ok(encrypted_data)
+                            }/*
                             SymmetricMode::Cbc => {
                                 // AES CBC encryption
                                 // ...
