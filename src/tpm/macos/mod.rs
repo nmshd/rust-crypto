@@ -34,7 +34,7 @@ impl SecureEnclaveProvider {
 #[derive(Clone)]
 pub struct SecureEnclaveConfig {
     pub asym_algorithm: Option<AsymmetricEncryption>,
-    pub sym_algorithm: Option<BlockCiphers>, // Not supported by Secure Enclave
+    pub sym_algorithm: Option<BlockCiphers>, // Not supported yet Secure Enclave
     pub hash: Option<Hash>
 }
 
@@ -42,7 +42,7 @@ impl SecureEnclaveConfig{
     pub fn new(asym_algorithm: Option<AsymmetricEncryption>, hash: Option<Hash>) -> SecureEnclaveConfig {
         Self {
             asym_algorithm, 
-            sym_algorithm: None, // Not supported by Secure Enclave
+            sym_algorithm: None, // Not supported yet Secure Enclave
             hash, 
         }
     }
