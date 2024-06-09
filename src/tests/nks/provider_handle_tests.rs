@@ -78,7 +78,7 @@ fn test_create_ecdh_key() {
 #[test]
 fn test_create_aes_key() {
     for &key_size in &[KeyBits::Bits128, KeyBits::Bits192, KeyBits::Bits256] {
-        for &aes_mode in &["aes_gcm", "aes_ccm", "aes_ecb"] {
+        for &aes_mode in &["aes_gcm", "aes_ccm", "aes_ecb", "aes_cbc"] {
             let mut provider = NksProvider::new("test_key".to_string());
 
             provider.config = Some(get_config(aes_mode, Some(key_size)).unwrap());
@@ -158,7 +158,7 @@ fn test_load_ecdh_key() {
 #[test]
 fn test_load_aes_key() {
     for &key_size in &[KeyBits::Bits128, KeyBits::Bits192, KeyBits::Bits256] {
-        for &aes_mode in &["aes_gcm", "aes_ccm", "aes_ecb"] {
+        for &aes_mode in &["aes_gcm", "aes_ccm", "aes_ecb", "aes_cbc"] {
             let mut provider = NksProvider::new("test_key".to_string());
 
             provider.config = Some(get_config(aes_mode, Some(key_size)).unwrap());
@@ -259,6 +259,17 @@ pub fn get_config(key_type: &str, key_size: Option<KeyBits>) -> Option<Arc<dyn P
                 Hash::Sha2(256.into()),
                 vec![KeyUsage::Decrypt],
                 Some(BlockCiphers::Aes(SymmetricMode::Ecb, key_size)),
+            ))
+        },
+        "aes_cbc" => {
+            let key_size = key_size.unwrap_or(KeyBits::Bits256); // Default to 256 bits if no size is provided
+            Some(NksConfig::new(
+                "".to_string(),
+                "https://localhost:5000/".to_string(),
+                None,
+                Hash::Sha2(256.into()),
+                vec![KeyUsage::Decrypt],
+                Some(BlockCiphers::Aes(SymmetricMode::Cbc, key_size)),
             ))
         },
         _ => None,
