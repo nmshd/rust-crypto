@@ -3,22 +3,9 @@ use std::any::Any;
 use robusta_jni::jni::JavaVM;
 
 use crate::common::{
-    crypto::{
-        algorithms::encryption::{AsymmetricEncryption, BlockCiphers},
-        algorithms::hashes::Hash,
-        KeyUsage,
-    },
+    crypto::{EncryptionMode, KeyUsage},
     traits::module_provider_config::ProviderConfig,
 };
-
-#[derive(Debug, Clone, Copy)]
-pub enum EncryptionMode {
-    Sym(BlockCiphers),
-    ASym {
-        algo: AsymmetricEncryption,
-        digest: Hash,
-    },
-}
 
 pub struct AndroidConfig {
     pub mode: EncryptionMode,

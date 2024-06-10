@@ -1,8 +1,11 @@
-use crate::common::traits::module_provider::Provider;
 #[cfg(feature = "linux")]
 use crate::tpm::linux::TpmProvider;
 #[cfg(feature = "win")]
 use crate::tpm::win::TpmProvider as WinTpmProvider;
+use crate::{
+    common::{crypto::EncryptionMode, traits::module_provider::Provider},
+    tpm::android::AndroidProvider,
+};
 use std::sync::{Arc, Mutex};
 
 /// Represents the different environments where a Trusted Platform Module (TPM) can operate.
@@ -131,6 +134,20 @@ impl TpmInstance {
                 )),
                 AndroidTpmType::Knox => todo!(),
             },
+            TpmType::None => todo!(),
+        }
+    }
+
+    pub fn get_capabilities(tpm_type: TpmType) -> Vec<EncryptionMode> {
+        match tpm_type {
+            #[cfg(feature = "win")]
+            TpmType::Windows => todo!(),
+            #[cfg(feature = "macos")]
+            TpmType::MacOs => todo!(),
+            #[cfg(feature = "linux")]
+            TpmType::Linux => todo!(),
+            TpmType::Android(AndroidTpmType::Keystore) => AndroidProvider::get_capabilities(),
+            TpmType::Android(AndroidTpmType::Knox) => todo!(),
             TpmType::None => todo!(),
         }
     }

@@ -1,4 +1,5 @@
 pub mod android_logger;
+mod capabilities;
 pub mod config;
 pub(crate) mod error;
 pub mod knox;
@@ -7,6 +8,7 @@ pub(crate) mod wrapper;
 
 use std::any::Any;
 
+use capabilities::get_capabilities;
 use robusta_jni::jni::objects::JObject;
 use tracing::{debug, info, instrument};
 use utils::{
@@ -15,7 +17,7 @@ use utils::{
 };
 use wrapper::key_generation::iv_parameter_spec::jni::IvParameterSpec;
 
-use crate::common::crypto::KeyUsage;
+use crate::common::crypto::{EncryptionMode, KeyUsage};
 use crate::common::error::SecurityModuleError;
 use crate::common::traits::key_handle::KeyHandle;
 use crate::common::{
@@ -64,9 +66,12 @@ impl AndroidProvider {
     }
 
     fn apply_config(&mut self, config: AndroidConfig) -> Result<(), SecurityModuleError> {
-        // TODO: verify config
         self.config = Some(config);
         Ok(())
+    }
+
+    pub fn get_capabilities() -> Vec<EncryptionMode> {
+        get_capabilities()
     }
 }
 
@@ -134,7 +139,7 @@ impl Provider for AndroidProvider {
                 .err_internal()?;
 
         match config.mode {
-            config::EncryptionMode::Sym(cipher) => {
+            EncryptionMode::Sym(cipher) => {
                 match cipher {
                     BlockCiphers::Aes(mode, size) => {
                         kps_builder = kps_builder
@@ -174,7 +179,7 @@ impl Provider for AndroidProvider {
 
                 kg.generateKey(&env).err_internal()?;
             }
-            config::EncryptionMode::ASym { algo, digest } => {
+            EncryptionMode::ASym { algo, digest } => {
                 match algo {
                     AsymmetricEncryption::Rsa(_key_bits) => {
                         kps_builder = kps_builder
@@ -391,7 +396,7 @@ impl KeyHandle for AndroidProvider {
             .err_internal()?;
 
         let decrypted = match config.mode {
-            config::EncryptionMode::Sym(cipher_mode) => {
+            EncryptionMode::Sym(cipher_mode) => {
                 let key = key_store
                     .getKey(&env, self.key_id.to_owned(), JObject::null())
                     .err_internal()?;
@@ -404,7 +409,7 @@ impl KeyHandle for AndroidProvider {
 
                 cipher.doFinal(&env, data).err_internal()?
             }
-            config::EncryptionMode::ASym { algo: _, digest: _ } => {
+            EncryptionMode::ASym { algo: _, digest: _ } => {
                 let key = key_store
                     .getKey(&env, self.key_id.to_owned(), JObject::null())
                     .err_internal()?;
@@ -479,7 +484,7 @@ impl KeyHandle for AndroidProvider {
 
         // symetric encryption needs an IV
         let encrypted = match config.mode {
-            config::EncryptionMode::Sym(_) => {
+            EncryptionMode::Sym(_) => {
                 let key = key_store
                     .getKey(&env, self.key_id.to_owned(), JObject::null())
                     .err_internal()?;
@@ -488,7 +493,7 @@ impl KeyHandle for AndroidProvider {
                 let encrypted = cipher.doFinal(&env, data.to_vec()).err_internal()?;
                 store_iv(encrypted, iv)
             }
-            config::EncryptionMode::ASym { algo: _, digest: _ } => {
+            EncryptionMode::ASym { algo: _, digest: _ } => {
                 let key = key_store
                     .getCertificate(&env, self.key_id.to_owned())
                     .err_internal()?

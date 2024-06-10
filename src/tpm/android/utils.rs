@@ -2,16 +2,17 @@
 
 use crate::{
     common::{
-        crypto::algorithms::{
-            encryption::{AsymmetricEncryption, BlockCiphers, SymmetricMode},
-            hashes::{Hash, Sha2Bits},
+        crypto::{
+            algorithms::{
+                encryption::{AsymmetricEncryption, BlockCiphers, SymmetricMode},
+                hashes::{Hash, Sha2Bits},
+            },
+            EncryptionMode,
         },
         error::SecurityModuleError,
     },
     tpm::core::error::TpmError,
 };
-
-use super::config::EncryptionMode;
 
 pub fn get_algorithm(enc: EncryptionMode) -> Result<String, SecurityModuleError> {
     Ok(match enc {
