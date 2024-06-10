@@ -33,18 +33,18 @@ fn main() -> glib::ExitCode {
     application.connect_activate(|app| {
         let window = ApplicationWindow::builder()
             .application(app)
-            .title("Übersicht")
+            .title("Overview")
             .default_width(500)
             .default_height(400)
             .build();
 
         let list_box = ListBox::new(); // Erstelle eine neue ListBox
         let actions = vec![
-            "Schlüssel generieren",
-            "Daten verschlüsseln",
-            "Daten entschlüsseln",
-            "Daten signieren",
-            "Signatur verifizieren",
+            "Generate Key Pair",
+            "Encrypt Data",
+            "Decrypt Data",
+            "Sign Data",
+            "Verify Signature",
         ];
 
         // ListBox füllen
@@ -61,11 +61,11 @@ fn main() -> glib::ExitCode {
         list_box.connect_row_activated(move |_, row| {
             let index = row.index();
             match index {
-                0 => create_new_window(&app_clone, "Schlüssel generieren".to_string()),
-                1 => create_new_window(&app_clone, "Daten verschlüsseln".to_string()),
-                2 => create_new_window(&app_clone, "Daten entschlüsseln".to_string()),
-                3 => create_new_window(&app_clone, "Daten signieren".to_string()),
-                4 => create_new_window(&app_clone, "Signatur verifizieren".to_string()),
+                0 => create_new_window(&app_clone, "Generate Key Pair".to_string()),
+                1 => create_new_window(&app_clone, "Encrypt Data".to_string()),
+                2 => create_new_window(&app_clone, "Decrypt Data".to_string()),
+                3 => create_new_window(&app_clone, "Sign Data".to_string()),
+                4 => create_new_window(&app_clone, "Verify Signature".to_string()),
                 _ => {}
             }
         });
@@ -81,7 +81,7 @@ fn main() -> glib::ExitCode {
 }
 
 fn create_new_window(app: &Application, title: String) {
-    if title != "Schlüssel generieren" {
+    if title != "Generate Key Pair" {
 let new_window = ApplicationWindow::builder()
         .application(app)
         .title(title.clone())
@@ -179,47 +179,42 @@ let new_window = ApplicationWindow::builder()
 
 fn perform_action(app: &Application, action: &str, data: &str, key_id: &str, encryption_type: &str) {
     match action {
-        //   "Daten verschlüsseln" => encrypt_data(data, key_id, encryption_type),
-        //   "Daten entschlüsseln" => decrypt_data(data, key_id, encryption_type),
-        "Schlüssel generieren" => {
+        //   "Encrypt Data" => encrypt_data(data, key_id, encryption_type),
+        //   "Decrypt Data" => decrypt_data(data, key_id, encryption_type),
+        "Generate Key Pair" => {
             generate(app, encryption_type, key_id);
         }
-        "Daten signieren" => {
+        "Sign Data" => {
             let ergebnis = sign_data(data, key_id, encryption_type);
             match ergebnis {
                 Ok(signat) => {
                     unsafe { SIGNATURE = signat };
-                    let ausgabe = "Signatur erfolgreich";
+                    let ausgabe = "Successfully signed";
                     create_new_window2(app, ausgabe.to_string());
                 }
                 Err(_) => {
-                    let ausgabe = "Es konnte keine Signatur erstellt werden";
+                    let ausgabe = "No signature could be created";
                     create_new_window2(app, ausgabe.to_string());
                 }
             }
         }
-        "Signatur verifizieren" => {
+        "Verify Signature" => {
             let signature = unsafe { SIGNATURE.clone() };
             println!("Signatur: {:?}",  signature);
             let ergebnis = verify_signature(data, key_id, encryption_type, signature);
             match ergebnis {
                 Ok(_) => {
-                    let ausgabe = "Signatur erfolgreich verifiziert";
+                    let ausgabe = "Successfully verified signature";
                     create_new_window2(app, ausgabe.to_string());
                 },
                 Err(_) => {
-                    let ausgabe = "Signatur konnte nicht verifiziert werden";
+                    let ausgabe = "Signature could not be verified";
                     create_new_window2(app, ausgabe.to_string());
                 },
             }
         }
         _ => {}
     }
-    println!(
-        "Aktion: {}, Daten: {}, Key ID: {}, Verschlüsselungstyp: {}",
-        action, data, key_id, encryption_type
-    );
-    // Führen Sie hier die entsprechende Aktion durch
 }
 
 fn verify_signature(
@@ -384,11 +379,11 @@ fn generate(app: &Application, encryption_type: &str, key_id: &str) {
                 .create_key(key_id, config);
             match rsa {
                 Ok(_) => {
-                    let ausgabe = "RSA1024 Schlüssel erfolgreich generiert";
+                    let ausgabe = "Successfully generated RSA1024 key";
                     create_new_window2(app, ausgabe.to_string());
                 }
                 Err(_) => {
-                    let ausgabe = "Fehler beim generieren des RSA1024 Schlüssels";
+                    let ausgabe = "Failed to generate RSA1024 key";
                     create_new_window2(app, ausgabe.to_string());
                 }
             
@@ -399,11 +394,11 @@ fn generate(app: &Application, encryption_type: &str, key_id: &str) {
                 .create_key(key_id, config);
             match rsa {
                 Ok(_) => {
-                    let ausgabe = "RSA2048 Schlüssel erfolgreich generiert";
+                    let ausgabe = "Successfully generated RSA2048 key";
                     create_new_window2(app, ausgabe.to_string());
                 }
                 Err(_) => {
-                    let ausgabe = "Fehler beim generieren des RSA2048 Schlüssels";
+                    let ausgabe = "Failed to generate RSA2048 key";
                     create_new_window2(app, ausgabe.to_string());
                 }
             
@@ -414,11 +409,11 @@ fn generate(app: &Application, encryption_type: &str, key_id: &str) {
                 .create_key(key_id, config);
             match ecc {
                 Ok(_) => {
-                    let ausgabe = "ECC256 Schlüssel erfolgreich generiert";
+                    let ausgabe = "Successfully generated ECC256 key";
                     create_new_window2(app, ausgabe.to_string());
                 }
                 Err(_) => {
-                    let ausgabe = "Fehler beim generieren des ECC256 Schlüssels";
+                    let ausgabe = "Failed to generate ECC256 key";
                     create_new_window2(app, ausgabe.to_string());
                 }
             
@@ -429,11 +424,11 @@ fn generate(app: &Application, encryption_type: &str, key_id: &str) {
                 .create_key(key_id, config);
             match ecc {
                 Ok(_) => {
-                    let ausgabe = "ECC384 Schlüssel erfolgreich generiert";
+                    let ausgabe = "Successfully generated ECC384 key";
                     create_new_window2(app, ausgabe.to_string());
                 }
                 Err(_) => {
-                    let ausgabe = "Fehler beim generieren des ECC384 Schlüssels";
+                    let ausgabe = "Failed to generate ECC384 key";
                     create_new_window2(app, ausgabe.to_string());
                 }
             
