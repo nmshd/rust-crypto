@@ -5,7 +5,6 @@ use std::path::Path;
 use std::str::FromStr;
 use std::string::String;
 use reqwest::Url;
-use serde::Deserialize;
 use serde_json::{json, Value};
 use super::{NksProvider};
 use tracing::instrument;
@@ -20,7 +19,7 @@ use crate::common::{
     error::SecurityModuleError,
     traits::module_provider::Provider,
 };
-use crate::common::crypto::algorithms::encryption::{EccCurves, EccSchemeAlgorithm};
+use crate::common::crypto::algorithms::encryption::{BlockCiphers, EccCurves, EccSchemeAlgorithm, SymmetricMode};
 use crate::common::crypto::algorithms::KeyBits;
 use crate::common::traits::module_provider_config::ProviderConfig;
 use crate::nks::NksConfig;
@@ -52,22 +51,33 @@ impl Provider for NksProvider {
     #[instrument]
     fn create_key(&mut self, key_id: &str, config: Box<dyn ProviderConfig>) -> Result<(), SecurityModuleError> {
         let mut key_length: Option<KeyBits> = None;
+        let mut cyphertype: Option<String> = None;
         if let Some(nks_config) = config.as_any().downcast_ref::<NksConfig>() {
             let runtime = Runtime::new().unwrap();
-            let get_and_save_keypair_result = runtime.block_on(get_and_save_key_pair(
-                &*nks_config.nks_token.clone(),
-                key_id,
-                match nks_config.key_algorithm.clone() {
-                    AsymmetricEncryption::Rsa(rsa) => {
-                        key_length = Some(rsa);
-                        "rsa"
-                    },
-                    AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::Curve25519)) => "ecdh",
-                    AsymmetricEncryption::Ecc(_) => "ecdsa",
+            let get_and_save_keypair_result = runtime.block_on(get_and_save_key_pair(&*nks_config.nks_token.clone(), key_id, match &nks_config.key_algorithm {
+                Some(AsymmetricEncryption::Rsa(rsa)) => {
+                    key_length = Some(*rsa);
+                    "rsa"
                 },
-                key_length,
-                Url::parse(&nks_config.nks_address).unwrap()
-            ));
+                Some(AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::Curve25519))) => "ecdh",
+                Some(AsymmetricEncryption::Ecc(_)) => "ecdsa",
+                None => match &nks_config.key_algorithm_sym {
+                    Some(BlockCiphers::Aes(mode,length)) => {
+                        key_length = Some(*length);
+                        cyphertype = Some(match mode {
+                            SymmetricMode::Cbc => "Cbc".to_string(),
+                            SymmetricMode::Cfb => "Cfb".to_string(),
+                            SymmetricMode::Ctr => "Ctr".to_string(),
+                            SymmetricMode::Ecb => "Ecb".to_string(),
+                            SymmetricMode::Ofb => "Ofb".to_string(),
+                            SymmetricMode::Gcm => "Gcm".to_string(),
+                            SymmetricMode::Ccm => "Ccm".to_string(),
+                        });
+                        "aes"
+                    },
+                    _ => "none",
+                },
+            }, key_length, Url::parse(&nks_config.nks_address).unwrap(), cyphertype));
             match key_length {
                 Some(kb) => println!("XXXXX Key length: {}", u32::from(kb)),
                 None => println!("XXXXX Key length: None"),
@@ -83,12 +93,13 @@ impl Provider for NksProvider {
                         nks_config.key_algorithm.clone(),
                         nks_config.hash.clone(),
                         nks_config.key_usages.clone(),
+                        nks_config.key_algorithm_sym.clone(),
                     );
                     self.config = Some(config);
                     //save token in token.json for persistence
                     let token_data = json!({
-                     "user_token": new_token.clone()
-                     });
+                 "user_token": new_token.clone()
+                 });
                     fs::write("token.json", token_data.to_string()).expect("Error writing to token.json");
                     Ok(())
                 }
@@ -101,7 +112,6 @@ impl Provider for NksProvider {
             println!("Failed to downcast to NksConfig");
             Err(SecurityModuleError::NksError)
         }
-
     }
 
     /// Loads an existing cryptographic key identified by `key_id` from the NksProvider.
@@ -217,6 +227,7 @@ impl Provider for NksProvider {
                 nks_config.key_algorithm.clone(),
                 nks_config.hash.clone(),
                 nks_config.key_usages.clone(),
+                nks_config.key_algorithm_sym.clone(),
             );
             self.config = Some(config);
             //save token in token.json for persistence
@@ -350,14 +361,17 @@ async fn get_and_save_key_pair(
     key_type: &str,
     key_length: Option<KeyBits>,
     nks_address: Url,
+    cyphertype: Option<String>,
 ) -> Result<(String, String), Box<dyn std::error::Error>> {
     let key_length_u32 = key_length.map(|kb| u32::from(kb));
-    let response = get_and_save_key_pair_request(token, key_name, key_type, nks_address, key_length_u32).await?;
+    let cyphertype_str = cyphertype.unwrap_or_else(|| "".to_string());
+    let response = get_and_save_key_pair_request(token, key_name, key_type, nks_address, key_length_u32, &cyphertype_str).await?;
 
     let status = response.status(); // Clone the status here
     let response_text = response.text().await?;
     if !status.is_success() {
         let response_json: Value = serde_json::from_str(&response_text)?;
+        println!("Response JSON: {}", response_json.to_string());
         if let Some(message) = response_json.get("message") {
             if message.as_str().unwrap() == format!("Key with ID {} already exists.", key_name) {
                 return Err(format!("A key with name {} already exists.", key_name).into());
@@ -426,6 +440,7 @@ async fn get_and_save_key_pair_request(
     key_type: &str,
     nks_address: Url,
     length: Option<u32>,
+    cyphertype: &str,
 ) -> Result<reqwest::Response, Box<dyn std::error::Error>> {
     let client = reqwest::Client::builder()
         .danger_accept_invalid_certs(true)
@@ -435,12 +450,14 @@ async fn get_and_save_key_pair_request(
             "token": token,
             "name": key_name,
             "type": key_type,
-            "length": len
+            "length": len,
+            "ciphertype": cyphertype
         }),
         None => json!({
             "token": token,
             "name": key_name,
-            "type": key_type
+            "type": key_type,
+            "ciphertype": cyphertype
         }),
     };
     let api_url = nks_address.join("generateAndSaveKeyPair");

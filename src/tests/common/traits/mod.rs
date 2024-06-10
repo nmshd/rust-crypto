@@ -71,7 +71,6 @@ fn setup_security_module(module: SecurityModule) -> Arc<Mutex<dyn Provider>> {
             SecurityModule::Nks,
             Some(log),
         )
-            .unwrap(),
-        _ => unimplemented!(), // Add this line to handle all other cases
+            .unwrap(), // Add this line to handle all other cases
     }
 }
