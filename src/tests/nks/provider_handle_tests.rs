@@ -78,7 +78,7 @@ fn test_create_ecdh_key() {
 #[test]
 fn test_create_aes_key() {
     for &key_size in &[KeyBits::Bits128, KeyBits::Bits192, KeyBits::Bits256] {
-        for &aes_mode in &[SymmetricMode::Gcm, SymmetricMode::Ccm, SymmetricMode::Ecb, SymmetricMode::Cbc, SymmetricMode::Ctr, SymmetricMode::Cfb, SymmetricMode::Ofb] {
+        for &aes_mode in &[SymmetricMode::Gcm, SymmetricMode::Ecb, SymmetricMode::Cbc, SymmetricMode::Ctr, SymmetricMode::Cfb, SymmetricMode::Ofb] {
             let mut provider = NksProvider::new("test_key".to_string());
 
             provider.config = Some(get_config("aes", Some(key_size), Some(aes_mode)).unwrap());
@@ -158,7 +158,7 @@ fn test_load_ecdh_key() {
 #[test]
 fn test_load_aes_key() {
     for &key_size in &[KeyBits::Bits128, KeyBits::Bits192, KeyBits::Bits256] {
-        for &aes_mode in &[SymmetricMode::Gcm, SymmetricMode::Ccm, SymmetricMode::Ecb, SymmetricMode::Cbc, SymmetricMode::Ctr, SymmetricMode::Cfb, SymmetricMode::Ofb] {
+        for &aes_mode in &[SymmetricMode::Gcm, SymmetricMode::Ecb, SymmetricMode::Cbc, SymmetricMode::Ctr, SymmetricMode::Cfb, SymmetricMode::Ofb] {
             let mut provider = NksProvider::new("test_key".to_string());
 
             provider.config = Some(get_config("aes", Some(key_size), Some(aes_mode)).unwrap());

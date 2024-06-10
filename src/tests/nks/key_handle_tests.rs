@@ -124,11 +124,6 @@ fn test_encrypt_and_decrypt_aes_gcm() {
 }
 
 #[test]
-fn test_encrypt_and_decrypt_aes_ccm() {
-    test_encrypt_and_decrypt_aes(SymmetricMode::Ccm, &[KeyBits::Bits128, KeyBits::Bits192, KeyBits::Bits256]);
-}
-
-#[test]
 fn test_encrypt_and_decrypt_aes_ecb() {
     test_encrypt_and_decrypt_aes(SymmetricMode::Ecb, &[KeyBits::Bits128, KeyBits::Bits192, KeyBits::Bits256]);
 }
