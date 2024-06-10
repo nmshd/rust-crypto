@@ -99,7 +99,8 @@ In the following chapter, you will find detailed information on the supported al
 We have provided a list of the supported Algorithms of our project:
 
 | Algorithm Type    | Details                                     |  
-|-------------------|---------------------------------------------| | **ECC**           | **Curve / Hashing**              |  
+|-------------------|---------------------------------------------|
+| **ECC**           | **Curve / Hashing**              |  
 |                   | secp256r1 / SHA-256                            |  
 |                   | secp384r1 / SHA-256                         |  
 |                   | secp521r1 / SHA-256                         |  
@@ -213,7 +214,8 @@ Example of how to create a provider and initialize it:
 let instance = SecModules::get_instance(    
     "test_key".to_owned(),    
     SecurityModule::Tpm(TpmType::Android(AndroidTpmType::Knox)),    
-None).unwrap();
+    None)
+.unwrap();
 let mut module = instance.lock().unwrap();  
 ```  
 To create a key, first you will have to decide which algorithm to use, then set a unique alias for the key. Finally, you can create a key. Here is an example of how that could look like:
@@ -232,7 +234,7 @@ let result = module.create_key(keyname, config);
 let keyname: &str = &format!("Asym{}", "asym_key");
 let config = Box::new(KnoxConfig::new(Some(asym_key),    
                                       None,    
-									  environment.get_java_vm().unwrap())); 
+				      environment.get_java_vm().unwrap())); 
 module.create_key(keyname, config)  
 ```  
 So now that we know how to create keys, let us look at examples of how to use them.  
@@ -241,11 +243,11 @@ First, we will need to load a key to be used.
 // loading a symmetric key  
 let config = Box::new(KnoxConfig::new(None,    
                                       Some(sym_key),    
-									  environment.get_java_vm().unwrap()));
+				      environment.get_java_vm().unwrap()));
 module.load_key(keyname, config); 
 let config = Box::new(KnoxConfig::new(Some(asym_key),    
                                       None,    
-environment.get_java_vm().unwrap())); 
+				      environment.get_java_vm().unwrap())); 
 module.load_key(keyname, config)  
 ```  
 Now that we loaded the key, we can use encrypt & decrypt, or sign & verify. Here is an example:
