@@ -83,29 +83,34 @@ This Repository contains a Wrapper that is used to perfom cryptogrphic operation
 <details open>
   <summary><strong>Supported Algorithms</strong></summary>
 
+
 We have provided a list of the supported Algorithms of our project:
 
-  | Algorithm Type    | Details                                      |
-  |-------------------|----------------------------------------------|
-  | **RSA**           | 512;SHA-256;PKCS1                       |
-  |                   | 1024;SHA-256;PKCS1                      |
-  |                   | 2048;SHA-256;PKCS1                      |
-  |                   | 3072;SHA-256;PKCS1                      |
-  |                   | 4096;SHA-256;PKCS1                      |
-  |                   | 8192;SHA-256;PKCS1                      |
-  | **ECC**           | secp256r1;SHA-256                        |
-  |                   | secp384r1;SHA-256                        |
-  |                   | secp521r1;SHA-256                        |
-  | **3DES**          | 168;CBC;PKCS7Padding                 |
-  | **AES**           | 128;GCM;NoPadding                       |
-  |                   | 128;CBC;PKCS7Padding                    |
-  |                   | 128;CTR;NoPadding                       |
-  |                   | 192;GCM;NoPadding                       |
-  |                   | 192;CBC;PKCS7Padding                    |
-  |                   | 192;CTR;NoPadding                       |
-  |                   | 256;GCM;NoPadding                       |
-  |                   | AES;256;CBC;PKCS7Padding                    |
-  |                   | AES;256;CTR;NoPadding                       |
+  | Algorithm Type    | Details                                     |
+  |-------------------|---------------------------------------------|
+  | **ECC** 	      | **Curve / Hashing**			    |
+  |         	      | secp256r1 / SHA-256                    	    |
+  |                   | secp384r1 / SHA-256                         |
+  |                   | secp521r1 / SHA-256                         |
+  | **RSA** 	      | **Keysize / Hashing / Padding**		    |
+  |          	      | 512 / SHA-256 / PKCS1                       |
+  |                   | 1024 / SHA-256 / PKCS1                      |
+  |                   | 2048 / SHA-256 / PKCS1                      |
+  |                   | 3072 / SHA-256 / PKCS1                      |
+  |                   | 4096 / SHA-256 / PKCS1                      |
+  |                   | 8192 / SHA-256 / PKCS1                      |
+  |		      |						    |
+  | **Symmetric**     | **Keysize / Block Mode / Padding**          |
+  | **3DES**          | 168  CBC / PKCS7Padding                	    |
+  | **AES**           | 128 / GCM / NoPadding                       |
+  |                   | 128 / CBC / PKCS7Padding                    |
+  |                   | 128 / CTR / NoPadding                       |
+  |                   | 192 / GCM / NoPadding                       |
+  |                   | 192 / CBC / PKCS7Padding                    |
+  |                   | 192 / CTR / NoPadding                       |
+  |                   | 256 / GCM / NoPadding                       |
+  |                   | 256 / CBC / PKCS7Padding                    |
+  |                   | 256 / CTR / NoPadding                       |
 </details>
 
 
