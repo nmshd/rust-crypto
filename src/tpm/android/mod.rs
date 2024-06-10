@@ -406,9 +406,7 @@ impl KeyHandle for AndroidProvider {
             }
             config::EncryptionMode::ASym { algo: _, digest: _ } => {
                 let key = key_store
-                    .getCertificate(&env, self.key_id.to_owned())
-                    .err_internal()?
-                    .getPublicKey(&env)
+                    .getKey(&env, self.key_id.to_owned(), JObject::null())
                     .err_internal()?;
                 cipher.init(&env, 2, key.raw.as_obj()).err_internal()?;
 
