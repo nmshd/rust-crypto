@@ -299,7 +299,7 @@ The component diagram illustrates the relationships and interactions between the
   `interface.rs` serves as the interface between the Rust implementation and the Java side, acting as the counterpart to `RustDef.java`. It facilitates seamless communication between Rust and Java, allowing for the invocation of Rust functions from Java code. This enables developers to leverage the robust cryptographic capabilities implemented in Rust within their Android applications.
 </details>  
 
-<details open>  
+<details open>   
 <summary>
 
 ### Libraries
