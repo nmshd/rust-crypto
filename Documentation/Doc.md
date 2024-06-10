@@ -104,13 +104,8 @@ We have provided a list of the supported Algorithms of our project:
 |                | secp256r1 / SHA-256                |  
 |                | secp384r1 / SHA-256                |  
 |                | secp521r1 / SHA-256                |  
-| **RSA**        | **Keysize / Hashing / Padding**    |  
-|                | 512 / SHA-256 / PKCS1              |  
-|                | 1024 / SHA-256 / PKCS1             |  
-|                | 2048 / SHA-256 / PKCS1             |  
-|                | 3072 / SHA-256 / PKCS1             |  
-|                | 4096 / SHA-256 / PKCS1             |  
-|                | 8192 / SHA-256 / PKCS1             |  
+| **RSA**        | **Keysize / Hashing / Padding**    |    
+|                | 2048 / SHA-256 / PKCS1             |   
 |                |                                    | 
 | **Symmetric**  | **Keysize / Block Mode / Padding** |  
 | **3DES**       | 168  CBC / PKCS7Padding            |  
