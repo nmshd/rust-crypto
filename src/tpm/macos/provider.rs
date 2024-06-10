@@ -63,8 +63,10 @@ impl Provider for SecureEnclaveProvider {
     ) -> Result<(), SecurityModuleError> {
         let config = *_config.downcast::<SecureEnclaveConfig>().map_err(|_| SecurityModuleError::InitializationError(("Failed to initialize config").to_owned()))?; 
         let _ = self.set_config(config.clone());
+        let algorithm = convert_algorithms(config.clone()); 
+        let hash = convert_hash(config.hash.expect("No Hash given"));
 
-        let load_key = apple_secure_enclave_bindings::provider::rust_crypto_call_load_key(_key_id.to_string(), convert_algorithms(config.clone()));
+        let load_key = apple_secure_enclave_bindings::provider::rust_crypto_call_load_key(_key_id.to_string(), algorithm, hash);
 
         if Regex::new("(?i)error").unwrap().is_match(load_key.as_str()){
             Err(SecurityModuleError::InitializationError(load_key.to_string()))
@@ -88,21 +90,15 @@ impl Provider for SecureEnclaveProvider {
 }
 
 pub fn convert_algorithms(config: SecureEnclaveConfig) -> String {
-    let algo; 
-    let hash = convert_hash(config.hash.expect("No Hash given"));
-
     let asym_algorithm_type = match config.asym_algorithm.expect("Invalid config") {
         // Is only Asymmetric-Algorithm which is working at that time
         AsymmetricEncryption::Rsa(_) => "RSA".to_string(), 
         _ => unimplemented!("Only RSA supported") ,
     };
-    
-    algo = asym_algorithm_type + ";" + &hash; 
-    
     //Debug TODO
-    println!("Converted Algo: {}", algo); 
+    println!("Converted Algo: {}", asym_algorithm_type); 
 
-    return algo
+    asym_algorithm_type
 }
 
 pub fn convert_hash(hash: Hash) -> String {

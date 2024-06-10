@@ -78,7 +78,7 @@ import CryptoKit
         let algo = String(key_type.toString().split(separator: ";")[0])
         let keySize = String(key_type.toString().split(separator:";")[1])
         do{
-            let algorithm = try convert_key_type(key_type: algo);
+            let algorithm = try get_key_type(key_type: algo);
             let keyPair = try create_key(keyID: key_id.toString(), algorithm: algorithm, keySize: keySize)
             return ("Private Key: "+String((keyPair?.privateKey.hashValue)!) + "\nPublic Key: " + String((keyPair?.publicKey.hashValue)!))
         }catch{
@@ -154,12 +154,12 @@ import CryptoKit
 
     A String representing the encrypted data.
     **/
-    func rustcall_encrypt_data(key_id: RustString, data: RustString, algorithm: RustString) -> String {
+    func rustcall_encrypt_data(key_id: RustString, data: RustString, algorithm: RustString, hash: RustString) -> String {
         do{
-            let key_type = try convert_key_type(key_type: String(algorithm.toString().split(separator: ";")[0]))
+            let key_type = try get_key_type(key_type: algorithm.toString())
             let privateKey: SecKey = try load_key(key_id: key_id.toString(), algo: key_type)!
             let publicKey = getPublicKeyFromPrivateKey(privateKey: privateKey)
-            let algorithm = try convert_encrypt_algorithm(algorithm: algorithm); 
+            let algorithm = try get_encrypt_algorithm(algorithm: algorithm.toString(), hash: hash.toString()); 
             let encryptedData: Data = try encrypt_data(data: data.toString().data(using: String.Encoding.utf8)!, publicKeyName: publicKey!, algorithm: algorithm)
             let encryptedData_string = encryptedData.base64EncodedString()
             return ("\(encryptedData_string)")
@@ -206,17 +206,16 @@ import CryptoKit
 
     A String representing the decrypted data.
     **/
-    func rustcall_decrypt_data(key_id: RustString, data: RustString, algorithm: RustString) -> String{
+    func rustcall_decrypt_data(key_id: RustString, data: RustString, algorithm: RustString, hash: RustString) -> String{
         do{
-            let seckey_algorithm_enum = try convert_encrypt_algorithm(algorithm: algorithm)
-            let key_type = try convert_key_type(key_type: String(algorithm.toString().split(separator: ";")[0]))
+            let seckey_algorithm_enum = try get_encrypt_algorithm(algorithm: algorithm.toString(), hash: hash.toString())
+            let key_type = try get_key_type(key_type: algorithm.toString())
             guard let data = Data(base64Encoded: data.toString())
             else {
                 return ("Invalid base64 input") 
             }
                                     
-            guard let decrypted_value = String(data: try decrypt_data(data: data, privateKey: load_key(key_id: key_id.toString(), algo: key_type)!, algorithm: seckey_algorithm_enum), encoding: .utf8)
-            else {
+            guard let decrypted_value = String(data: try decrypt_data(data: data, privateKey: load_key(key_id: key_id.toString(), algo: key_type)!, algorithm: seckey_algorithm_enum), encoding: .utf8) else {
                 return ("Converting decrypted data to string")
             }
             
@@ -286,13 +285,13 @@ import CryptoKit
 
     A String representing the signed data.
     **/
-    func rustcall_sign_data(key_id: RustString, data: RustString, algorithm: RustString) -> String{
+    func rustcall_sign_data(key_id: RustString, data: RustString, algorithm: RustString, hash: RustString) -> String{
         let privateKeyName_string = key_id.toString()
         let data_cfdata = data.toString().data(using: String.Encoding.utf8)! as CFData
 
         do {
-            let seckey_algorithm_enum = try convert_sign_algorithm(algorithm: algorithm)
-            let key_type = try convert_key_type(key_type: String(algorithm.toString().split(separator: ";")[0])) as CFString
+            let seckey_algorithm_enum = try get_sign_algorithm(algorithm: algorithm.toString(), hash: hash.toString())
+            let key_type = try get_key_type(key_type: algorithm.toString()) as CFString
             let privateKeyReference = try load_key(key_id: privateKeyName_string, algo: key_type)!
             let signed_data = try ((sign_data(data: data_cfdata, privateKeyReference: privateKeyReference, algorithm: seckey_algorithm_enum))! as Data) 
             return signed_data.base64EncodedString(options: [])
@@ -352,13 +351,16 @@ import CryptoKit
 
     A String if the data could have been verified with the signature.
     **/
-    func rustcall_verify_data(key_id: RustString, data: RustString, signature: RustString, algorithm: RustString) -> String {
+    func rustcall_verify_data(key_id: RustString, data: RustString, signature: RustString, algorithm: RustString, hash: RustString) -> String {
         do{
+            //Convert Datatype from RustString to String 
             let publicKeyName_string = key_id.toString()
             let data_string = data.toString()
             let signature_string = signature.toString()
-            let seckey_algorithm_enum = try convert_sign_algorithm(algorithm: algorithm)
-            let key_type = try convert_key_type(key_type: String(algorithm.toString().split(separator: ";")[0]))
+
+            //Get Algorithm enums
+            let seckey_algorithm_enum = try get_sign_algorithm(algorithm: algorithm.toString(), hash: hash.toString())
+            let key_type = try get_key_type(key_type: algorithm.toString())
 
             guard let publicKey = getPublicKeyFromPrivateKey(privateKey: try load_key(key_id: publicKeyName_string, algo: key_type)!)else{
                 throw SecureEnclaveError.SignatureVerificationError("Public key could not be received from the private key")
@@ -436,11 +438,11 @@ import CryptoKit
 
     A String representing the private key as a String.
     **/
-    func rustcall_load_key(key_id: RustString, key_type: RustString) -> String {
+    func rustcall_load_key(key_id: RustString, key_type: RustString, hash: RustString) -> String {
         do {
-            let key_algorithm = try convert_key_type(key_type: String(key_type.toString().split(separator: ";")[0]))
-            let operation_algorithm_encryption = try convert_encrypt_algorithm(algorithm: key_type)
-            let operation_algorithm_signing = try convert_sign_algorithm(algorithm: key_type)
+            let key_algorithm = try get_key_type(key_type: key_type.toString())
+            let operation_algorithm_encryption = try get_encrypt_algorithm(algorithm: key_type.toString(), hash: hash.toString())
+            let operation_algorithm_signing = try get_sign_algorithm(algorithm: key_type.toString(), hash: hash.toString())
 
             guard let key = try load_key(key_id: key_id.toString(), algo: key_algorithm) else {
                 return "Key with KeyID \(key_id) could not be found."
@@ -525,13 +527,8 @@ import CryptoKit
         } 
     }
 
-    func convert_key_type(key_type: String) throws -> CFString {
+    func get_key_type(key_type: String) throws -> CFString {
         switch key_type{
-            //Maybe supported later with symmetric encryption
-            // case "ECDSA": 
-            //     return kSecAttrKeyTypeECDSA
-            // case "ECC": 
-            //     return kSecAttrKeyTypeECSECPrimeRandom
             case "RSA": 
                 return kSecAttrKeyTypeRSA
             default:
@@ -539,32 +536,32 @@ import CryptoKit
         }
     }
 
-    func convert_sign_algorithm(algorithm: RustString) throws -> SecKeyAlgorithm{
-        let algorithm = algorithm.toString().split(separator: ";")
+    func get_sign_algorithm(algorithm: String, hash: String) throws -> SecKeyAlgorithm{
         let apple_algorithm_enum: SecKeyAlgorithm;
-        
-        switch algorithm[1] {
-            case "SHA1": 
-                apple_algorithm_enum = SecKeyAlgorithm.rsaSignatureMessagePSSSHA1
-            case "SHA224": 
-                apple_algorithm_enum = SecKeyAlgorithm.rsaSignatureMessagePSSSHA224
-            case "SHA256": 
-                apple_algorithm_enum = SecKeyAlgorithm.rsaSignatureMessagePSSSHA256
-            case "SHA384":
-                apple_algorithm_enum = SecKeyAlgorithm.rsaSignatureMessagePSSSHA384
-            default: 
-                throw SecureEnclaveError.SigningError("Hash for Signing is not supported")
+        if algorithm == "RSA"{
+            switch hash {
+                case "SHA1": 
+                    apple_algorithm_enum = SecKeyAlgorithm.rsaSignatureMessagePSSSHA1
+                case "SHA224": 
+                    apple_algorithm_enum = SecKeyAlgorithm.rsaSignatureMessagePSSSHA224
+                case "SHA256": 
+                    apple_algorithm_enum = SecKeyAlgorithm.rsaSignatureMessagePSSSHA256
+                case "SHA384":
+                    apple_algorithm_enum = SecKeyAlgorithm.rsaSignatureMessagePSSSHA384
+                default: 
+                    throw SecureEnclaveError.SigningError("Hash for Signing is not supported")
+            }
+            return apple_algorithm_enum
+        }else{
+            throw SecureEnclaveError.EncryptionError("Algorithm for Encrypt / Decrypt not supported")
         }
-
-        return apple_algorithm_enum
     }
 
-    func convert_encrypt_algorithm(algorithm: RustString) throws -> SecKeyAlgorithm{
-        let algorithm = algorithm.toString().split(separator: ";")
+    func get_encrypt_algorithm(algorithm: String, hash: String) throws -> SecKeyAlgorithm{
         let apple_algorithm_enum: SecKeyAlgorithm;
 
-        if algorithm[0] == "RSA"{
-            switch algorithm[1] {
+        if algorithm == "RSA"{
+            switch hash {
                 case "SHA1": 
                     apple_algorithm_enum = SecKeyAlgorithm.rsaEncryptionOAEPSHA1
                 case "SHA224": 
@@ -580,5 +577,4 @@ import CryptoKit
         }else{
             throw SecureEnclaveError.EncryptionError("Algorithm for Encrypt / Decrypt not supported")
         }
-
     }

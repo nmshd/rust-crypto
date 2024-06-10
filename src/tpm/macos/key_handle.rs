@@ -1,5 +1,5 @@
 extern crate apple_secure_enclave_bindings;
-use super::{provider::convert_algorithms, SecureEnclaveProvider};
+use super::{provider::{convert_algorithms, convert_hash}, SecureEnclaveProvider};
 use crate::common::{error::SecurityModuleError, traits::key_handle::KeyHandle};
 use tracing::instrument;
 use regex::Regex;
@@ -7,16 +7,17 @@ use regex::Regex;
 impl KeyHandle for SecureEnclaveProvider {
     #[instrument]
     fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
-        let _string_data = String::from_utf8(data.to_vec())
+        let string_data = String::from_utf8(data.to_vec())
             .map_err(|_| SecurityModuleError::SigningError("Data conversion error".to_string()))?;
         
         let key_id = &self.key_id; 
         let config = self.config.as_ref().ok_or(SecurityModuleError::InitializationError(("Failed to initialize config").to_owned()))?;
-        let algo = convert_algorithms(config.clone()); 
+        let algo = convert_algorithms(config.clone());
+        let hash = convert_hash(config.hash.expect("No Hash given"));
 
         // Debug TODO
         // println!("\nSignData: Send to Swift | key_id: {} | StringData: {} | Algorithm: {}", key_id, _string_data, algo); 
-        let signed_data = apple_secure_enclave_bindings::keyhandle::rust_crypto_call_sign_data(key_id.clone(), _string_data, algo);
+        let signed_data = apple_secure_enclave_bindings::keyhandle::rust_crypto_call_sign_data(key_id.clone(), string_data, algo, hash);
 
         // Debug TODO
         // println!("\nSignData: Recieved from Swift: {}", signed_data); 
@@ -40,9 +41,10 @@ impl KeyHandle for SecureEnclaveProvider {
         })?;
         let config = self.config.as_ref().ok_or(SecurityModuleError::InitializationError(("Failed to initialize config").to_owned()))?;
         let algorithm = convert_algorithms(config.clone()); 
+        let hash = convert_hash(config.hash.expect("No Hash given"));
 
         let decrypted_data =
-            apple_secure_enclave_bindings::keyhandle::rust_crypto_call_decrypt_data(self.key_id.to_string(), string_data, algorithm);
+            apple_secure_enclave_bindings::keyhandle::rust_crypto_call_decrypt_data(self.key_id.to_string(), string_data, algorithm, hash);
 
         if Regex::new("(?i)error")
             .unwrap()
@@ -64,12 +66,13 @@ impl KeyHandle for SecureEnclaveProvider {
         let key_id = &self.key_id;
         let config = self.config.as_ref().ok_or(SecurityModuleError::InitializationError(("Failed to initialize config").to_owned()))?;
         let algorithm = convert_algorithms(config.clone()); 
-        
+        let hash = convert_hash(config.hash.expect("No Hash given"));
+
         //Debug TODO
         // println!("\nEncryptData: Send to Swift | key_id: {} | data: {}", key_id.clone(), string_data); 
 
         let encrypted_data =
-            apple_secure_enclave_bindings::keyhandle::rust_crypto_call_encrypt_data(key_id.to_string(), string_data, algorithm);
+            apple_secure_enclave_bindings::keyhandle::rust_crypto_call_encrypt_data(key_id.to_string(), string_data, algorithm, hash);
 
         //Debug TODO
         // println!("\nEncryptData: Recieved from Swift data: {}", encrypted_data); 
@@ -99,12 +102,13 @@ impl KeyHandle for SecureEnclaveProvider {
         let key_id = &self.key_id;  
         let config = self.config.as_ref().ok_or(SecurityModuleError::InitializationError(("Failed to initialize config").to_owned()))?;
         let algo = convert_algorithms(config.clone()); 
+        let hash = convert_hash(config.hash.expect("No Hash given"));
 
         // Debug TODO
         // println!("VerifyData: Send to Swift | key_id: {} | string_data: {} | string_signature: {} ",key_id.clone(), string_data, string_signature);
 
         let verification_result =
-            apple_secure_enclave_bindings::keyhandle::rust_crypto_call_verify_signature(key_id.clone(), string_data, string_signature, algo);
+            apple_secure_enclave_bindings::keyhandle::rust_crypto_call_verify_signature(key_id.clone(), string_data, string_signature, algo, hash);
 
         // The FFI bridge always returns strings by design.
         // If not "true" or "false" is found, we expect an error from the function
