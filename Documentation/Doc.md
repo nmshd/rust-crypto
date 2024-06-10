@@ -352,7 +352,8 @@ and finally the parameters themselves as JValues.
 The class and method name can be determined manually, but the signature should always be automatically generated. To do  
 this, call the following command on the commandline:
 
-javap -s -p path/to/the/java/file.class  
+  ``` javap -s -p path/to/the/java/file.class ```
+ 
 with the compiled `.class` file. This will print all method signatures to the command line, including the name and the  
 parameter signature needed for `sig`.
 
@@ -362,12 +363,14 @@ The method returns a JValue containing the return type of the Java method that n
 types. If a Java exception is thrown, the method returns an Error.
 
 Example:
-
+```rust
 call_static_method(    "com/example/vulcans_limes/RustDef",    
 "create_key",    
 "(Ljava/lang/String;Ljava/lang/String;)V",    
 &[JValue::from(jnienv.new_string(key_id).unwrap()),    
 JValue::from(jnienv.new_string(key_gen_info).unwrap())]);
+```
+
 </details>  
 
 <details open>  
