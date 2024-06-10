@@ -283,59 +283,67 @@ impl Provider for YubiKeyProvider {
     /// On failure, it returns a `SecurityModuleError`.
     #[instrument]
     fn load_key(&mut self, key_id: &str, config: Box<dyn Any>) -> Result<(), SecurityModuleError> {
-        let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
-        let mut found = false;
-        for i in 10..20 {
-            let _ = yubikey.verify_pin(self.pin.as_ref());
-            let _ = yubikey.authenticate(MgmKey::new(self.management_key.unwrap()).unwrap());
-            let data = yubikey.fetch_object(SLOTSU32[i]);
-            let mut output: Vec<u8> = Vec::new();
-            match data {
-                Ok(data) => {
-                    output = data.to_vec();
-                }
-                Err(err) => {
-                    println!("Error: {:?}", err);
-                }
-            }
-
-            let data = output;
-            match parse_slot_data(&data) {
-                Ok((key_name, _, usage, public_key)) => {
-                    let parts = usage.split('+');
-                    if key_name == key_id.to_string() {
-                        let mut vector = Vec::new();
-                        self.slot_id = Some(SLOTS[i - 10]);
-                        for part in parts {
-                            match part {
-                                "SignEncrypt" => {
-                                    vector.push(KeyUsage::SignEncrypt);
-                                }
-                                "Decrypt" => {
-                                    vector.push(KeyUsage::Decrypt);
-                                }
-                                _ => continue,
-                            };
-                        }
-                        self.key_usages = Some(vector);
-                        self.pkey = public_key;
-                        found = true;
-                        break;
+        if let Some(hsm_config) = config.downcast_ref::<HsmProviderConfig>() {
+            self.key_algo = Some(hsm_config.key_algorithm);
+            self.key_usages = Some(hsm_config.key_usage.clone());
+            let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
+            let mut found = false;
+            for i in 10..20 {
+                let _ = yubikey.verify_pin(self.pin.as_ref());
+                let _ = yubikey.authenticate(MgmKey::new(self.management_key.unwrap()).unwrap());
+                let data = yubikey.fetch_object(SLOTSU32[i]);
+                let mut output: Vec<u8> = Vec::new();
+                match data {
+                    Ok(data) => {
+                        output = data.to_vec();
+                    }
+                    Err(err) => {
+                        println!("Error: {:?}", err);
                     }
                 }
-                Err(e) => {
-                    println!("Error parsing slot data: {:?}", e);
-                    continue;
+
+                let data = output;
+                match parse_slot_data(&data) {
+                    Ok((key_name, _, usage, public_key)) => {
+                        let parts = usage.split('+');
+                        if key_name == key_id.to_string() {
+                            let mut vector = Vec::new();
+                            self.slot_id = Some(SLOTS[i - 10]);
+                            for part in parts {
+                                match part {
+                                    "SignEncrypt" => {
+                                        vector.push(KeyUsage::SignEncrypt);
+                                    }
+                                    "Decrypt" => {
+                                        vector.push(KeyUsage::Decrypt);
+                                    }
+                                    _ => continue,
+                                };
+                            }
+                            self.key_usages = Some(vector);
+                            self.pkey = public_key;
+                            found = true;
+                            break;
+                        }
+                    }
+                    Err(e) => {
+                        println!("Error parsing slot data: {:?}", e);
+                        continue;
+                    }
                 }
             }
-        }
 
-        if !found {
-            return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
-                "Key not found".to_string(),
-            )));
+            if !found {
+                return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
+                    "Key not found".to_string(),
+                )));
+            } else {
+                Ok(())
+            }
         } else {
-            Ok(())
+            Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
+                "Failed to get the Configurations".to_string(),
+            )))
         }
     }
 
