@@ -21,7 +21,11 @@ use crypto_layer::common::{
 use crypto_layer::hsm::{yubikey::YubiKeyProvider, HsmProviderConfig};
 
 #[cfg(feature = "yubi")]
+
+static mut SIGNATURE: Vec<u8> = Vec::new();
+
 fn main() -> glib::ExitCode {
+
     let application = Application::builder()
         .application_id("com.example.DemoApp")
         .build();
@@ -103,11 +107,12 @@ fn create_new_window(app: &Application, title: String) {
     let combo_encryption_type_clone = combo_encryption_type.clone();
 
     let button = Button::with_label("Aktion ausführen");
+    let app2 = app.clone();
     button.connect_clicked(move |_| {
         let key_id = entry_key_id.text().to_string();
         let data = entry_data.text().to_string();
         let encryption_type = combo_encryption_type.active_text().unwrap().to_string();
-        perform_action(&title, &data, &key_id, &encryption_type);
+        perform_action(&app2,&title, &data, &key_id, &encryption_type);
     });
 
     vbox.append(&label_key_id);
@@ -122,8 +127,8 @@ fn create_new_window(app: &Application, title: String) {
     new_window.present();
 }
 
-fn perform_action(action: &str, data: &str, key_id: &str, encryption_type: &str) {
-    let mut signature = Vec::new();
+
+fn perform_action(app: &Application, action: &str, data: &str, key_id: &str, encryption_type: &str) {
     match action {
         //   "Daten verschlüsseln" => encrypt_data(data, key_id, encryption_type),
         //   "Daten entschlüsseln" => decrypt_data(data, key_id, encryption_type),
@@ -131,17 +136,29 @@ fn perform_action(action: &str, data: &str, key_id: &str, encryption_type: &str)
             let ergebnis = sign_data(data, key_id, encryption_type);
             match ergebnis {
                 Ok(signat) => {
-                    signature = signat;
-                    println!("Signatur erfolgreich verifiziert")
+                    unsafe { SIGNATURE = signat };
+                    let ausgabe = "Signatur erfolgreich";
+                    create_new_window2(app, ausgabe.to_string());
                 }
-                Err(_) => println!("Signatur konnte nicht verifiziert werden"),
+                Err(_) => {
+                    let ausgabe = "Es konnte keine Signatur erstellt werden";
+                    create_new_window2(app, ausgabe.to_string());
+                }
             }
         }
         "Signatur verifizieren" => {
+            let signature = unsafe { SIGNATURE.clone() };
+            println!("Signatur: {:?}",  signature);
             let ergebnis = verify_signature(data, key_id, encryption_type, signature);
             match ergebnis {
-                Ok(_) => println!("Signatur erfolgreich verifiziert"),
-                Err(_) => println!("Signatur konnte nicht verifiziert werden"),
+                Ok(_) => {
+                    let ausgabe = "Signatur erfolgreich verifiziert";
+                    create_new_window2(app, ausgabe.to_string());
+                },
+                Err(_) => {
+                    let ausgabe = "Signatur konnte nicht verifiziert werden";
+                    create_new_window2(app, ausgabe.to_string());
+                },
             }
         }
         _ => {}
@@ -267,4 +284,22 @@ fn sign_data(
             ))
         }
     }
+}
+
+fn create_new_window2(app: &Application, message: String) {
+    let new_window = ApplicationWindow::builder()
+        .application(app)
+        .title("Nachricht")
+        .default_width(400)
+        .default_height(300)
+        .build();
+
+    let vbox = gtk::Box::new(gtk::Orientation::Vertical, 5);
+    vbox.set_spacing(5);
+
+    let label_message = Label::new(Some(&message));
+    vbox.append(&label_message);
+
+    new_window.set_child(Some(&vbox));
+    new_window.present();
 }
