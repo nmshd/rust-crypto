@@ -231,31 +231,26 @@ fn verify_signature(
     let mut provider = YubiKeyProvider::new(key_id.to_string());
     let mut config = HsmProviderConfig::new(
         AsymmetricEncryption::Rsa(KeyBits::Bits1024),
-        vec![KeyUsage::SignEncrypt],
     );
     match encryption_type {
         "RSA1024" => {
             config = HsmProviderConfig::new(
                 AsymmetricEncryption::Rsa(KeyBits::Bits1024),
-                vec![KeyUsage::SignEncrypt],
             );
         }
         "RSA2048" => {
             config = HsmProviderConfig::new(
                 AsymmetricEncryption::Rsa(KeyBits::Bits2048),
-                vec![KeyUsage::SignEncrypt],
             );
         }
         "ECC256" => {
             config = HsmProviderConfig::new(
                 AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P256)),
-                vec![KeyUsage::SignEncrypt],
             );
         }
         "ECC384" => {
             config = HsmProviderConfig::new(
                 AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P384)),
-                vec![KeyUsage::SignEncrypt],
             );
         }
         _ => {}
@@ -290,31 +285,26 @@ fn sign_data(
     let mut provider = YubiKeyProvider::new(key_id.to_string());
     let mut config = HsmProviderConfig::new(
         AsymmetricEncryption::Rsa(KeyBits::Bits1024),
-        vec![KeyUsage::SignEncrypt],
     );
     match encryption_type {
         "RSA1024" => {
             config = HsmProviderConfig::new(
                 AsymmetricEncryption::Rsa(KeyBits::Bits1024),
-                vec![KeyUsage::SignEncrypt],
             );
         }
         "RSA2048" => {
             config = HsmProviderConfig::new(
                 AsymmetricEncryption::Rsa(KeyBits::Bits2048),
-                vec![KeyUsage::SignEncrypt],
             );
         }
         "ECC256" => {
             config = HsmProviderConfig::new(
                 AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P256)),
-                vec![KeyUsage::SignEncrypt],
             );
         }
         "ECC384" => {
             config = HsmProviderConfig::new(
                 AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P384)),
-                vec![KeyUsage::SignEncrypt],
             );
         }
         _ => {}
@@ -360,31 +350,26 @@ fn generate(app: &Application, encryption_type: &str, key_id: &str) {
     let mut provider = YubiKeyProvider::new(key_id.to_string());
     let mut config = HsmProviderConfig::new(
         AsymmetricEncryption::Rsa(KeyBits::Bits1024),
-        vec![KeyUsage::SignEncrypt],
     );
     match encryption_type {
         "RSA1024" => {
             config = HsmProviderConfig::new(
                 AsymmetricEncryption::Rsa(KeyBits::Bits1024),
-                vec![KeyUsage::SignEncrypt],
             );
         }
         "RSA2048" => {
             config = HsmProviderConfig::new(
                 AsymmetricEncryption::Rsa(KeyBits::Bits2048),
-                vec![KeyUsage::SignEncrypt],
             );
         }
         "ECC256" => {
             config = HsmProviderConfig::new(
                 AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P256)),
-                vec![KeyUsage::SignEncrypt],
             );
         }
         "ECC384" => {
             config = HsmProviderConfig::new(
                 AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P384)),
-                vec![KeyUsage::SignEncrypt],
             );
         }
         _ => {}
