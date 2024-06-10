@@ -47,7 +47,7 @@ This Repository contains a Wrapper that is used to perform cryptographic operati
 ### Supported Devices
 </summary>  
 
-This wrapper should work for all Android devices equiped with a SE, but the focus for our group is specifically on smartphones using Samsung Knox Vault. Therefore, testing will only be done using a Samsung smartphone, and in case there are incompatibilities between device manufacturers, Samsung will take priority. An up-to-date list of devices equipped with Knox Vault can be found [here](https://www.samsungknox.com/en/knox-platform/supported-devices) after selecting Knox Vault in the filter options. As of April 2024, the following devices are equipped with Knox Vault:
+This wrapper should work for all Android devices equipped with a SE, but the focus for our group is specifically on smartphones using Samsung Knox Vault. Therefore, testing will only be done using a Samsung smartphone, and in case there are incompatibilities between device manufacturers, Samsung will take priority. An up-to-date list of devices equipped with Knox Vault can be found [here](https://www.samsungknox.com/en/knox-platform/supported-devices) after selecting Knox Vault in the filter options. As of April 2024, the following devices are equipped with Knox Vault:
 
 Smartphones
 - Samsung Galaxy A 35 / A55
@@ -98,30 +98,31 @@ In the following chapter, you will find detailed information on the supported al
 
 We have provided a list of the supported Algorithms of our project:
 
-| Algorithm Type    | Details                                     |  
-|-------------------|---------------------------------------------|
-| **ECC**           | **Curve / Hashing**              |  
-|                   | secp256r1 / SHA-256                            |  
-|                   | secp384r1 / SHA-256                         |  
-|                   | secp521r1 / SHA-256                         |  
-| **RSA**           | **Keysize / Hashing / Padding**           |  
-|                   | 512 / SHA-256 / PKCS1                       |  
-|                   | 1024 / SHA-256 / PKCS1                      |  
-|                   | 2048 / SHA-256 / PKCS1                      |  
-|                   | 3072 / SHA-256 / PKCS1                      |  
-|                   | 4096 / SHA-256 / PKCS1                      |  
-|                   | 8192 / SHA-256 / PKCS1                      |  
-|          |                       | | **Symmetric**     | **Keysize / Block Mode / Padding**          |  
-| **3DES**          | 168  CBC / PKCS7Padding                     |  
-| **AES**           | 128 / GCM / NoPadding                       |  
-|                   | 128 / CBC / PKCS7Padding                    |  
-|                   | 128 / CTR / NoPadding                       |  
-|                   | 192 / GCM / NoPadding                       |  
-|                   | 192 / CBC / PKCS7Padding                    |  
-|                   | 192 / CTR / NoPadding                       |  
-|                   | 256 / GCM / NoPadding                       |  
-|                   | 256 / CBC / PKCS7Padding                    |  
-|                   | 256 / CTR / NoPadding                       |
+| Algorithm Type | Details                            |  
+|----------------|------------------------------------|
+| **ECC**        | **Curve / Hashing**                |  
+|                | secp256r1 / SHA-256                |  
+|                | secp384r1 / SHA-256                |  
+|                | secp521r1 / SHA-256                |  
+| **RSA**        | **Keysize / Hashing / Padding**    |  
+|                | 512 / SHA-256 / PKCS1              |  
+|                | 1024 / SHA-256 / PKCS1             |  
+|                | 2048 / SHA-256 / PKCS1             |  
+|                | 3072 / SHA-256 / PKCS1             |  
+|                | 4096 / SHA-256 / PKCS1             |  
+|                | 8192 / SHA-256 / PKCS1             |  
+|                |                                    | 
+| **Symmetric**  | **Keysize / Block Mode / Padding** |  
+| **3DES**       | 168  CBC / PKCS7Padding            |  
+| **AES**        | 128 / GCM / NoPadding              |  
+|                | 128 / CBC / PKCS7Padding           |  
+|                | 128 / CTR / NoPadding              |  
+|                | 192 / GCM / NoPadding              |  
+|                | 192 / CBC / PKCS7Padding           |  
+|                | 192 / CTR / NoPadding              |  
+|                | 256 / GCM / NoPadding              |  
+|                | 256 / CBC / PKCS7Padding           |  
+|                | 256 / CTR / NoPadding              |
 </details>  
 
 ## Installation Guide
@@ -188,7 +189,7 @@ If you already have a project combining Rust and Java, you can skip this section
 - Fork this Repo and integrate it into the project you created as a submodule. This can be done with:
     ```  
   git submodule add <Link to your forked Repo>  
-git submodlue update --init --recursive ```- The two files `CryptoManager.java` and `RustDef.java` in [`src/tpm/android/knox/java`](https://github.com/cep-sose2024/rust-crypto-knox/tree/main/src/tpm/android/knox/java) will need to be moved to the other Java files in your project. By default, this is something like `src/main/java/com/example/example_project`.
+git submodule update --init --recursive ```- The two files `CryptoManager.java` and `RustDef.java` in [`src/tpm/android/knox/java`](https://github.com/cep-sose2024/rust-crypto-knox/tree/main/src/tpm/android/knox/java) will need to be moved to the other Java files in your project. By default, this is something like `src/main/java/com/example/example_project`.
 - Adjust the `const CLASS_SIGNATURE` in [`src/tpm/android/knox/interface.rs`](https://github.com/cep-sose2024/rust-crypto-knox/blob/main/src/tpm/android/knox/interface.rs) to match the package that you put `RustDef.java` into. For the example above, that would be `const CLASS_SIGNATURE: &str = "com/example/example_project/RustDef";` 
 </details>
 
@@ -316,9 +317,9 @@ the Rust environment and passing parameters that way. The JNI is provided by Ora
 To find out more about how the exact communication works, check the [JNI Implementation](#JNI-Implementation).
 - **KeyStore API**
 
-The [Android Keystore system](https://developer.android.com/privacy-and-security/keystore) handles the cryptographic keys for us. We went with this over the Knox SDK because it's a better fit for our needs, and even Samsung recommends it in their [Knox Vault Whitepaper](https://image-us.samsung.com/SamsungUS/samsungbusiness/solutions/topics/iot/071421/Knox-Whitepaper-v1.5-20210709.pdf).
+The [Android Keystore system](https://developer.android.com/privacy-and-security/keystore) handles the cryptographic keys for us. We went with this over the Knox SDK because it's a better fit for our needs, and even Samsung recommends it in their [Knox Vault White paper](https://image-us.samsung.com/SamsungUS/samsungbusiness/solutions/topics/iot/071421/Knox-Whitepaper-v1.5-20210709.pdf).
 
-With the Keystore and related APIs, we can use keys to encrypt and decrypt data, as well as sign and verify it. The API also helps us solve the central requirenment from j&s-soft, as we can enforce generated cryptographic keys to be saved in the Knox Vault (or any other strongbox).
+With the Keystore and related APIs, we can use keys to encrypt and decrypt data, as well as sign and verify it. The API also helps us solve the central requirement from j&s-soft, as we can enforce generated cryptographic keys to be saved in the Knox Vault (or any other strongbox).
 
 The Knox Vault doesn't support all the cryptographic algorithms enabled by the Keystore and other APIs. As we couldn't find any detailed documentation about what the Knox Vault supports, we had to test it out by trial and error. You can see all the algorithms that have passed our tests in the [Supported Algorithms](#supported-algorithms) section.
 
@@ -433,7 +434,7 @@ A Contribution guide can be found [here](https://github.com/nmshd/.github/tree/m
 
 
 ## References
-[Samsung Knox Whitepaper](https://image-us.samsung.com/SamsungUS/samsungbusiness/solutions/topics/iot/071421/Knox-Whitepaper-v1.5-20210709.pdf): Hold information about Samsung Knox, but also about the Knox Vault feature.
+[Samsung Knox White paper](https://image-us.samsung.com/SamsungUS/samsungbusiness/solutions/topics/iot/071421/Knox-Whitepaper-v1.5-20210709.pdf): Hold information about Samsung Knox, but also about the Knox Vault feature.
 
 [Android Keystore system](https://developer.android.com/privacy-and-security/keystore): Holds information about the Keystore system, how to use the Android keystore, as well as leading to other Android developer documents.
 
