@@ -63,12 +63,7 @@ impl Provider for KnoxProvider {
             key_algo = match asym_alg.expect("Already checked") {
                 AsymmetricEncryption::Rsa(bitslength) => {
                     match bitslength {
-                        KeyBits::Bits512 => { String::from("RSA;512;SHA-256;PKCS1") }
-                        KeyBits::Bits1024 => { String::from("RSA;1024;SHA-256;PKCS1") }
                         KeyBits::Bits2048 => { String::from("RSA;2048;SHA-256;PKCS1") }
-                        KeyBits::Bits3072 => { String::from("RSA;3072;SHA-256;PKCS1") }
-                        KeyBits::Bits4096 => { String::from("RSA;4096;SHA-256;PKCS1") }
-                        KeyBits::Bits8192 => { String::from("RSA;8192;SHA-256;PKCS1") }
                         _ => {
                             return Err(SecurityModuleError::Tpm(UnsupportedOperation(
                                 format!("Unsupported asymmetric encryption algorithm: {:?}",
