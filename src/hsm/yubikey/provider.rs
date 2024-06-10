@@ -1,12 +1,10 @@
 use super::YubiKeyProvider;
 use crate::common::{
-    crypto::{
+    crypto::
         algorithms::{
             encryption::{AsymmetricEncryption, EccCurves, EccSchemeAlgorithm},
             KeyBits,
         },
-        KeyUsage,
-    },
     error::SecurityModuleError,
     traits::module_provider::Provider,
 };
@@ -79,7 +77,7 @@ impl Provider for YubiKeyProvider {
     ///
     /// This method creates a persisted cryptographic key using the specified algorithm
     /// and identifier, making it retrievable for future operations. The key is created
-    /// with the specified key usages and stored in the YubiKey.
+    /// stored in the YubiKey.
     ///
     /// # Arguments
     ///
@@ -105,12 +103,9 @@ impl Provider for YubiKeyProvider {
     ) -> Result<(), SecurityModuleError> {
         if let Some(hsm_config) = config.downcast_ref::<HsmProviderConfig>() {
             self.key_algo = Some(hsm_config.key_algorithm);
-            self.key_usages = Some(hsm_config.key_usage.clone());
             let key_algo = self.key_algo.clone().expect("No Key Algortihm found");
 
-            let mut usage: String = String::new();
             let slot: u32;
-            let key_usages = self.key_usages.clone().unwrap();
             let slot_id;
             let algorithm: AlgorithmId;
 
@@ -174,28 +169,7 @@ impl Provider for YubiKeyProvider {
                             )));
                         }
                     }
-                    let mut counter = 0;
-                    let mut end = false;
-                    for i in 0..key_usages.len() {
-                        match key_usages.get(i).unwrap() {
-                            KeyUsage::SignEncrypt => {
-                                usage = format!("{}SignEncrypt", usage);
-                            }
-                            KeyUsage::Decrypt => usage = format!("{}Decrypt", usage),
-                            _ => {
-                                return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
-                                    "Key Usage not supported".to_string(),
-                                )));
-                            }
-                        }
-                        if counter == key_usages.len() {
-                            end = true;
-                        }
-                        if !end {
-                            usage = format!("{}+", usage);
-                        }
-                        counter = counter + 1;
-                    }
+                    
                 }
                 AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(curve)) => {
                     match curve {
@@ -207,31 +181,7 @@ impl Provider for YubiKeyProvider {
                             )));
                         }
                     }
-                    let mut counter = 0;
-                    let mut end = false;
-                    for i in 0..key_usages.len() {
-                        match key_usages.get(i).unwrap() {
-                            KeyUsage::SignEncrypt => {
-                                usage = format!("{}SignEncrypt", usage);
-                            }
-                            // The Yubikey does not support decryption with ECC, so it is not useful to generate one, see:
-                            // https://docs.yubico.com/yesdk/users-manual/application-piv/apdu/auth-decrypt.html
-                            KeyUsage::Decrypt => {}
-
-                            _ => {
-                                return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
-                                    "Key Usage not supported".to_string(),
-                                )));
-                            }
-                        }
-                        if counter == key_usages.len() {
-                            end = true;
-                        }
-                        if !end {
-                            usage = format!("{}+", usage);
-                        }
-                        counter = counter + 1;
-                    }
+                   
                 }
                 _ => {
                     return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
@@ -251,7 +201,7 @@ impl Provider for YubiKeyProvider {
             let _ = yubikey.verify_pin(self.pin.as_ref());
             let _ = yubikey.authenticate(MgmKey::new(self.management_key.unwrap()).unwrap());
 
-            match save_key_object(&mut yubikey, usage.as_str(), key_id, slot, &pkey) {
+            match save_key_object(&mut yubikey, key_id, slot, &pkey) {
                 Ok(_) => Ok(()),
                 Err(err) => {
                     return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
@@ -269,7 +219,7 @@ impl Provider for YubiKeyProvider {
     /// Loads an existing cryptographic key identified by `key_id`.
     ///
     /// This method attempts to load a persisted cryptographic key by its identifier from the YubiKey.
-    /// If successful, it sets the key usages and returns a handle to the key for further
+    /// If successful, it returns a handle to the key for further
     /// cryptographic operations.
     ///
     /// # Arguments
@@ -285,7 +235,6 @@ impl Provider for YubiKeyProvider {
     fn load_key(&mut self, key_id: &str, config: Box<dyn Any>) -> Result<(), SecurityModuleError> {
         if let Some(hsm_config) = config.downcast_ref::<HsmProviderConfig>() {
             self.key_algo = Some(hsm_config.key_algorithm);
-            self.key_usages = Some(hsm_config.key_usage.clone());
             let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
             let mut found = false;
             for i in 10..20 {
@@ -304,23 +253,9 @@ impl Provider for YubiKeyProvider {
 
                 let data = output;
                 match parse_slot_data(&data) {
-                    Ok((key_name, _, usage, public_key)) => {
-                        let parts = usage.split('+');
+                    Ok((key_name, _, public_key)) => {
                         if key_name == key_id.to_string() {
-                            let mut vector = Vec::new();
                             self.slot_id = Some(SLOTS[i - 10]);
-                            for part in parts {
-                                match part {
-                                    "SignEncrypt" => {
-                                        vector.push(KeyUsage::SignEncrypt);
-                                    }
-                                    "Decrypt" => {
-                                        vector.push(KeyUsage::Decrypt);
-                                    }
-                                    _ => continue,
-                                };
-                            }
-                            self.key_usages = Some(vector);
                             self.pkey = public_key;
                             found = true;
                             break;
@@ -356,7 +291,6 @@ impl Provider for YubiKeyProvider {
     ///
     /// * `key_algorithm` - The asymmetric encryption algorithm to be used for the key.
     /// * `hash` - An optional hash algorithm to be used with the key.
-    /// * `key_usages` - A vector of `KeyUsage` values specifying the intended usages for the key.
     ///
     /// # Returns
     ///
@@ -399,11 +333,10 @@ impl Provider for YubiKeyProvider {
 /// Saves the key object to the YubiKey device.
 ///
 /// This method saves a object to the YubiKey device. The object is stored in a slot and represents
-/// information about the key, such as the key name, slot, key usage, and public key. This information
+/// information about the key, such as the key name, slot, key and public key. This information
 /// belongs to a private key which is stored in a other Slot.
 ///
 /// # Arguments
-/// * 'usage' - The key usage of the key object to be stored.
 /// * 'key_id' - A string slice that uniquely identifies the key for later usage.
 /// * 'slot_id' - An address where an object will be stored must be given.
 /// * 'pkey' - The public key which is intended to be stored.
@@ -415,7 +348,6 @@ impl Provider for YubiKeyProvider {
 /// On failure, it returns a `yubikey::Error`.
 fn save_key_object(
     yubikey: &mut YubiKey,
-    usage: &str,
     key_id: &str,
     slot_id: u32,
     pkey: &str,
@@ -424,7 +356,7 @@ fn save_key_object(
     let slot = slot_id.to_string();
     let public_key = pkey;
 
-    let total_length = key_name.len() + 1 + slot.len() + 1 + usage.len() + 1 + public_key.len();
+    let total_length = key_name.len() + 1 + slot.len() + 1 + 1 + public_key.len();
     let mut data = vec![0u8; total_length];
     let data_slice: &mut [u8] = &mut data;
 
@@ -439,10 +371,6 @@ fn save_key_object(
     data_slice[offset] = 0;
     offset += 1;
 
-    data_slice[offset..offset + usage.len()].copy_from_slice(usage.as_bytes());
-    offset += usage.len();
-    data_slice[offset] = 0;
-    offset += 1;
 
     data_slice[offset..offset + public_key.len()].copy_from_slice(public_key.as_bytes());
 
@@ -457,33 +385,30 @@ fn save_key_object(
 ///
 /// This method creates a persisted cryptographic key using the specified algorithm
 /// and identifier, making it retrievable for future operations. The key is created
-/// with the specified key usages and stored in the YubiKey.
+/// and stored in the YubiKey.
 ///
 /// # Arguments
 ///
-///* 'data' - This array reference contains important information, it provides: the key name, the slot where it is stored, the usage and the public key itself
+///* 'data' - This array reference contains important information, it provides: the key name, the slot where it is stored and the public key itself
 ///
 /// # Returns
 ///
-/// A `Result` that, on success, contains `Ok(key_name, slot, key_usage, public_key)` where the individual information is given.
+/// A `Result` that, on success, contains `Ok(key_name, slot, public_key)` where the individual information is given.
 /// On failure, it returns a `Utf8Error`.
-fn parse_slot_data(data: &[u8]) -> Result<(String, String, String, String), SecurityModuleError> {
+fn parse_slot_data(data: &[u8]) -> Result<(String, String, String), SecurityModuleError> {
     let parts: Vec<&[u8]> = data.split(|&x| x == 0).collect();
     if !(parts.len() < 4
         || parts[0].is_empty()
         || parts[1].is_empty()
-        || parts[2].is_empty()
-        || parts[3].is_empty())
+        || parts[2].is_empty())
     {
         let key_name = std::str::from_utf8(parts[0]).unwrap();
         let slot = std::str::from_utf8(parts[1]).unwrap();
-        let usage = std::str::from_utf8(parts[2]).unwrap();
-        let public_key = std::str::from_utf8(parts[3]).unwrap();
+        let public_key = std::str::from_utf8(parts[2]).unwrap();
 
         Ok((
             key_name.to_string(),
             slot.to_string(),
-            usage.to_string(),
             public_key.to_string(),
         ))
     } else {
@@ -589,10 +514,10 @@ fn list_all_slots(yubikey: &mut YubiKey) -> Result<Vec<String>, SecurityModuleEr
         }
         let data = temp_vec;
         match parse_slot_data(&data) {
-            Ok((key_name, slot, usage, pkey)) => {
+            Ok((key_name, slot, pkey)) => {
                 let output_string = format!(
-                    "Key Name: {}, Slot: {}, Usage: {}, Public-Key: {}\n",
-                    key_name, slot, usage, pkey
+                    "Key Name: {}, Slot: {}, Public-Key: {}\n",
+                    key_name, slot, pkey
                 );
                 output.push(output_string);
             }
@@ -643,7 +568,6 @@ fn initialize_module(
     key_algorithm: AsymmetricEncryption,
     sym_algorithm: Option<BlockCiphers>,
     hash: Option<Hash>,
-    key_usage: Vec<KeyUsage>,
     input: &str,
 ) -> Result<device, SecurityModuleError> {
     // Opens a connection to the yubikey device

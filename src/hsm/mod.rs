@@ -65,8 +65,6 @@ pub mod yubikey;
 pub struct HsmProviderConfig {
     /// The asymmetric encryption algorithm supported by the HSM.
     pub(super) key_algorithm: AsymmetricEncryption,
-    /// The key usages supported by the HSM.
-    pub(super) key_usage: Vec<KeyUsage>,
 }
 
 impl ProviderConfig for HsmProviderConfig {
@@ -88,10 +86,9 @@ impl HsmProviderConfig {
     ///
     /// A boxed trait object representing the HSM provider configuration.
     #[allow(clippy::new_ret_no_self)]
-    pub fn new(key_algorithm: AsymmetricEncryption, key_usage: Vec<KeyUsage>) -> Box<dyn Any> {
+    pub fn new(key_algorithm: AsymmetricEncryption) -> Box<dyn Any> {
         Box::new(Self {
             key_algorithm,
-            key_usage,
         })
     }
 }

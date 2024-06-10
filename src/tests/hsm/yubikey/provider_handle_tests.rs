@@ -68,7 +68,6 @@ fn test_create_rsa_key_1024() {
     let mut provider = YubiKeyProvider::new(key_id.to_string());
     let config = HsmProviderConfig::new(
         AsymmetricEncryption::Rsa(KeyBits::Bits1024),
-        vec![KeyUsage::SignEncrypt],
     );
 
     //initialize HSM-module
@@ -91,7 +90,6 @@ fn test_create_rsa_key_2048() {
 
     let config = HsmProviderConfig::new(
         AsymmetricEncryption::Rsa(KeyBits::Bits2048),
-        vec![KeyUsage::SignEncrypt],
     );
 
     // initialize HSM-module
@@ -115,7 +113,6 @@ fn test_create_ecc_key_256() {
 
     let config = HsmProviderConfig::new(
         AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P256)),
-        vec![KeyUsage::SignEncrypt],
     );
 
     // initialize HSM-module
@@ -139,7 +136,6 @@ fn test_create_ecc_key_384() {
 
     let config = HsmProviderConfig::new(
         AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P384)),
-        vec![KeyUsage::SignEncrypt],
     );
 
     // initialize HSM-module
@@ -162,7 +158,6 @@ fn test_load_rsa_key_1024() {
 
     let config = HsmProviderConfig::new(
         AsymmetricEncryption::Rsa(KeyBits::Bits1024),
-        vec![KeyUsage::SignEncrypt],
     );
 
     // initialize HSM-module
@@ -185,7 +180,6 @@ fn test_load_rsa_key_2048() {
 
     let config = HsmProviderConfig::new(
         AsymmetricEncryption::Rsa(KeyBits::Bits1024),
-        vec![KeyUsage::SignEncrypt],
     );
 
     // initialize HSM-module
@@ -209,7 +203,6 @@ fn test_load_ecc_key_256() {
 
     let config = HsmProviderConfig::new(
         AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P256)),
-        vec![KeyUsage::SignEncrypt],
     );
 
     // initialize HSM-module
@@ -233,7 +226,6 @@ fn test_load_ecc_key_384() {
 
     let config = HsmProviderConfig::new(
         AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P256)),
-        vec![KeyUsage::SignEncrypt],
     );
 
     // initialize HSM-module

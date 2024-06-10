@@ -74,7 +74,6 @@ fn test_sign_and_verify_rsa_1024() {
 
     let config = HsmProviderConfig::new(
         AsymmetricEncryption::Rsa(KeyBits::Bits1024),
-        vec![KeyUsage::SignEncrypt],
     );
 
     provider
@@ -98,7 +97,6 @@ fn test_sign_and_verify_rsa_2048() {
 
     let config = HsmProviderConfig::new(
         AsymmetricEncryption::Rsa(KeyBits::Bits2048),
-        vec![KeyUsage::SignEncrypt],
     );
 
     provider
@@ -122,7 +120,6 @@ fn test_sign_and_verify_ecc_256() {
 
     let config = HsmProviderConfig::new(
         AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P256)),
-        vec![KeyUsage::SignEncrypt],
     );
 
     provider
@@ -146,7 +143,6 @@ fn test_sign_and_verify_ecc_384() {
 
     let config = HsmProviderConfig::new(
         AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P384)),
-        vec![KeyUsage::SignEncrypt, KeyUsage::Decrypt],
     );
 
     provider
@@ -168,7 +164,6 @@ fn test_encrypt_and_decrypt_rsa_1024() {
     let mut provider = YubiKeyProvider::new("test_enc_dec_1024".to_string());
     let config = HsmProviderConfig::new(
         AsymmetricEncryption::Rsa(KeyBits::Bits1024),
-        vec![KeyUsage::SignEncrypt, KeyUsage::Decrypt],
     );
 
     provider
@@ -193,7 +188,6 @@ fn test_encrypt_and_decrypt_rsa_2048() {
     let mut provider = YubiKeyProvider::new("test_enc_dec_2048".to_string());
     let config = HsmProviderConfig::new(
         AsymmetricEncryption::Rsa(KeyBits::Bits2048),
-        vec![KeyUsage::SignEncrypt, KeyUsage::Decrypt],
     );
 
     provider
