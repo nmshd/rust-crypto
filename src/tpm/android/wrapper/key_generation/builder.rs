@@ -207,6 +207,7 @@ impl<'env: 'borrow, 'borrow> Builder<'env, 'borrow> {
     /// # Returns
     ///
     /// A `JniResult` containing the updated `Builder` instance.
+    #[allow(dead_code)]
     pub fn set_algorithm_parameter_spec(
         mut self,
         env: &'borrow JNIEnv<'env>,

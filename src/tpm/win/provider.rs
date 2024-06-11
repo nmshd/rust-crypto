@@ -6,10 +6,11 @@ use crate::{
             KeyUsage,
         },
         error::SecurityModuleError,
-        traits::{module_provider::Provider, module_provider_config::ProviderConfig},
+        traits::module_provider::Provider,
     },
     tpm::{core::error::TpmError, TpmConfig},
 };
+use std::any::Any;
 use tracing::instrument;
 use windows::{
     core::PCWSTR,
@@ -51,9 +52,9 @@ impl Provider for TpmProvider {
     fn create_key(
         &mut self,
         key_id: &str,
-        config: Box<dyn ProviderConfig>,
+        config: Box<dyn Any>,
     ) -> Result<(), SecurityModuleError> {
-        let config = config.as_any().downcast_ref::<TpmConfig>().unwrap();
+        let config = config.downcast_ref::<TpmConfig>().unwrap();
 
         self.key_algo = Some(config.key_algorithm);
         self.sym_algo = Some(config.sym_algorithm);
@@ -198,12 +199,8 @@ impl Provider for TpmProvider {
     /// A `Result` that, on success, contains `Ok(())`, indicating that the key was loaded successfully.
     /// On failure, it returns a `SecurityModuleError`.
     #[instrument]
-    fn load_key(
-        &mut self,
-        key_id: &str,
-        config: Box<dyn ProviderConfig>,
-    ) -> Result<(), SecurityModuleError> {
-        let config = config.as_any().downcast_ref::<TpmConfig>().unwrap();
+    fn load_key(&mut self, key_id: &str, config: Box<dyn Any>) -> Result<(), SecurityModuleError> {
+        let config = config.downcast_ref::<TpmConfig>().unwrap();
 
         self.key_algo = Some(config.key_algorithm);
         self.sym_algo = Some(config.sym_algorithm);
@@ -304,13 +301,7 @@ impl Provider for TpmProvider {
     /// A `Result` that, on success, contains `Ok(())`, indicating that the module was initialized successfully.
     /// On failure, it returns a `SecurityModuleError`.
     #[instrument]
-    fn initialize_module(
-        &mut self,
-        key_algorithm: AsymmetricEncryption,
-        sym_algorithm: Option<BlockCiphers>,
-        hash: Option<Hash>,
-        key_usages: Vec<KeyUsage>,
-    ) -> Result<(), SecurityModuleError> {
+    fn initialize_module(&mut self) -> Result<(), SecurityModuleError> {
         let mut handle = NCRYPT_PROV_HANDLE::default();
 
         if unsafe { NCryptOpenStorageProvider(&mut handle, MS_PLATFORM_CRYPTO_PROVIDER, 0) }
@@ -318,12 +309,6 @@ impl Provider for TpmProvider {
         {
             return Err(TpmError::Win(windows::core::Error::from_win32()).into());
         }
-
-        self.handle = Some(handle);
-        self.key_algo = Some(key_algorithm);
-        self.sym_algo = sym_algorithm;
-        self.hash = hash;
-        self.key_usages = Some(key_usages);
 
         Ok(())
     }
