@@ -27,4 +27,4 @@ These are the requirements defined at the start of the project by Vulcan's Limes
 | 8. Implementation of the abstraction layer: The wrapper must enable all implementable functions of the abstraction layer | partially complete | Asymmetric Encryption and Key Usage are not implemented yet 
 | 9. Programming language: The wrapper is written in the Rust programming language. | Complete | 
 | 6. Maintainability: The code of the wrapper is documented so that any subsequent further development by other persons is possible. | Complete | 
-| 7. Documentation: Documentation is provided for the wrapper that describes installation, configuration and use. |  |
+| 7. Documentation: Documentation is provided for the wrapper that describes installation, configuration and use. | Complete |
