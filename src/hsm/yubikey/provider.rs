@@ -234,15 +234,13 @@ impl Provider for YubiKeyProvider {
                 let _ = yubikey.verify_pin(self.pin.as_ref());
                 let _ = yubikey.authenticate(MgmKey::new(self.management_key.unwrap()).unwrap());
                 let data = yubikey.fetch_object(SLOTSU32[i]);
-                let output: Vec<u8>;
+                let mut output: Vec<u8> = Vec::new();
                 match data {
                     Ok(data) => {
                         output = data.to_vec();
                     }
                     Err(err) => {
-                        return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
-                            err.to_string(),
-                        )))
+                        println!("Error: {:?}", err);
                     }
                 }
 
@@ -256,7 +254,8 @@ impl Provider for YubiKeyProvider {
                             break;
                         }
                     }
-                    Err(_) => {
+                    Err(e) => {
+                        println!("Error parsing slot data: {:?}", e);
                         continue;
                     }
                 }
@@ -424,14 +423,17 @@ fn get_free_slot(yubikey: &mut YubiKey) -> Result<RetiredSlotId, SecurityModuleE
     let mut counter = 0;
     for i in 10..20 {
         let data = yubikey.fetch_object(SLOTSU32[i]);
-        let output: Vec<u8>;
+        let mut output: Vec<u8> = Vec::new();
         match data {
             Ok(data) => {
                 output = data.to_vec();
             }
-            Err(_) => continue,
+            Err(err) => {
+                println!("Error: {:?}", err);
+            }
         }
         let data = output;
+        println!("{:?}", data);
         let parsed = parse_slot_data(&data);
         if !parsed.is_ok() {
             slot_id = SLOTS[i - 10];
@@ -485,28 +487,17 @@ fn get_reference_u32slot(slot: RetiredSlotId) -> u32 {
     output
 }
 
-/// Lists all slots on the YubiKey device.
-/// For further use
-/// # Arguments
-/// * `yubikey` - The YubiKey device to list the slots from.
-///
-/// # Returns
-/// A Vector, which contains the data from every used slot
-/// On failure, it returns a `SecurityModuleError`.
-///
 fn list_all_slots(yubikey: &mut YubiKey) -> Result<Vec<String>, SecurityModuleError> {
     let mut output: Vec<String> = Vec::new();
     for i in 10..20 {
         let data = yubikey.fetch_object(SLOTSU32[i]);
-        let temp_vec: Vec<u8>;
+        let mut temp_vec: Vec<u8> = Vec::new();
         match data {
             Ok(data) => {
                 temp_vec = data.to_vec();
             }
-            Err(_) => {
-                return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
-                    "No keys in slots found".to_string(),
-                )));
+            Err(err) => {
+                println!("Error: {:?}", err);
             }
         }
         let data = temp_vec;
@@ -518,10 +509,8 @@ fn list_all_slots(yubikey: &mut YubiKey) -> Result<Vec<String>, SecurityModuleEr
                 );
                 output.push(output_string);
             }
-            Err(err) => {
-                return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
-                    err.to_string(),
-                )));
+            Err(e) => {
+                println!("Error parsing slot data: {:?}", e);
             }
         }
     }
