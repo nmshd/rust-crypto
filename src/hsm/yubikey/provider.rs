@@ -291,27 +291,25 @@ impl Provider for YubiKeyProvider {
     #[instrument]
     fn initialize_module(&mut self) -> Result<(), SecurityModuleError> {
         let yubi = YubiKey::open().map_err(|_| Error::NotFound);
-        let mut yubikey: YubiKey;
         match yubi {
-            Ok(yubi) => {
-                yubikey = yubi;
-            }
-            Err(err) => {
-                return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
-                    err.to_string(),
-                )));
-            }
-        }
-        // Hier muesste die Pin Eingabe und die Managementkey Eingabe implementiert werden. Ist aktuell hardcoded.
-        self.pin = "123456".to_string();
-        self.management_key = Some(*MgmKey::default().as_ref());
+            Ok(mut yubikey) => {
+                // Hier muesste die Pin Eingabe und die Managementkey Eingabe implementiert werden. Ist aktuell hardcoded.
+                self.pin = "123456".to_string();
+                self.management_key = Some(*MgmKey::default().as_ref());
 
-        let verify = yubikey.verify_pin(self.pin.as_ref());
-        match verify {
-            Ok(_) => {
-                self.yubikey = Some(Arc::new(Mutex::new(yubikey)));
+                let verify = yubikey.verify_pin(self.pin.as_ref());
+                match verify {
+                    Ok(_) => {
+                        self.yubikey = Some(Arc::new(Mutex::new(yubikey)));
 
-                Ok(())
+                        Ok(())
+                    }
+                    Err(err) => {
+                        return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
+                            err.to_string(),
+                        )));
+                    }
+                }
             }
             Err(err) => {
                 return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
