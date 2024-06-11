@@ -344,6 +344,5 @@ fn apply_pkcs1v15_padding(data: &[u8], block_size: usize) -> Vec<u8> {
     }
     padded_data.push(0x00);
     padded_data.extend_from_slice(data);
-    //println!("{:?}", padded_data);
     padded_data
 }

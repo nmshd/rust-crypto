@@ -234,13 +234,13 @@ impl Provider for YubiKeyProvider {
                 let _ = yubikey.verify_pin(self.pin.as_ref());
                 let _ = yubikey.authenticate(MgmKey::new(self.management_key.unwrap()).unwrap());
                 let data = yubikey.fetch_object(SLOTSU32[i]);
-                let mut output: Vec<u8> = Vec::new();
+                let output: Vec<u8>;
                 match data {
                     Ok(data) => {
                         output = data.to_vec();
                     }
-                    Err(err) => {
-                        println!("Error: {:?}", err);
+                    Err(_) => {
+                        continue;
                     }
                 }
 
@@ -254,8 +254,7 @@ impl Provider for YubiKeyProvider {
                             break;
                         }
                     }
-                    Err(e) => {
-                        println!("Error parsing slot data: {:?}", e);
+                    Err(_) => {
                         continue;
                     }
                 }
@@ -423,17 +422,16 @@ fn get_free_slot(yubikey: &mut YubiKey) -> Result<RetiredSlotId, SecurityModuleE
     let mut counter = 0;
     for i in 10..20 {
         let data = yubikey.fetch_object(SLOTSU32[i]);
-        let mut output: Vec<u8> = Vec::new();
+        let output: Vec<u8>;
         match data {
             Ok(data) => {
                 output = data.to_vec();
             }
-            Err(err) => {
-                println!("Error: {:?}", err);
+            Err(_) => {
+                continue;
             }
         }
         let data = output;
-        println!("{:?}", data);
         let parsed = parse_slot_data(&data);
         if !parsed.is_ok() {
             slot_id = SLOTS[i - 10];
@@ -491,13 +489,13 @@ fn list_all_slots(yubikey: &mut YubiKey) -> Result<Vec<String>, SecurityModuleEr
     let mut output: Vec<String> = Vec::new();
     for i in 10..20 {
         let data = yubikey.fetch_object(SLOTSU32[i]);
-        let mut temp_vec: Vec<u8> = Vec::new();
+        let temp_vec: Vec<u8>;
         match data {
             Ok(data) => {
                 temp_vec = data.to_vec();
             }
-            Err(err) => {
-                println!("Error: {:?}", err);
+            Err(_) => {
+                continue;
             }
         }
         let data = temp_vec;
@@ -509,8 +507,8 @@ fn list_all_slots(yubikey: &mut YubiKey) -> Result<Vec<String>, SecurityModuleEr
                 );
                 output.push(output_string);
             }
-            Err(e) => {
-                println!("Error parsing slot data: {:?}", e);
+            Err(_) => {
+                continue;
             }
         }
     }
