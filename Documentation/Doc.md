@@ -417,8 +417,9 @@ This chapter is all about looking to the future and thinking about how to take t
 
 - Encryption and Decryption in Knox Vault is very slow. So creating derived keys for encryption and decryption outside of the security module will speed this process up immensely. The drawback however, this comes with security considerations.
 - Implementing some kind of attestation, if possible, so the enmeshed app knows its communicating with a security module, and which security module. (e.g. for our case the Google attestation service)
-- A method that lists and returns all the capabilities/supported algorithms the wrapper and security module provide.
-- a method that returns metadata about the loaded key like usages, algorithm, etc.
+- A method that lists and returns all the capabilities/supported algorithms the wrapper and security module provide and a method returning all stored key aliases.
+- A method that returns the public key of a key pair
+- A method that returns metadata about the loaded key like usages, algorithm, etc.
  
 </details>
 
