@@ -45,7 +45,7 @@
 /// // Pass the configuration to the HSM provider for initialization
 /// let provider = initialize_hsm_provider(config);
 /// ```
-use crate::common::crypto::{algorithms::encryption::AsymmetricEncryption, KeyUsage};
+use crate::common::crypto::algorithms::encryption::AsymmetricEncryption;
 use crate::common::traits::module_provider_config::ProviderConfig;
 
 /// The core functionality for hardware security module (HSM) providers.
@@ -87,8 +87,6 @@ impl HsmProviderConfig {
     /// A boxed trait object representing the HSM provider configuration.
     #[allow(clippy::new_ret_no_self)]
     pub fn new(key_algorithm: AsymmetricEncryption) -> Box<dyn Any> {
-        Box::new(Self {
-            key_algorithm,
-        })
+        Box::new(Self { key_algorithm })
     }
 }
