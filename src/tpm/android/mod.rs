@@ -10,9 +10,10 @@ use std::any::Any;
 use robusta_jni::jni::objects::JObject;
 use tracing::{debug, info, instrument};
 use utils::{
-    get_algorithm, get_cipher_mode, get_digest, get_key_size, get_padding, get_signature_algorithm,
-    get_signature_padding, get_sym_block_mode,
+    get_algorithm, get_cipher_mode, get_digest, get_iv_len, get_key_size, get_padding,
+    get_signature_algorithm, get_signature_padding, get_sym_block_mode, load_iv, store_iv,
 };
+use wrapper::key_generation::iv_parameter_spec::jni::IvParameterSpec;
 
 use crate::common::crypto::KeyUsage;
 use crate::common::error::SecurityModuleError;
@@ -386,17 +387,36 @@ impl KeyHandle for AndroidProvider {
         let key_store = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_owned()).err_internal()?;
         key_store.load(&env, None).err_internal()?;
 
-        let key = key_store
-            .getKey(&env, self.key_id.to_owned(), JObject::null())
-            .err_internal()?;
-
         let cipher = wrapper::key_store::cipher::jni::Cipher::getInstance(&env, cipher_mode)
             .err_internal()?;
-        cipher.init(&env, 2, key.raw.as_obj()).err_internal()?;
 
-        let decrypted = cipher
-            .doFinal(&env, encrypted_data.to_vec())
-            .err_internal()?;
+        let decrypted = match config.mode {
+            config::EncryptionMode::Sym(cipher_mode) => {
+                let key = key_store
+                    .getKey(&env, self.key_id.to_owned(), JObject::null())
+                    .err_internal()?;
+
+                let (data, iv) = load_iv(encrypted_data, get_iv_len(cipher_mode)?);
+                let iv_spec = IvParameterSpec::new(&env, &iv).err_internal()?;
+                cipher
+                    .init2(&env, 2, key, iv_spec.raw.as_obj())
+                    .err_internal()?;
+
+                cipher.doFinal(&env, data).err_internal()?
+            }
+            config::EncryptionMode::ASym { algo: _, digest: _ } => {
+                let key = key_store
+                    .getCertificate(&env, self.key_id.to_owned())
+                    .err_internal()?
+                    .getPublicKey(&env)
+                    .err_internal()?;
+                cipher.init(&env, 2, key.raw.as_obj()).err_internal()?;
+
+                cipher
+                    .doFinal(&env, encrypted_data.to_vec())
+                    .err_internal()?
+            }
+        };
 
         debug!("decrypted data: {:?}", decrypted);
         Ok(decrypted)
@@ -446,17 +466,12 @@ impl KeyHandle for AndroidProvider {
                 )
             })?;
 
+        info!("before getInstance");
+
         let key_store = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_owned()).err_internal()?;
+        info!("after getInstance");
         key_store.load(&env, None).err_internal()?;
-
-        let key = key_store
-            .getCertificate(&env, self.key_id.to_owned())
-            .err_internal()?
-            .getPublicKey(&env)
-            .err_internal()?;
-
-        let public_alg = key.getAlgorithm(&env).unwrap();
-        debug!("Public Alg: {}", public_alg);
+        info!("after load");
 
         let cipher = wrapper::key_store::cipher::jni::Cipher::getInstance(
             &env,
@@ -464,9 +479,27 @@ impl KeyHandle for AndroidProvider {
         )
         .err_internal()?;
 
-        cipher.init(&env, 1, key.raw.as_obj()).err_internal()?;
-
-        let encrypted = cipher.doFinal(&env, data.to_vec()).err_internal()?;
+        // symetric encryption needs an IV
+        let encrypted = match config.mode {
+            config::EncryptionMode::Sym(_) => {
+                let key = key_store
+                    .getKey(&env, self.key_id.to_owned(), JObject::null())
+                    .err_internal()?;
+                cipher.init(&env, 1, key.raw.as_obj()).err_internal()?;
+                let iv = cipher.getIV(&env).err_internal()?;
+                let encrypted = cipher.doFinal(&env, data.to_vec()).err_internal()?;
+                store_iv(encrypted, iv)
+            }
+            config::EncryptionMode::ASym { algo: _, digest: _ } => {
+                let key = key_store
+                    .getCertificate(&env, self.key_id.to_owned())
+                    .err_internal()?
+                    .getPublicKey(&env)
+                    .err_internal()?;
+                cipher.init(&env, 1, key.raw.as_obj()).err_internal()?;
+                cipher.doFinal(&env, data.to_vec()).err_internal()?
+            }
+        };
 
         debug!("encrypted: {:?}", encrypted);
         Ok(encrypted)

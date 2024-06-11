@@ -3,10 +3,11 @@ use crate::{
     common::{
         crypto::{algorithms::encryption::AsymmetricEncryption, KeyUsage},
         error::SecurityModuleError,
-        traits::{module_provider::Provider, module_provider_config::ProviderConfig},
+        traits::module_provider::Provider,
     },
     tpm::TpmConfig,
 };
+use std::any::Any;
 use std::sync::{Arc, Mutex};
 use tracing::instrument;
 use tss_esapi::{
@@ -50,9 +51,9 @@ impl Provider for TpmProvider {
     fn create_key(
         &mut self,
         key_id: &str,
-        config: Box<dyn ProviderConfig>,
+        config: Box<dyn Any>,
     ) -> Result<(), SecurityModuleError> {
-        let config = config.as_any().downcast_ref::<TpmConfig>().unwrap();
+        let config = config.downcast_ref::<TpmConfig>().unwrap();
 
         self.key_algorithm = Some(config.key_algorithm);
         self.sym_algorithm = Some(config.sym_algorithm);
@@ -193,12 +194,8 @@ impl Provider for TpmProvider {
     /// A `Result` that, on success, contains `Ok(())`, indicating that the key was loaded successfully.
     /// On failure, it returns a `SecurityModuleError`.
     #[instrument]
-    fn load_key(
-        &mut self,
-        key_id: &str,
-        config: Box<dyn ProviderConfig>,
-    ) -> Result<(), SecurityModuleError> {
-        let config = config.as_any().downcast_ref::<TpmConfig>().unwrap();
+    fn load_key(&mut self, key_id: &str, config: Box<dyn Any>) -> Result<(), SecurityModuleError> {
+        let config = config.downcast_ref::<TpmConfig>().unwrap();
 
         self.key_algorithm = Some(config.key_algorithm);
         self.sym_algorithm = Some(config.sym_algorithm);
@@ -334,18 +331,7 @@ impl Provider for TpmProvider {
     /// A `Result` that, on success, contains `Ok(())`, indicating that the module was initialized successfully.
     /// On failure, it returns a `SecurityModuleError`.
     #[instrument]
-    fn initialize_module(
-        &mut self,
-        key_algorithm: AsymmetricEncryption,
-        sym_algorithm: Option<BlockCiphers>,
-        hash: Option<Hash>,
-        key_usages: Vec<KeyUsage>,
-    ) -> Result<(), SecurityModuleError> {
-        self.key_algorithm = Some(key_algorithm);
-        self.sym_algorithm = sym_algorithm;
-        self.hash = hash;
-        self.key_usages = Some(key_usages);
-
+    fn initialize_module(&mut self) -> Result<(), SecurityModuleError> {
         let tcti = TctiNameConf::from_environment_variable().unwrap();
 
         let context = Context::new(tcti)
