@@ -234,14 +234,12 @@ impl Provider for YubiKeyProvider {
                 let _ = yubikey.verify_pin(self.pin.as_ref());
                 let _ = yubikey.authenticate(MgmKey::new(self.management_key.unwrap()).unwrap());
                 let data = yubikey.fetch_object(SLOTSU32[i]);
-                let output: Vec<u8>;
+                let mut output: Vec<u8> = Vec::new();
                 match data {
                     Ok(data) => {
                         output = data.to_vec();
                     }
-                    Err(_) => {
-                        continue;
-                    }
+                    Err(_) => {}
                 }
 
                 let data = output;
@@ -291,25 +289,27 @@ impl Provider for YubiKeyProvider {
     #[instrument]
     fn initialize_module(&mut self) -> Result<(), SecurityModuleError> {
         let yubi = YubiKey::open().map_err(|_| Error::NotFound);
+        let mut yubikey: YubiKey;
         match yubi {
-            Ok(mut yubikey) => {
-                // Hier muesste die Pin Eingabe und die Managementkey Eingabe implementiert werden. Ist aktuell hardcoded.
-                self.pin = "123456".to_string();
-                self.management_key = Some(*MgmKey::default().as_ref());
+            Ok(yubi) => {
+                yubikey = yubi;
+            }
+            Err(err) => {
+                return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
+                    err.to_string(),
+                )));
+            }
+        }
+        // Hier muesste die Pin Eingabe und die Managementkey Eingabe implementiert werden. Ist aktuell hardcoded.
+        self.pin = "123456".to_string();
+        self.management_key = Some(*MgmKey::default().as_ref());
 
-                let verify = yubikey.verify_pin(self.pin.as_ref());
-                match verify {
-                    Ok(_) => {
-                        self.yubikey = Some(Arc::new(Mutex::new(yubikey)));
+        let verify = yubikey.verify_pin(self.pin.as_ref());
+        match verify {
+            Ok(_) => {
+                self.yubikey = Some(Arc::new(Mutex::new(yubikey)));
 
-                        Ok(())
-                    }
-                    Err(err) => {
-                        return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
-                            err.to_string(),
-                        )));
-                    }
-                }
+                Ok(())
             }
             Err(err) => {
                 return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
@@ -420,14 +420,12 @@ fn get_free_slot(yubikey: &mut YubiKey) -> Result<RetiredSlotId, SecurityModuleE
     let mut counter = 0;
     for i in 10..20 {
         let data = yubikey.fetch_object(SLOTSU32[i]);
-        let output: Vec<u8>;
+        let mut output: Vec<u8> = Vec::new();
         match data {
             Ok(data) => {
                 output = data.to_vec();
             }
-            Err(_) => {
-                continue;
-            }
+            Err(_) => {}
         }
         let data = output;
         let parsed = parse_slot_data(&data);
@@ -487,14 +485,12 @@ fn list_all_slots(yubikey: &mut YubiKey) -> Result<Vec<String>, SecurityModuleEr
     let mut output: Vec<String> = Vec::new();
     for i in 10..20 {
         let data = yubikey.fetch_object(SLOTSU32[i]);
-        let temp_vec: Vec<u8>;
+        let mut temp_vec: Vec<u8> = Vec::new();
         match data {
             Ok(data) => {
                 temp_vec = data.to_vec();
             }
-            Err(_) => {
-                continue;
-            }
+            Err(_) => {}
         }
         let data = temp_vec;
         match parse_slot_data(&data) {
@@ -505,9 +501,7 @@ fn list_all_slots(yubikey: &mut YubiKey) -> Result<Vec<String>, SecurityModuleEr
                 );
                 output.push(output_string);
             }
-            Err(_) => {
-                continue;
-            }
+            Err(_) => {}
         }
     }
     Ok(output)
