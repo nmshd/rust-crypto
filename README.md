@@ -17,20 +17,24 @@ Then you need to clone this directory and run the following commands:
     ```bash
     cd path/to/the/project
     ```
-3. **To execute the `provider_handle_tests`, run the following command:**
+3. **Add `default = ["nks"]` to the `features` section in your `Cargo.toml` file. This will enable the `nks` feature by default when you run your tests.**
+    ```toml
+    [features]
+    default = ["nks"]
+    ```
+4. **To execute the `provider_handle_tests`, run the following command:**
     ```bash
     cargo test --features hcvault tests::nks::provider_handle_tests -- --nocapture --test-threads=1
     ```
-4. **After the `provider_handle_tests` have finished running, you can execute the `key_handle_tests` with the following command:**
+5. **After the `provider_handle_tests` have finished running, you can execute the `key_handle_tests` with the following command:**
     ```bash
     cargo test --features hcvault tests::nks::key_handle_tests -- --nocapture --test-threads=1
     ```
-5. **Please note that the `--nocapture` flag is used to display any print statements in the console, and `--test-threads=1` is used to run the tests sequentially.**
+6. **Please note that the `--nocapture` flag is used to display any print statements in the console, and `--test-threads=1` is used to run the tests sequentially.**
 
 Please also note that with every execution of a provider_handle_test, a token.json is being created in the root directory of the project.
 This file is used to store the token for the Hashicorp Vault server.
 It is recommended to delete this file after the tests have been executed because otherwise keys will not be created because keys with the given names already exist.
-
 ## Features
 
 - **Encryption Algorithms**: Supports a variety of encryption algorithms, including:
