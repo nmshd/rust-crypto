@@ -23,7 +23,6 @@ debug = false
 strip = "symbols"
 
 [features]
-default = ["nks"]
 nks = []
 android = []
 debug = []
