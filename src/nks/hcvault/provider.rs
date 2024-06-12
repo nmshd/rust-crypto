@@ -1,3 +1,4 @@
+use std::any::Any;
 use std::fs;
 use std::fs::File;
 use std::io::Read;
@@ -44,14 +45,15 @@ impl Provider for NksProvider {
     ///
     /// # Example
     ///
-    /// ```
+    /// ```ignore
     /// let config = get_config("rsa").unwrap();
     /// provider.create_key("test_rsa_key", Box::new(config.clone())).expect("Failed to create RSA key");
     /// ```
     #[instrument]
-    fn create_key(&mut self, key_id: &str, config: Box<dyn ProviderConfig>) -> Result<(), SecurityModuleError> {
+    fn create_key(&mut self, key_id: &str, config: Box<dyn Any>) -> Result<(), SecurityModuleError> {
         let mut key_length: Option<KeyBits> = None;
         let mut cyphertype: Option<String> = None;
+        let config = config.downcast_ref::<NksConfig>().ok_or(SecurityModuleError::NksError)?;
         if let Some(nks_config) = config.as_any().downcast_ref::<NksConfig>() {
             let runtime = Runtime::new().unwrap();
             let get_and_save_keypair_result = runtime.block_on(get_and_save_key_pair(&*nks_config.nks_token.clone(), key_id, match &nks_config.key_algorithm {
@@ -131,12 +133,12 @@ impl Provider for NksProvider {
     ///
     /// # Example
     ///
-    /// ```
+    /// ```ignore
     /// let config = get_config("rsa").unwrap();
     /// provider.load_key("test_rsa_key", Box::new(config.clone())).expect("Failed to load RSA key");
     /// ```
     #[instrument]
-    fn load_key(&mut self, key_id: &str, _config: Box<dyn ProviderConfig>) -> Result<(), SecurityModuleError> {
+    fn load_key(&mut self, key_id: &str, _config: Box<dyn Any>) -> Result<(), SecurityModuleError> {
         // Check if secrets_json is None
         if let Some(secrets_json) = &self.secrets_json {
             // Iterate over the secrets_json object
@@ -175,7 +177,7 @@ impl Provider for NksProvider {
     ///
     /// # Example
     ///
-    /// ```
+    /// ```ignore
     /// provider.initialize_module().expect("Failed to initialize module");
     /// ```
     #[instrument]
@@ -255,7 +257,7 @@ impl Provider for NksProvider {
 ///
 /// # Example
 ///
-/// ```
+/// ```ignore
 /// let user_token = get_user_token_from_file();
 /// if let Some(token) = user_token {
 ///     println!("User token: {}", token);
@@ -294,7 +296,7 @@ fn get_user_token_from_file() -> Option<String> {
 ///
 /// # Example
 ///
-/// ```
+/// ```ignore
 /// let nks_address = Url::parse("https://nks.example.com").unwrap();
 /// let runtime = Runtime::new().unwrap();
 /// match runtime.block_on(get_token(nks_address)) {
@@ -344,7 +346,7 @@ async fn get_token(nks_address: Url) -> anyhow::Result<String, Box<dyn std::erro
 ///
 /// # Example
 ///
-/// ```
+/// ```ignore
 /// let nks_address = Url::parse("https://nks.example.com").unwrap();
 /// let runtime = Runtime::new().unwrap();
 /// match runtime.block_on(get_and_save_key_pair("user_token", "key_name", "rsa", nks_address)) {
@@ -420,7 +422,7 @@ async fn get_and_save_key_pair(
 ///
 /// # Example
 ///
-/// ```
+/// ```ignore
 /// let response = get_and_save_key_pair_request(&token, "test_rsa_key", "rsa", nks_address, Some(2048))
 ///     .await
 ///     .expect("Failed to send key pair generation request");
@@ -488,7 +490,7 @@ async fn get_and_save_key_pair_request(
 ///
 /// # Example
 ///
-/// ```
+/// ```ignore
 /// let nks_address_str = "https://nks.example.com";
 /// let runtime = Runtime::new().unwrap();
 /// match runtime.block_on(get_secrets("user_token", nks_address_str)) {

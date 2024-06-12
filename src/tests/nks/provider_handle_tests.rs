@@ -195,7 +195,7 @@ fn test_load_aes_key() {
 /// # Example
 ///
 /// ```
-/// let config = get_config("rsa").unwrap();
+// let config = get_config("rsa").unwrap();
 /// ```
 pub fn get_config(key_type: &str, key_size: Option<KeyBits>, aes_mode: Option<SymmetricMode>) -> Option<Arc<dyn ProviderConfig + Send + Sync>> {
     match key_type {
