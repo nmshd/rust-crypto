@@ -21,3 +21,8 @@ pub enum EncryptionMode {
         digest: Hash,
     },
 }
+
+pub struct Capability {
+    pub name: &'static str,
+    pub mode: EncryptionMode,
+}

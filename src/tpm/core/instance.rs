@@ -3,7 +3,7 @@ use crate::tpm::linux::TpmProvider;
 #[cfg(feature = "win")]
 use crate::tpm::win::TpmProvider as WinTpmProvider;
 use crate::{
-    common::{crypto::EncryptionMode, traits::module_provider::Provider},
+    common::{crypto::Capability, traits::module_provider::Provider},
     tpm::android::AndroidProvider,
 };
 use std::sync::{Arc, Mutex};
@@ -138,7 +138,7 @@ impl TpmInstance {
         }
     }
 
-    pub fn get_capabilities(tpm_type: TpmType) -> Vec<EncryptionMode> {
+    pub fn get_capabilities(tpm_type: TpmType) -> Vec<Capability> {
         match tpm_type {
             #[cfg(feature = "win")]
             TpmType::Windows => todo!(),

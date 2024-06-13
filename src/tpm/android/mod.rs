@@ -17,7 +17,7 @@ use utils::{
 };
 use wrapper::key_generation::iv_parameter_spec::jni::IvParameterSpec;
 
-use crate::common::crypto::{EncryptionMode, KeyUsage};
+use crate::common::crypto::{Capability, EncryptionMode, KeyUsage};
 use crate::common::error::SecurityModuleError;
 use crate::common::traits::key_handle::KeyHandle;
 use crate::common::{
@@ -70,7 +70,7 @@ impl AndroidProvider {
         Ok(())
     }
 
-    pub fn get_capabilities() -> Vec<EncryptionMode> {
+    pub fn get_capabilities() -> Vec<Capability> {
         get_capabilities()
     }
 }

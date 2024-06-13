@@ -1,4 +1,4 @@
-use crate::common::crypto::EncryptionMode;
+use crate::common::crypto::Capability;
 use crate::common::traits::module_provider::Provider;
 use std::sync::{Arc, Mutex};
 
@@ -100,7 +100,7 @@ impl HsmInstance {
         }
     }
 
-    pub fn get_capabilities(hsm_type: HsmType) -> Vec<EncryptionMode> {
+    pub fn get_capabilities(hsm_type: HsmType) -> Vec<Capability> {
         match hsm_type {
             HsmType::YubiKey => todo!(),
             HsmType::NitroKey => todo!(),

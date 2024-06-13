@@ -1,5 +1,5 @@
 use super::{
-    crypto::EncryptionMode,
+    crypto::Capability,
     traits::{log_config::LogConfig, module_provider::Provider},
 };
 #[cfg(feature = "hsm")]
@@ -101,7 +101,7 @@ impl SecModules {
         instances.get(&module).cloned()
     }
 
-    pub fn get_capabilities(module: SecurityModule) -> Vec<EncryptionMode> {
+    pub fn get_capabilities(module: SecurityModule) -> Vec<Capability> {
         match module {
             #[cfg(feature = "hsm")]
             SecurityModule::Hsm(hsm_type) => HsmInstance::get_capabilities(hsm_type),
