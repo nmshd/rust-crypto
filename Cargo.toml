@@ -23,7 +23,7 @@ debug = false
 strip = "symbols"
 
 [features]
-nks = ["core", "x25519-dalek"]
+nks = ["core", "x25519-dalek", "hcvault"]
 android = ["robusta_jni", "libloading", "tracing-android", "x25519-dalek"]
 debug = []
 hsm = []
