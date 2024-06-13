@@ -33,7 +33,7 @@ import CryptoKit
             ]
             params = [
                 kSecAttrKeyType as String: algorithm,
-                kSecAttrKeySizeInBits as String: key_size,
+                kSecAttrKeySizeInBits as String: 256,
                 kSecAttrTokenID as String: kSecAttrTokenIDSecureEnclave,
                 kSecPrivateKeyAttrs as String: privateKeyParams
             ]
@@ -87,15 +87,6 @@ import CryptoKit
     - Returns: A 'SecAccessControl' configured for private key usage.
     */
     func create_access_control_object() -> SecAccessControl {
-        if #available(macOS 10.13.4, *) {
-            let access = SecAccessControlCreateWithFlags(
-                kCFAllocatorDefault,
-                kSecAttrAccessibleWhenUnlockedThisDeviceOnly, 
-                .biometryAny,
-                nil)!
-            
-            return access
-        } else {
             let access = SecAccessControlCreateWithFlags(
                 kCFAllocatorDefault,
                 kSecAttrAccessibleWhenUnlockedThisDeviceOnly, 
@@ -103,7 +94,6 @@ import CryptoKit
                 nil)!
             
             return access
-        }
     }
     
     
@@ -258,7 +248,7 @@ import CryptoKit
             let signed_data = try ((sign_data(data: data_cfdata, privateKeyReference: privateKeyReference, algorithm: seckey_algorithm_enum))! as Data) 
             return signed_data.base64EncodedString(options: [])
         }catch{
-            return "Error: \(String(describing: error))"
+            return "Error:  \(String(describing: error))"
         }
     }
     
@@ -483,6 +473,9 @@ import CryptoKit
         switch key_type{
             case "RSA": 
                 return kSecAttrKeyTypeRSA
+            // According documentation of Apple, kSecAttrKeyTypeECDSA is deprecated. Suggesting to use kSecAttrKeyTypeECSECPrimeRandom instead.
+            case "ECDSA": 
+                return kSecAttrKeyTypeECSECPrimeRandom 
             default:
                 throw SecureEnclaveError.CreateKeyError("Key Algorithm is not supported.)")
         }
@@ -510,11 +503,26 @@ import CryptoKit
                 case "SHA384":
                     apple_algorithm_enum = SecKeyAlgorithm.rsaSignatureMessagePSSSHA384
                 default: 
-                    throw SecureEnclaveError.SigningError("Hash for Signing is not supported.)")
+                    throw SecureEnclaveError.SigningError("Hash for asymmetric signing with RSA is not supported.)")
             }
             return apple_algorithm_enum
-        }else{
-            throw SecureEnclaveError.EncryptionError("Algorithm for Encryption/Decryption not supported.)")
+        }else if algorithm == "ECDSA"{
+            switch hash {
+                case "SHA1": 
+                    apple_algorithm_enum = SecKeyAlgorithm.ecdsaSignatureMessageX962SHA1
+                case "SHA224": 
+                    apple_algorithm_enum = SecKeyAlgorithm.ecdsaSignatureMessageX962SHA224
+                case "SHA256": 
+                    apple_algorithm_enum = SecKeyAlgorithm.ecdsaSignatureMessageX962SHA256
+                case "SHA384":
+                    apple_algorithm_enum = SecKeyAlgorithm.ecdsaSignatureMessageX962SHA384
+                default: 
+                    throw SecureEnclaveError.SigningError("Hash for asymmetric signing with ECDSA is not supported.)")
+            }
+            return apple_algorithm_enum
+        }
+        else{
+            throw SecureEnclaveError.SigningError("Algorithm for Encryption/Decryption not supported. Only RSA or ECDSA)")
         }
     }
 

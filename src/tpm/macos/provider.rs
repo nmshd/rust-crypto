@@ -2,7 +2,7 @@ use super::{SecureEnclaveConfig, SecureEnclaveProvider};
 extern crate apple_secure_enclave_bindings;
 use crate::
     common::{
-        crypto::algorithms::{encryption::AsymmetricEncryption, hashes::Hash, KeyBits},
+        crypto::algorithms::{encryption::{AsymmetricEncryption, EccCurves, EccSchemeAlgorithm}, hashes::Hash, KeyBits},
         error::SecurityModuleError,
         traits::module_provider::Provider,
     };
@@ -54,7 +54,19 @@ impl Provider for SecureEnclaveProvider {
                         _ => unimplemented!("With RSA only Keysize of 512 and 1024 are supported"),
                     }
                 }
-                _ => unimplemented!("Only RSA supported"),
+                AsymmetricEncryption::Ecc(ecc_scheme_algo) => {
+                    match ecc_scheme_algo {
+                        EccSchemeAlgorithm::EcDsa(ecc_curve) => {
+                            match ecc_curve{
+                                EccCurves::P256 => "ECDSA;256".to_string(),
+                                EccCurves::P384 => "ECDSA;384".to_string(),
+                                // EccCurves::P521 => "ECDSA;521".to_string(), Not supported by Secure Enclave
+                                _ => {return Err(CreateKeyError("Ecc-Curve is not supported. Only P256 and P384 are supported.".to_string()))}
+                            }
+                        }
+                        _ => {return Err(CreateKeyError("Algorithm is not supported".to_string()))} 
+                    }
+                }
             };
 
             // Debug TODO
@@ -151,8 +163,9 @@ impl Provider for SecureEnclaveProvider {
 pub fn convert_algorithms(config: SecureEnclaveConfig) -> String {
     let asym_algorithm_type = match config.asym_algorithm.expect("Invalid config") {
         // Is only Asymmetric-Algorithm which is working at that time
-        AsymmetricEncryption::Rsa(_) => "RSA".to_string(), 
-        _ => unimplemented!("Only RSA supported") ,
+        AsymmetricEncryption::Rsa(_) => "RSA".to_string(),
+        AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(_)) => "ECDSA".to_string(), 
+        _ => unimplemented!("Only RSA and ECDSA supported") ,
     };
     //Debug TODO
     println!("Converted Algo: {}", asym_algorithm_type); 
