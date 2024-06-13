@@ -2,12 +2,16 @@ use tracing::Level;
 use tracing_appender::rolling;
 use tracing_subscriber::FmtSubscriber;
 
+#[cfg(feature = "tpm")]
+use crate::tpm::core::instance::TpmType;
+#[cfg(feature = "tpm")]
+use crate::tpm::linux::TpmProvider;
 use crate::{
     common::{
         factory::SecurityModule,
         traits::{log_config::LogConfig, module_provider::Provider},
     },
-    tpm::core::instance::TpmType,
+    // tpm::core::instance::TpmType,
     SecModules,
 };
 use std::sync::{Arc, Mutex};
@@ -59,7 +63,14 @@ fn setup_security_module(module: SecurityModule) -> Arc<Mutex<dyn Provider>> {
             )
             .unwrap(),
             TpmType::None => unimplemented!(),
+            _ => unimplemented!(),
         },
-        // _ => unimplemented!(),
+        #[cfg(feature = "nks")]
+        SecurityModule::Nks => SecModules::get_instance(
+            "test_key".to_owned(),
+            SecurityModule::Nks,
+            Some(log),
+        )
+            .unwrap(), // Add this line to handle all other cases
     }
 }

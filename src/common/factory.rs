@@ -24,6 +24,9 @@ pub enum SecurityModule {
     Hsm(HsmType),
     #[cfg(feature = "tpm")]
     Tpm(TpmType),
+    #[cfg(feature = "nks")]
+    Nks,
+
 }
 
 /// Provides conversion from a string slice to a `SecurityModule` variant.
@@ -133,6 +136,8 @@ impl SecModule {
             #[cfg(feature = "tpm")]
             SecurityModule::Tpm(tpm_type) => Some(TpmInstance::create_instance(key_id, tpm_type)),
             // _ => unimplemented!(),
+            #[cfg(feature = "nks")]
+            SecurityModule::Nks => Some(Arc::new(Mutex::new(crate::nks::hcvault::NksProvider::new(key_id)))),
         }
     }
 }
