@@ -287,7 +287,7 @@ impl KeyHandle for AndroidProvider {
     /// # Returns
     ///
     /// Returns a `Result` containing the signed data as a `Vec<u8>` if successful, or a `SecurityModuleError` if an error occurs.
-    #[instrument]
+    #[instrument(skip(data))]
     fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         // check that signing is allowed
         let config = self
@@ -360,7 +360,7 @@ impl KeyHandle for AndroidProvider {
     /// # Returns
     ///
     /// Returns a `Result` containing the decrypted data as a `Vec<u8>` if successful, or a `SecurityModuleError` if an error occurs.
-    #[instrument]
+    #[instrument(skip(encrypted_data))]
     fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         info!("decrypting data");
 
@@ -442,7 +442,7 @@ impl KeyHandle for AndroidProvider {
     /// # Returns
     ///
     /// Returns a `Result` containing the encrypted data as a `Vec<u8>` if successful, or a `SecurityModuleError` if an error occurs.
-    #[instrument]
+    #[instrument(skip(data))]
     fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         info!("encrypting");
 
@@ -529,7 +529,7 @@ impl KeyHandle for AndroidProvider {
     /// # Returns
     ///
     /// Returns a `Result` containing `true` if the signature is valid, `false` otherwise, or a `SecurityModuleError` if an error occurs.
-    #[instrument]
+    #[instrument(skip(data, signature))]
     fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, SecurityModuleError> {
         info!("verifiying");
 
