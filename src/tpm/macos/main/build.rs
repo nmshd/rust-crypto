@@ -9,7 +9,7 @@ fn main() {
     swift_bridge_build::parse_bridges(bridge_files)
         .write_all_concatenated(swift_bridge_out_dir(), "rust-calls-swift");
 
-    // 2. Compile Swift library
+    // 2. Compile Swift library and set name for linking library
     compile_swift(ios);
 
     println!(
@@ -48,7 +48,6 @@ fn main() {
     }
     
     println!("cargo:rustc-link-search={}", "/usr/lib/swift");
-    println!("Hello World"); 
 }
 
 fn compile_swift(ios: bool) {

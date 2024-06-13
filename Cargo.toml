@@ -6,7 +6,7 @@ license = "MIT"
 crate-type = ["staticlib"]
 
 [lib]
-crate-type = ["cdylib", "lib"] #TODO: "lib" muss vor dem PR entfernt werden. 
+crate-type = ["cdylib", "lib"]
 
 [profile.dev]
 debug-assertions = true
@@ -51,7 +51,6 @@ tracing-subscriber = "0.3.18"
 tracing-appender = "0.2.3"
 yubikey = { version = "0.8.0", optional = true }
 apple-secure-enclave-bindings = {edition = "2021", version = "0.1.0", path="./src/tpm/macos/main", name="main"}
-security-framework = {version="2.11.0", features=["OSX_10_12"]}
 regex = "1.10.4"
 
 

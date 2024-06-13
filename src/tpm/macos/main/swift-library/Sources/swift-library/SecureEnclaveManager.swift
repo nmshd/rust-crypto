@@ -25,7 +25,7 @@ import CryptoKit
                     kSecAttrAccessControl as String: accessControl,
                 ]
             ]
-        }else{ // Symmetric + Asymmetric Encryption running on the Secure Enclave
+        }else{
             let privateKeyParams: [String: Any] = [
                 kSecAttrLabel as String: key_id,
                 kSecAttrIsPermanent as String: true,
@@ -33,7 +33,7 @@ import CryptoKit
             ]
             params = [
                 kSecAttrKeyType as String: algorithm,
-                kSecAttrKeySizeInBits as String: 256,
+                kSecAttrKeySizeInBits as String: key_size,
                 kSecAttrTokenID as String: kSecAttrTokenIDSecureEnclave,
                 kSecPrivateKeyAttrs as String: privateKeyParams
             ]
@@ -53,7 +53,7 @@ import CryptoKit
         do{
             try storeKey_Keychain(key_id, privateKeyReference)
         }catch{
-            // TODO: Programm stürzt ab
+            // TODO: Program is crashing
             throw SecureEnclaveError.CreateKeyError("The key could not be stored successfully into the keychain. \(String(describing: error))")
         }
         return keyPair
@@ -425,8 +425,6 @@ import CryptoKit
     */
     func initialize_module() -> Bool  {
         if #available(macOS 10.15, *) {
-            //Debug TODO
-            // print("MacOS 10.15 and higher")
             do{
                 guard SecureEnclave.isAvailable else {
                     throw SecureEnclaveError.runtimeError("Secure Enclave is unavailable on this device. ")
@@ -436,8 +434,6 @@ import CryptoKit
                 return false
             }
         } else {
-            //Debug TODO
-            // print("Not MacOS 10.15")
             return true
         }
     }

@@ -69,16 +69,11 @@ impl Provider for SecureEnclaveProvider {
                 }
             };
 
-            // Debug TODO
-            println!("Algorithm {}", key_algorithm_type); 
-
             let keypair = apple_secure_enclave_bindings::provider::rust_crypto_call_create_key(self.key_id.clone(), key_algorithm_type);
 
             if Regex::new("(?i)error").unwrap().is_match(keypair.as_str()) {
                 Err(SecurityModuleError::CreateKeyError(keypair.to_string()))
             } else {
-                //Debug TODO
-                println!("\nGenerated KeyPair:\n{}", keypair);
                 Ok(())
             }
         }else{
@@ -167,8 +162,6 @@ pub fn convert_algorithms(config: SecureEnclaveConfig) -> String {
         AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(_)) => "ECDSA".to_string(), 
         _ => unimplemented!("Only RSA and ECDSA supported") ,
     };
-    //Debug TODO
-    println!("Converted Algo: {}", asym_algorithm_type); 
 
     asym_algorithm_type
 }
