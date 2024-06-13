@@ -9,7 +9,7 @@ use crate::
 use regex::Regex;
 use crate::common::crypto::algorithms::hashes::*; 
 use std::any::Any;
-use crate::common::error::SecurityModuleError::CreateKeyError; 
+use crate::common::error::SecurityModuleError::InitializationError; 
 use tracing::instrument;
 
 
@@ -61,10 +61,10 @@ impl Provider for SecureEnclaveProvider {
                                 EccCurves::P256 => "ECDSA;256".to_string(),
                                 EccCurves::P384 => "ECDSA;384".to_string(),
                                 // EccCurves::P521 => "ECDSA;521".to_string(), Not supported by Secure Enclave
-                                _ => {return Err(CreateKeyError("Ecc-Curve is not supported. Only P256 and P384 are supported.".to_string()))}
+                                _ => {return Err(InitializationError("Ecc-Curve is not supported. Only P256 and P384 are supported.".to_string()))}
                             }
                         }
-                        _ => {return Err(CreateKeyError("Algorithm is not supported".to_string()))} 
+                        _ => {return Err(InitializationError("Algorithm is not supported".to_string()))} 
                     }
                 }
             };
@@ -72,12 +72,12 @@ impl Provider for SecureEnclaveProvider {
             let keypair = apple_secure_enclave_bindings::provider::rust_crypto_call_create_key(self.key_id.clone(), key_algorithm_type);
 
             if Regex::new("(?i)error").unwrap().is_match(keypair.as_str()) {
-                Err(SecurityModuleError::CreateKeyError(keypair.to_string()))
+                Err(SecurityModuleError::InitializationError(keypair.to_string()))
             } else {
                 Ok(())
             }
         }else{
-            return Err(CreateKeyError("Algorithm is not supported".to_string()))
+            return Err(InitializationError("Algorithm is not supported".to_string()))
         }
         
     }

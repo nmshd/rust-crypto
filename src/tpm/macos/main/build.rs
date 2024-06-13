@@ -52,7 +52,7 @@ fn main() {
 
 fn compile_swift(ios: bool) {
     let swift_package_dir = manifest_dir().join("swift-library");
-    let mut cmd = Command::new(""); 
+    let mut cmd; 
     if ios{
         cmd = Command::new("swiftc");
         cmd.current_dir(swift_package_dir)
