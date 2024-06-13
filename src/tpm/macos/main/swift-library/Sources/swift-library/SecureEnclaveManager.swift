@@ -12,28 +12,28 @@ import CryptoKit
     - Throws: 'SecureEnclaveError.CreateKeyError' if a new public-private key pair could not be generated.
     - Returns: A 'SEKeyPair' containing the public and private key on success, or a 'SecureEnclaveError' on failure.
     */
-    func create_key(keyID: String, algorithm: CFString, keySize: String ) throws -> SEKeyPair? {
-        let accessControl = createAccessControlObject()
+    func create_key(key_id: String, algorithm: CFString, key_size: String ) throws -> SEKeyPair? {
+        let accessControl = create_access_control_object()
         let params: [String: Any]; 
         if algorithm == kSecAttrKeyTypeRSA{ // Asymmetric Encryption
             params =
                 [kSecAttrKeyType as String:           algorithm,
-                kSecAttrKeySizeInBits as String:      keySize,
+                kSecAttrKeySizeInBits as String:      key_size,
                 kSecPrivateKeyAttrs as String:        [
                     kSecAttrIsPermanent as String:    false,
-                    kSecAttrApplicationTag as String: keyID,
+                    kSecAttrApplicationTag as String: key_id,
                     kSecAttrAccessControl as String: accessControl,
                 ]
             ]
         }else{ // Symmetric + Asymmetric Encryption running on the Secure Enclave
             let privateKeyParams: [String: Any] = [
-                kSecAttrLabel as String: keyID,
+                kSecAttrLabel as String: key_id,
                 kSecAttrIsPermanent as String: true,
                 kSecAttrAccessControl as String: accessControl,
             ]
             params = [
                 kSecAttrKeyType as String: algorithm,
-                kSecAttrKeySizeInBits as String: keySize,
+                kSecAttrKeySizeInBits as String: key_size,
                 kSecAttrTokenID as String: kSecAttrTokenIDSecureEnclave,
                 kSecPrivateKeyAttrs as String: privateKeyParams
             ]
@@ -44,14 +44,14 @@ import CryptoKit
             throw SecureEnclaveError.CreateKeyError("A new public-private key pair could not be generated. \(String(describing: error))")
         }
         
-        guard let publicKey = getPublicKeyFromPrivateKey(privateKey: privateKeyReference) else {
+        guard let publicKey = get_public_key_from_private_key(private_key: privateKeyReference) else {
             throw SecureEnclaveError.CreateKeyError("Public key could not be received from the private key. \(String(describing: error))")
         }
         
         let keyPair = SEKeyPair(publicKey: publicKey, privateKey: privateKeyReference)
         
         do{
-            try storeKey_Keychain(keyID, privateKeyReference)
+            try storeKey_Keychain(key_id, privateKeyReference)
         }catch{
             // TODO: Programm stürzt ab
             throw SecureEnclaveError.CreateKeyError("The key could not be stored successfully into the keychain. \(String(describing: error))")
@@ -69,11 +69,11 @@ import CryptoKit
     */
     func rustcall_create_key(key_id: RustString, key_type: RustString) -> String {
         // For Secure Enclave is only ECC supported
-        let algo = String(key_type.toString().split(separator: ";")[0])
+        let algorithm = String(key_type.toString().split(separator: ";")[0])
         let keySize = String(key_type.toString().split(separator:";")[1])
         do{
-            let algorithm = try get_key_type(key_type: algo);
-            let keyPair = try create_key(keyID: key_id.toString(), algorithm: algorithm, keySize: keySize)
+            let algorithm = try get_key_type(key_type: algorithm);
+            let keyPair = try create_key(key_id: key_id.toString(), algorithm: algorithm, key_size: keySize)
             return ("Private Key: "+String((keyPair?.privateKey.hashValue)!) + "\nPublic Key: " + String((keyPair?.publicKey.hashValue)!))
         }catch{
             return ("Error: \(String(describing: error))")
@@ -86,7 +86,7 @@ import CryptoKit
      
     - Returns: A 'SecAccessControl' configured for private key usage.
     */
-    func createAccessControlObject() -> SecAccessControl {
+    func create_access_control_object() -> SecAccessControl {
         if #available(macOS 10.13.4, *) {
             let access = SecAccessControlCreateWithFlags(
                 kCFAllocatorDefault,
@@ -116,10 +116,10 @@ import CryptoKit
     - Throws: 'SecureEnclaveError.EncryptionError' if the data could not be encrypted.
     - Returns: Data that has been encrypted.
     */
-    func encrypt_data(data: Data, publicKeyName: SecKey, algorithm: SecKeyAlgorithm) throws -> Data {
+    func encrypt_data(data: Data, public_key_name: SecKey, algorithm: SecKeyAlgorithm) throws -> Data {
         let algorithm = algorithm
         var error: Unmanaged<CFError>?
-        let result = SecKeyCreateEncryptedData(publicKeyName, algorithm, data as CFData, &error)
+        let result = SecKeyCreateEncryptedData(public_key_name, algorithm, data as CFData, &error)
         
         if result == nil {
             throw SecureEnclaveError.EncryptionError("Data could not be encrypted. \(String(describing: error))")
@@ -141,10 +141,10 @@ import CryptoKit
     func rustcall_encrypt_data(key_id: RustString, data: RustString, algorithm: RustString, hash: RustString) -> String {
         do{
             let key_type = try get_key_type(key_type: algorithm.toString())
-            let privateKey: SecKey = try load_key(key_id: key_id.toString(), algo: key_type)!
-            let publicKey = getPublicKeyFromPrivateKey(privateKey: privateKey)
+            let privateKey: SecKey = try load_key(key_id: key_id.toString(), algorithm: key_type)!
+            let publicKey = get_public_key_from_private_key(private_key: privateKey)
             let algorithm = try get_encrypt_algorithm(algorithm: algorithm.toString(), hash: hash.toString()); 
-            let encryptedData: Data = try encrypt_data(data: data.toString().data(using: String.Encoding.utf8)!, publicKeyName: publicKey!, algorithm: algorithm)
+            let encryptedData: Data = try encrypt_data(data: data.toString().data(using: String.Encoding.utf8)!, public_key_name: publicKey!, algorithm: algorithm)
             let encryptedData_string = encryptedData.base64EncodedString()
             return ("\(encryptedData_string)")
         }catch{
@@ -163,10 +163,10 @@ import CryptoKit
     - Throws: 'SecureEnclaveError.DecryptionError' if the data could not be decrypted.
     - Returns: Data that has been decrypted.
     */
-    func decrypt_data(data: Data, privateKey: SecKey, algorithm: SecKeyAlgorithm) throws -> Data {
+    func decrypt_data(data: Data, private_key: SecKey, algorithm: SecKeyAlgorithm) throws -> Data {
         let algorithm: SecKeyAlgorithm = algorithm
         var error: Unmanaged<CFError>?
-        let result = SecKeyCreateDecryptedData(privateKey, algorithm, data as CFData, &error)
+        let result = SecKeyCreateDecryptedData(private_key, algorithm, data as CFData, &error)
         if result == nil {
             throw SecureEnclaveError.DecryptionError("Data could not be decrypted. \(String(describing: error))")
         }
@@ -191,7 +191,7 @@ import CryptoKit
                 return ("Invalid base64 input") 
             }
                                     
-            guard let decrypted_value = String(data: try decrypt_data(data: data, privateKey: load_key(key_id: key_id.toString(), algo: key_type)!, algorithm: seckey_algorithm_enum), encoding: .utf8) else {
+            guard let decrypted_value = String(data: try decrypt_data(data: data, private_key: load_key(key_id: key_id.toString(), algorithm: key_type)!, algorithm: seckey_algorithm_enum), encoding: .utf8) else {
                 return ("Converting decrypted data to string")
             }
             
@@ -209,8 +209,8 @@ import CryptoKit
     - Parameter privateKey: A 'SecKey' data type representing a cryptographic private key.
     - Returns: Optionally a public key representing a cryptographic public key on success, or 'nil' on failure.
     */
-    func getPublicKeyFromPrivateKey(privateKey: SecKey) -> SecKey? {
-        return SecKeyCopyPublicKey(privateKey)
+    func get_public_key_from_private_key(private_key: SecKey) -> SecKey? {
+        return SecKeyCopyPublicKey(private_key)
     }
     
     
@@ -254,7 +254,7 @@ import CryptoKit
         do {
             let seckey_algorithm_enum = try get_sign_algorithm(algorithm: algorithm.toString(), hash: hash.toString())
             let key_type = try get_key_type(key_type: algorithm.toString()) as CFString
-            let privateKeyReference = try load_key(key_id: privateKeyName_string, algo: key_type)!
+            let privateKeyReference = try load_key(key_id: privateKeyName_string, algorithm: key_type)!
             let signed_data = try ((sign_data(data: data_cfdata, privateKeyReference: privateKeyReference, algorithm: seckey_algorithm_enum))! as Data) 
             return signed_data.base64EncodedString(options: [])
         }catch{
@@ -273,7 +273,7 @@ import CryptoKit
     - Throws: 'SecureEnclaveError.SignatureVerificationError' if the signature could not be verified.
     - Returns: A boolean if the signature is valid ('true') or not ('false').
     */
-    func verify_signature(publicKey: SecKey, data: String, signature: String, sign_algorithm: SecKeyAlgorithm) throws -> Bool {
+    func verify_signature(public_key: SecKey, data: String, signature: String, sign_algorithm: SecKeyAlgorithm) throws -> Bool {
         let sign_algorithm = sign_algorithm
         guard Data(base64Encoded: signature) != nil else{
             throw SecureEnclaveError.SignatureVerificationError("Invalid message to verify.)")
@@ -285,7 +285,7 @@ import CryptoKit
         }
         
         var error: Unmanaged<CFError>?
-        if SecKeyVerifySignature(publicKey, sign_algorithm, data_data as CFData, Data(base64Encoded: signature, options: [])! as CFData, &error){
+        if SecKeyVerifySignature(public_key, sign_algorithm, data_data as CFData, Data(base64Encoded: signature, options: [])! as CFData, &error){
             return true
         } else{
             return false
@@ -314,10 +314,10 @@ import CryptoKit
             let seckey_algorithm_enum = try get_sign_algorithm(algorithm: algorithm.toString(), hash: hash.toString())
             let key_type = try get_key_type(key_type: algorithm.toString())
 
-            guard let publicKey = getPublicKeyFromPrivateKey(privateKey: try load_key(key_id: publicKeyName_string, algo: key_type)!)else{
+            guard let publicKey = get_public_key_from_private_key(private_key: try load_key(key_id: publicKeyName_string, algorithm: key_type)!)else{
                 throw SecureEnclaveError.SignatureVerificationError("Public key could not be received from the private key.)")
             }
-            let status = try verify_signature(publicKey: publicKey, data: data_string, signature: signature_string, sign_algorithm: seckey_algorithm_enum)
+            let status = try verify_signature(public_key: publicKey, data: data_string, signature: signature_string, sign_algorithm: seckey_algorithm_enum)
             
             if status == true{
                 return "true"
@@ -358,12 +358,12 @@ import CryptoKit
     - Throws: 'SecureEnclaveError.LoadKeyError' if the key could not be found.
     - Returns: Optionally the key as a SecKey data type on success, or a nil on failure.
     */
-    func load_key(key_id: String, algo: CFString) throws -> SecKey? {
+    func load_key(key_id: String, algorithm: CFString) throws -> SecKey? {
         let tag = key_id
         let query: [String: Any] = [
             kSecClass as String                 : kSecClassKey,
             kSecAttrApplicationTag as String    : tag,
-            kSecAttrKeyType as String           : algo,
+            kSecAttrKeyType as String           : algorithm,
             kSecReturnRef as String             : true
         ]
 
@@ -390,14 +390,14 @@ import CryptoKit
             let operation_algorithm_encryption = try get_encrypt_algorithm(algorithm: key_type.toString(), hash: hash.toString())
             let operation_algorithm_signing = try get_sign_algorithm(algorithm: key_type.toString(), hash: hash.toString())
 
-            guard let key = try load_key(key_id: key_id.toString(), algo: key_algorithm) else {
+            guard let key = try load_key(key_id: key_id.toString(), algorithm: key_algorithm) else {
                 return "Key with KeyID \(key_id) could not be found."
             }
 
-            try check_algorithm_support(key: getPublicKeyFromPrivateKey(privateKey: key)!, operation: SecKeyOperationType.encrypt, algorithm: operation_algorithm_encryption)
+            try check_algorithm_support(key: get_public_key_from_private_key(private_key: key)!, operation: SecKeyOperationType.encrypt, algorithm: operation_algorithm_encryption)
             try check_algorithm_support(key: key, operation: SecKeyOperationType.decrypt, algorithm: operation_algorithm_encryption)
             try check_algorithm_support(key: key, operation: SecKeyOperationType.sign, algorithm: operation_algorithm_signing)
-            try check_algorithm_support(key: getPublicKeyFromPrivateKey(privateKey: key)!, operation: SecKeyOperationType.verify, algorithm: operation_algorithm_signing)
+            try check_algorithm_support(key: get_public_key_from_private_key(private_key: key)!, operation: SecKeyOperationType.verify, algorithm: operation_algorithm_signing)
             
             return "\(key.hashValue)"
         } catch {
