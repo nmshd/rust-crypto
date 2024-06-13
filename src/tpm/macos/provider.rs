@@ -13,7 +13,27 @@ use crate::common::error::SecurityModuleError::CreateKeyError;
 use tracing::instrument;
 
 
+/// Implements the `Provider` trait, providing cryptographic operations utilizing a Secure Enclave.
 impl Provider for SecureEnclaveProvider {
+
+    /// Creates a new cryptographic key identified by `key_id`.
+    ///
+    /// This method creates a persisted cryptographic key using the specified algorithm
+    /// and identifier, making it retrievable for future operations. The key is created
+    /// with the specified key usages and stored in the Secure Enclave.
+    /// 
+    /// Uses the rust_crypto_call_create_key function from the Swift Secure Enclave bindings.
+    ///
+    /// # Arguments
+    ///
+    /// * `key_id` - A string slice that uniquely identifies the key to be created.
+    /// * `key_algorithm` - The asymmetric encryption algorithm to be used for the key.
+    /// * `config` - A boxed `SecureEnclaveConfig` object containing the configuration for the key.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` that, on success, contains `Ok(())`, indicating that the key was created successfully.
+    /// On failure, it returns a `SecurityModuleError`.
     #[instrument]
     fn create_key(
         &mut self,
@@ -55,6 +75,24 @@ impl Provider for SecureEnclaveProvider {
         
     }
 
+    /// Loads an existing cryptographic key identified by `key_id`.
+    ///
+    /// This method attempts to load a persisted cryptographic key by its identifier from the Secure Enclave.
+    /// If successful, it sets the key usages and returns a handle to the key for further
+    /// cryptographic operations.
+    /// 
+    /// Uses the rust_crypto_call_load_key function from the Swift Secure Enclave bindings.
+    ///
+    /// # Arguments
+    ///
+    /// * `key_id` - A string slice that uniquely identifies the key to be loaded.
+    /// * `key_algorithm` - The asymmetric encryption algorithm used for the key.
+    /// * `config` - A boxed `SecureEnclaveConfig` object containing the configuration for the key.
+    /// 
+    /// # Returns
+    ///
+    /// A `Result` that, on success, contains `Ok(())`, indicating that the key was loaded successfully.
+    /// On failure, it returns a `SecurityModuleError`.
     #[instrument]
     fn load_key(
         &mut self,
@@ -75,6 +113,18 @@ impl Provider for SecureEnclaveProvider {
         }
     }
 
+
+    /// Initializes the Secure Enclave module and returns a handle for cryptographic operations.
+    ///
+    /// This method initializes the Secure Enclave context and prepares it for use. It should be called
+    /// before performing any other operations with the Secure Enclave.
+    /// 
+    /// Uses the rust_crypto_call_sign_data function from the Swift Secure Enclave bindings.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` that, on success, contains `Ok(())`, indicating that the module was initialized successfully.
+    /// On failure, it returns a `SecurityModuleError`.
     #[instrument]
     fn initialize_module(&mut self) -> Result<(), SecurityModuleError> {
         let initialization_result =
@@ -89,6 +139,15 @@ impl Provider for SecureEnclaveProvider {
     }
 }
 
+/// Converts the algorithm type to a String.
+/// 
+/// # Arguments
+/// 
+/// * `config` - A `SecureEnclaveConfig` object containing the configuration for the key.
+/// 
+/// # Returns
+/// 
+/// A `String` containing the AsymmetricEncryption algorithm.
 pub fn convert_algorithms(config: SecureEnclaveConfig) -> String {
     let asym_algorithm_type = match config.asym_algorithm.expect("Invalid config") {
         // Is only Asymmetric-Algorithm which is working at that time
@@ -101,6 +160,16 @@ pub fn convert_algorithms(config: SecureEnclaveConfig) -> String {
     asym_algorithm_type
 }
 
+
+/// Converts the Hash algorithm to a String.
+/// 
+/// # Arguments
+/// 
+/// * `hash` - A `Hash` object containing the hash algorithm.
+/// 
+/// # Returns
+/// 
+/// A `String` containing the Hash algorithm.
 pub fn convert_hash(hash: Hash) -> String {
     match hash {
         Hash::Sha1 => "SHA1".to_string(),
@@ -116,6 +185,3 @@ pub fn convert_hash(hash: Hash) -> String {
         _ => unimplemented!("Only SHA1 and Sha2Bits supported."), 
     }
 }
-
-
-
