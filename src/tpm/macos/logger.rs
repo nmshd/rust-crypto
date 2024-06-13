@@ -8,6 +8,14 @@ use crate::common::traits::log_config::LogConfig;
 pub struct Logger {}
 
 impl LogConfig for Logger{
+
+    /// Sets up the logging configuration for the application.
+    /// 
+    /// This method configures the logging system to write log messages to a file named `output.log`
+    /// 
+    /// # Arguments
+    /// 
+    /// * `self` - A reference to the `Logger` instance.
     fn setup_logging(&self) {
         let file_appender = rolling::daily("./logs", "output.log");
         let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
@@ -21,6 +29,12 @@ impl LogConfig for Logger{
 }
 
 impl Logger {
+
+    /// Creates a new instance of the `Logger` struct.
+    /// 
+    /// # Returns
+    /// 
+    /// A new instance of the `Logger` struct.
     pub fn new_boxed() -> Box<dyn LogConfig> {
         Box::new(Self {})
     }
