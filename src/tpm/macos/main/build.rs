@@ -1,6 +1,8 @@
 use std::{path::PathBuf, process::Command};
 
 fn main() {
+    let ios = false; 
+
     // 1. Use `swift-bridge-build` to generate Swift/C FFI glue.
     //    You can also use the `swift-bridge` CLI.
     let bridge_files = vec!["src/lib.rs"];
@@ -8,10 +10,8 @@ fn main() {
         .write_all_concatenated(swift_bridge_out_dir(), "rust-calls-swift");
 
     // 2. Compile Swift library
-    compile_swift();
+    compile_swift(ios);
 
-    // 3. Link to Swift library
-    println!("cargo:rustc-link-lib=static=swift-library");
     println!(
         "cargo:rustc-link-search={}",
         swift_library_static_lib_dir().to_str().unwrap()
@@ -35,32 +35,58 @@ fn main() {
     } else {
         "/Applications/Xcode.app/Contents/Developer".to_string()
     };
-    println!(
-        "cargo:rustc-link-search={}/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx/",
-        &xcode_path
-    );
+    if ios{
+        println!(
+            "cargo:rustc-link-search={}/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/",
+            &xcode_path
+        );
+    }else {
+        println!(
+            "cargo:rustc-link-search={}/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx/",
+            &xcode_path
+        );
+    }
+    
     println!("cargo:rustc-link-search={}", "/usr/lib/swift");
     println!("Hello World"); 
 }
 
-fn compile_swift() {
+fn compile_swift(ios: bool) {
     let swift_package_dir = manifest_dir().join("swift-library");
+    let mut cmd = Command::new(""); 
+    if ios{
+        cmd = Command::new("swiftc");
+        cmd.current_dir(swift_package_dir)
+        .args(&["-target", "arm64-apple-ios14.0"])
+        .args(&["-sdk", "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS17.5.sdk"])
+        .args(&["-emit-library", "-static"])
+        .args(&["-F", "./"])
+        .args(&["-o", "./.build/debug/libswift-library_ios.a", 
+        "./Sources/swift-library/SecureEnclaveManager.swift",
+         "./Sources/swift-library/swift_library.swift", 
+         "./Sources/swift-library/generated/SwiftBridgeCore.swift", 
+         generated_code_dir().join("rust-calls-swift/rust-calls-swift.swift").to_str().unwrap(),])
+         .args(&["-import-objc-header", "./Sources/swift-library/bridging-header.h"]);
 
-    let mut cmd = Command::new("swift");
-
-    cmd.current_dir(swift_package_dir)
-        .arg("build")
-        .args(&["-Xswiftc", "-static"])
-        .args(&[
-            "-Xswiftc",
-            "-import-objc-header",
-            "-Xswiftc",
-            swift_source_dir()
-                .join("bridging-header.h")
-                .to_str()
-                .unwrap(),
-        ]);
-
+         println!("cargo:rustc-link-lib=static=swift-library_ios");
+               
+    }else{
+        cmd = Command::new("swift");
+        cmd.current_dir(swift_package_dir)
+            .arg("build")
+            .args(&["-Xswiftc", "-static"])
+            .args(&[
+                "-Xswiftc",
+                "-import-objc-header",
+                "-Xswiftc",
+                swift_source_dir()
+                    .join("bridging-header.h")
+                    .to_str()
+                    .unwrap(),
+            ]);
+            println!("cargo:rustc-link-lib=static=swift-library");
+    }
+    
     if is_release_build() {
         cmd.args(&["-c", "release"]);
     }
