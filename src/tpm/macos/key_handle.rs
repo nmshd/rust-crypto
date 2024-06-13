@@ -4,7 +4,21 @@ use crate::common::{error::SecurityModuleError, traits::key_handle::KeyHandle};
 use tracing::instrument;
 use regex::Regex;
 
+
+/// Provides cryptographic operations for asymmetric keys on macOS,
+/// such as signing, encryption, decryption, and signature verification.
 impl KeyHandle for SecureEnclaveProvider {
+    /// Signs the given data using the cryptographic key managed by the Secure Enclave provider.
+    /// 
+    /// Uses the rust_crypto_call_sign_data function from the Swift Secure Enclave bindings.
+    ///
+    /// # Arguments
+    ///
+    /// * `data` - A byte slice representing the data to be signed.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing the signature as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
     #[instrument]
     fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         let string_data = String::from_utf8(data.to_vec())
@@ -34,6 +48,18 @@ impl KeyHandle for SecureEnclaveProvider {
         }
     }
 
+
+    /// Decrypts the given encrypted data using the cryptographic key managed by the Secure Enclave provider.
+    /// 
+    /// Uses the rust_crypto_call_decrypt_data function from the Swift Secure Enclave bindings.
+    ///
+    /// # Arguments
+    ///
+    /// * `encrypted_data` - A byte slice representing the data to be decrypted.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing the decrypted data as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
     #[instrument]
     fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         let string_data = String::from_utf8(encrypted_data.to_vec()).map_err(|_| {
@@ -58,6 +84,18 @@ impl KeyHandle for SecureEnclaveProvider {
         }
     }
 
+
+    /// Encrypts data with the cryptographic key.
+    ///
+    /// Uses the rust_crypto_call_encrypt_data function from the Swift Secure Enclave bindings.
+    ///
+    /// # Arguments
+    ///
+    /// * `data` - The data to be encrypted.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing the encrypted data as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
     #[instrument]
     fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         let string_data = String::from_utf8(data.to_vec()).map_err(|_| {
@@ -89,6 +127,20 @@ impl KeyHandle for SecureEnclaveProvider {
         }
     }
 
+
+    /// Verifies the signature of the given data using the cryptographic key managed by the Secure Enclave provider.
+    /// 
+    /// Uses the rust_crypto_call_verify_signature function from the Swift Secure Enclave bindings.
+    ///
+    /// # Arguments
+    ///
+    /// * `data` - A byte slice representing the data whose signature is to be verified.
+    /// * `signature` - A byte slice representing the signature to be verified against the data.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing a boolean indicating whether the signature is valid (`true`) or not (`false`),
+    /// or a `SecurityModuleError` on failure.
     #[instrument]
     fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, SecurityModuleError> {
         let string_data = String::from_utf8(data.to_vec()).map_err(|_| {
@@ -111,7 +163,7 @@ impl KeyHandle for SecureEnclaveProvider {
             apple_secure_enclave_bindings::keyhandle::rust_crypto_call_verify_signature(key_id.clone(), string_data, string_signature, algo, hash);
 
         // The FFI bridge always returns strings by design.
-        // If not "true" or "false" is found, we expect an error from the function
+        // If not "true" or "false" is found, an error from the function is expected
         match verification_result.as_str() {
             "true" => Ok(true),
             "false" => Ok(false),
