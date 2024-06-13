@@ -23,8 +23,8 @@ debug = false
 strip = "symbols"
 
 [features]
-nks = []
-android = ["robusta_jni", "libloading", "tracing-android"]
+nks = ["core", "x25519-dalek"]
+android = ["robusta_jni", "libloading", "tracing-android", "x25519-dalek"]
 debug = []
 hsm = []
 ffi = []

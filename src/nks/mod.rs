@@ -1,14 +1,14 @@
-use std::any::Any;
-use std::sync::Arc;
 use crate::common::crypto::algorithms::encryption::{AsymmetricEncryption, BlockCiphers};
 use crate::common::crypto::algorithms::hashes::Hash;
 use crate::common::crypto::KeyUsage;
 use crate::common::traits::module_provider_config::ProviderConfig;
+use std::any::Any;
+use std::sync::Arc;
 
-#[cfg(feature = "hcvault")]
-pub mod hcvault;
 #[cfg(feature = "core")]
 pub mod core;
+#[cfg(feature = "hcvault")]
+pub mod hcvault;
 
 /// Configuration for NKS (Network Key Storage).
 #[derive(Debug, Clone)]

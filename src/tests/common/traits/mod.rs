@@ -61,6 +61,7 @@ fn setup_security_module(module: SecurityModule) -> Arc<Mutex<dyn Provider>> {
             TpmType::None => unimplemented!(),
             TpmType::Android(_) => unimplemented!(),
         },
+        SecurityModule::Nks => unimplemented!(),
         // _ => unimplemented!(),
     }
 }
