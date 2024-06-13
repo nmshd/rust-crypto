@@ -1,4 +1,4 @@
-# Work in Progress (Knox)
+# Work in Progress
 
 Not fully implemented yet
 
