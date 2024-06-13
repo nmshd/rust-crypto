@@ -314,7 +314,6 @@ import CryptoKit
             }else{
                 return "false"
             }
-
         }catch{
             return "Error: \(String(describing: error))"
         }
@@ -448,6 +447,12 @@ import CryptoKit
         switch operation{
             case SecKeyOperationType.encrypt: 
                 operation_string = "encrypt"
+            case SecKeyOperationType.decrypt: 
+                operation_string = "decrypt"
+            case SecKeyOperationType.sign: 
+                operation_string = "sign"
+            case SecKeyOperationType.verify: 
+                operation_string = "verify"
             default: 
                 operation_string = "Noting"
         }
