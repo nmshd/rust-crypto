@@ -12,7 +12,6 @@ use std::any::Any;
 
 #[cfg(feature = "android")]
 pub mod android;
-#[cfg(feature = "core")]
 pub mod core;
 #[cfg(feature = "linux")]
 pub mod linux;
@@ -42,7 +41,7 @@ impl TpmConfig {
         sym_algorithm: BlockCiphers,
         hash: Hash,
         key_usages: Vec<KeyUsage>,
-    ) -> Box<dyn ProviderConfig> {
+    ) -> Box<dyn Any> {
         Box::new(Self {
             key_algorithm,
             sym_algorithm,

@@ -1,11 +1,10 @@
-use robusta_jni::convert::IntoJavaValue;
-
 use crate::common::crypto::{algorithms, KeyUsage};
 use crate::common::factory::SecModules;
 use crate::common::factory::SecurityModule;
 use crate::tpm::android::*;
 use crate::tpm::core::instance::AndroidTpmType;
 use crate::tpm::core::instance::TpmType;
+use robusta_jni::convert::IntoJavaValue;
 
 #[test]
 fn initializ_module_test1() {
