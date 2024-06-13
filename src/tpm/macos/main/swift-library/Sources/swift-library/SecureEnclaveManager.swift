@@ -226,7 +226,7 @@ import CryptoKit
     func sign_data(data: CFData, privateKeyReference: SecKey, algorithm: SecKeyAlgorithm) throws -> CFData? {
         let sign_algorithm = algorithm;
         if !SecKeyIsAlgorithmSupported(privateKeyReference, SecKeyOperationType.sign, sign_algorithm){
-            throw SecureEnclaveError.SigningError("Algorithm is not supported. \(String(describing: error))")
+            throw SecureEnclaveError.SigningError("Algorithm is not supported.)")
         }
         
         var error: Unmanaged<CFError>?
@@ -276,12 +276,12 @@ import CryptoKit
     func verify_signature(publicKey: SecKey, data: String, signature: String, sign_algorithm: SecKeyAlgorithm) throws -> Bool {
         let sign_algorithm = sign_algorithm
         guard Data(base64Encoded: signature) != nil else{
-            throw SecureEnclaveError.SignatureVerificationError("Invalid message to verify. \(String(describing: error))")
+            throw SecureEnclaveError.SignatureVerificationError("Invalid message to verify.)")
         }
         
         guard let data_data = data.data(using: String.Encoding.utf8)
         else{
-            throw SecureEnclaveError.SignatureVerificationError("Invalid message to verify. \(String(describing: error))")
+            throw SecureEnclaveError.SignatureVerificationError("Invalid message to verify.)")
         }
         
         var error: Unmanaged<CFError>?
@@ -315,7 +315,7 @@ import CryptoKit
             let key_type = try get_key_type(key_type: algorithm.toString())
 
             guard let publicKey = getPublicKeyFromPrivateKey(privateKey: try load_key(key_id: publicKeyName_string, algo: key_type)!)else{
-                throw SecureEnclaveError.SignatureVerificationError("Public key could not be received from the private key. \(String(describing: error))")
+                throw SecureEnclaveError.SignatureVerificationError("Public key could not be received from the private key.)")
             }
             let status = try verify_signature(publicKey: publicKey, data: data_string, signature: signature_string, sign_algorithm: seckey_algorithm_enum)
             
@@ -370,7 +370,7 @@ import CryptoKit
         var item: CFTypeRef?
         let status = SecItemCopyMatching(query as CFDictionary, &item)
         guard status == errSecSuccess else {
-            throw SecureEnclaveError.LoadKeyError("Key could not be found. \(String(describing: error))")
+            throw SecureEnclaveError.LoadKeyError("Key could not be found.)")
         }
         return (item as! SecKey)
     }
@@ -484,7 +484,7 @@ import CryptoKit
             case "RSA": 
                 return kSecAttrKeyTypeRSA
             default:
-                throw SecureEnclaveError.CreateKeyError("Key Algorithm is not supported. \(String(describing: error))")
+                throw SecureEnclaveError.CreateKeyError("Key Algorithm is not supported.)")
         }
     }
 
@@ -510,11 +510,11 @@ import CryptoKit
                 case "SHA384":
                     apple_algorithm_enum = SecKeyAlgorithm.rsaSignatureMessagePSSSHA384
                 default: 
-                    throw SecureEnclaveError.SigningError("Hash for Signing is not supported. \(String(describing: error))")
+                    throw SecureEnclaveError.SigningError("Hash for Signing is not supported.)")
             }
             return apple_algorithm_enum
         }else{
-            throw SecureEnclaveError.EncryptionError("Algorithm for Encryption/Decryption not supported. \(String(describing: error))")
+            throw SecureEnclaveError.EncryptionError("Algorithm for Encryption/Decryption not supported.)")
         }
     }
 
@@ -541,10 +541,10 @@ import CryptoKit
                 case "SHA384":
                     apple_algorithm_enum = SecKeyAlgorithm.rsaEncryptionOAEPSHA384
                 default: 
-                    throw SecureEnclaveError.EncryptionError("Hash for Encryption/Decryption is not supported. \(String(describing: error))")
+                    throw SecureEnclaveError.EncryptionError("Hash for Encryption/Decryption is not supported.)")
             }
             return apple_algorithm_enum
         }else{
-            throw SecureEnclaveError.EncryptionError("Algorithm for Encryption/Decryption not supported. \(String(describing: error))")
+            throw SecureEnclaveError.EncryptionError("Algorithm for Encryption/Decryption not supported.))")
         }
     }
