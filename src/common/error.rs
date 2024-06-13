@@ -118,6 +118,7 @@ impl std::error::Error for SecurityModuleError {
             SecurityModuleError::VerificationFailed => None,
             SecurityModuleError::InvalidSignature => None,
             SecurityModuleError::InvalidPublicKey => None,
+            #[cfg(feature = "nks")]
             SecurityModuleError::NksError => None,
             SecurityModuleError::SigningFailed => None,
         }

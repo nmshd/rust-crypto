@@ -217,7 +217,7 @@ pub fn get_iv_len(cipher: BlockCiphers) -> Result<usize, SecurityModuleError> {
 
 pub fn store_iv(mut data: Vec<u8>, mut iv: Vec<u8>) -> Vec<u8> {
     iv.append(&mut data);
-    return iv;
+    iv
 }
 
 pub fn load_iv(data: &[u8], iv_size: usize) -> (Vec<u8>, Vec<u8>) {
