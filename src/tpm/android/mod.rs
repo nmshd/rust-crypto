@@ -498,8 +498,6 @@ impl KeyHandle for AndroidProvider {
                 cipher.doFinal(&env, data.to_vec()).err_internal()?
             }
         };
-
-        debug!("encrypted: {:?}", encrypted);
         Ok(encrypted)
     }
 
