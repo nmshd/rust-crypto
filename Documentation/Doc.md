@@ -397,7 +397,7 @@ All used Rust code is documented [here](RustDoc/crypto_layer/index.html).
 
 The simplest way to test the code would be to execute Rust unit tests. This is not feasible for this project, because the unit tests would need to be executed on an actual Android phone and cannot be run on an emulator, since the program only functions with the physical HSM.
 
-TODO @Noah: Details einfügen, warum das schwer ist
+Despite the potential benefits of running unit tests on our Android device, we encountered significant challenges due to complexity of setting up a reliable test environment. The time that would have been necessary to invest was needed for more important parts of the project.
 
 For this reason, we created a test app (which can be found in this repo: [Vulcan's Limes](https://github.com/cep-sose2024/vulcans_limes)) and wrote methods that tests our wrapper by calling the relevant functions of the abstraction layer. This way, it is still possible to confirm functionality without needing to go through the complex process of executing proper Rust unit tests on a smartphone.
 Because of the process described above, there is no automated testing process. To execute the tests, you have to compile the test app with the version of the abstraction layer that you want to test. Upon start-up, the function `testMethod()` in [`lib.rs`](https://github.com/cep-sose2024/vulcans_limes/blob/master/app/src/rust/lib.rs) is executed. This method tests all implemented functions, and outputs to the console (which can be viewed with logcat).
