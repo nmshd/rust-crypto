@@ -2,7 +2,6 @@ extern crate apple_secure_enclave_bindings;
 use super::{provider::{convert_algorithms, convert_hash}, SecureEnclaveProvider};
 use crate::common::{error::SecurityModuleError, traits::key_handle::KeyHandle};
 use tracing::instrument;
-// use regex::Regex;
 
 
 /// Provides cryptographic operations for asymmetric keys on macOS,
@@ -72,18 +71,6 @@ impl KeyHandle for SecureEnclaveProvider {
         } else {
             Ok(decrypted_data.1.into_bytes())
         }
-
-
-        // if Regex::new("(?i)error")
-        //     .unwrap()
-        //     .is_match(decrypted_data.as_str())
-        // {
-        //     Err(SecurityModuleError::EncryptionError(
-        //         decrypted_data.to_string(),
-        //     ))
-        // } else {
-        //     Ok(decrypted_data.into_bytes())
-        // }
     }
 
 
@@ -119,17 +106,6 @@ impl KeyHandle for SecureEnclaveProvider {
         } else {
             Ok(encrypted_data.1.into_bytes())
         }
-
-        // if Regex::new("(?i)error")
-        //     .unwrap()
-        //     .is_match(encrypted_data.as_str())
-        // {
-        //     Err(SecurityModuleError::EncryptionError(
-        //         encrypted_data.to_string(),
-        //     ))
-        // } else {
-        //     Ok(encrypted_data.into_bytes())
-        // }
     }
 
 
