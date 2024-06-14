@@ -20,6 +20,9 @@ pub enum SecurityModuleError {
     #[cfg(feature = "tpm")]
     /// Error originating from a Trusted Platform Module (TPM).
     Tpm(TpmError),
+    #[cfg(feature = "nks")]
+    /// Error originating from a Network Key Storage (NKS).
+    NksError,
     /// Error that occurred during the signing operation.
     ///
     /// This variant contains a descriptive error message.
@@ -44,6 +47,12 @@ pub enum SecurityModuleError {
     ///
     /// This variant contains a descriptive error message.
     CreationError(String),
+    KeyError,
+    UnsupportedAlgorithm,
+    VerificationFailed,
+    InvalidSignature,
+    InvalidPublicKey,
+    SigningFailed,
 }
 
 impl fmt::Display for SecurityModuleError {
@@ -76,9 +85,18 @@ impl fmt::Display for SecurityModuleError {
             SecurityModuleError::InitializationError(ref error_msg) => {
                 write!(f, "Initialization error: {}", error_msg)
             }
+
             SecurityModuleError::CreationError(ref error_msg) => {
                 write!(f, "Creation error: {}", error_msg)
             }
+            SecurityModuleError::KeyError => write!(f, "Key error"),
+            SecurityModuleError::UnsupportedAlgorithm => write!(f, "Unsupported algorithm"),
+            SecurityModuleError::VerificationFailed => write!(f, "Verification failed"),
+            SecurityModuleError::InvalidSignature => write!(f, "Invalid signature"),
+            SecurityModuleError::InvalidPublicKey => write!(f, "Invalid public key"),
+            SecurityModuleError::SigningFailed => write!(f, "Invalid public key"),
+            #[cfg(feature = "nks")]
+            SecurityModuleError::NksError => write!(f, "Key error"),
         }
     }
 }
@@ -104,6 +122,14 @@ impl std::error::Error for SecurityModuleError {
             SecurityModuleError::SignatureVerificationError(_) => None,
             SecurityModuleError::InitializationError(_) => None,
             SecurityModuleError::CreationError(_) => None
+            SecurityModuleError::KeyError => None,
+            SecurityModuleError::UnsupportedAlgorithm => None,
+            SecurityModuleError::VerificationFailed => None,
+            SecurityModuleError::InvalidSignature => None,
+            SecurityModuleError::InvalidPublicKey => None,
+            #[cfg(feature = "nks")]
+            SecurityModuleError::NksError => None,
+            SecurityModuleError::SigningFailed => None,
         }
     }
 }

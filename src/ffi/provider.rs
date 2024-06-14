@@ -5,6 +5,7 @@ use crate::{
     tpm::TpmConfig,
 };
 use std::{
+    any::Any,
     ffi::{c_void, CStr},
     os::raw::c_char,
     sync::{Arc, Mutex},
@@ -46,10 +47,9 @@ pub unsafe extern "C" fn initialize_module(provider_ffi: *mut ProviderFFI) -> i3
     }
 }
 
-
 #[no_mangle]
 pub extern "C" fn config_new() -> *mut c_void {
-    let config: Box<dyn ProviderConfig> = Box::new(TpmConfig::default());
+    let config: Box<dyn ProviderConfig> = Box::<TpmConfig>::default();
     let ptr: *mut dyn ProviderConfig = Box::into_raw(config);
     ptr as *mut c_void
 }
@@ -88,10 +88,9 @@ pub unsafe extern "C" fn create_key(
     };
 
     // Cast the void pointer back to Box<dyn Config>
-    let config: Box<dyn ProviderConfig> = {
+    let config: Box<dyn Any> = {
         // Convert it back to a Box to properly handle the ownership
-        let boxed_config: Box<Box<dyn ProviderConfig>> =
-            Box::from_raw(config as *mut Box<dyn ProviderConfig>);
+        let boxed_config: Box<Box<dyn Any>> = Box::from_raw(config as *mut Box<dyn Any>);
         *boxed_config
     };
 
@@ -123,10 +122,9 @@ pub unsafe extern "C" fn load_key(
     };
 
     // Cast the void pointer back to Box<dyn Config>
-    let config: Box<dyn ProviderConfig> = {
+    let config: Box<dyn Any> = {
         // Convert it back to a Box to properly handle the ownership
-        let boxed_config: Box<Box<dyn ProviderConfig>> =
-            Box::from_raw(config as *mut Box<dyn ProviderConfig>);
+        let boxed_config: Box<Box<dyn Any>> = Box::from_raw(config as *mut Box<dyn Any>);
         *boxed_config
     };
 
