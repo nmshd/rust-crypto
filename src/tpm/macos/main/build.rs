@@ -1,8 +1,12 @@
-use std::{path::PathBuf, process::Command};
-
+use std::{path::PathBuf, process::Command, env};
 fn main() {
-    let ios = false; 
+    let mut ios = false; 
+    let target = String::from(env::var("TARGET").unwrap());
 
+    if target.contains("ios") {
+        ios = true;
+    }
+    
     // 1. Use `swift-bridge-build` to generate Swift/C FFI glue.
     //    You can also use the `swift-bridge` CLI.
     let bridge_files = vec!["src/lib.rs"];
