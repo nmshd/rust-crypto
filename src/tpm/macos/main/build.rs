@@ -1,11 +1,13 @@
 use std::{path::PathBuf, process::Command, env};
 fn main() {
     
-    let mut ios = false; 
+    let mut ios = false;
+    let mut sdk_name = "macosx";
     let target = String::from(env::var("TARGET").unwrap());
 
     if target.contains("ios") {
         ios = true;
+        sdk_name = "iphoneos"; 
     }
     
     // 1. Use `swift-bridge-build` to generate Swift/C FFI glue.
@@ -40,17 +42,11 @@ fn main() {
     } else {
         "/Applications/Xcode.app/Contents/Developer".to_string()
     };
-    if ios{
-        println!(
-            "cargo:rustc-link-search={}/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/",
-            &xcode_path
-        );
-    }else {
-        println!(
-            "cargo:rustc-link-search={}/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx/",
-            &xcode_path
-        );
-    }
+        
+    println!(
+        "cargo:rustc-link-search={}/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/{}/",
+        &xcode_path, &sdk_name
+    );
     
     println!("cargo:rustc-link-search={}", "/usr/lib/swift");
 }
