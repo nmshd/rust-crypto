@@ -40,6 +40,10 @@ import javax.crypto.spec.IvParameterSpec;
  */
 public class CryptoManager {
     private static final String ANDROID_KEY_STORE = "AndroidKeyStore";
+    private static final int IV_CBC_AND_CTR_AES = 16; // CBC & CTR standard IV size is 16 Byte
+    private static final int IV_GCM_AES = 12; // GCM standard IV size is 12 Byte
+    private static final int IV_CBC_DES = 8; // DES with CBC standard IV size is 8 Byte
+    private static final int TAG_SIZE_GCM = 128; // 128 is the recommended TagSize
     private final KeyStore keyStore;
     private String KEY_NAME;
 
@@ -108,8 +112,8 @@ public class CryptoManager {
      * <p>
      * This method takes plaintext data as input and encrypts it using a symmetric key retrieved from the Android KeyStore.
      * The encryption process supports GCM, CBC and CTR transformations. A new initialization vector (IV)
-     * is generated and the IV is prepended to the ciphertext. The method initializes a
-     * {@link Cipher} instance with the appropriate transformation, loads the Android KeyStore, retrieves the symmetric key, and then
+     * is generated and the IV is prepended to the ciphertext. In the case of 3DES only CBC is used, which needs a different IV size than with AES.
+     * The method initializes a {@link Cipher} instance with the appropriate transformation, loads the Android KeyStore, retrieves the symmetric key, and then
      * initializes the cipher in encryption mode with the retrieved key and the generated IV. Finally, the plaintext data is encrypted
      * using the cipher's {@code doFinal} method, and the resulting ciphertext is returned as a byte array.
      *
@@ -140,11 +144,11 @@ public class CryptoManager {
         cipher.init(Cipher.ENCRYPT_MODE, secretKey);
         byte[] iv = cipher.getIV();
         if (TRANSFORMATION.contains("/GCM/")) {
-            assert iv.length == 12; // GCM standard IV size is 12 Byte
+            assert iv.length == IV_GCM_AES;
         } else if(TRANSFORMATION.contains("DESede")) {
-            assert iv.length == 8; // DES standard IV size is 8 Byte
+            assert iv.length == IV_CBC_DES;
         } else {
-            assert iv.length == 16; // CBC & CTR standard IV size is 16 Byte
+            assert iv.length == IV_CBC_AND_CTR_AES;
         }
         byte[] encryptedData = cipher.doFinal(data);
         ByteBuffer byteBuffer = ByteBuffer.allocate(iv.length + encryptedData.length);
@@ -158,7 +162,8 @@ public class CryptoManager {
      * <p>
      * This method takes encrypted data as input and decrypts it using a symmetric key retrieved from the Android KeyStore.
      * The decryption process supports GCM, CBC and CTR transformations. The initialization vector (IV)
-     * is extracted from the beginning of the encrypted data. The method initializes a {@link Cipher} instance with the appropriate
+     * is extracted from the beginning of the encrypted data. In the case of 3DES only CBC is used, which needs a different IV size than with AES.
+     * The method initializes a {@link Cipher} instance with the appropriate
      * transformation, loads the Android KeyStore, retrieves the symmetric key, and initializes the cipher in decryption mode with the
      * retrieved key and the extracted IV. Finally, the encrypted data is decrypted using the cipher's {@code doFinal} method, and the
      * original plaintext data is returned as a byte array.
@@ -189,15 +194,22 @@ public class CryptoManager {
         ByteBuffer byteBuffer = ByteBuffer.wrap(encryptedData);
         byte[] iv;
         if (TRANSFORMATION.contains("/GCM/")) {
-            iv = new byte[12]; // GCM standard IV size
+            assert byteBuffer.capacity() > IV_GCM_AES;
+            iv = new byte[IV_GCM_AES];
             byteBuffer.get(iv);
             encryptedData = new byte[byteBuffer.remaining()];
             byteBuffer.get(encryptedData);
-            GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(128, iv); // 128 is the recommended TagSize
+            GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(TAG_SIZE_GCM, iv);
             cipher.init(Cipher.DECRYPT_MODE, secretKey, gcmParameterSpec);
         } else {
-            if(TRANSFORMATION.contains("DESede")) iv = new byte[8]; // DES standard IV size
-            else iv = new byte[16]; // CBC & CTR standard IV size
+            if(TRANSFORMATION.contains("DESede")){
+                assert byteBuffer.capacity() > IV_CBC_DES;
+                iv = new byte[IV_CBC_DES];
+            }
+            else {
+                assert byteBuffer.capacity() > IV_CBC_AND_CTR_AES;
+                iv = new byte[IV_CBC_AND_CTR_AES];
+            }
             byteBuffer.get(iv);
             encryptedData = new byte[byteBuffer.remaining()];
             byteBuffer.get(encryptedData);
