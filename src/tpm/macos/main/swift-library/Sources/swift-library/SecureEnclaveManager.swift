@@ -495,8 +495,6 @@ import CryptoKit
         let apple_algorithm_enum: SecKeyAlgorithm;
         if algorithm == "RSA"{
             switch hash {
-                case "SHA1": 
-                    apple_algorithm_enum = SecKeyAlgorithm.rsaSignatureMessagePSSSHA1
                 case "SHA224": 
                     apple_algorithm_enum = SecKeyAlgorithm.rsaSignatureMessagePSSSHA224
                 case "SHA256": 
@@ -509,8 +507,6 @@ import CryptoKit
             return apple_algorithm_enum
         }else if algorithm == "ECDSA"{
             switch hash {
-                case "SHA1": 
-                    apple_algorithm_enum = SecKeyAlgorithm.ecdsaSignatureMessageX962SHA1
                 case "SHA224": 
                     apple_algorithm_enum = SecKeyAlgorithm.ecdsaSignatureMessageX962SHA224
                 case "SHA256": 

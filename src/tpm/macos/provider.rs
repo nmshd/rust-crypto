@@ -178,7 +178,6 @@ pub fn convert_algorithms(config: SecureEnclaveConfig) -> String {
 /// A `String` containing the Hash algorithm.
 pub fn convert_hash(hash: Hash) -> String {
     match hash {
-        Hash::Sha1 => "SHA1".to_string(),
         Hash::Sha2(sha2_bits) =>{
             match sha2_bits {
                 Sha2Bits::Sha224 => "SHA224".to_string(),
