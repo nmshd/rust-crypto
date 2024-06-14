@@ -1,5 +1,6 @@
 use std::{path::PathBuf, process::Command, env};
 fn main() {
+    
     let mut ios = false; 
     let target = String::from(env::var("TARGET").unwrap());
 
@@ -18,7 +19,7 @@ fn main() {
 
     println!(
         "cargo:rustc-link-search={}",
-        swift_library_static_lib_dir().to_str().unwrap()
+        swift_library_static_lib_dir(ios).to_str().unwrap()
     );
 
     // Without this we will get warnings about not being able to find dynamic libraries, and then
@@ -56,45 +57,17 @@ fn main() {
 
 fn compile_swift(ios: bool) {
     let swift_package_dir = manifest_dir().join("swift-library");
-    let mut cmd; 
+    let mut bash_cmd = Command::new("bash"); 
     if ios{
-        cmd = Command::new("swiftc");
-        cmd.current_dir(swift_package_dir)
-        .args(&["-target", "arm64-apple-ios14.0"])
-        .args(&["-sdk", "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS17.5.sdk"])
-        .args(&["-emit-library", "-static"])
-        .args(&["-F", "./"])
-        .args(&["-o", "./.build/debug/libswift-library_ios.a", 
-        "./Sources/swift-library/SecureEnclaveManager.swift",
-         "./Sources/swift-library/swift_library.swift", 
-         "./Sources/swift-library/generated/SwiftBridgeCore.swift", 
-         generated_code_dir().join("rust-calls-swift/rust-calls-swift.swift").to_str().unwrap(),])
-         .args(&["-import-objc-header", "./Sources/swift-library/bridging-header.h"]);
-
-         println!("cargo:rustc-link-lib=static=swift-library_ios");
+        bash_cmd.current_dir(swift_package_dir).args(&["./compile.sh", "ios"]);
+        println!("cargo:rustc-link-lib=static=swift-library_ios");
                
     }else{
-        cmd = Command::new("swift");
-        cmd.current_dir(swift_package_dir)
-            .arg("build")
-            .args(&["-Xswiftc", "-static"])
-            .args(&[
-                "-Xswiftc",
-                "-import-objc-header",
-                "-Xswiftc",
-                swift_source_dir()
-                    .join("bridging-header.h")
-                    .to_str()
-                    .unwrap(),
-            ]);
-            println!("cargo:rustc-link-lib=static=swift-library");
-    }
-    
-    if is_release_build() {
-        cmd.args(&["-c", "release"]);
+        bash_cmd.current_dir(swift_package_dir).args(&["./compile.sh", "macos"]);
+        println!("cargo:rustc-link-lib=static=swift-library");
     }
 
-    let exit_status = cmd.spawn().unwrap().wait_with_output().unwrap();
+    let exit_status = bash_cmd.spawn().unwrap().wait_with_output().unwrap();
 
     if !exit_status.status.success() {
         panic!(
@@ -129,12 +102,17 @@ fn generated_code_dir() -> PathBuf {
     swift_source_dir().join("generated")
 }
 
-fn swift_library_static_lib_dir() -> PathBuf {
+fn swift_library_static_lib_dir(ios: bool) -> PathBuf {
     let debug_or_release = if is_release_build() {
         "release"
     } else {
         "debug"
     };
 
-    manifest_dir().join(format!("swift-library/.build/{}", debug_or_release))
+    if ios{
+        manifest_dir().join(format!("swift-library/.build/"))
+    }else{
+        manifest_dir().join(format!("swift-library/.build/{}", debug_or_release))
+
+    }
 }
