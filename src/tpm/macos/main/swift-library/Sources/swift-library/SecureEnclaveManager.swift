@@ -128,7 +128,7 @@ import CryptoKit
     - Parameter hash: A 'RustString' data type used to represent the hash that is used.
     - Returns: A String representing the encrypted data, or an error as a String on failure.
     */
-    func rustcall_encrypt_data(key_id: RustString, data: RustString, algorithm: RustString, hash: RustString) -> String {
+    func rustcall_encrypt_data(key_id: RustString, data: RustString, algorithm: RustString, hash: RustString) -> (Bool, String) {
         do{
             let key_type = try get_key_type(key_type: algorithm.toString())
             let privateKey: SecKey = try load_key(key_id: key_id.toString(), algorithm: key_type)!
@@ -136,9 +136,9 @@ import CryptoKit
             let algorithm = try get_encrypt_algorithm(algorithm: algorithm.toString(), hash: hash.toString()); 
             let encryptedData: Data = try encrypt_data(data: data.toString().data(using: String.Encoding.utf8)!, public_key_name: publicKey!, algorithm: algorithm)
             let encryptedData_string = encryptedData.base64EncodedString()
-            return ("\(encryptedData_string)")
+            return (false, "\(encryptedData_string)")
         }catch{
-            return ("Error: \(String(describing: error))")
+            return (true, "Error: \(String(describing: error))")
         }
 
     }
@@ -172,22 +172,22 @@ import CryptoKit
     - Parameter hash: A 'RustString' data type used to represent the hash that is used.
     - Returns: A String representing the decrypted data, or an error as a String on failure.
     */
-    func rustcall_decrypt_data(key_id: RustString, data: RustString, algorithm: RustString, hash: RustString) -> String{
+    func rustcall_decrypt_data(key_id: RustString, data: RustString, algorithm: RustString, hash: RustString) -> (Bool, String) {
         do{
             let seckey_algorithm_enum = try get_encrypt_algorithm(algorithm: algorithm.toString(), hash: hash.toString())
             let key_type = try get_key_type(key_type: algorithm.toString())
             guard let data = Data(base64Encoded: data.toString())
             else {
-                return ("Invalid base64 input") 
+                return (true, "Invalid base64 input") 
             }
                                     
             guard let decrypted_value = String(data: try decrypt_data(data: data, private_key: load_key(key_id: key_id.toString(), algorithm: key_type)!, algorithm: seckey_algorithm_enum), encoding: .utf8) else {
-                return ("Converting decrypted data to string")
+                return (true, "Converting decrypted data to string")
             }
             
-            return ("\(decrypted_value)")
+            return (false, "\(decrypted_value)")
         } catch {
-            return ("Error: \(String(describing: error))")
+            return (true, "Error: \(String(describing: error))")
         }
     }
     
@@ -237,7 +237,7 @@ import CryptoKit
     - Parameter hash: A 'RustString' data type used to represent the hash that is used.
     - Returns: A String representing the signed data, or an error as a String on failure.
     */
-    func rustcall_sign_data(key_id: RustString, data: RustString, algorithm: RustString, hash: RustString) -> String{
+    func rustcall_sign_data(key_id: RustString, data: RustString, algorithm: RustString, hash: RustString) -> (Bool, String){
         let privateKeyName_string = key_id.toString()
         let data_cfdata = data.toString().data(using: String.Encoding.utf8)! as CFData
 
@@ -246,9 +246,9 @@ import CryptoKit
             let key_type = try get_key_type(key_type: algorithm.toString()) as CFString
             let privateKeyReference = try load_key(key_id: privateKeyName_string, algorithm: key_type)!
             let signed_data = try ((sign_data(data: data_cfdata, privateKeyReference: privateKeyReference, algorithm: seckey_algorithm_enum))! as Data) 
-            return signed_data.base64EncodedString(options: [])
+            return (false, signed_data.base64EncodedString(options: []))
         }catch{
-            return "Error:  \(String(describing: error))"
+            return (true, "Error:  \(String(describing: error))")
         }
     }
     

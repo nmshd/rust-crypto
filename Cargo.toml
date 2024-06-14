@@ -67,7 +67,5 @@ tracing-android = { version = "0.2.0", optional = true }
 apple-secure-enclave-bindings = {version = "0.1.0", path="./src/tpm/macos/main"}
 regex = "1.10.4"
 
-
-
 [dev-dependencies]
 test-case = "*"

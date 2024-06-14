@@ -2,7 +2,7 @@ extern crate apple_secure_enclave_bindings;
 use super::{provider::{convert_algorithms, convert_hash}, SecureEnclaveProvider};
 use crate::common::{error::SecurityModuleError, traits::key_handle::KeyHandle};
 use tracing::instrument;
-use regex::Regex;
+// use regex::Regex;
 
 
 /// Provides cryptographic operations for asymmetric keys on macOS,
@@ -31,15 +31,12 @@ impl KeyHandle for SecureEnclaveProvider {
 
         let signed_data = apple_secure_enclave_bindings::keyhandle::rust_crypto_call_sign_data(key_id.clone(), string_data, algo, hash);
 
-        if Regex::new("(?i)error")
-            .unwrap()
-            .is_match(signed_data.as_str())
-        {
+        if signed_data.0 {
             Err(SecurityModuleError::EncryptionError(
-                signed_data.to_string(),
-            ))
+                        signed_data.1.to_string(),
+                    ))
         } else {
-            Ok(signed_data.into_bytes())
+            Ok(signed_data.1.into_bytes())
         }
     }
 
@@ -67,16 +64,26 @@ impl KeyHandle for SecureEnclaveProvider {
         let decrypted_data =
             apple_secure_enclave_bindings::keyhandle::rust_crypto_call_decrypt_data(self.key_id.to_string(), string_data, algorithm, hash);
 
-        if Regex::new("(?i)error")
-            .unwrap()
-            .is_match(decrypted_data.as_str())
-        {
+
+        if decrypted_data.0 {
             Err(SecurityModuleError::EncryptionError(
-                decrypted_data.to_string(),
-            ))
+                decrypted_data.1.to_string(),
+                ))
         } else {
-            Ok(decrypted_data.into_bytes())
+            Ok(decrypted_data.1.into_bytes())
         }
+
+
+        // if Regex::new("(?i)error")
+        //     .unwrap()
+        //     .is_match(decrypted_data.as_str())
+        // {
+        //     Err(SecurityModuleError::EncryptionError(
+        //         decrypted_data.to_string(),
+        //     ))
+        // } else {
+        //     Ok(decrypted_data.into_bytes())
+        // }
     }
 
 
@@ -103,17 +110,26 @@ impl KeyHandle for SecureEnclaveProvider {
 
         let encrypted_data =
             apple_secure_enclave_bindings::keyhandle::rust_crypto_call_encrypt_data(key_id.to_string(), string_data, algorithm, hash);
-        
-        if Regex::new("(?i)error")
-            .unwrap()
-            .is_match(encrypted_data.as_str())
-        {
+
+
+        if encrypted_data.0 {
             Err(SecurityModuleError::EncryptionError(
-                encrypted_data.to_string(),
-            ))
+                encrypted_data.1.to_string(),
+                ))
         } else {
-            Ok(encrypted_data.into_bytes())
+            Ok(encrypted_data.1.into_bytes())
         }
+
+        // if Regex::new("(?i)error")
+        //     .unwrap()
+        //     .is_match(encrypted_data.as_str())
+        // {
+        //     Err(SecurityModuleError::EncryptionError(
+        //         encrypted_data.to_string(),
+        //     ))
+        // } else {
+        //     Ok(encrypted_data.into_bytes())
+        // }
     }
 
 
