@@ -32,6 +32,8 @@ Then you need to clone this directory and run the following commands:
     ```
 6. **Please note that the `--nocapture` flag is used to display any print statements in the console, and `--test-threads=1` is used to run the tests sequentially.**
 
+7. **Please ensure that you have the `trust_bad_certs` environment variable set to `true` if you plan on using self-signed certificates with your RheinSec backend server.**
+
 Please also note that with every execution of a provider_handle_test, a token.json is being created in the root directory of the project.
 This file is used to store the token for the Hashicorp Vault server.
 It is recommended to delete this file after the tests have been executed because otherwise keys will not be created because keys with the given names already exist.
