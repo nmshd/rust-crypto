@@ -49,6 +49,10 @@ Follow these steps to execute the tests:
 9. **Token Management:**
    Each `provider_handle_test` execution generates a `token.json` file in the project's root directory, storing the token for the Hashicorp Vault server. It is crucial to delete this file post-testing to prevent key creation issues, as existing keys with the same names will block new key generation.
 
+10. **Decrypting the X25519-Encrypted data:**
+    Please note that all data encrypted using the X25519 algorithm includes the nonce required for decryption within the first 24 bytes of the encrypted data array.
+
+
 ## Features
 
 - **Encryption Algorithms**: Supports a variety of encryption algorithms, including:

@@ -1,18 +1,21 @@
 use arrayref::array_ref;
 use base64::Engine;
 use base64::prelude::BASE64_STANDARD;
+use crypto_box;
+use crypto_box::{Nonce, PublicKey, SalsaBox, SecretKey};
+use crypto_box::aead::{Aead, OsRng};
+use rand_core::RngCore; // Make sure to include this trait for OsRng
 use ed25519_dalek::{Signature, Signer as EdSigner, SigningKey, Verifier, VerifyingKey};
+use openssl::base64 as openssl_base64;
 use openssl::hash::MessageDigest;
 use openssl::pkey::PKey;
 use openssl::rsa::{Padding, Rsa};
 use openssl::sign::{Signer as RSASigner, Verifier as RSAVerifier};
 use openssl::symm::{Cipher, Crypter, Mode};
-use openssl::{base64 as openssl_base64};
-use sodiumoxide::crypto::box_;
+use rand::Rng;
 use x25519_dalek::{
     StaticSecret as X25519StaticSecret, StaticSecret,
 };
-use rand::Rng;
 
 use crate::common::{
     crypto::algorithms::encryption::AsymmetricEncryption, error::SecurityModuleError,
@@ -147,27 +150,26 @@ impl KeyHandle for NksProvider {
                         .decode(self.private_key.as_bytes())
                         .expect("Invalid private key base64");
 
-                    let public_key =
-                        box_::PublicKey::from_slice(&public_key_bytes).expect("Invalid public key");
-                    let private_key = box_::SecretKey::from_slice(&private_key_bytes)
-                        .expect("Invalid private key");
+                    let public_key = PublicKey::from_slice(&public_key_bytes).expect("Invalid public key");
+                    let private_key = SecretKey::from_slice(&private_key_bytes).expect("Invalid private key");
 
-                    // Split the encrypted data into the nonce and the encrypted message
-                    let (nonce_bytes, encrypted_message) =
-                        _encrypted_data.split_at(box_::NONCEBYTES);
-                    let nonce = box_::Nonce::from_slice(nonce_bytes).expect("Invalid nonce");
+                    let salsa_box = crypto_box::SalsaBox::new(&public_key, &private_key);
+                    const NONCE_SIZE: usize = 24;
+                    let (nonce_bytes, encrypted_message) = _encrypted_data.split_at(NONCE_SIZE);
 
-                    // Decrypt the message
-                    let decrypted_message =
-                        box_::open(encrypted_message, &nonce, &public_key, &private_key).map_err(
-                            |_| {
-                                SecurityModuleError::DecryptionError(
-                                    "Decryption failed".to_string(),
-                                )
-                            },
-                        )?;
+                    let mut nonce = Nonce::default();
+
+                    if nonce_bytes.len() == NONCE_SIZE {
+                        nonce = *Nonce::from_slice(nonce_bytes);
+                    } else {
+                        return Err(SecurityModuleError::DecryptionError("Invalid nonce size".to_string()));
+                    }
+
+                    let decrypted_message = salsa_box.decrypt(&nonce, encrypted_message)
+                        .map_err(|_| SecurityModuleError::DecryptionError("Decryption failed".to_string()))?;
 
                     Ok(decrypted_message)
+
                 }
                 None => match &key_algorithm_sym {
                     Some(BlockCiphers::Aes(mode, length)) => {
@@ -347,18 +349,19 @@ impl KeyHandle for NksProvider {
                         .decode(self.private_key.as_bytes())
                         .expect("Invalid private key base64");
 
-                    let public_key =
-                        box_::PublicKey::from_slice(&public_key_bytes).expect("Invalid public key");
-                    let private_key = box_::SecretKey::from_slice(&private_key_bytes)
-                        .expect("Invalid private key");
+                    let public_key = PublicKey::from_slice(&public_key_bytes).expect("Invalid public key");
+                    let private_key = SecretKey::from_slice(&private_key_bytes).expect("Invalid private key");
 
-                    let nonce = box_::gen_nonce();
-                    let encrypted_message = box_::seal(data, &nonce, &public_key, &private_key);
+                    const NONCE_SIZE: usize = 24;
+                    let mut nonce = [0u8; NONCE_SIZE];
+                    OsRng.fill_bytes(&mut nonce);
 
-                    // Concatenate the nonce and the encrypted message into a single Vec<u8>
-                    let mut result =
-                        Vec::with_capacity(nonce.as_ref().len() + encrypted_message.len());
-                    result.extend_from_slice(nonce.as_ref());
+                    let encrypted_message = SalsaBox::new(&public_key, &private_key)
+                        .encrypt(&Nonce::from(nonce), data)
+                        .expect("Encryption failed");
+
+                    let mut result = Vec::with_capacity(nonce.len() + encrypted_message.len());
+                    result.extend_from_slice(&nonce);
                     result.extend_from_slice(&encrypted_message);
                     Ok(result)
                 }
