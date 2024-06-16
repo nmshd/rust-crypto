@@ -106,16 +106,16 @@ import CryptoKit
     - Throws: 'SecureEnclaveError.EncryptionError' if the data could not be encrypted.
     - Returns: Data that has been encrypted.
     */
-    func encrypt_data(data: Data, public_key_name: SecKey, algorithm: SecKeyAlgorithm) throws -> Data {
+    func encrypt_data(data: CFData, public_key_name: SecKey, algorithm: SecKeyAlgorithm) throws -> CFData? {
         let algorithm = algorithm
         var error: Unmanaged<CFError>?
-        let result = SecKeyCreateEncryptedData(public_key_name, algorithm, data as CFData, &error)
+        let result = SecKeyCreateEncryptedData(public_key_name, algorithm, data, &error)
         
         if result == nil {
             throw SecureEnclaveError.EncryptionError("Data could not be encrypted. \(String(describing: error))")
         }
         
-        return result! as Data
+        return result
     }
 
 
@@ -128,21 +128,21 @@ import CryptoKit
     - Parameter hash: A 'RustString' data type used to represent the hash that is used.
     - Returns: A String representing the encrypted data, or an error as a String on failure.
     */
-    func rustcall_encrypt_data(key_id: RustString, data: RustString, algorithm: RustString, hash: RustString) -> (Bool, String) {
+    func rustcall_encrypt_data(key_id: RustString, data: RustVec<UInt8>, algorithm: RustString, hash: RustString) -> (Bool, String) {
         do{
             let key_type = try get_key_type(key_type: algorithm.toString())
             let privateKey: SecKey = try load_key(key_id: key_id.toString(), algorithm: key_type)!
             let publicKey = get_public_key_from_private_key(private_key: privateKey)
-            let algorithm = try get_encrypt_algorithm(algorithm: algorithm.toString(), hash: hash.toString()); 
-            let encryptedData: Data = try encrypt_data(data: data.toString().data(using: String.Encoding.utf8)!, public_key_name: publicKey!, algorithm: algorithm)
-            let encryptedData_string = encryptedData.base64EncodedString()
-            return (false, "\(encryptedData_string)")
+            let algorithm = try get_encrypt_algorithm(algorithm: algorithm.toString(), hash: hash.toString())
+            
+            let encryptedData: Data = try encrypt_data(data: Data(data) as CFData, public_key_name: publicKey!, algorithm: algorithm)! as Data
+
+            let encryptedData_string = encryptedData.base64EncodedString(options: [])
+            return (false, encryptedData_string)
         }catch{
             return (true, "Error: \(String(describing: error))")
         }
-
     }
-    
     
     /**
     Decrypts data using a private key.
@@ -153,39 +153,35 @@ import CryptoKit
     - Throws: 'SecureEnclaveError.DecryptionError' if the data could not be decrypted.
     - Returns: Data that has been decrypted.
     */
-    func decrypt_data(data: Data, private_key: SecKey, algorithm: SecKeyAlgorithm) throws -> Data {
+    func decrypt_data(data: CFData, private_key: SecKey, algorithm: SecKeyAlgorithm) throws -> CFData? {
         let algorithm: SecKeyAlgorithm = algorithm
         var error: Unmanaged<CFError>?
-        let result = SecKeyCreateDecryptedData(private_key, algorithm, data as CFData, &error)
+        let result = SecKeyCreateDecryptedData(private_key, algorithm, data, &error)
         if result == nil {
             throw SecureEnclaveError.DecryptionError("Data could not be decrypted. \(String(describing: error))")
         }
-        return result! as Data
+        return result
     }
 
     /** 
     Optimized method of @decrypt_data() to communicate with the rust-side abstraction-layer.
 
     - Parameter key_id: A 'RustString' data type used to identify the private key.
-    - Parameter data: A 'RustString' data type used to represent the data that has to be decrypted as a String.
+    - Parameter data: A 'RustVec<UInt8>' data type used to represent the data that has to be decrypted as a Rust-Vector.
     - Parameter algorithm: A 'RustString' data type used to represent the algorithm that is used to decrypt the data.
     - Parameter hash: A 'RustString' data type used to represent the hash that is used.
     - Returns: A String representing the decrypted data, or an error as a String on failure.
     */
-    func rustcall_decrypt_data(key_id: RustString, data: RustString, algorithm: RustString, hash: RustString) -> (Bool, String) {
+    func rustcall_decrypt_data(key_id: RustString, data: RustVec<UInt8>, algorithm: RustString, hash: RustString) -> (Bool, String) {
         do{
             let seckey_algorithm_enum = try get_encrypt_algorithm(algorithm: algorithm.toString(), hash: hash.toString())
+
             let key_type = try get_key_type(key_type: algorithm.toString())
-            guard let data = Data(base64Encoded: data.toString())
-            else {
-                return (true, "Invalid base64 input") 
-            }
-                                    
-            guard let decrypted_value = String(data: try decrypt_data(data: data, private_key: load_key(key_id: key_id.toString(), algorithm: key_type)!, algorithm: seckey_algorithm_enum), encoding: .utf8) else {
-                return (true, "Converting decrypted data to string")
-            }
-            
-            return (false, "\(decrypted_value)")
+            let data_cfdata = Data(base64Encoded: Data(data), options: [])! as CFData
+
+            let decrypted_data = try (decrypt_data(data: data_cfdata, private_key: load_key(key_id: key_id.toString(), algorithm: key_type)!, algorithm: seckey_algorithm_enum))! as Data
+
+            return (false, String(data: decrypted_data, encoding: String.Encoding.ascii)!)
         } catch {
             return (true, "Error: \(String(describing: error))")
         }
@@ -220,7 +216,7 @@ import CryptoKit
         }
         
         var error: Unmanaged<CFError>?
-        guard let signed_data = SecKeyCreateSignature(privateKeyReference, sign_algorithm, data as CFData, &error)
+        guard let signed_data = SecKeyCreateSignature(privateKeyReference, sign_algorithm, data, &error)
         else{
             throw SecureEnclaveError.SigningError("Data could not be signed: \(String(describing: error))")
         }
@@ -241,6 +237,7 @@ import CryptoKit
         let privateKeyName_string = key_id.toString()
         // let data_cfdata = data.toString().data(using: String.Encoding.utf8)! as CFData
         let data_cfdata = Data(data) as CFData; 
+
         do {
             let seckey_algorithm_enum = try get_sign_algorithm(algorithm: algorithm.toString(), hash: hash.toString())
             let key_type = try get_key_type(key_type: algorithm.toString()) as CFString

@@ -50,21 +50,15 @@ impl KeyHandle for SecureEnclaveProvider {
     /// A `Result` containing the decrypted data as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
     #[instrument]
     fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
-        let string_data = String::from_utf8(encrypted_data.to_vec()).map_err(|_| {
-            SecurityModuleError::DecryptionError("Data conversion error".to_string())
-        })?;
+        let encrypted_data_vec = encrypted_data.to_vec(); 
         let config = self.config.as_ref().ok_or(SecurityModuleError::InitializationError(("Failed to initialize config").to_owned()))?;
         let algorithm = convert_algorithms(config.clone()); 
         let hash = convert_hash(config.hash.expect("No Hash given"));
 
         let decrypted_data =
-            apple_secure_enclave_bindings::keyhandle::rust_crypto_call_decrypt_data(self.key_id.to_string(), string_data, algorithm, hash);
-
-
+            apple_secure_enclave_bindings::keyhandle::rust_crypto_call_decrypt_data(self.key_id.to_string(), encrypted_data_vec, algorithm, hash);
         if decrypted_data.0 {
-            Err(SecurityModuleError::EncryptionError(
-                decrypted_data.1.to_string(),
-                ))
+            Err(SecurityModuleError::EncryptionError(decrypted_data.1.to_string()))
         } else {
             Ok(decrypted_data.1.into_bytes())
         }
@@ -84,17 +78,17 @@ impl KeyHandle for SecureEnclaveProvider {
     /// A `Result` containing the encrypted data as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
     #[instrument]
     fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
-        let string_data = String::from_utf8(data.to_vec()).map_err(|_| {
-            SecurityModuleError::EncryptionError("Data conversion error".to_string())
-        })?;
+        // let string_data = String::from_utf8(data.to_vec()).map_err(|_| {
+        //     SecurityModuleError::EncryptionError("Data conversion error".to_string())
+        // })?;
+        let data_vec = data.to_vec(); 
         let key_id = &self.key_id;
         let config = self.config.as_ref().ok_or(SecurityModuleError::InitializationError(("Failed to initialize config").to_owned()))?;
         let algorithm = convert_algorithms(config.clone()); 
         let hash = convert_hash(config.hash.expect("No Hash given"));
 
         let encrypted_data =
-            apple_secure_enclave_bindings::keyhandle::rust_crypto_call_encrypt_data(key_id.to_string(), string_data, algorithm, hash);
-
+            apple_secure_enclave_bindings::keyhandle::rust_crypto_call_encrypt_data(key_id.to_string(), data_vec, algorithm, hash);
 
         if encrypted_data.0 {
             Err(SecurityModuleError::EncryptionError(
@@ -121,18 +115,8 @@ impl KeyHandle for SecureEnclaveProvider {
     /// or a `SecurityModuleError` on failure.
     #[instrument]
     fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, SecurityModuleError> {
-        // let string_data = String::from_utf8(data.to_vec()).map_err(|_| {
-        //     SecurityModuleError::SignatureVerificationError("Data conversion error".to_string())
-        // })?;
-
         let data_vec = data.to_vec();
-
-        // let string_signature = String::from_utf8(signature.to_vec()).map_err(|_| {
-        //     SecurityModuleError::SignatureVerificationError("Signature conversion error".to_string(),)
-        // })?;
-
         let signature_vec = signature.to_vec(); 
-
         let key_id = &self.key_id;  
         let config = self.config.as_ref().ok_or(SecurityModuleError::InitializationError(("Failed to initialize config").to_owned()))?;
         let algo = convert_algorithms(config.clone()); 
@@ -148,7 +132,7 @@ impl KeyHandle for SecureEnclaveProvider {
             "false" => Ok(false),
             _ => Err(SecurityModuleError::SignatureVerificationError(
                 verification_result,
-            )),
+            ))
         }
     }
 }
