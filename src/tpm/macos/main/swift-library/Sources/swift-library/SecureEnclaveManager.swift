@@ -65,7 +65,7 @@ import CryptoKit
 
     - Parameter key_id: A 'RustString' data type used to identify the private key.
     - Parameter key_type - A 'RustString' data type used to represent the algorithm that is used to create the key pair.
-    - Returns: A boolean representing if a error occured and a String representing the private and public key, or an error as a String on failure. //TODO KIWAN
+    - Returns: A boolean representing if a error occured and a String representing the private and public key, or an error as a String on failure.
     */
     func rustcall_create_key(key_id: RustString, key_type: RustString) -> (Bool, String) {
         // For Secure Enclave is only ECC supported
@@ -126,7 +126,7 @@ import CryptoKit
     - Parameter data: A 'RustVec<UInt8>' data type used to represent the data that has to be encrypted as a Rust-Vector.
     - Parameter algorithm: A 'RustString' data type used to represent the algorithm that is used to encrypt the data.
     - Parameter hash: A 'RustString' data type used to represent the hash that is used.
-    - Returns: A boolean representing if a error occured and a String representing the encrypted data, or an error as a String on failure. //TODO KIWAN
+    - Returns: A boolean representing if a error occured and a String representing the encrypted data, or an error as a String on failure.
     */
     func rustcall_encrypt_data(key_id: RustString, data: RustVec<UInt8>, algorithm: RustString, hash: RustString) -> (Bool, String) {
         do{
@@ -170,7 +170,7 @@ import CryptoKit
     - Parameter data: A 'RustVec<UInt8>' data type used to represent the data that has to be decrypted as a Rust-Vector.
     - Parameter algorithm: A 'RustString' data type used to represent the algorithm that is used to decrypt the data.
     - Parameter hash: A 'RustString' data type used to represent the hash that is used.
-    - Returns: A boolean representing if a error occured and a String representing the decrypted data, or an error as a String on failure. //TODO KIWAN
+    - Returns: A boolean representing if a error occured and a String representing the decrypted data, or an error as a String on failure.
     */
     func rustcall_decrypt_data(key_id: RustString, data: RustVec<UInt8>, algorithm: RustString, hash: RustString) -> (Bool, String) {
         do{
@@ -227,7 +227,7 @@ import CryptoKit
     - Parameter data: A 'RustVec<UInt8>' data type used to represent the data that has to be signed as a Rust-Vector.
     - Parameter algorithm: A 'RustString' data type used to represent the algorithm that is used to sign the data.
     - Parameter hash: A 'RustString' data type used to represent the hash that is used.
-    - Returns: A boolean representing if a error occured and a String representing the signed data, or an error as a String on failure. //TODO KIWAN
+    - Returns: A boolean representing if a error occured and a String representing the signed data, or an error as a String on failure.
     */
     func rustcall_sign_data(key_id: RustString, data: RustVec<UInt8>, algorithm: RustString, hash: RustString) -> (Bool, String){
         let privateKeyName_string = key_id.toString()
@@ -277,7 +277,7 @@ import CryptoKit
     - Parameter signature: A 'RustVec<UInt8>' data type used to represent the signature of the signed data as a Rust-Vector.
     - Parameter algorithm: A 'RustString' data type used to represent the algorithm that is used to verify the signature.
     - Parameter hash: A 'RustString' data type used to represent the hash that is used.
-    - Returns: A String if the data could have been verified with the signature, or an error as a String on failure. //TODO KIWAN
+    - Returns: A boolean representing if a error occured and a String representing the verify status, or an error as a String on failure.
     */
     func rustcall_verify_signature(key_id: RustString, data: RustVec<UInt8>, signature: RustVec<UInt8>, algorithm: RustString, hash: RustString) -> (Bool, String) {
         do{
@@ -362,7 +362,7 @@ import CryptoKit
     - Parameter key_id: A 'RustString' data type used to identify the private key.
     - Parameter key_type - A 'RustString' data type used to represent the algorithm that is used to create the key pair.
     - Parameter hash - A 'RustString' data type used to represent the hash that is used.
-    - Returns: A boolean representing if a error occured and a String representing the private key, or an error as a String on failure. //TODO KIWAN
+    - Returns: A boolean representing if a error occured and a String representing the private key, or an error as a String on failure.
     */
     func rustcall_load_key(key_id: RustString, key_type: RustString, hash: RustString) -> (Bool, String) {
         do {
