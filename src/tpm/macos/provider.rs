@@ -113,9 +113,9 @@ impl Provider for SecureEnclaveProvider {
         let load_key = apple_secure_enclave_bindings::provider::rust_crypto_call_load_key(_key_id.to_string(), algorithm, hash);
 
         if load_key.0 {
-            return Ok(())
+            return Err(SecurityModuleError::InitializationError(load_key.1.to_string()))
         }
-        return Err(SecurityModuleError::InitializationError(load_key.1.to_string()))
+        return Ok(())
     }
 
 
