@@ -127,11 +127,11 @@ impl KeyHandle for SecureEnclaveProvider {
 
         // The FFI bridge always returns strings by design.
         // If not "true" or "false" is found, an error from the function is expected
-        match verification_result.as_str() {
+        match verification_result.1.as_str() {
             "true" => Ok(true),
             "false" => Ok(false),
             _ => Err(SecurityModuleError::SignatureVerificationError(
-                verification_result,
+                verification_result.1,
             ))
         }
     }

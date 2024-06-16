@@ -1,4 +1,4 @@
-use crate::{common::{crypto::algorithms::{encryption::{AsymmetricEncryption, BlockCiphers}, hashes::Hash}, traits::module_provider_config::ProviderConfig}, SecurityModuleError};
+use crate::{common::{crypto::algorithms::{encryption::{AsymmetricEncryption}, hashes::Hash}, traits::module_provider_config::ProviderConfig}, SecurityModuleError};
 use anyhow::Result;
 use std::fmt::{Debug, Formatter};
 use std::any::Any;

@@ -6,7 +6,6 @@ use crate::
         error::SecurityModuleError,
         traits::module_provider::Provider,
     };
-use regex::Regex;
 use crate::common::crypto::algorithms::hashes::*; 
 use std::any::Any;
 use crate::common::error::SecurityModuleError::InitializationError; 
@@ -71,8 +70,8 @@ impl Provider for SecureEnclaveProvider {
 
             let keypair = apple_secure_enclave_bindings::provider::rust_crypto_call_create_key(self.key_id.clone(), key_algorithm_type);
 
-            if Regex::new("(?i)error").unwrap().is_match(keypair.as_str()) {
-                Err(SecurityModuleError::InitializationError(keypair.to_string()))
+            if keypair.0 {
+                Err(SecurityModuleError::InitializationError(keypair.1.to_string()))
             } else {
                 Ok(())
             }
@@ -113,11 +112,10 @@ impl Provider for SecureEnclaveProvider {
 
         let load_key = apple_secure_enclave_bindings::provider::rust_crypto_call_load_key(_key_id.to_string(), algorithm, hash);
 
-        if Regex::new("(?i)error").unwrap().is_match(load_key.as_str()){
-            Err(SecurityModuleError::InitializationError(load_key.to_string()))
-        } else {
-            Ok(())
+        if load_key.0 {
+            return Ok(())
         }
+        return Err(SecurityModuleError::InitializationError(load_key.1.to_string()))
     }
 
 

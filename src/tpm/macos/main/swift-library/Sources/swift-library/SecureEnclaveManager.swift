@@ -65,18 +65,18 @@ import CryptoKit
 
     - Parameter key_id: A 'RustString' data type used to identify the private key.
     - Parameter key_type - A 'RustString' data type used to represent the algorithm that is used to create the key pair.
-    - Returns: A String representing the private and public key, or an error as a String on failure.
+    - Returns: A boolean representing if a error occured and a String representing the private and public key, or an error as a String on failure.
     */
-    func rustcall_create_key(key_id: RustString, key_type: RustString) -> String {
+    func rustcall_create_key(key_id: RustString, key_type: RustString) -> (Bool, String) {
         // For Secure Enclave is only ECC supported
         let algorithm = String(key_type.toString().split(separator: ";")[0])
         let keySize = String(key_type.toString().split(separator:";")[1])
         do{
             let algorithm = try get_key_type(key_type: algorithm);
             let keyPair = try create_key(key_id: key_id.toString(), algorithm: algorithm, key_size: keySize)
-            return ("Private Key: "+String((keyPair?.privateKey.hashValue)!) + "\nPublic Key: " + String((keyPair?.publicKey.hashValue)!))
+            return (false,("Private Key: "+String((keyPair?.privateKey.hashValue)!) + "\nPublic Key: " + String((keyPair?.publicKey.hashValue)!)))
         }catch{
-            return ("Error: \(String(describing: error))")
+            return (true,"Error: \(String(describing: error))")
         }
     }
     
@@ -126,7 +126,7 @@ import CryptoKit
     - Parameter data: A 'RustString' data type used to represent the data that has to be encrypted as a String.
     - Parameter algorithm: A 'RustString' data type used to represent the algorithm that is used to encrypt the data.
     - Parameter hash: A 'RustString' data type used to represent the hash that is used.
-    - Returns: A String representing the encrypted data, or an error as a String on failure.
+    - Returns: A boolean representing if a error occured and a String representing the encrypted data, or an error as a String on failure.
     */
     func rustcall_encrypt_data(key_id: RustString, data: RustVec<UInt8>, algorithm: RustString, hash: RustString) -> (Bool, String) {
         do{
@@ -170,7 +170,7 @@ import CryptoKit
     - Parameter data: A 'RustVec<UInt8>' data type used to represent the data that has to be decrypted as a Rust-Vector.
     - Parameter algorithm: A 'RustString' data type used to represent the algorithm that is used to decrypt the data.
     - Parameter hash: A 'RustString' data type used to represent the hash that is used.
-    - Returns: A String representing the decrypted data, or an error as a String on failure.
+    - Returns: A boolean representing if a error occured and a String representing the decrypted data, or an error as a String on failure.
     */
     func rustcall_decrypt_data(key_id: RustString, data: RustVec<UInt8>, algorithm: RustString, hash: RustString) -> (Bool, String) {
         do{
@@ -231,7 +231,7 @@ import CryptoKit
     - Parameter data: A 'RustVec<UInt8>' data type used to represent the data that has to be signed as a Vector.
     - Parameter algorithm: A 'RustString' data type used to represent the algorithm that is used to sign the data.
     - Parameter hash: A 'RustString' data type used to represent the hash that is used.
-    - Returns: A String representing the signed data, or an error as a String on failure.
+    - Returns: A boolean representing if a error occured and a String representing the signed data, or an error as a String on failure.
     */
     func rustcall_sign_data(key_id: RustString, data: RustVec<UInt8>, algorithm: RustString, hash: RustString) -> (Bool, String){
         let privateKeyName_string = key_id.toString()
@@ -282,7 +282,7 @@ import CryptoKit
     - Parameter hash: A 'RustString' data type used to represent the hash that is used.
     - Returns: A String if the data could have been verified with the signature, or an error as a String on failure.
     */
-    func rustcall_verify_data(key_id: RustString, data: RustVec<UInt8>, signature: RustVec<UInt8>, algorithm: RustString, hash: RustString) -> String {
+    func rustcall_verify_signature(key_id: RustString, data: RustVec<UInt8>, signature: RustVec<UInt8>, algorithm: RustString, hash: RustString) -> (Bool, String) {
         do{
             let publicKeyName_string = key_id.toString()
             let data_cfdata = Data(data) as CFData;
@@ -302,12 +302,12 @@ import CryptoKit
             let status = try verify_signature(public_key: publicKey, data: data_cfdata, signature: signature_cfdata, sign_algorithm: seckey_algorithm_enum)
             
             if status == true{
-                return "true"
+                return (false,"true")
             }else{
-                return "false"
+                return (false,"false")
             }
         }catch{
-            return "Error: \(String(describing: error))"
+            return (true,"Error: \(String(describing: error))")
         }
     }
     
@@ -363,16 +363,16 @@ import CryptoKit
     - Parameter key_id: A 'RustString' data type used to identify the private key.
     - Parameter key_type - A 'RustString' data type used to represent the algorithm that is used to create the key pair.
     - Parameter hash - A 'RustString' data type used to represent the hash that is used.
-    - Returns: A String representing the private key, or an error as a String on failure.
+    - Returns: A boolean representing if a error occured and a String representing the private key, or an error as a String on failure.
     */
-    func rustcall_load_key(key_id: RustString, key_type: RustString, hash: RustString) -> String {
+    func rustcall_load_key(key_id: RustString, key_type: RustString, hash: RustString) -> (Bool, String) {
         do {
             let key_algorithm = try get_key_type(key_type: key_type.toString())
             let operation_algorithm_encryption = try get_encrypt_algorithm(algorithm: key_type.toString(), hash: hash.toString())
             let operation_algorithm_signing = try get_sign_algorithm(algorithm: key_type.toString(), hash: hash.toString())
 
             guard let key = try load_key(key_id: key_id.toString(), algorithm: key_algorithm) else {
-                return "Key with KeyID \(key_id) could not be found."
+                return (true,"Key with KeyID \(key_id) could not be found.")
             }
 
             try check_algorithm_support(key: get_public_key_from_private_key(private_key: key)!, operation: SecKeyOperationType.encrypt, algorithm: operation_algorithm_encryption)
@@ -380,9 +380,9 @@ import CryptoKit
             try check_algorithm_support(key: key, operation: SecKeyOperationType.sign, algorithm: operation_algorithm_signing)
             try check_algorithm_support(key: get_public_key_from_private_key(private_key: key)!, operation: SecKeyOperationType.verify, algorithm: operation_algorithm_signing)
             
-            return "\(key.hashValue)"
+            return (false,"\(key.hashValue)")
         } catch {
-            return "Error: \(key_type.toString()) + \(String(describing: error))"
+            return (true,"Error: \(key_type.toString()) + \(String(describing: error))")
         }
     }
     
