@@ -1,10 +1,9 @@
 use arrayref::array_ref;
-use base64::Engine;
 use base64::prelude::BASE64_STANDARD;
+use base64::Engine;
 use crypto_box;
-use crypto_box::{Nonce, PublicKey, SalsaBox, SecretKey};
 use crypto_box::aead::{Aead, OsRng};
-use rand_core::RngCore; // Make sure to include this trait for OsRng
+use crypto_box::{Nonce, PublicKey, SalsaBox, SecretKey};
 use ed25519_dalek::{Signature, Signer as EdSigner, SigningKey, Verifier, VerifyingKey};
 use openssl::base64 as openssl_base64;
 use openssl::hash::MessageDigest;
@@ -13,17 +12,18 @@ use openssl::rsa::{Padding, Rsa};
 use openssl::sign::{Signer as RSASigner, Verifier as RSAVerifier};
 use openssl::symm::{Cipher, Crypter, Mode};
 use rand::Rng;
-use x25519_dalek::{
-    StaticSecret as X25519StaticSecret, StaticSecret,
-};
+use rand_core::RngCore; // Make sure to include this trait for OsRng
+use x25519_dalek::{StaticSecret as X25519StaticSecret, StaticSecret};
 
+use crate::common::crypto::algorithms::encryption::{
+    BlockCiphers, EccCurves, EccSchemeAlgorithm, SymmetricMode,
+};
+use crate::common::crypto::algorithms::hashes::*;
+use crate::common::crypto::algorithms::KeyBits;
 use crate::common::{
     crypto::algorithms::encryption::AsymmetricEncryption, error::SecurityModuleError,
     traits::key_handle::KeyHandle,
 };
-use crate::common::crypto::algorithms::encryption::{BlockCiphers, EccCurves, EccSchemeAlgorithm, SymmetricMode};
-use crate::common::crypto::algorithms::hashes::*;
-use crate::common::crypto::algorithms::KeyBits;
 use crate::nks::NksConfig;
 use crate::SecurityModuleError::InitializationError;
 
@@ -41,7 +41,13 @@ impl KeyHandle for NksProvider {
     /// A `Result` containing the signature as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
     #[tracing::instrument]
     fn sign_data(&self, _data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
-        if let Some(nks_config) = self.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>() {
+        if let Some(nks_config) = self
+            .config
+            .as_ref()
+            .unwrap()
+            .as_any()
+            .downcast_ref::<NksConfig>()
+        {
             let key_algorithm = &nks_config.key_algorithm;
             let data = _data;
             let hash = nks_config.hash;
@@ -55,23 +61,41 @@ impl KeyHandle for NksProvider {
                         let private_key_pem = self.private_key.as_bytes();
                         let rsa = Rsa::private_key_from_pem(private_key_pem)
                             .map_err(|_| SecurityModuleError::KeyError)?;
-                        let pkey = PKey::from_rsa(rsa).map_err(|_| SecurityModuleError::KeyError)?;
+                        let pkey =
+                            PKey::from_rsa(rsa).map_err(|_| SecurityModuleError::KeyError)?;
                         // Create the signer based on the hash algorithm
                         let mut signer = match hash {
                             Hash::Sha1 => RSASigner::new(MessageDigest::sha1(), &pkey),
-                            Hash::Sha2(Sha2Bits::Sha224) => RSASigner::new(MessageDigest::sha224(), &pkey),
-                            Hash::Sha2(Sha2Bits::Sha256) => RSASigner::new(MessageDigest::sha256(), &pkey),
-                            Hash::Sha2(Sha2Bits::Sha384) => RSASigner::new(MessageDigest::sha384(), &pkey),
-                            Hash::Sha2(Sha2Bits::Sha512) => RSASigner::new(MessageDigest::sha512(), &pkey),
-                            Hash::Sha3(Sha3Bits::Sha3_224) => RSASigner::new(MessageDigest::sha3_224(), &pkey),
-                            Hash::Sha3(Sha3Bits::Sha3_256) => RSASigner::new(MessageDigest::sha3_256(), &pkey),
-                            Hash::Sha3(Sha3Bits::Sha3_384) => RSASigner::new(MessageDigest::sha3_384(), &pkey),
-                            Hash::Sha3(Sha3Bits::Sha3_512) => RSASigner::new(MessageDigest::sha3_512(), &pkey),
+                            Hash::Sha2(Sha2Bits::Sha224) => {
+                                RSASigner::new(MessageDigest::sha224(), &pkey)
+                            }
+                            Hash::Sha2(Sha2Bits::Sha256) => {
+                                RSASigner::new(MessageDigest::sha256(), &pkey)
+                            }
+                            Hash::Sha2(Sha2Bits::Sha384) => {
+                                RSASigner::new(MessageDigest::sha384(), &pkey)
+                            }
+                            Hash::Sha2(Sha2Bits::Sha512) => {
+                                RSASigner::new(MessageDigest::sha512(), &pkey)
+                            }
+                            Hash::Sha3(Sha3Bits::Sha3_224) => {
+                                RSASigner::new(MessageDigest::sha3_224(), &pkey)
+                            }
+                            Hash::Sha3(Sha3Bits::Sha3_256) => {
+                                RSASigner::new(MessageDigest::sha3_256(), &pkey)
+                            }
+                            Hash::Sha3(Sha3Bits::Sha3_384) => {
+                                RSASigner::new(MessageDigest::sha3_384(), &pkey)
+                            }
+                            Hash::Sha3(Sha3Bits::Sha3_512) => {
+                                RSASigner::new(MessageDigest::sha3_512(), &pkey)
+                            }
                             Hash::Md5 => RSASigner::new(MessageDigest::md5(), &pkey),
                             Hash::Ripemd160 => RSASigner::new(MessageDigest::ripemd160(), &pkey),
                             //Md2 and Md4 are not supported by openssl crate
                             _ => return Err(SecurityModuleError::UnsupportedAlgorithm),
-                        }.map_err(|_| SecurityModuleError::SigningFailed)?;
+                        }
+                        .map_err(|_| SecurityModuleError::SigningFailed)?;
                         signer
                             .update(data)
                             .map_err(|_| SecurityModuleError::SigningFailed)?;
@@ -79,7 +103,9 @@ impl KeyHandle for NksProvider {
                             .sign_to_vec()
                             .map_err(|_| SecurityModuleError::SigningFailed)
                     }
-                    Some(AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::Curve25519))) => {
+                    Some(AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(
+                        EccCurves::Curve25519,
+                    ))) => {
                         // ECC signing method
                         let static_secret = decode_base64_private_key(self.private_key.as_str());
                         let signing_key = SigningKey::from_bytes(&static_secret.to_bytes());
@@ -126,7 +152,7 @@ impl KeyHandle for NksProvider {
             match &key_algorithm {
                 Some(AsymmetricEncryption::Rsa(..)) => {
                     // RSA decryption method
-                    let rsa = Rsa::private_key_from_pem(&self.private_key.as_bytes())
+                    let rsa = Rsa::private_key_from_pem(self.private_key.as_bytes())
                         .map_err(|_| SecurityModuleError::KeyError)?;
                     let mut decrypted_data = vec![0; rsa.size() as usize];
                     rsa.private_decrypt(encrypted_data, &mut decrypted_data, Padding::PKCS1)
@@ -150,8 +176,10 @@ impl KeyHandle for NksProvider {
                         .decode(self.private_key.as_bytes())
                         .expect("Invalid private key base64");
 
-                    let public_key = PublicKey::from_slice(&public_key_bytes).expect("Invalid public key");
-                    let private_key = SecretKey::from_slice(&private_key_bytes).expect("Invalid private key");
+                    let public_key =
+                        PublicKey::from_slice(&public_key_bytes).expect("Invalid public key");
+                    let private_key =
+                        SecretKey::from_slice(&private_key_bytes).expect("Invalid private key");
 
                     let salsa_box = crypto_box::SalsaBox::new(&public_key, &private_key);
                     const NONCE_SIZE: usize = 24;
@@ -162,14 +190,17 @@ impl KeyHandle for NksProvider {
                     if nonce_bytes.len() == NONCE_SIZE {
                         nonce = *Nonce::from_slice(nonce_bytes);
                     } else {
-                        return Err(SecurityModuleError::DecryptionError("Invalid nonce size".to_string()));
+                        return Err(SecurityModuleError::DecryptionError(
+                            "Invalid nonce size".to_string(),
+                        ));
                     }
 
-                    let decrypted_message = salsa_box.decrypt(&nonce, encrypted_message)
-                        .map_err(|_| SecurityModuleError::DecryptionError("Decryption failed".to_string()))?;
+                    let decrypted_message =
+                        salsa_box.decrypt(&nonce, encrypted_message).map_err(|_| {
+                            SecurityModuleError::DecryptionError("Decryption failed".to_string())
+                        })?;
 
                     Ok(decrypted_message)
-
                 }
                 None => match &key_algorithm_sym {
                     Some(BlockCiphers::Aes(mode, length)) => {
@@ -189,18 +220,23 @@ impl KeyHandle for NksProvider {
                                 // Split the encrypted data into the nonce, encrypted message, and tag
                                 let nonce_end_index = 12; // Nonce is 12 bytes
                                 let tag_start_index = _encrypted_data.len() - 16; // Tag is 16 bytes
-                                let (nonce_and_encrypted_data, tag) = _encrypted_data.split_at(tag_start_index);
-                                let (nonce, encrypted_data) = nonce_and_encrypted_data.split_at(nonce_end_index);
+                                let (nonce_and_encrypted_data, tag) =
+                                    _encrypted_data.split_at(tag_start_index);
+                                let (nonce, encrypted_data) =
+                                    nonce_and_encrypted_data.split_at(nonce_end_index);
 
                                 // Initialize the crypter
-                                let mut crypter = Crypter::new(cipher, Mode::Decrypt, &key, Some(nonce)).unwrap();
+                                let mut crypter =
+                                    Crypter::new(cipher, Mode::Decrypt, &key, Some(nonce)).unwrap();
                                 crypter.set_tag(tag).unwrap();
 
                                 // Create a buffer for the decrypted data
-                                let mut decrypted_data = vec![0; encrypted_data.len() + cipher.block_size()];
+                                let mut decrypted_data =
+                                    vec![0; encrypted_data.len() + cipher.block_size()];
 
                                 // Decrypt the data
-                                let count = crypter.update(encrypted_data, &mut decrypted_data).unwrap();
+                                let count =
+                                    crypter.update(encrypted_data, &mut decrypted_data).unwrap();
                                 let rest = crypter.finalize(&mut decrypted_data[count..]).unwrap();
 
                                 // Truncate the decrypted data to remove any extra bytes
@@ -217,10 +253,14 @@ impl KeyHandle for NksProvider {
                                     _ => return Err(SecurityModuleError::UnsupportedAlgorithm),
                                 };
                                 let key = openssl_base64::decode_block(&self.private_key).unwrap();
-                                let mut crypter = Crypter::new(cipher, Mode::Decrypt, &key, None).unwrap();
+                                let mut crypter =
+                                    Crypter::new(cipher, Mode::Decrypt, &key, None).unwrap();
                                 crypter.pad(true);
-                                let mut decrypted_data = vec![0; _encrypted_data.len() + cipher.block_size()];
-                                let count = crypter.update(_encrypted_data, &mut decrypted_data).unwrap();
+                                let mut decrypted_data =
+                                    vec![0; _encrypted_data.len() + cipher.block_size()];
+                                let count = crypter
+                                    .update(_encrypted_data, &mut decrypted_data)
+                                    .unwrap();
                                 let rest = crypter.finalize(&mut decrypted_data[count..]).unwrap();
                                 decrypted_data.truncate(count + rest);
                                 Ok(decrypted_data)
@@ -233,11 +273,15 @@ impl KeyHandle for NksProvider {
                                     _ => return Err(SecurityModuleError::UnsupportedAlgorithm),
                                 };
                                 let key = openssl_base64::decode_block(&self.private_key).unwrap();
-                                let (iv, encrypted_data) = _encrypted_data.split_at(cipher.iv_len().unwrap());
-                                let mut crypter = Crypter::new(cipher, Mode::Decrypt, &key, Some(iv)).unwrap();
+                                let (iv, encrypted_data) =
+                                    _encrypted_data.split_at(cipher.iv_len().unwrap());
+                                let mut crypter =
+                                    Crypter::new(cipher, Mode::Decrypt, &key, Some(iv)).unwrap();
                                 crypter.pad(true);
-                                let mut decrypted_data = vec![0; encrypted_data.len() + cipher.block_size()];
-                                let count = crypter.update(encrypted_data, &mut decrypted_data).unwrap();
+                                let mut decrypted_data =
+                                    vec![0; encrypted_data.len() + cipher.block_size()];
+                                let count =
+                                    crypter.update(encrypted_data, &mut decrypted_data).unwrap();
                                 let rest = crypter.finalize(&mut decrypted_data[count..]).unwrap();
                                 decrypted_data.truncate(count + rest);
                                 Ok(decrypted_data)
@@ -250,10 +294,14 @@ impl KeyHandle for NksProvider {
                                     _ => return Err(SecurityModuleError::UnsupportedAlgorithm),
                                 };
                                 let key = openssl_base64::decode_block(&self.private_key).unwrap();
-                                let (iv, encrypted_data) = _encrypted_data.split_at(cipher.iv_len().unwrap());
-                                let mut crypter = Crypter::new(cipher, Mode::Decrypt, &key, Some(iv)).unwrap();
-                                let mut decrypted_data = vec![0; encrypted_data.len() + cipher.block_size()];
-                                let count = crypter.update(encrypted_data, &mut decrypted_data).unwrap();
+                                let (iv, encrypted_data) =
+                                    _encrypted_data.split_at(cipher.iv_len().unwrap());
+                                let mut crypter =
+                                    Crypter::new(cipher, Mode::Decrypt, &key, Some(iv)).unwrap();
+                                let mut decrypted_data =
+                                    vec![0; encrypted_data.len() + cipher.block_size()];
+                                let count =
+                                    crypter.update(encrypted_data, &mut decrypted_data).unwrap();
                                 let rest = crypter.finalize(&mut decrypted_data[count..]).unwrap();
                                 decrypted_data.truncate(count + rest);
                                 Ok(decrypted_data)
@@ -266,10 +314,14 @@ impl KeyHandle for NksProvider {
                                     _ => return Err(SecurityModuleError::UnsupportedAlgorithm),
                                 };
                                 let key = openssl_base64::decode_block(&self.private_key).unwrap();
-                                let (iv, encrypted_data) = _encrypted_data.split_at(cipher.iv_len().unwrap());
-                                let mut crypter = Crypter::new(cipher, Mode::Decrypt, &key, Some(iv)).unwrap();
-                                let mut decrypted_data = vec![0; encrypted_data.len() + cipher.block_size()];
-                                let count = crypter.update(encrypted_data, &mut decrypted_data).unwrap();
+                                let (iv, encrypted_data) =
+                                    _encrypted_data.split_at(cipher.iv_len().unwrap());
+                                let mut crypter =
+                                    Crypter::new(cipher, Mode::Decrypt, &key, Some(iv)).unwrap();
+                                let mut decrypted_data =
+                                    vec![0; encrypted_data.len() + cipher.block_size()];
+                                let count =
+                                    crypter.update(encrypted_data, &mut decrypted_data).unwrap();
                                 let rest = crypter.finalize(&mut decrypted_data[count..]).unwrap();
                                 decrypted_data.truncate(count + rest);
                                 Ok(decrypted_data)
@@ -282,10 +334,14 @@ impl KeyHandle for NksProvider {
                                     _ => return Err(SecurityModuleError::UnsupportedAlgorithm),
                                 };
                                 let key = openssl_base64::decode_block(&self.private_key).unwrap();
-                                let (iv, encrypted_data) = _encrypted_data.split_at(cipher.iv_len().unwrap());
-                                let mut crypter = Crypter::new(cipher, Mode::Decrypt, &key, Some(iv)).unwrap();
-                                let mut decrypted_data = vec![0; encrypted_data.len() + cipher.block_size()];
-                                let count = crypter.update(encrypted_data, &mut decrypted_data).unwrap();
+                                let (iv, encrypted_data) =
+                                    _encrypted_data.split_at(cipher.iv_len().unwrap());
+                                let mut crypter =
+                                    Crypter::new(cipher, Mode::Decrypt, &key, Some(iv)).unwrap();
+                                let mut decrypted_data =
+                                    vec![0; encrypted_data.len() + cipher.block_size()];
+                                let count =
+                                    crypter.update(encrypted_data, &mut decrypted_data).unwrap();
                                 let rest = crypter.finalize(&mut decrypted_data[count..]).unwrap();
                                 decrypted_data.truncate(count + rest);
                                 Ok(decrypted_data)
@@ -330,7 +386,7 @@ impl KeyHandle for NksProvider {
             match &key_algorithm {
                 Some(AsymmetricEncryption::Rsa(..)) => {
                     // RSA encryption method
-                    let rsa = Rsa::public_key_from_pem(&self.public_key.as_bytes())
+                    let rsa = Rsa::public_key_from_pem(self.public_key.as_bytes())
                         .map_err(|_| SecurityModuleError::KeyError)?;
                     let mut encrypted_data = vec![0; rsa.size() as usize];
                     rsa.public_encrypt(data, &mut encrypted_data, Padding::PKCS1)
@@ -349,8 +405,10 @@ impl KeyHandle for NksProvider {
                         .decode(self.private_key.as_bytes())
                         .expect("Invalid private key base64");
 
-                    let public_key = PublicKey::from_slice(&public_key_bytes).expect("Invalid public key");
-                    let private_key = SecretKey::from_slice(&private_key_bytes).expect("Invalid private key");
+                    let public_key =
+                        PublicKey::from_slice(&public_key_bytes).expect("Invalid public key");
+                    let private_key =
+                        SecretKey::from_slice(&private_key_bytes).expect("Invalid private key");
 
                     const NONCE_SIZE: usize = 24;
                     let mut nonce = [0u8; NONCE_SIZE];
@@ -389,7 +447,9 @@ impl KeyHandle for NksProvider {
                                 result.extend_from_slice(&nonce);
 
                                 // Initialize the crypter
-                                let mut crypter = Crypter::new(cipher, Mode::Encrypt, &key, Some(&nonce)).unwrap();
+                                let mut crypter =
+                                    Crypter::new(cipher, Mode::Encrypt, &key, Some(&nonce))
+                                        .unwrap();
 
                                 // Create a buffer for the encrypted data
                                 let mut encrypted_data = vec![0; _data.len() + cipher.block_size()];
@@ -420,7 +480,8 @@ impl KeyHandle for NksProvider {
                                     _ => return Err(SecurityModuleError::UnsupportedAlgorithm),
                                 };
                                 let key = openssl_base64::decode_block(&self.private_key).unwrap();
-                                let mut crypter = Crypter::new(cipher, Mode::Encrypt, &key, None).unwrap();
+                                let mut crypter =
+                                    Crypter::new(cipher, Mode::Encrypt, &key, None).unwrap();
                                 crypter.pad(true); // Enable padding
                                 let mut encrypted_data = vec![0; _data.len() + cipher.block_size()];
                                 let count = crypter.update(_data, &mut encrypted_data).unwrap();
@@ -439,7 +500,8 @@ impl KeyHandle for NksProvider {
                                 let iv_len = cipher.iv_len().unwrap();
                                 let mut iv = vec![0; iv_len];
                                 openssl::rand::rand_bytes(&mut iv).unwrap();
-                                let mut crypter = Crypter::new(cipher, Mode::Encrypt, &key, Some(&iv)).unwrap();
+                                let mut crypter =
+                                    Crypter::new(cipher, Mode::Encrypt, &key, Some(&iv)).unwrap();
                                 crypter.pad(true);
                                 let mut encrypted_data = vec![0; _data.len() + cipher.block_size()];
                                 let count = crypter.update(_data, &mut encrypted_data).unwrap();
@@ -459,7 +521,8 @@ impl KeyHandle for NksProvider {
                                 let key = openssl_base64::decode_block(&self.private_key).unwrap();
                                 let mut iv = vec![0; cipher.iv_len().unwrap()];
                                 openssl::rand::rand_bytes(&mut iv).unwrap();
-                                let mut crypter = Crypter::new(cipher, Mode::Encrypt, &key, Some(&iv)).unwrap();
+                                let mut crypter =
+                                    Crypter::new(cipher, Mode::Encrypt, &key, Some(&iv)).unwrap();
                                 let mut encrypted_data = vec![0; _data.len() + cipher.block_size()];
                                 let count = crypter.update(_data, &mut encrypted_data).unwrap();
                                 let rest = crypter.finalize(&mut encrypted_data[count..]).unwrap();
@@ -478,7 +541,8 @@ impl KeyHandle for NksProvider {
                                 let key = openssl_base64::decode_block(&self.private_key).unwrap();
                                 let mut iv = vec![0; cipher.iv_len().unwrap()];
                                 openssl::rand::rand_bytes(&mut iv).unwrap();
-                                let mut crypter = Crypter::new(cipher, Mode::Encrypt, &key, Some(&iv)).unwrap();
+                                let mut crypter =
+                                    Crypter::new(cipher, Mode::Encrypt, &key, Some(&iv)).unwrap();
                                 let mut encrypted_data = vec![0; _data.len() + cipher.block_size()];
                                 let count = crypter.update(_data, &mut encrypted_data).unwrap();
                                 let rest = crypter.finalize(&mut encrypted_data[count..]).unwrap();
@@ -497,7 +561,8 @@ impl KeyHandle for NksProvider {
                                 let key = openssl_base64::decode_block(&self.private_key).unwrap();
                                 let mut iv = vec![0; cipher.iv_len().unwrap()];
                                 openssl::rand::rand_bytes(&mut iv).unwrap();
-                                let mut crypter = Crypter::new(cipher, Mode::Encrypt, &key, Some(&iv)).unwrap();
+                                let mut crypter =
+                                    Crypter::new(cipher, Mode::Encrypt, &key, Some(&iv)).unwrap();
                                 let mut encrypted_data = vec![0; _data.len() + cipher.block_size()];
                                 let count = crypter.update(_data, &mut encrypted_data).unwrap();
                                 let rest = crypter.finalize(&mut encrypted_data[count..]).unwrap();
@@ -531,7 +596,13 @@ impl KeyHandle for NksProvider {
         _data: &[u8],
         _signature: &[u8],
     ) -> Result<bool, SecurityModuleError> {
-        if let Some(nks_config) = self.config.as_ref().unwrap().as_any().downcast_ref::<NksConfig>() {
+        if let Some(nks_config) = self
+            .config
+            .as_ref()
+            .unwrap()
+            .as_any()
+            .downcast_ref::<NksConfig>()
+        {
             let key_algorithm = &nks_config.key_algorithm;
             let data = _data;
             let signature = _signature;
@@ -548,22 +619,40 @@ impl KeyHandle for NksProvider {
                         let public_key_pem = self.public_key.as_bytes();
                         let rsa = Rsa::public_key_from_pem(public_key_pem)
                             .map_err(|_| SecurityModuleError::KeyError)?;
-                        let pkey = PKey::from_rsa(rsa).map_err(|_| SecurityModuleError::KeyError)?;
+                        let pkey =
+                            PKey::from_rsa(rsa).map_err(|_| SecurityModuleError::KeyError)?;
                         let mut verifier = match hash {
                             Hash::Sha1 => RSAVerifier::new(MessageDigest::sha1(), &pkey),
-                            Hash::Sha2(Sha2Bits::Sha224) => RSAVerifier::new(MessageDigest::sha224(), &pkey),
-                            Hash::Sha2(Sha2Bits::Sha256) => RSAVerifier::new(MessageDigest::sha256(), &pkey),
-                            Hash::Sha2(Sha2Bits::Sha384) => RSAVerifier::new(MessageDigest::sha384(), &pkey),
-                            Hash::Sha2(Sha2Bits::Sha512) => RSAVerifier::new(MessageDigest::sha512(), &pkey),
-                            Hash::Sha3(Sha3Bits::Sha3_224) => RSAVerifier::new(MessageDigest::sha3_224(), &pkey),
-                            Hash::Sha3(Sha3Bits::Sha3_256) => RSAVerifier::new(MessageDigest::sha3_256(), &pkey),
-                            Hash::Sha3(Sha3Bits::Sha3_384) => RSAVerifier::new(MessageDigest::sha3_384(), &pkey),
-                            Hash::Sha3(Sha3Bits::Sha3_512) => RSAVerifier::new(MessageDigest::sha3_512(), &pkey),
+                            Hash::Sha2(Sha2Bits::Sha224) => {
+                                RSAVerifier::new(MessageDigest::sha224(), &pkey)
+                            }
+                            Hash::Sha2(Sha2Bits::Sha256) => {
+                                RSAVerifier::new(MessageDigest::sha256(), &pkey)
+                            }
+                            Hash::Sha2(Sha2Bits::Sha384) => {
+                                RSAVerifier::new(MessageDigest::sha384(), &pkey)
+                            }
+                            Hash::Sha2(Sha2Bits::Sha512) => {
+                                RSAVerifier::new(MessageDigest::sha512(), &pkey)
+                            }
+                            Hash::Sha3(Sha3Bits::Sha3_224) => {
+                                RSAVerifier::new(MessageDigest::sha3_224(), &pkey)
+                            }
+                            Hash::Sha3(Sha3Bits::Sha3_256) => {
+                                RSAVerifier::new(MessageDigest::sha3_256(), &pkey)
+                            }
+                            Hash::Sha3(Sha3Bits::Sha3_384) => {
+                                RSAVerifier::new(MessageDigest::sha3_384(), &pkey)
+                            }
+                            Hash::Sha3(Sha3Bits::Sha3_512) => {
+                                RSAVerifier::new(MessageDigest::sha3_512(), &pkey)
+                            }
                             Hash::Md5 => RSAVerifier::new(MessageDigest::md5(), &pkey),
                             Hash::Ripemd160 => RSAVerifier::new(MessageDigest::ripemd160(), &pkey),
                             //Md2 and Md4 are not supported by openssl crate
                             _ => return Err(SecurityModuleError::UnsupportedAlgorithm),
-                        }.map_err(|_| SecurityModuleError::SigningFailed)?;
+                        }
+                        .map_err(|_| SecurityModuleError::SigningFailed)?;
                         verifier
                             .update(data)
                             .map_err(|_| SecurityModuleError::VerificationFailed)?;
@@ -583,7 +672,9 @@ impl KeyHandle for NksProvider {
                                 .map_err(|_| SecurityModuleError::InvalidPublicKey)?,
                         );
                         match verifying_result {
-                            Ok(verifying_key) => Ok(verifying_key.verify(data, &signature_sig).is_ok()),
+                            Ok(verifying_key) => {
+                                Ok(verifying_key.verify(data, &signature_sig).is_ok())
+                            }
                             Err(_) => Err(SecurityModuleError::VerificationFailed),
                         }
                     }
@@ -607,10 +698,8 @@ impl KeyHandle for NksProvider {
 ///
 /// A `StaticSecret` representing the decoded private key.
 pub fn decode_base64_private_key(private_key_base64: &str) -> StaticSecret {
-    let private_key_base64 = private_key_base64; // example private key
     let private_key_bytes = BASE64_STANDARD
         .decode(private_key_base64.as_bytes())
         .expect("Invalid private key base64");
-    let x25519_private_key = X25519StaticSecret::from(*array_ref![private_key_bytes, 0, 32]);
-    return x25519_private_key;
+    X25519StaticSecret::from(*array_ref![private_key_bytes, 0, 32])
 }
