@@ -19,37 +19,30 @@ Follow these steps to execute the tests:
     ```
    Replace `path/to/the/project` with the actual path to your cloned repository.
 
-3. **Configure the `Cargo.toml` file to enable the `nks` feature:**
-    ```toml
-    [features]
-    default = ["nks"]
-    ```
-   This setting activates the `nks` feature for test runs.
-
-4. **Run the `provider_handle_tests`:**
+3. **Run the `provider_handle_tests`:**
     ```bash
-    cargo test --features hcvault tests::nks::provider_handle_tests -- --nocapture --test-threads=1
+    cargo test --features "hcvault nks" tests::nks::provider_handle_tests -- --nocapture --test-threads=1
     ```
 
-5. **Proceed with the `key_handle_tests`:**
+4. **Proceed with the `key_handle_tests`:**
     ```bash
-    cargo test --features hcvault tests::nks::key_handle_tests -- --nocapture --test-threads=1
+    cargo test --features "hcvault nks" tests::nks::key_handle_tests -- --nocapture --test-threads=1
     ```
 
-6. **Test Execution Flags:**
+5. **Test Execution Flags:**
     - The `--nocapture` flag allows the output of print statements to the console.
     - The `--test-threads=1` flag ensures that tests are run sequentially, which is essential for accurate test results.
 
-7. **Environment Variable for Self-Signed Certificates:**
+6. **Environment Variable for Self-Signed Certificates:**
    If using self-signed certificates with the RheinSec backend server, set the `trust_bad_certs` environment variable to `true` for proper trust establishment.
 
-8. **Concurrent Operations:**
+7. **Concurrent Operations:**
    The system is designed to handle one operation at a time. Concurrent operations are not supported to maintain the security and integrity of each operation.
 
-9. **Token Management:**
+8. **Token Management:**
    Each `provider_handle_test` execution generates a `token.json` file in the project's root directory, storing the token for the Hashicorp Vault server. It is crucial to delete this file post-testing to prevent key creation issues, as existing keys with the same names will block new key generation.
 
-10. **Decrypting the X25519-Encrypted data:**
+9. **Decrypting the X25519-Encrypted data:**
     Please note that all data encrypted using the X25519 algorithm includes the nonce required for decryption within the first 24 bytes of the encrypted data array.
 
 
