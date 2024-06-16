@@ -1,6 +1,4 @@
-use std::fmt;
-use std::fmt::{Display};
-
+use std::fmt::{Display, Formatter, Result};
 
 /// Represents errors that can occur when interacting with a Network Key Storage (nks).
 ///
@@ -19,8 +17,7 @@ pub enum NksError {
     UnsupportedOperation(String),
 }
 
-
-impl fmt::Display for NksError {
+impl Display for NksError {
     /// Formats the `NksError` for display.
     ///
     /// This method provides a user-friendly description of the error based on the variant of `NksError`.
@@ -38,12 +35,11 @@ impl fmt::Display for NksError {
     /// * `NksError::Io(ref err)` - Formats as `"Communication error: {err}"`.
     /// * `NksError::InitializationError(ref msg)` - Formats as `"Authentication error: {msg}"`.
     /// * `NksError::UnsupportedOperation(ref msg)` - Formats as `"Device-specific error: {msg}"`.
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         match *self {
             NksError::Io(ref err) => write!(f, "Communication error: {}", err),
             NksError::InitializationError(ref msg) => write!(f, "Authentication error: {}", msg),
             NksError::UnsupportedOperation(ref msg) => write!(f, "Device-specific error: {}", msg),
-
         }
     }
 }
@@ -60,5 +56,3 @@ impl std::error::Error for NksError {
         }
     }
 }
-
-
