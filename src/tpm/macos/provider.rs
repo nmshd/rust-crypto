@@ -63,7 +63,7 @@ impl Provider for SecureEnclaveProvider {
                                 _ => {return Err(InitializationError("Ecc-Curve is not supported. Only P256 and P384 are supported.".to_string()))}
                             }
                         }
-                        _ => {return Err(InitializationError("Algorithm is not supported".to_string()))} 
+                        _ => {return Err(InitializationError("ECC-Alogithm is not supported".to_string()))} 
                     }
                 }
             };
