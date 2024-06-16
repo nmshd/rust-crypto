@@ -20,20 +20,17 @@ impl KeyHandle for SecureEnclaveProvider {
     /// A `Result` containing the signature as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
     #[instrument]
     fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
-        let string_data = String::from_utf8(data.to_vec())
-            .map_err(|_| SecurityModuleError::SigningError("Data conversion error".to_string()))?;
         
+        let data_vec = data.to_vec(); 
         let key_id = &self.key_id; 
         let config = self.config.as_ref().ok_or(SecurityModuleError::InitializationError(("Failed to initialize config").to_owned()))?;
         let algo = convert_algorithms(config.clone());
         let hash = convert_hash(config.hash.expect("No Hash given"));
 
-        let signed_data = apple_secure_enclave_bindings::keyhandle::rust_crypto_call_sign_data(key_id.clone(), string_data, algo, hash);
+        let signed_data = apple_secure_enclave_bindings::keyhandle::rust_crypto_call_sign_data(key_id.clone(), data_vec, algo, hash);
 
         if signed_data.0 {
-            Err(SecurityModuleError::EncryptionError(
-                        signed_data.1.to_string(),
-                    ))
+            Err(SecurityModuleError::EncryptionError(signed_data.1.to_string()))
         } else {
             Ok(signed_data.1.into_bytes())
         }
@@ -124,13 +121,17 @@ impl KeyHandle for SecureEnclaveProvider {
     /// or a `SecurityModuleError` on failure.
     #[instrument]
     fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, SecurityModuleError> {
-        let string_data = String::from_utf8(data.to_vec()).map_err(|_| {
-            SecurityModuleError::SignatureVerificationError("Data conversion error".to_string())
-        })?;
+        // let string_data = String::from_utf8(data.to_vec()).map_err(|_| {
+        //     SecurityModuleError::SignatureVerificationError("Data conversion error".to_string())
+        // })?;
 
-        let string_signature = String::from_utf8(signature.to_vec()).map_err(|_| {
-            SecurityModuleError::SignatureVerificationError("Signature conversion error".to_string(),)
-        })?;
+        let data_vec = data.to_vec();
+
+        // let string_signature = String::from_utf8(signature.to_vec()).map_err(|_| {
+        //     SecurityModuleError::SignatureVerificationError("Signature conversion error".to_string(),)
+        // })?;
+
+        let signature_vec = signature.to_vec(); 
 
         let key_id = &self.key_id;  
         let config = self.config.as_ref().ok_or(SecurityModuleError::InitializationError(("Failed to initialize config").to_owned()))?;
@@ -138,7 +139,7 @@ impl KeyHandle for SecureEnclaveProvider {
         let hash = convert_hash(config.hash.expect("No Hash given"));
 
         let verification_result =
-            apple_secure_enclave_bindings::keyhandle::rust_crypto_call_verify_signature(key_id.clone(), string_data, string_signature, algo, hash);
+            apple_secure_enclave_bindings::keyhandle::rust_crypto_call_verify_signature(key_id.clone(), data_vec, signature_vec, algo, hash);
 
         // The FFI bridge always returns strings by design.
         // If not "true" or "false" is found, an error from the function is expected

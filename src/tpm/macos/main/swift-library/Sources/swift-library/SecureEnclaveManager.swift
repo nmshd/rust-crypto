@@ -232,15 +232,15 @@ import CryptoKit
     Optimized method of @sign_data() to communicate with the rust-side abstraction-layer.
 
     - Parameter key_id: A 'RustString' data type used to identify the private key.
-    - Parameter data: A 'RustString' data type used to represent the data that has to be signed as a String.
+    - Parameter data: A 'RustVec<UInt8>' data type used to represent the data that has to be signed as a Vector.
     - Parameter algorithm: A 'RustString' data type used to represent the algorithm that is used to sign the data.
     - Parameter hash: A 'RustString' data type used to represent the hash that is used.
     - Returns: A String representing the signed data, or an error as a String on failure.
     */
-    func rustcall_sign_data(key_id: RustString, data: RustString, algorithm: RustString, hash: RustString) -> (Bool, String){
+    func rustcall_sign_data(key_id: RustString, data: RustVec<UInt8>, algorithm: RustString, hash: RustString) -> (Bool, String){
         let privateKeyName_string = key_id.toString()
-        let data_cfdata = data.toString().data(using: String.Encoding.utf8)! as CFData
-
+        // let data_cfdata = data.toString().data(using: String.Encoding.utf8)! as CFData
+        let data_cfdata = Data(data) as CFData; 
         do {
             let seckey_algorithm_enum = try get_sign_algorithm(algorithm: algorithm.toString(), hash: hash.toString())
             let key_type = try get_key_type(key_type: algorithm.toString()) as CFString
@@ -257,25 +257,17 @@ import CryptoKit
     Verifies a signature using a public key.
 
     - Parameter publicKey: A 'SecKey' data type representing a cryptographic public key.
-    - Parameter data: A String of the sata that has to be verified.
-    - Parameter signature: A String of the signature that has to be verified.
+    - Parameter data: A CFData-Type of the data that has to be verified.
+    - Parameter signature: A CFData-Type of the signature that has to be verified.
     - Parameter sign_algorithm: A 'SecKeyAlgorithm' data type representing the algorithm used to verify the signature.
     - Throws: 'SecureEnclaveError.SignatureVerificationError' if the signature could not be verified.
     - Returns: A boolean if the signature is valid ('true') or not ('false').
     */
-    func verify_signature(public_key: SecKey, data: String, signature: String, sign_algorithm: SecKeyAlgorithm) throws -> Bool {
+    func verify_signature(public_key: SecKey, data: CFData, signature: CFData, sign_algorithm: SecKeyAlgorithm) throws -> Bool {
         let sign_algorithm = sign_algorithm
-        guard Data(base64Encoded: signature) != nil else{
-            throw SecureEnclaveError.SignatureVerificationError("Invalid message to verify.)")
-        }
-        
-        guard let data_data = data.data(using: String.Encoding.utf8)
-        else{
-            throw SecureEnclaveError.SignatureVerificationError("Invalid message to verify.)")
-        }
         
         var error: Unmanaged<CFError>?
-        if SecKeyVerifySignature(public_key, sign_algorithm, data_data as CFData, Data(base64Encoded: signature, options: [])! as CFData, &error){
+        if SecKeyVerifySignature(public_key, sign_algorithm, data, signature, &error){
             return true
         } else{
             return false
@@ -287,18 +279,21 @@ import CryptoKit
     Optimized method of @verify_data() to communicate with the rust-side abstraction-layer.
 
     - Parameter key_id: A 'RustString' data type used to identify the public key.
-    - Parameter data: A 'RustString' data type used to represent the data that has to be verified with the signature as a String.
-    - Parameter signature: A 'RustString' data type used to represent the signature of the signed data as a String.
+    - Parameter data: A 'RustVec<UInt8>' data type used to represent the data that has to be verified with the signature as a Rust-Vector.
+    - Parameter signature: A 'RustVec<UInt8>' data type used to represent the signature of the signed data as a Rust-Vector.
     - Parameter algorithm: A 'RustString' data type used to represent the algorithm that is used to verify the signature.
     - Parameter hash: A 'RustString' data type used to represent the hash that is used.
     - Returns: A String if the data could have been verified with the signature, or an error as a String on failure.
     */
-    func rustcall_verify_data(key_id: RustString, data: RustString, signature: RustString, algorithm: RustString, hash: RustString) -> String {
+    func rustcall_verify_data(key_id: RustString, data: RustVec<UInt8>, signature: RustVec<UInt8>, algorithm: RustString, hash: RustString) -> String {
         do{
-            //Convert Datatype from RustString to String 
             let publicKeyName_string = key_id.toString()
-            let data_string = data.toString()
-            let signature_string = signature.toString()
+            let data_cfdata = Data(data) as CFData;
+            let signature_cfdata = Data(base64Encoded: Data(signature), options: [])! as CFData
+
+            guard Data(base64Encoded: Data(signature)) != nil else{
+                throw SecureEnclaveError.SignatureVerificationError("Invalid message to verify.)")
+            }
 
             //Get Algorithm enums
             let seckey_algorithm_enum = try get_sign_algorithm(algorithm: algorithm.toString(), hash: hash.toString())
@@ -307,7 +302,7 @@ import CryptoKit
             guard let publicKey = get_public_key_from_private_key(private_key: try load_key(key_id: publicKeyName_string, algorithm: key_type)!)else{
                 throw SecureEnclaveError.SignatureVerificationError("Public key could not be received from the private key.)")
             }
-            let status = try verify_signature(public_key: publicKey, data: data_string, signature: signature_string, sign_algorithm: seckey_algorithm_enum)
+            let status = try verify_signature(public_key: publicKey, data: data_cfdata, signature: signature_cfdata, sign_algorithm: seckey_algorithm_enum)
             
             if status == true{
                 return "true"
