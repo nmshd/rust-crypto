@@ -6,6 +6,35 @@ Not fully implemented yet
 
 The Crypto Layer is a comprehensive and flexible cryptographic library designed to provide a unified interface for various cryptographic operations and algorithms. It offers a wide range of functionalities, including encryption, decryption, signing, signature verification, and hashing, while supporting both symmetric and asymmetric cryptography.
 
+## Running Tests for NKS
+
+Firstly, you need to have a Hashicorp Vault server and the backend server running.
+You can find instructions and code [here](https://github.com/cep-sose2024/rhein_sec)
+Then you need to clone this directory and run the following commands:
+
+1. **Open your terminal.**
+2. **Navigate to the root directory of the project using the `cd` command. Replace `path/to/your/project` with the actual path to your project:**
+    ```bash
+    cd path/to/the/project
+    ```
+3. **Add `default = ["nks"]` to the `features` section in your `Cargo.toml` file. This will enable the `nks` feature by default when you run your tests.**
+    ```toml
+    [features]
+    default = ["nks"]
+    ```
+4. **To execute the `provider_handle_tests`, run the following command:**
+    ```bash
+    cargo test --features hcvault tests::nks::provider_handle_tests -- --nocapture --test-threads=1
+    ```
+5. **After the `provider_handle_tests` have finished running, you can execute the `key_handle_tests` with the following command:**
+    ```bash
+    cargo test --features hcvault tests::nks::key_handle_tests -- --nocapture --test-threads=1
+    ```
+6. **Please note that the `--nocapture` flag is used to display any print statements in the console, and `--test-threads=1` is used to run the tests sequentially.**
+
+Please also note that with every execution of a provider_handle_test, a token.json is being created in the root directory of the project.
+This file is used to store the token for the Hashicorp Vault server.
+It is recommended to delete this file after the tests have been executed because otherwise keys will not be created because keys with the given names already exist.
 ## Features
 
 - **Encryption Algorithms**: Supports a variety of encryption algorithms, including:
