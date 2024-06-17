@@ -17,25 +17,35 @@ pub fn get_capabilities() -> Vec<Capability> {
             mode: EncryptionMode::Sym(BlockCiphers::Aes(SymmetricMode::Cbc, KeyBits::Bits128)),
         },
         Capability {
-            name: "ENC-AES-CBC-192",
-            mode: EncryptionMode::Sym(BlockCiphers::Aes(SymmetricMode::Cbc, KeyBits::Bits192)),
-        },
-        Capability {
             name: "ENC-DESede-CBC",
             mode: EncryptionMode::Sym(BlockCiphers::TripleDes(TripleDesNumKeys::Tdes2)),
         },
         Capability {
-            name: "ENC-RSA-512",
+            name: "ENC-RSA-1024-256",
             mode: EncryptionMode::ASym {
-                algo: AsymmetricEncryption::Rsa(KeyBits::Bits512),
+                algo: AsymmetricEncryption::Rsa(KeyBits::Bits1024),
                 digest: Hash::Sha2(Sha2Bits::Sha256),
             },
         },
         Capability {
-            name: "ENC-RSA-512-512",
+            name: "ENC-RSA-2048-256",
             mode: EncryptionMode::ASym {
-                algo: AsymmetricEncryption::Rsa(KeyBits::Bits512),
-                digest: Hash::Sha2(Sha2Bits::Sha512),
+                algo: AsymmetricEncryption::Rsa(KeyBits::Bits2048),
+                digest: Hash::Sha2(Sha2Bits::Sha256),
+            },
+        },
+        Capability {
+            name: "SIG-RSA-1024-256",
+            mode: EncryptionMode::ASym {
+                algo: AsymmetricEncryption::Rsa(KeyBits::Bits1024),
+                digest: Hash::Sha2(Sha2Bits::Sha256),
+            },
+        },
+        Capability {
+            name: "SIG-RSA-2048-256",
+            mode: EncryptionMode::ASym {
+                algo: AsymmetricEncryption::Rsa(KeyBits::Bits2048),
+                digest: Hash::Sha2(Sha2Bits::Sha256),
             },
         },
         Capability {
@@ -43,13 +53,6 @@ pub fn get_capabilities() -> Vec<Capability> {
             mode: EncryptionMode::ASym {
                 algo: AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::Secp256k1)),
                 digest: Hash::Sha2(Sha2Bits::Sha256),
-            },
-        },
-        Capability {
-            name: "SIG-EC-DSA-512",
-            mode: EncryptionMode::ASym {
-                algo: AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::Secp256k1)),
-                digest: Hash::Sha2(Sha2Bits::Sha512),
             },
         },
     ]
