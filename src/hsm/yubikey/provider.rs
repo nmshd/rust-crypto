@@ -574,7 +574,7 @@ fn clear_slot(yubikey: &mut YubiKey, slot: Option<u32>) {
             remv(yubikey, address);
         }
         None => {
-            //for address in RETIRED_SLOT {
+            //for address in SLOTSU32 {
             //remv(yubikey, address);
         }
     }
