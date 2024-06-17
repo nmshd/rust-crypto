@@ -22,6 +22,8 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.security.spec.ECGenParameterSpec;
 import java.security.spec.InvalidKeySpecException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -67,6 +69,7 @@ public class CryptoManager {
      * Generates a new symmetric key and saves it into the Android KeyStore.
      * <p>
      * This method initializes a new symmetric key for encryption and decryption purposes using the specified symmetric key algorithm.
+     * The keyGenInfo string is checked for its pattern to ensure that no incorrect values have been transferred.
      * The key is stored in the Android KeyStore.
      * Additionally, this method ensures that the key is backed by the strong box feature.
      *
@@ -82,6 +85,10 @@ public class CryptoManager {
     public void genKey(String key_id, String keyGenInfo) throws CertificateException,
             IOException, NoSuchAlgorithmException, NoSuchProviderException,
             InvalidAlgorithmParameterException, KeyStoreException {
+        Pattern pattern = Pattern.compile("^(AES|DESede);(\\d+);(CBC|GCM|CTR);(NoPadding|PKCS7Padding)$");
+        Matcher matcher = pattern.matcher(keyGenInfo);
+        assert matcher.matches() : "Generate Key keyGenInfo is not valid.";
+
         String[] keyGenInfoArr = keyGenInfo.split(";");
         String KEY_ALGORITHM = keyGenInfoArr[0];
         int KEY_SIZE = Integer.parseInt(keyGenInfoArr[1]);
@@ -144,11 +151,11 @@ public class CryptoManager {
         cipher.init(Cipher.ENCRYPT_MODE, secretKey);
         byte[] iv = cipher.getIV();
         if (TRANSFORMATION.contains("/GCM/")) {
-            assert iv.length == IV_GCM_AES;
+            assert iv.length == IV_GCM_AES : "AES GCM IV length not matching.";
         } else if(TRANSFORMATION.contains("DESede")) {
-            assert iv.length == IV_CBC_DES;
+            assert iv.length == IV_CBC_DES : "DES CBC IV length not matching.";
         } else {
-            assert iv.length == IV_CBC_AND_CTR_AES;
+            assert iv.length == IV_CBC_AND_CTR_AES : "AES CBC and CTR IV length not matching.";
         }
         byte[] encryptedData = cipher.doFinal(data);
         ByteBuffer byteBuffer = ByteBuffer.allocate(iv.length + encryptedData.length);
@@ -194,7 +201,7 @@ public class CryptoManager {
         ByteBuffer byteBuffer = ByteBuffer.wrap(encryptedData);
         byte[] iv;
         if (TRANSFORMATION.contains("/GCM/")) {
-            assert byteBuffer.capacity() > IV_GCM_AES;
+            assert byteBuffer.capacity() > IV_GCM_AES : "Data is not at least IV size in length.";
             iv = new byte[IV_GCM_AES];
             byteBuffer.get(iv);
             encryptedData = new byte[byteBuffer.remaining()];
@@ -203,11 +210,11 @@ public class CryptoManager {
             cipher.init(Cipher.DECRYPT_MODE, secretKey, gcmParameterSpec);
         } else {
             if(TRANSFORMATION.contains("DESede")){
-                assert byteBuffer.capacity() > IV_CBC_DES;
+                assert byteBuffer.capacity() > IV_CBC_DES : "Data is not at least IV size in length.";
                 iv = new byte[IV_CBC_DES];
             }
             else {
-                assert byteBuffer.capacity() > IV_CBC_AND_CTR_AES;
+                assert byteBuffer.capacity() > IV_CBC_AND_CTR_AES : "Data is not at least IV size in length.";
                 iv = new byte[IV_CBC_AND_CTR_AES];
             }
             byteBuffer.get(iv);
@@ -221,12 +228,12 @@ public class CryptoManager {
     /**
      * Generates a new asymmetric key pair and saves it into the Android KeyStore.
      * <p>
-     * This method generates a new asymmetric key pair suitable for signing and verifying digital signatures.
-     * The key pair is stored in the Android KeyStore, leveraging the platform's secure storage capabilities.
+     * This method generates a new asymmetric key pair suitable for signing and verifying data.
+     * The key pair is stored in the Android KeyStore.
      * The method configures the key pair generator with specific parameters, like the digest algorithms to be supported,
      * the signature padding scheme, and whether the key is backed by the strong box feature for enhanced security.
      * The generated key pair consists of a private key for signing and a corresponding public key for verification.
-     * The supported algorithms are RSA and EC. The keyGenInfo String should have the following form:
+     * The supported algorithms are RSA and EC. The keyGenInfo string is checked for its pattern to ensure that no incorrect values have been transferred.
      *
      * @param key_id The unique identifier under which the key pair will be stored in the KeyStore.
      * @param keyGenInfo A string containing key generation parameters separated by semicolons. Expected formats: RSA: "KEY_ALGORITHM;KEY_SIZE;HASH;PADDING", EC: "KEY_ALGORITHM;CURVE;HASH".
@@ -240,6 +247,9 @@ public class CryptoManager {
     public void generateKeyPair(String key_id, String keyGenInfo) throws CertificateException, IOException,
             NoSuchAlgorithmException, InvalidAlgorithmParameterException, NoSuchProviderException,
             KeyStoreException {
+        Pattern pattern = Pattern.compile("^(RSA|EC);(\\d+|secp256r1|secp384r1|secp521r1);(SHA-256);(PKCS1)?$");
+        Matcher matcher = pattern.matcher(keyGenInfo);
+        assert matcher.matches() : "Generate KeyPair keyGenInfo is not valid.";
         String[] keyGenInfoArr = keyGenInfo.split(";");
         String KEY_ALGORITHM = keyGenInfoArr[0];
         String HASH = keyGenInfoArr[2];
@@ -392,15 +402,18 @@ public class CryptoManager {
             SecretKey secretKey = (SecretKey) key;
             SecretKeyFactory factory = SecretKeyFactory.getInstance(secretKey.getAlgorithm(), ANDROID_KEY_STORE);
             keyInfo = (KeyInfo) factory.getKeySpec(secretKey, KeyInfo.class);
+            assert(keyInfo.getEncryptionPaddings().length > 0);
             keyPadding = keyInfo.getEncryptionPaddings()[0];
         } else if (key instanceof PrivateKey) {
             PrivateKey privateKey = (PrivateKey) key;
             KeyFactory factory = KeyFactory.getInstance(privateKey.getAlgorithm(), ANDROID_KEY_STORE);
             keyInfo = factory.getKeySpec(privateKey, KeyInfo.class);
+            assert(keyInfo.getSignaturePaddings().length > 0);
             keyPadding = keyInfo.getSignaturePaddings()[0];
         } else {
             throw new KeyStoreException("Unsupported key type");
         }
+        assert(keyInfo.getBlockModes().length > 0);
         return keyAlgorithm + "/" + keyInfo.getBlockModes()[0] + "/" + keyPadding;
     }
 
@@ -424,6 +437,7 @@ public class CryptoManager {
             InvalidKeySpecException {
         KeyFactory keyFactory = KeyFactory.getInstance(privateKey.getAlgorithm(), ANDROID_KEY_STORE);
         KeyInfo keyInfo = keyFactory.getKeySpec(privateKey, KeyInfo.class);
+        assert(keyInfo.getDigests().length > 0);
         String hashAlgorithm = keyInfo.getDigests()[0].replaceAll("-", "");
         String algorithm = privateKey.getAlgorithm();
         if (algorithm.contains("EC")) {
