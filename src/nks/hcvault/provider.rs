@@ -499,7 +499,7 @@ async fn get_and_save_key_pair_request(
         String::from("false")
     }) == "true";
 
-    let client_builder = reqwest::Client::builder();
+    let client_builder = Client::builder();
     let client = if trust_bad_certs {
         client_builder.danger_accept_invalid_certs(true).build()?
     } else {
@@ -570,7 +570,7 @@ async fn get_secrets(
         String::from("false")
     }) == "true";
 
-    let client_builder = reqwest::Client::builder();
+    let client_builder = Client::builder();
     let client = if trust_bad_certs {
         client_builder.danger_accept_invalid_certs(true).build()?
     } else {

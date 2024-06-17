@@ -181,7 +181,7 @@ impl KeyHandle for NksProvider {
                     let private_key =
                         SecretKey::from_slice(&private_key_bytes).expect("Invalid private key");
 
-                    let salsa_box = crypto_box::SalsaBox::new(&public_key, &private_key);
+                    let salsa_box = SalsaBox::new(&public_key, &private_key);
                     const NONCE_SIZE: usize = 24;
                     let (nonce_bytes, encrypted_message) = _encrypted_data.split_at(NONCE_SIZE);
 
