@@ -19,7 +19,8 @@ pub fn get_algorithm(enc: EncryptionMode) -> Result<String, SecurityModuleError>
         EncryptionMode::Sym(algo) => match algo {
             BlockCiphers::Aes(_, _) => "AES",
             BlockCiphers::TripleDes(_) => "DESede",
-            BlockCiphers::Des | BlockCiphers::Rc2(_) | BlockCiphers::Camellia(_, _) => {
+            BlockCiphers::Des => "DES",
+            BlockCiphers::Rc2(_) | BlockCiphers::Camellia(_, _) => {
                 Err(TpmError::UnsupportedOperation("not supported".to_owned()))?
             }
         },
@@ -39,10 +40,8 @@ pub fn get_cipher_mode(e_mode: EncryptionMode) -> Result<String, SecurityModuleE
                 get_sym_block_mode(mode)?,
                 get_padding(e_mode)?
             )),
-            BlockCiphers::TripleDes(_) => {
-                Err(TpmError::UnsupportedOperation("not supported".to_owned()).into())
-            }
-            BlockCiphers::Des => Ok("DES".to_owned()),
+            BlockCiphers::TripleDes(_) => Ok("DESede/CBC/PKCS7Padding".to_owned()),
+            BlockCiphers::Des => Ok("DES/CBC/NoPadding".to_owned()),
             BlockCiphers::Rc2(_) => {
                 Err(TpmError::UnsupportedOperation("not supported".to_owned()).into())
             }
@@ -65,20 +64,21 @@ pub fn get_sym_block_mode(mode: SymmetricMode) -> Result<String, SecurityModuleE
         SymmetricMode::Ecb => "ECB",
         SymmetricMode::Cbc => "CBC",
         SymmetricMode::Ctr => "CTR",
-        SymmetricMode::Cfb | SymmetricMode::Ofb | SymmetricMode::Ccm => {
-            Err(TpmError::UnsupportedOperation(
-                "Only GCM, ECB, CBC and CTR as blockmodes supported".to_owned(),
-            ))?
-        }
+        SymmetricMode::Cfb => "CFB",
+        SymmetricMode::Ofb => "OFB",
+        SymmetricMode::Ccm => Err(TpmError::UnsupportedOperation(
+            "CCM is not supportet".to_owned(),
+        ))?,
     }
     .to_owned())
 }
 
 pub fn get_padding(mode: EncryptionMode) -> Result<String, SecurityModuleError> {
     Ok(match mode {
+        EncryptionMode::Sym(BlockCiphers::Aes(SymmetricMode::Gcm, _)) => "NoPadding",
         EncryptionMode::Sym(BlockCiphers::Aes(_, _)) => "PKCS7Padding",
         EncryptionMode::ASym { algo: _, digest: _ } => "PKCS1Padding",
-        _ => "NoPadding",
+        _ => "PKCS7Padding",
     }
     .to_owned())
 }

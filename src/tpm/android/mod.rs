@@ -157,9 +157,14 @@ impl Provider for AndroidProvider {
                             .set_encryption_paddings(&env, vec![get_padding(config.mode)?])
                             .err_internal()?;
                     }
-                    BlockCiphers::TripleDes(_)
-                    | BlockCiphers::Rc2(_)
-                    | BlockCiphers::Camellia(_, _) => {
+                    BlockCiphers::TripleDes(_) => {
+                        kps_builder = kps_builder
+                            .set_block_modes(&env, vec!["CBC".to_owned()])
+                            .err_internal()?
+                            .set_encryption_paddings(&env, vec![get_padding(config.mode)?])
+                            .err_internal()?;
+                    }
+                    BlockCiphers::Rc2(_) | BlockCiphers::Camellia(_, _) => {
                         Err(TpmError::UnsupportedOperation("not supported".to_owned()))?
                     }
                 };
@@ -482,15 +487,21 @@ impl KeyHandle for AndroidProvider {
         )
         .err_internal()?;
 
+        info!("after cipher::getInstance");
+
         // symetric encryption needs an IV
         let encrypted = match config.mode {
             EncryptionMode::Sym(_) => {
                 let key = key_store
                     .getKey(&env, self.key_id.to_owned(), JObject::null())
                     .err_internal()?;
+                info!("key loaded");
                 cipher.init(&env, 1, key.raw.as_obj()).err_internal()?;
+                info!("cipher initialized");
                 let iv = cipher.getIV(&env).err_internal()?;
+                info!("iv generated");
                 let encrypted = cipher.doFinal(&env, data.to_vec()).err_internal()?;
+                info!("data encrypted");
                 store_iv(encrypted, iv)
             }
             EncryptionMode::ASym { algo: _, digest: _ } => {
@@ -503,6 +514,7 @@ impl KeyHandle for AndroidProvider {
                 cipher.doFinal(&env, data.to_vec()).err_internal()?
             }
         };
+        info!("encrypted");
         Ok(encrypted)
     }
 
