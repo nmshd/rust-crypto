@@ -115,7 +115,7 @@ impl Provider for AndroidProvider {
         key_id: &str,
         config: Box<dyn Any>,
     ) -> Result<(), SecurityModuleError> {
-        info!("generating key! {}", key_id);
+        debug!("generating key! {}", key_id);
 
         // load config
         let config = *config
@@ -333,7 +333,6 @@ impl KeyHandle for AndroidProvider {
             .err_internal()?;
 
         let signature_algorithm = get_signature_algorithm(config.mode)?;
-        debug!("Signature Algorithm: {}", signature_algorithm);
 
         let s = Signature::getInstance(&env, signature_algorithm.to_string()).err_internal()?;
 
@@ -342,7 +341,6 @@ impl KeyHandle for AndroidProvider {
         let data_bytes = data.to_vec().into_boxed_slice();
 
         s.update(&env, data_bytes).err_internal()?;
-        debug!("Signature Init: {}", s.toString(&env).unwrap());
 
         let output = s.sign(&env).err_internal()?;
 
@@ -372,7 +370,7 @@ impl KeyHandle for AndroidProvider {
     /// Returns a `Result` containing the decrypted data as a `Vec<u8>` if successful, or a `SecurityModuleError` if an error occurs.
     #[instrument(skip(encrypted_data))]
     fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
-        info!("decrypting data");
+        debug!("decrypting data");
 
         let config = self
             .config
@@ -426,7 +424,6 @@ impl KeyHandle for AndroidProvider {
             }
         };
 
-        debug!("decrypted data: {:?}", decrypted);
         Ok(decrypted)
     }
 
@@ -454,7 +451,7 @@ impl KeyHandle for AndroidProvider {
     /// Returns a `Result` containing the encrypted data as a `Vec<u8>` if successful, or a `SecurityModuleError` if an error occurs.
     #[instrument(skip(data))]
     fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
-        info!("encrypting");
+        debug!("encrypting");
 
         let config = self
             .config
@@ -474,12 +471,8 @@ impl KeyHandle for AndroidProvider {
                 )
             })?;
 
-        info!("before getInstance");
-
         let key_store = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_owned()).err_internal()?;
-        info!("after getInstance");
         key_store.load(&env, None).err_internal()?;
-        info!("after load");
 
         let cipher = wrapper::key_store::cipher::jni::Cipher::getInstance(
             &env,
@@ -487,21 +480,15 @@ impl KeyHandle for AndroidProvider {
         )
         .err_internal()?;
 
-        info!("after cipher::getInstance");
-
         // symetric encryption needs an IV
         let encrypted = match config.mode {
             EncryptionMode::Sym(_) => {
                 let key = key_store
                     .getKey(&env, self.key_id.to_owned(), JObject::null())
                     .err_internal()?;
-                info!("key loaded");
                 cipher.init(&env, 1, key.raw.as_obj()).err_internal()?;
-                info!("cipher initialized");
                 let iv = cipher.getIV(&env).err_internal()?;
-                info!("iv generated");
                 let encrypted = cipher.doFinal(&env, data.to_vec()).err_internal()?;
-                info!("data encrypted");
                 store_iv(encrypted, iv)
             }
             EncryptionMode::ASym { algo: _, digest: _ } => {
@@ -514,7 +501,6 @@ impl KeyHandle for AndroidProvider {
                 cipher.doFinal(&env, data.to_vec()).err_internal()?
             }
         };
-        info!("encrypted");
         Ok(encrypted)
     }
 
@@ -546,7 +532,7 @@ impl KeyHandle for AndroidProvider {
     /// Returns a `Result` containing `true` if the signature is valid, `false` otherwise, or a `SecurityModuleError` if an error occurs.
     #[instrument(skip(data, signature))]
     fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, SecurityModuleError> {
-        info!("verifiying");
+        debug!("verifiying");
 
         let config = self
             .config
@@ -570,7 +556,6 @@ impl KeyHandle for AndroidProvider {
         key_store.load(&env, None).err_internal()?;
 
         let signature_algorithm = get_signature_algorithm(config.mode)?;
-        debug!("Signature Algorithm: {}", signature_algorithm);
 
         let s = Signature::getInstance(&env, signature_algorithm.to_string()).err_internal()?;
 
@@ -579,7 +564,6 @@ impl KeyHandle for AndroidProvider {
             .err_internal()?;
 
         s.initVerify(&env, cert).err_internal()?;
-        debug!("Signature Init: {}", s.toString(&env).unwrap());
 
         let data_bytes = data.to_vec().into_boxed_slice();
         s.update(&env, data_bytes).err_internal()?;
