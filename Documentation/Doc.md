@@ -329,42 +329,45 @@ You can find out more about the KeyStore API and other APIs that are normally us
 ### JNI-Implementation
 </summary>   
 
-The basic premise of our JNI connection is to have a `JavaVM` passed to the Rust Code. With this reference we are able  
-to call methods provided by the [JNI crate](https://crates.io/crates/jni). Those allow us to call Java functions and  
-pass parameters to them and receive return values and Java exceptions.
+The basic premise of our JNI connection is to have a `JavaVM` passed to the Rust Code. With this reference we are able to call methods provided by the [JNI crate](https://crates.io/crates/jni). Those allow us to call Java functions and pass parameters to them and receive return values and Java exceptions.
 
-In order to aid type conversion, we are currently using Robusta as a wrapper around the JNI, but we are only using  
-functionality that is provided by the JNI itself, in order to make a future conversion to pure JNI easier.
+In order to aide type conversion, we are currently using Robusta as a wrapper around the JNI, but we are only using  functionality that is provided by the JNI itself, in order to make a future conversion to pure JNI easier.
 
-From the `JavaVM` that is passed in the `KnoxConfig` struct we are able to obtain a `JNIEnv`. For us the most important  
-method provided by this is this method:
+From the `JavaVM` that is passed in the `KnoxConfig` struct we are able to obtain a `JNIEnv`. There are two reasons we are passing a `JavaVM` reference instead of a `JNIEnv` reference. First, it makes it a bit easier to use the wrapper, and second, one `JNIEnv` cannot be shared between threads. To make our wrapper more robust, we therefore obtain a `JNIEnv` by calling `javavm.getenv()`.
+For us the most important method provided by the JNIEnv is this method:
 
-```  
+```rust  
 call_static_method(&self,  
  class: T, name: U, sig: V, args: &[JValue]) -> Result<JValue>  
 ```  
 
-This method gets the class definition with the full package name,  
-the name of the method in the class,  
-a signature of the parameters used by the method,  
-and finally the parameters themselves as JValues.
+This method gets the class definition with the full package name, the name of the method in the class, a signature of the parameters used by the method, and finally the parameters themselves as JValues.
 
-The class and method name can be determined manually, but the signature should always be automatically generated. To do  
-this, call the following command on the commandline:
+The class and method name can be determined manually, but the signature should always be automatically generated. To do this, call the following command on the command line:
 
   ``` javap -s -p path/to/the/java/file.class ```
  
-with the compiled `.class` file. This will print all method signatures to the command line, including the name and the  
-parameter signature needed for `sig`.
+with the compiled `.class` file. This will print all method signatures to the command line, including the name and the parameter signature needed for `sig`.
 
-The conversion of your parameters to JValues can be done through `JValue::from(<xyz>)` most of the time.
+The conversion of your parameters to JValues can be done through `JValue::from(jnienv.new_XYZ(xyz))` most of the time.
 
-The method returns a JValue containing the return type of the Java method that needs to be converted back to Rust data  
-types. If a Java exception is thrown, the method returns an Error.
+The method returns a JValue containing the return type of the Java method that needs to be converted back to Rust data types. If a Java exception is thrown, the method returns an Error.
+The conversion back from a JValue is a bit convoluted. In general, this should work:
+
+```rust
+let jobj = result 				// result is the return value in this case
+  .l()    						//Converts to a JObject
+  .into_inner() as jbyteArray;  //converts to a jbyteArray, for other data types equivalent jDataType exist
+      
+let output_vec = jnienv  
+  .convert_byte_array(jobj)     //converts the jbyteArray to a Vec<u8>, equivalent methods exist for most data types
+```
 
 Example:
+
 ```rust
-call_static_method(    "com/example/vulcans_limes/RustDef",    
+call_static_method(
+"com/example/vulcans_limes/RustDef",    
 "create_key",    
 "(Ljava/lang/String;Ljava/lang/String;)V",    
 &[JValue::from(jnienv.new_string(key_id).unwrap()),    
