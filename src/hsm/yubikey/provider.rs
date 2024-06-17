@@ -491,6 +491,7 @@ fn get_free_slot(yubikey: &mut YubiKey) -> Result<RetiredSlotId, SecurityModuleE
         if !parsed.is_ok() {
             slot_id = SLOTS[i - 10];
             end = true;
+        }
 
         if end {
             break;
