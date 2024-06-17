@@ -1,13 +1,13 @@
 use super::NksProvider;
-use reqwest::Url;
+use reqwest::{Client, Url};
 use serde_json::{json, Value};
 use std::any::Any;
-use std::fs;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 use std::str::FromStr;
 use std::string::String;
+use std::{env, fs};
 use tokio::runtime::Runtime;
 use tracing::instrument;
 
@@ -324,13 +324,23 @@ fn get_user_token_from_file() -> Option<String> {
 ///     Err(err) => println!("Failed to get token: {}", err),
 /// }
 /// ```
-async fn get_token(nks_address: Url) -> anyhow::Result<String, Box<dyn std::error::Error>> {
-    let api_url = nks_address.join("getToken");
-    let response: Value = reqwest::Client::builder()
-        .danger_accept_invalid_certs(true)
-        .build()
-        .unwrap()
-        .get(api_url.unwrap())
+async fn get_token(nks_address: Url) -> anyhow::Result<String> {
+    let api_url = nks_address.join("getToken").unwrap();
+
+    let trust_bad_certs = env::var("trust_bad_certs").unwrap_or_else(|_| {
+        println!("'trust_bad_certs' environment variable not set, please set it to 'true' to trust self-signed certificates!");
+        String::from("false")
+    }) == "true";
+
+    let client_builder = Client::builder();
+    let client = if trust_bad_certs {
+        client_builder.danger_accept_invalid_certs(true).build()?
+    } else {
+        client_builder.build()?
+    };
+
+    let response: Value = client
+        .get(api_url)
         .header("accept", "*/*")
         .send()
         .await?
@@ -339,10 +349,11 @@ async fn get_token(nks_address: Url) -> anyhow::Result<String, Box<dyn std::erro
 
     if let Some(user_token) = response.get("token") {
         if let Some(user_token_str) = user_token.as_str() {
+            println!("Response JSON: {}", user_token_str.to_string());
             return Ok(user_token_str.to_string());
         }
     }
-    println!("The response does not contain a 'token' field");
+
     Ok(String::new())
 }
 
@@ -483,9 +494,18 @@ async fn get_and_save_key_pair_request(
     length: Option<u32>,
     cyphertype: &str,
 ) -> Result<reqwest::Response, Box<dyn std::error::Error>> {
-    let client = reqwest::Client::builder()
-        .danger_accept_invalid_certs(true)
-        .build()?;
+    let trust_bad_certs = env::var("trust_bad_certs").unwrap_or_else(|_| {
+        println!("'trust_bad_certs' environment variable not set, please set it to 'true' to trust self-signed certificates!");
+        String::from("false")
+    }) == "true";
+
+    let client_builder = Client::builder();
+    let client = if trust_bad_certs {
+        client_builder.danger_accept_invalid_certs(true).build()?
+    } else {
+        client_builder.build()?
+    };
+
     let request_body = match length {
         Some(len) => json!({
             "token": token,
@@ -501,9 +521,10 @@ async fn get_and_save_key_pair_request(
             "ciphertype": cyphertype
         }),
     };
-    let api_url = nks_address.join("generateAndSaveKeyPair");
+
+    let api_url = nks_address.join("generateAndSaveKeyPair").unwrap();
     let response = client
-        .post(api_url.unwrap())
+        .post(api_url)
         .header("accept", "*/*")
         .header("Content-Type", "application/json-patch+json")
         .json(&request_body)
@@ -544,9 +565,18 @@ async fn get_secrets(
     token: &str,
     nks_address_str: &str,
 ) -> anyhow::Result<(String, String), Box<dyn std::error::Error>> {
-    let client = reqwest::Client::builder()
-        .danger_accept_invalid_certs(true)
-        .build()?;
+    let trust_bad_certs = env::var("trust_bad_certs").unwrap_or_else(|_| {
+        println!("'trust_bad_certs' environment variable not set, please set it to 'true' to trust self-signed certificates!");
+        String::from("false")
+    }) == "true";
+
+    let client_builder = Client::builder();
+    let client = if trust_bad_certs {
+        client_builder.danger_accept_invalid_certs(true).build()?
+    } else {
+        client_builder.build()?
+    };
+
     let body = json!({
         "token": token
     });

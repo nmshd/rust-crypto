@@ -8,33 +8,44 @@ The Crypto Layer is a comprehensive and flexible cryptographic library designed 
 
 ## Running Tests for NKS
 
-Firstly, you need to have a Hashicorp Vault server and the backend server running.
-You can find instructions and code [here](https://github.com/cep-sose2024/rhein_sec)
-Then you need to clone this directory and run the following commands:
+Before running the tests, ensure that both the Hashicorp Vault server and the backend server are operational. Detailed setup instructions and necessary code can be found in our [repository](https://github.com/cep-sose2024/rhein_sec).
+
+Follow these steps to execute the tests:
 
 1. **Open your terminal.**
-2. **Navigate to the root directory of the project using the `cd` command. Replace `path/to/your/project` with the actual path to your project:**
+2. **Navigate to the project's root directory:**
     ```bash
-    cd path/to/the/project
+    cd path/to/your/project
     ```
-3. **Add `default = ["nks"]` to the `features` section in your `Cargo.toml` file. This will enable the `nks` feature by default when you run your tests.**
-    ```toml
-    [features]
-    default = ["nks"]
-    ```
-4. **To execute the `provider_handle_tests`, run the following command:**
-    ```bash
-    cargo test --features hcvault tests::nks::provider_handle_tests -- --nocapture --test-threads=1
-    ```
-5. **After the `provider_handle_tests` have finished running, you can execute the `key_handle_tests` with the following command:**
-    ```bash
-    cargo test --features hcvault tests::nks::key_handle_tests -- --nocapture --test-threads=1
-    ```
-6. **Please note that the `--nocapture` flag is used to display any print statements in the console, and `--test-threads=1` is used to run the tests sequentially.**
+   Replace `path/to/the/project` with the actual path to your cloned repository.
 
-Please also note that with every execution of a provider_handle_test, a token.json is being created in the root directory of the project.
-This file is used to store the token for the Hashicorp Vault server.
-It is recommended to delete this file after the tests have been executed because otherwise keys will not be created because keys with the given names already exist.
+3. **Run the `provider_handle_tests`:**
+    ```bash
+    cargo test --features "hcvault nks" tests::nks::provider_handle_tests -- --nocapture --test-threads=1
+    ```
+
+4. **Proceed with the `key_handle_tests`:**
+    ```bash
+    cargo test --features "hcvault nks" tests::nks::key_handle_tests -- --nocapture --test-threads=1
+    ```
+
+5. **Test Execution Flags:**
+    - The `--nocapture` flag allows the output of print statements to the console.
+    - The `--test-threads=1` flag ensures that tests are run sequentially, which is essential for accurate test results.
+
+6. **Environment Variable for Self-Signed Certificates:**
+   If using self-signed certificates with the RheinSec backend server, set the `trust_bad_certs` environment variable to `true` for proper trust establishment.
+
+7. **Concurrent Operations:**
+   The system is designed to handle one operation at a time. Concurrent operations are not supported to maintain the security and integrity of each operation.
+
+8. **Token Management:**
+   Each `provider_handle_test` execution generates a `token.json` file in the project's root directory, storing the token for the Hashicorp Vault server. It is crucial to delete this file post-testing to prevent key creation issues, as existing keys with the same names will block new key generation.
+
+9. **Decrypting the X25519-Encrypted data:**
+    Please note that all data encrypted using the X25519 algorithm includes the nonce required for decryption within the first 24 bytes of the encrypted data array.
+
+**For a GUI demo that utilizes the NKS solution, you can visit the [RheinSec GUI](https://github.com/halrifai/crypto-demo) Repository.**
 ## Features
 
 - **Encryption Algorithms**: Supports a variety of encryption algorithms, including:

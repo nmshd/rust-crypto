@@ -12,6 +12,7 @@ use std::any::Any;
 
 #[cfg(feature = "android")]
 pub mod android;
+#[cfg(feature = "core")]
 pub mod core;
 #[cfg(feature = "linux")]
 pub mod linux;

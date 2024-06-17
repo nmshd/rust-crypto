@@ -2,12 +2,16 @@ use tracing::Level;
 use tracing_appender::rolling;
 use tracing_subscriber::FmtSubscriber;
 
+#[cfg(feature = "tpm")]
+use crate::tpm::core::instance::TpmType;
+#[cfg(feature = "tpm")]
+use crate::tpm::linux::TpmProvider;
 use crate::{
     common::{
         factory::SecurityModule,
         traits::{log_config::LogConfig, module_provider::Provider},
     },
-    tpm::core::instance::TpmType,
+    // tpm::core::instance::TpmType,
     SecModules,
 };
 use std::sync::{Arc, Mutex};
