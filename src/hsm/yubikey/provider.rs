@@ -102,7 +102,16 @@ impl Provider for YubiKeyProvider {
     ) -> Result<(), SecurityModuleError> {
         if let Some(hsm_config) = config.downcast_ref::<HsmProviderConfig>() {
             self.key_algo = Some(hsm_config.key_algorithm);
-            let key_algo = self.key_algo.clone().expect("No Key Algortihm found");
+            let key_algo = self.key_algo.clone();
+            let key_algorithm;
+            match key_algo {
+                Some(algo) => key_algorithm = algo,
+                None => {
+                    return Err(SecurityModuleError::InitializationError(
+                        "No key algorithm found".to_string(),
+                    ));
+                }
+            }
 
             let slot: u32;
             let slot_id;
@@ -157,7 +166,7 @@ impl Provider for YubiKeyProvider {
                 Ok((slot_id, pkey))
             }
 
-            match key_algo {
+            match key_algorithm {
                 AsymmetricEncryption::Rsa(curve) => match curve {
                     KeyBits::Bits1024 => algorithm = AlgorithmId::Rsa1024,
                     KeyBits::Bits2048 => algorithm = AlgorithmId::Rsa2048,
@@ -183,6 +192,23 @@ impl Provider for YubiKeyProvider {
                 }
             }
 
+            let algo: &str;
+            match key_algorithm {
+                AsymmetricEncryption::Rsa(KeyBits::Bits1024) => algo = "Rsa1024",
+                AsymmetricEncryption::Rsa(KeyBits::Bits2048) => algo = "Rsa2048",
+                AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P256)) => {
+                    algo = "EccP256"
+                }
+                AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::P384)) => {
+                    algo = "EccP384"
+                }
+                _ => {
+                    return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
+                        "Key Algorithm not supported".to_string(),
+                    )));
+                }
+            }
+
             let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
             let (slot_id, pkey) = generate_key(&mut yubikey, algorithm, slot_id).unwrap();
             self.slot_id = Some(slot_id);
@@ -194,7 +220,7 @@ impl Provider for YubiKeyProvider {
             let _ = yubikey.verify_pin(self.pin.as_ref());
             let _ = yubikey.authenticate(MgmKey::new(self.management_key.unwrap()).unwrap());
 
-            match save_key_object(&mut yubikey, key_id, slot, &pkey) {
+            match save_key_object(&mut yubikey, key_id, slot, &pkey, algo) {
                 Ok(_) => Ok(()),
                 Err(err) => {
                     return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
@@ -244,8 +270,28 @@ impl Provider for YubiKeyProvider {
 
                 let data = output;
                 match parse_slot_data(&data) {
-                    Ok((key_name, _, public_key)) => {
-                        if key_name == key_id.to_string() {
+                    Ok((key_name, _, public_key, algo)) => {
+                        let _keyalgo;
+                        match self.key_algo {
+                            Some(AsymmetricEncryption::Rsa(KeyBits::Bits1024)) => {
+                                _keyalgo = "Rsa1024"
+                            }
+                            Some(AsymmetricEncryption::Rsa(KeyBits::Bits2048)) => {
+                                _keyalgo = "Rsa2048"
+                            }
+                            Some(AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(
+                                EccCurves::P256,
+                            ))) => _keyalgo = "EccP256",
+                            Some(AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(
+                                EccCurves::P384,
+                            ))) => _keyalgo = "EccP384",
+                            _ => {
+                                return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
+                                    "Algorithm not supported".to_string(),
+                                )))
+                            }
+                        }
+                        if key_name == key_id.to_string() && _keyalgo == algo {
                             self.slot_id = Some(SLOTS[i - 10]);
                             self.pkey = public_key;
                             found = true;
@@ -341,12 +387,13 @@ fn save_key_object(
     key_id: &str,
     slot_id: u32,
     pkey: &str,
+    algo: &str,
 ) -> Result<(), yubikey::Error> {
     let key_name = key_id;
     let slot = slot_id.to_string();
     let public_key = pkey;
 
-    let total_length = key_name.len() + 1 + slot.len() + 1 + 1 + public_key.len();
+    let total_length = key_name.len() + 1 + slot.len() + 1 + public_key.len() + 1 + algo.len();
     let mut data = vec![0u8; total_length];
     let data_slice: &mut [u8] = &mut data;
 
@@ -362,6 +409,11 @@ fn save_key_object(
     offset += 1;
 
     data_slice[offset..offset + public_key.len()].copy_from_slice(public_key.as_bytes());
+    offset += public_key.len();
+    data_slice[offset] = 0;
+    offset += 1;
+
+    data_slice[offset..offset + algo.len()].copy_from_slice(algo.as_bytes());
 
     let saved = yubikey.save_object(slot_id, data_slice);
     match saved {
@@ -384,21 +436,28 @@ fn save_key_object(
 ///
 /// A `Result` that, on success, contains `Ok(key_name, slot, public_key)` where the individual information is given.
 /// On failure, it returns a `Utf8Error`.
-fn parse_slot_data(data: &[u8]) -> Result<(String, String, String), SecurityModuleError> {
+fn parse_slot_data(data: &[u8]) -> Result<(String, String, String, String), SecurityModuleError> {
     let parts: Vec<&[u8]> = data.split(|&x| x == 0).collect();
-    if !(parts.len() < 4 || parts[0].is_empty() || parts[1].is_empty() || parts[2].is_empty()) {
+    if !(parts.len() < 4
+        || parts[0].is_empty()
+        || parts[1].is_empty()
+        || parts[2].is_empty()
+        || parts[3].is_empty())
+    {
         let key_name = std::str::from_utf8(parts[0]).unwrap();
         let slot = std::str::from_utf8(parts[1]).unwrap();
         let public_key = std::str::from_utf8(parts[2]).unwrap();
+        let algo = std::str::from_utf8(parts[3]).unwrap();
 
         Ok((
             key_name.to_string(),
             slot.to_string(),
             public_key.to_string(),
+            algo.to_string(),
         ))
     } else {
         return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
-            "Failed to verify PIN, retries: {}".to_string(),
+            "Failed to parse the slot data".to_string(),
         )));
     }
 }
@@ -494,10 +553,10 @@ fn list_all_slots(yubikey: &mut YubiKey) -> Result<Vec<String>, SecurityModuleEr
         }
         let data = temp_vec;
         match parse_slot_data(&data) {
-            Ok((key_name, slot, pkey)) => {
+            Ok((key_name, slot, pkey, algo)) => {
                 let output_string = format!(
-                    "Key Name: {}, Slot: {}, Public-Key: {}\n",
-                    key_name, slot, pkey
+                    "Key Name: {}, Slot: {}, Public-Key: {}, Key-Algorithm: {}\n",
+                    key_name, slot, pkey, algo
                 );
                 output.push(output_string);
             }
