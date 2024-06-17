@@ -101,6 +101,17 @@ impl SecModules {
         instances.get(&module).cloned()
     }
 
+    /// Retrieves the capabilities of a security module based on the provided type.
+    /// This function delegates the capability retrieval to the specific module's implementation.
+    /// Capabilities are currently an array of encryption modes supported by the module.
+    /// # Arguments
+    ///
+    /// * `module` - The `SecurityModule` variant representing the type of module to retrieve capabilities for.
+    ///
+    /// # Returns
+    ///
+    /// A `Vec<Capability>` containing the encryption modes supported by the module.
+    /// If the module type is not supported, an empty vector is returned.
     pub fn get_capabilities(module: SecurityModule) -> Vec<Capability> {
         match module {
             #[cfg(feature = "hsm")]

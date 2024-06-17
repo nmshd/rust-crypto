@@ -138,6 +138,18 @@ impl TpmInstance {
         }
     }
 
+    /// Retrieves the capabilities of a TPM provider based on the specified `TpmType`.
+    /// This method delegates the capability retrieval to the specific provider's implementation.
+    /// Capabilities are currently an array of encryption modes supported by the provider.
+    /// # Arguments
+    ///
+    /// * `tpm_type` - The `TpmType` variant representing the type of TPM to retrieve capabilities for.
+    ///
+    /// # Returns
+    ///
+    /// A `Vec<Capability>` containing the encryption modes supported by the provider.
+    ///
+    /// If the TPM type is not supported, an empty vector is returned.
     pub fn get_capabilities(tpm_type: TpmType) -> Vec<Capability> {
         match tpm_type {
             #[cfg(feature = "win")]
