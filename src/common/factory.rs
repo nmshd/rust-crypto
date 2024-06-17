@@ -118,6 +118,8 @@ impl SecModules {
             SecurityModule::Hsm(hsm_type) => HsmInstance::get_capabilities(hsm_type),
             #[cfg(feature = "tpm")]
             SecurityModule::Tpm(tpm_type) => TpmInstance::get_capabilities(tpm_type),
+            #[cfg(feature = "nks")]
+            SecurityModule::Nks => todo!("NKS capabilities"),
         }
     }
 }

@@ -10,7 +10,7 @@ use std::any::Any;
 
 use capabilities::get_capabilities;
 use robusta_jni::jni::objects::JObject;
-use tracing::{debug, info, instrument};
+use tracing::{debug, instrument};
 use utils::{
     get_algorithm, get_cipher_mode, get_digest, get_iv_len, get_key_size, get_padding,
     get_signature_algorithm, get_signature_padding, get_sym_block_mode, load_iv, store_iv,
