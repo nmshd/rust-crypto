@@ -21,8 +21,8 @@ pub struct YubiKeyProvider {
     pub(super) slot_id: Option<RetiredSlotId>,
     pub(super) key_algo: Option<AsymmetricEncryption>,
     pub(super) yubikey: Option<Arc<Mutex<YubiKey>>>,
-    pub(super) pin: String,
-    pub(super) management_key: Option<[u8; 24]>,
+    pin: String,
+    management_key: Option<[u8; 24]>,
 }
 
 impl YubiKeyProvider {
