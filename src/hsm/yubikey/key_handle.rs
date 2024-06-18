@@ -29,6 +29,8 @@ use sha2::Sha256;
 use tracing::instrument;
 use x509_cert::der::zeroize::Zeroizing;
 
+const BYTES_1024: usize = 128;
+const BYTES_2048: usize = 256;
 /// Provides cryptographic operations for asymmetric keys on a YubiKey,
 /// such as signing, encryption, decryption, and signature verification.
 
@@ -80,12 +82,12 @@ impl KeyHandle for YubiKeyProvider {
         match key_algo {
             AsymmetricEncryption::Rsa(KeyBits::Bits1024) => {
                 algorithm_id = AlgorithmId::Rsa1024;
-                vec_data = apply_pkcs1v15_padding(&vec_data, 128);
+                vec_data = apply_pkcs1v15_padding(&vec_data, BYTES_1024);
                 data = &vec_data.as_slice();
             }
             AsymmetricEncryption::Rsa(KeyBits::Bits2048) => {
                 algorithm_id = AlgorithmId::Rsa2048;
-                vec_data = apply_pkcs1v15_padding(&vec_data, 256);
+                vec_data = apply_pkcs1v15_padding(&vec_data, BYTES_2048);
                 data = vec_data.as_slice();
             }
 
