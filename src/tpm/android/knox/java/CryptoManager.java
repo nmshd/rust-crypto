@@ -247,7 +247,7 @@ public class CryptoManager {
     public void generateKeyPair(String key_id, String keyGenInfo) throws CertificateException, IOException,
             NoSuchAlgorithmException, InvalidAlgorithmParameterException, NoSuchProviderException,
             KeyStoreException {
-        Pattern pattern = Pattern.compile("^(RSA|EC);(\\d+|secp256r1|secp384r1|secp521r1);(SHA-256);(PKCS1)?$");
+        Pattern pattern = Pattern.compile("^(RSA|EC);(\\d+|secp256r1|secp384r1|secp521r1);(SHA-256)(;PKCS1|;NoPadding)?$");
         Matcher matcher = pattern.matcher(keyGenInfo);
         assert matcher.matches() : "Generate KeyPair keyGenInfo is not valid.";
         String[] keyGenInfoArr = keyGenInfo.split(";");
