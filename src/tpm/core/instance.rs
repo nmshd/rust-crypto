@@ -129,7 +129,9 @@ impl TpmInstance {
                 AndroidTpmType::Keystore => Arc::new(Mutex::new(
                     crate::tpm::android::AndroidProvider::new(key_id),
                 )),
-                AndroidTpmType::Knox => todo!(),
+               AndroidTpmType::Knox => Arc::new(Mutex::new(
+                    crate::tpm::android::knox::KnoxProvider::new(),
+                )),
             },
             TpmType::None => todo!(),
         }

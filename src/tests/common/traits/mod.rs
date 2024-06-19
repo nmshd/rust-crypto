@@ -2,12 +2,16 @@ use tracing::Level;
 use tracing_appender::rolling;
 use tracing_subscriber::FmtSubscriber;
 
+#[cfg(feature = "tpm")]
+use crate::tpm::core::instance::TpmType;
+#[cfg(feature = "tpm")]
+use crate::tpm::linux::TpmProvider;
 use crate::{
     common::{
         factory::SecurityModule,
         traits::{log_config::LogConfig, module_provider::Provider},
     },
-    tpm::core::instance::TpmType,
+    // tpm::core::instance::TpmType,
     SecModules,
 };
 use std::sync::{Arc, Mutex};
@@ -37,7 +41,7 @@ impl LogConfig for Logger {
     }
 }
 
-fn setup_security_module(module: SecurityModule) -> Arc<Mutex<dyn Provider>> {
+pub fn setup_security_module(module: SecurityModule) -> Arc<Mutex<dyn Provider>> {
     let log = Logger::new_boxed();
     match module {
         #[cfg(feature = "hsm")]
@@ -58,8 +62,15 @@ fn setup_security_module(module: SecurityModule) -> Arc<Mutex<dyn Provider>> {
                 Some(log),
             )
             .unwrap(),
+            TpmType::Android(t) => SecModules::get_instance(
+                "test_key".to_owned(),
+                SecurityModule::Tpm(TpmType::Android(t)),
+                Some(log),
+            )
+            .unwrap(),
             TpmType::None => unimplemented!(),
-            TpmType::Android(_) => unimplemented!(),
+          
+            _ => unimplemented!(),
         },
         #[cfg(feature = "nks")]
         SecurityModule::Nks => unimplemented!(),

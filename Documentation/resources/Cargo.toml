@@ -1,0 +1,15 @@
+[package]
+name = "your_project_name"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+path = "lib.rs"
+
+[dependencies]
+robusta_jni = "0.2"
+jni = "^0.20"
+android_logger = "^0"
+log = "^0"
+crypto-layer = { path = "../rust-crypto-knox", features = ["android", "tpm"] }

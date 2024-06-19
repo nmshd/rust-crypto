@@ -43,6 +43,10 @@ pub enum SecurityModuleError {
     ///
     /// This variant contains a descriptive error message.
     InitializationError(String),
+    /// Error that occurred during the key generation operation.
+    ///
+    /// This variant contains a descriptive error message.
+    CreationError(String),
     KeyError,
     UnsupportedAlgorithm,
     VerificationFailed,
@@ -81,6 +85,10 @@ impl fmt::Display for SecurityModuleError {
             SecurityModuleError::InitializationError(ref error_msg) => {
                 write!(f, "Initialization error: {}", error_msg)
             }
+
+            SecurityModuleError::CreationError(ref error_msg) => {
+                write!(f, "Creation error: {}", error_msg)
+            }
             SecurityModuleError::KeyError => write!(f, "Key error"),
             SecurityModuleError::UnsupportedAlgorithm => write!(f, "Unsupported algorithm"),
             SecurityModuleError::VerificationFailed => write!(f, "Verification failed"),
@@ -113,6 +121,7 @@ impl std::error::Error for SecurityModuleError {
             SecurityModuleError::EncryptionError(_) => None,
             SecurityModuleError::SignatureVerificationError(_) => None,
             SecurityModuleError::InitializationError(_) => None,
+            SecurityModuleError::CreationError(_) => None
             SecurityModuleError::KeyError => None,
             SecurityModuleError::UnsupportedAlgorithm => None,
             SecurityModuleError::VerificationFailed => None,
