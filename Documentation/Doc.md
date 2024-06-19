@@ -112,9 +112,6 @@ We have provided a list of the supported Algorithms of our project:
 | **AES**        | 128 / GCM / NoPadding              |  
 |                | 128 / CBC / PKCS7Padding           |  
 |                | 128 / CTR / NoPadding              |  
-|                | 192 / GCM / NoPadding              |  
-|                | 192 / CBC / PKCS7Padding           |  
-|                | 192 / CTR / NoPadding              |  
 |                | 256 / GCM / NoPadding              |  
 |                | 256 / CBC / PKCS7Padding           |  
 |                | 256 / CTR / NoPadding              |
