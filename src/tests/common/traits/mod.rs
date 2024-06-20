@@ -1,68 +1,196 @@
-use tracing::Level;
-use tracing_appender::rolling;
-use tracing_subscriber::FmtSubscriber;
-
-use crate::{
+#[cfg(feature = "hsm")]
+use crate::hsm::core::instance::HsmType;
+#[cfg(feature = "tpm")]
+use crate::tpm::core::instance::TpmType;
+/*use crate::{
     common::{
-        factory::SecurityModule,
-        traits::{log_config::LogConfig, module_provider::Provider},
-    },
-    tpm::core::instance::TpmType,
-    SecModules,
-};
-use std::sync::{Arc, Mutex};
-
-pub mod key_handle;
-pub mod module_provider;
-
-#[derive(Debug, Clone, Copy)]
-struct Logger {}
-
-impl Logger {
-    fn new_boxed() -> Box<dyn LogConfig> {
-        Box::new(Self {})
-    }
-}
-
-impl LogConfig for Logger {
-    fn setup_logging(&self) {
-        let file_appender = rolling::daily("./logs", "output.log");
-        let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
-        let subscriber = FmtSubscriber::builder()
-            .with_max_level(Level::TRACE)
-            .with_writer(non_blocking)
-            .finish();
-        tracing::subscriber::set_global_default(subscriber)
-            .expect("setting default subscriber failed");
-    }
-}
-
-fn setup_security_module(module: SecurityModule) -> Arc<Mutex<dyn Provider>> {
-    let log = Logger::new_boxed();
-    match module {
-        #[cfg(feature = "hsm")]
-        SecurityModule::Hsm(_hsm_type) => {
-            unimplemented!()
-        }
-        #[cfg(feature = "tpm")]
-        SecurityModule::Tpm(tpm_type) => match tpm_type {
-            TpmType::Linux => SecModules::get_instance(
-                "test_key".to_owned(),
-                SecurityModule::Tpm(TpmType::Linux),
-                Some(log),
-            )
-            .unwrap(),
-            TpmType::Windows => SecModules::get_instance(
-                "test_key".to_owned(),
-                SecurityModule::Tpm(TpmType::Windows),
-                Some(log),
-            )
-            .unwrap(),
-            TpmType::None => unimplemented!(),
-            TpmType::Android(_) => unimplemented!(),
+        crypto::{
+            algorithms::{
+                encryption::{
+                    AsymmetricEncryption, BlockCiphers, EccCurves, EccSchemeAlgorithm,
+                    SymmetricMode,
+                },
+                hashes::{Hash, Sha2Bits},
+                KeyBits,
+            },
+            KeyUsage,
         },
-        #[cfg(feature = "nks")]
-        SecurityModule::Nks => unimplemented!(),
-        // _ => unimplemented!(),
-    }
-}
+        factory::SecurityModule,
+    },
+    tests::common::traits::setup_security_module,
+};
+use test_case::test_matrix;*/
+//
+// // #[test_matrix(
+// //     [SecurityModule::Tpm(TpmType::Linux),
+// //      SecurityModule::Tpm(TpmType::Windows),
+// //      SecurityModule::Hsm(HsmType::NitroKey)]
+// // )]
+// #[test_matrix(
+//     [SecurityModule::Nks]
+// )]
+// fn test_sign_and_verify_rsa(module: SecurityModule) {
+//     let provider = setup_security_module(module);
+//
+//     let config = TpmConfig::new(
+//         AsymmetricEncryption::Rsa(KeyBits::Bits4096),
+//         BlockCiphers::Aes(SymmetricMode::Gcm, KeyBits::Bits512),
+//         Hash::Sha2(Sha2Bits::Sha256),
+//         vec![KeyUsage::SignEncrypt, KeyUsage::ClientAuth],
+//     );
+//
+//     provider
+//         .lock()
+//         .unwrap()
+//         .initialize_module()
+//         .expect("Failed to initialize module");
+//     provider
+//         .lock()
+//         .unwrap()
+//         .create_key("test_rsa_key", config)
+//         .expect("Failed to create RSA key");
+//
+//     let data = b"Hello, World!";
+//     let signature = provider
+//         .lock()
+//         .unwrap()
+//         .sign_data(data)
+//         .expect("Failed to sign data");
+//
+//     assert!(provider
+//         .lock()
+//         .unwrap()
+//         .verify_signature(data, &signature)
+//         .unwrap());
+// }
+//
+// // #[test_matrix(
+// //     [SecurityModule::Tpm(TpmType::Linux),
+// //      SecurityModule::Tpm(TpmType::Windows),
+// //      SecurityModule::Hsm(HsmType::NitroKey)]
+// // )]
+// #[test_matrix(
+//     [SecurityModule::Nks]
+// )]
+// fn test_sign_and_verify_ecdsa(module: SecurityModule) {
+//     let provider = setup_security_module(module);
+//
+//     let config = TpmConfig::new(
+//         AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::Curve25519)),
+//         BlockCiphers::Aes(SymmetricMode::Gcm, KeyBits::Bits512),
+//         Hash::Sha2(Sha2Bits::Sha256),
+//         vec![KeyUsage::SignEncrypt, KeyUsage::ClientAuth],
+//     );
+//
+//     provider
+//         .lock()
+//         .unwrap()
+//         .initialize_module()
+//         .expect("Failed to initialize module");
+//     provider
+//         .lock()
+//         .unwrap()
+//         .create_key("test_ecdsa_key", config)
+//         .expect("Failed to create ECDSA key");
+//
+//     let data = b"Hello, World!";
+//     let signature = provider
+//         .lock()
+//         .unwrap()
+//         .sign_data(data)
+//         .expect("Failed to sign data");
+//
+//     assert!(provider
+//         .lock()
+//         .unwrap()
+//         .verify_signature(data, &signature)
+//         .unwrap());
+// }
+//
+// // #[test_matrix(
+// //     [SecurityModule::Tpm(TpmType::Linux),
+// //      SecurityModule::Tpm(TpmType::Windows),
+// //      SecurityModule::Hsm(HsmType::NitroKey)]
+// // )]
+// #[test_matrix(
+//     [SecurityModule::Nks]
+// )]
+// fn test_encrypt_and_decrypt_rsa(module: SecurityModule) {
+//     let provider = setup_security_module(module);
+//
+//     let config = TpmConfig::new(
+//         AsymmetricEncryption::Rsa(KeyBits::Bits4096),
+//         BlockCiphers::Aes(SymmetricMode::Gcm, KeyBits::Bits512),
+//         Hash::Sha2(Sha2Bits::Sha256),
+//         vec![KeyUsage::Decrypt, KeyUsage::SignEncrypt],
+//     );
+//
+//     provider
+//         .lock()
+//         .unwrap()
+//         .initialize_module()
+//         .expect("Failed to initialize module");
+//     provider
+//         .lock()
+//         .unwrap()
+//         .create_key("test_rsa_key", config)
+//         .expect("Failed to create RSA key");
+//
+//     let data = b"Hello, World!";
+//     let encrypted_data = provider
+//         .lock()
+//         .unwrap()
+//         .encrypt_data(data)
+//         .expect("Failed to encrypt data");
+//     let decrypted_data = provider
+//         .lock()
+//         .unwrap()
+//         .decrypt_data(&encrypted_data)
+//         .expect("Failed to decrypt data");
+//
+//     assert_eq!(data, decrypted_data.as_slice());
+// }
+//
+// // #[test_matrix(
+// //     [SecurityModule::Tpm(TpmType::Linux),
+// //      SecurityModule::Tpm(TpmType::Windows),
+// //      SecurityModule::Hsm(HsmType::NitroKey)]
+// // )]
+// #[test_matrix(
+//     [SecurityModule::Nks]
+// )]
+// fn test_encrypt_and_decrypt_ecdh(module: SecurityModule) {
+//     let provider = setup_security_module(module);
+//
+//     let config = TpmConfig::new(
+//         AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::Curve25519)),
+//         BlockCiphers::Aes(SymmetricMode::Gcm, KeyBits::Bits512),
+//         Hash::Sha2(Sha2Bits::Sha256),
+//         vec![KeyUsage::SignEncrypt, KeyUsage::Decrypt],
+//     );
+//
+//     provider
+//         .lock()
+//         .unwrap()
+//         .initialize_module()
+//         .expect("Failed to initialize module");
+//     provider
+//         .lock()
+//         .unwrap()
+//         .create_key("test_ecdh_key", config)
+//         .expect("Failed to create ECDH key");
+//
+//     let data = b"Hello, World!";
+//     let encrypted_data = provider
+//         .lock()
+//         .unwrap()
+//         .encrypt_data(data)
+//         .expect("Failed to encrypt data");
+//     let decrypted_data = provider
+//         .lock()
+//         .unwrap()
+//         .decrypt_data(&encrypted_data)
+//         .expect("Failed to decrypt data");
+//
+//     assert_eq!(data, decrypted_data.as_slice());
+// }

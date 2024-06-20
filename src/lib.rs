@@ -1,7 +1,7 @@
 pub mod common;
 #[cfg(feature = "ffi")]
 pub mod ffi;
-#[cfg(feature = "hsm")]
+//#[cfg(feature = "hsm")]
 pub mod hsm;
 #[cfg(test)]
 mod tests;

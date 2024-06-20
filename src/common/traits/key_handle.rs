@@ -21,6 +21,8 @@ pub enum GenericKeyHandle {
     Linux(TssKeyHandle),
     #[cfg(feature = "win")]
     Windows(NCRYPT_KEY_HANDLE),
+    #[cfg(feature = "yubikey")]
+    YubiKey(KeyHandle),
 }
 
 /// Defines a common interface for cryptographic key operations.
