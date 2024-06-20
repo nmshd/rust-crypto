@@ -1,3 +1,6 @@
+use algorithms::encryption::{AsymmetricEncryption, BlockCiphers};
+use algorithms::hashes::Hash;
+
 pub mod algorithms;
 pub mod pkcs;
 
@@ -8,4 +11,18 @@ pub enum KeyUsage {
     Decrypt,
     SignEncrypt,
     CreateX509,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum EncryptionMode {
+    Sym(BlockCiphers),
+    ASym {
+        algo: AsymmetricEncryption,
+        digest: Hash,
+    },
+}
+
+pub struct Capability {
+    pub name: &'static str,
+    pub mode: EncryptionMode,
 }

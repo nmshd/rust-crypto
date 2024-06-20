@@ -3,27 +3,22 @@ use std::any::Any;
 use robusta_jni::jni::JavaVM;
 
 use crate::common::{
-    crypto::{
-        algorithms::encryption::{AsymmetricEncryption, BlockCiphers},
-        algorithms::hashes::Hash,
-        KeyUsage,
-    },
+    crypto::{EncryptionMode, KeyUsage},
     traits::module_provider_config::ProviderConfig,
 };
 
-#[derive(Debug, Clone, Copy)]
-pub enum EncryptionMode {
-    Sym(BlockCiphers),
-    ASym {
-        algo: AsymmetricEncryption,
-        digest: Hash,
-    },
-}
-
+/// Represents the configuration for the Android provider.
 pub struct AndroidConfig {
+    /// The encryption mode used by the provider.
     pub mode: EncryptionMode,
+    /// The allowed key usages for the provider.
     pub key_usages: Vec<KeyUsage>,
+    /// Indicates whether keys should be hardware-backed. If `true`, keys are stored in secure
+    /// hardware. If the hardware does not support hardware-backed keys, all operations will fail.
     pub hardware_backed: bool,
+    /// A Java VM instance used to interact with the Android Keystore.
+    /// While in most cases the Java VM can be retrieved programmatically, it is recommended to
+    /// provide it explicitly to avoid potential issues.
     pub vm: Option<JavaVM>,
 }
 

@@ -68,7 +68,7 @@ pub mod jni {
             env.call_method(
                 self.raw.as_obj(),
                 "init",
-                "(ILjava/security/Key;Ljava/security/AlgorithmParameters;)V",
+                "(ILjava/security/Key;Ljava/security/spec/AlgorithmParameterSpec;)V",
                 &[
                     JValue::Int(opmode),
                     JValue::Object(key.raw.as_obj()),

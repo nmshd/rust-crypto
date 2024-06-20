@@ -1,8 +1,11 @@
-use crate::common::traits::module_provider::Provider;
 #[cfg(feature = "linux")]
 use crate::tpm::linux::TpmProvider;
 #[cfg(feature = "win")]
 use crate::tpm::win::TpmProvider as WinTpmProvider;
+use crate::{
+    common::{crypto::Capability, traits::module_provider::Provider},
+    tpm::android::AndroidProvider,
+};
 use std::sync::{Arc, Mutex};
 
 /// Represents the different environments where a Trusted Platform Module (TPM) can operate.
@@ -131,6 +134,32 @@ impl TpmInstance {
                 )),
                 AndroidTpmType::Knox => todo!(),
             },
+            TpmType::None => todo!(),
+        }
+    }
+
+    /// Retrieves the capabilities of a TPM provider based on the specified `TpmType`.
+    /// This method delegates the capability retrieval to the specific provider's implementation.
+    /// Capabilities are currently an array of encryption modes supported by the provider.
+    /// # Arguments
+    ///
+    /// * `tpm_type` - The `TpmType` variant representing the type of TPM to retrieve capabilities for.
+    ///
+    /// # Returns
+    ///
+    /// A `Vec<Capability>` containing the encryption modes supported by the provider.
+    ///
+    /// If the TPM type is not supported, an empty vector is returned.
+    pub fn get_capabilities(tpm_type: TpmType) -> Vec<Capability> {
+        match tpm_type {
+            #[cfg(feature = "win")]
+            TpmType::Windows => todo!(),
+            #[cfg(feature = "macos")]
+            TpmType::MacOs => todo!(),
+            #[cfg(feature = "linux")]
+            TpmType::Linux => todo!(),
+            TpmType::Android(AndroidTpmType::Keystore) => AndroidProvider::get_capabilities(),
+            TpmType::Android(AndroidTpmType::Knox) => todo!(),
             TpmType::None => todo!(),
         }
     }

@@ -1,4 +1,7 @@
-use super::traits::{log_config::LogConfig, module_provider::Provider};
+use super::{
+    crypto::Capability,
+    traits::{log_config::LogConfig, module_provider::Provider},
+};
 #[cfg(feature = "hsm")]
 use crate::hsm::core::instance::{HsmInstance, HsmType};
 #[cfg(feature = "tpm")]
@@ -26,7 +29,6 @@ pub enum SecurityModule {
     Tpm(TpmType),
     #[cfg(feature = "nks")]
     Nks,
-
 }
 
 /// Provides conversion from a string slice to a `SecurityModule` variant.
@@ -98,6 +100,28 @@ impl SecModules {
 
         instances.get(&module).cloned()
     }
+
+    /// Retrieves the capabilities of a security module based on the provided type.
+    /// This function delegates the capability retrieval to the specific module's implementation.
+    /// Capabilities are currently an array of encryption modes supported by the module.
+    /// # Arguments
+    ///
+    /// * `module` - The `SecurityModule` variant representing the type of module to retrieve capabilities for.
+    ///
+    /// # Returns
+    ///
+    /// A `Vec<Capability>` containing the encryption modes supported by the module.
+    /// If the module type is not supported, an empty vector is returned.
+    pub fn get_capabilities(module: SecurityModule) -> Vec<Capability> {
+        match module {
+            #[cfg(feature = "hsm")]
+            SecurityModule::Hsm(hsm_type) => HsmInstance::get_capabilities(hsm_type),
+            #[cfg(feature = "tpm")]
+            SecurityModule::Tpm(tpm_type) => TpmInstance::get_capabilities(tpm_type),
+            #[cfg(feature = "nks")]
+            SecurityModule::Nks => todo!("NKS capabilities"),
+        }
+    }
 }
 
 /// Represents a specific instance of a security module.
@@ -137,7 +161,9 @@ impl SecModule {
             SecurityModule::Tpm(tpm_type) => Some(TpmInstance::create_instance(key_id, tpm_type)),
             // _ => unimplemented!(),
             #[cfg(feature = "nks")]
-            SecurityModule::Nks => Some(Arc::new(Mutex::new(crate::nks::hcvault::NksProvider::new(key_id)))),
+            SecurityModule::Nks => Some(Arc::new(Mutex::new(
+                crate::nks::hcvault::NksProvider::new(key_id),
+            ))),
         }
     }
 }

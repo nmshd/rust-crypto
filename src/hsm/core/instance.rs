@@ -1,3 +1,4 @@
+use crate::common::crypto::Capability;
 use crate::common::traits::module_provider::Provider;
 use std::sync::{Arc, Mutex};
 
@@ -94,6 +95,13 @@ impl HsmInstance {
     /// reference-counting pointer.
     pub fn create_instance(_key_id: String, hpm_type: &HsmType) -> Arc<Mutex<dyn Provider>> {
         match hpm_type {
+            HsmType::YubiKey => todo!(),
+            HsmType::NitroKey => todo!(),
+        }
+    }
+
+    pub fn get_capabilities(hsm_type: HsmType) -> Vec<Capability> {
+        match hsm_type {
             HsmType::YubiKey => todo!(),
             HsmType::NitroKey => todo!(),
         }
