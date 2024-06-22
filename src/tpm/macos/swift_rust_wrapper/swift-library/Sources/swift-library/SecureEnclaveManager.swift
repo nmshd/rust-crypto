@@ -53,7 +53,6 @@ import CryptoKit
         do{
             try storeKey_Keychain(key_id, privateKeyReference)
         }catch{
-            // TODO: Program is crashing
             throw SecureEnclaveError.CreateKeyError("The key could not be stored successfully into the keychain. \(String(describing: error))")
         }
         return keyPair
@@ -341,7 +340,7 @@ import CryptoKit
     func load_key(key_id: String, algorithm: CFString) throws -> SecKey? {
         let tag = key_id
         let query: [String: Any] = [
-            kSecClass as String                 : kSecClassKey,
+            kSecClass as String                  : kSecClassKey,
             kSecAttrApplicationTag as String    : tag,
             kSecAttrKeyType as String           : algorithm,
             kSecReturnRef as String             : true
@@ -458,7 +457,8 @@ import CryptoKit
         switch key_type{
             case "RSA": 
                 return kSecAttrKeyTypeRSA
-            // According documentation of Apple, kSecAttrKeyTypeECDSA is deprecated. Suggesting to use kSecAttrKeyTypeECSECPrimeRandom instead.
+            /* According documentation of Apple, kSecAttrKeyTypeECDSA is deprecated. 
+            Suggesting to use kSecAttrKeyTypeECSECPrimeRandom instead.*/
             case "ECDSA": 
                 return kSecAttrKeyTypeECSECPrimeRandom 
             default:

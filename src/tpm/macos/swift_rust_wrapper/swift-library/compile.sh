@@ -39,11 +39,20 @@ if $file_path_valid && $headder_path_valid; then
     fi
 
     if [ "$TARGET" == "ios" ]; then
-        swiftc -target arm64-apple-ios14.0 -sdk $(xcrun --sdk iphoneos --show-sdk-path) -emit-library -static -F /swift-library -o $compile_files_path  -import-objc-header $compile_header_path
+        swiftc -target arm64-apple-ios14.0 \
+        -sdk $(xcrun --sdk iphoneos --show-sdk-path) \
+        -emit-library -static -F /swift-library \
+        -o $compile_files_path  \
+        -import-objc-header $compile_header_path \
+
         echo "Compiled for: $TARGET"
 
     elif [ "$TARGET" == "macos" ]; then
-        swift build -Xswiftc -static -Xswiftc -import-objc-header -Xswiftc ./Sources/swift-library/bridging-header.h
+        swift build \
+        -Xswiftc -static \
+        -Xswiftc -import-objc-header \
+        -Xswiftc $compile_header_path \
+        
         echo "Compiled for: $TARGET"
 
     else
