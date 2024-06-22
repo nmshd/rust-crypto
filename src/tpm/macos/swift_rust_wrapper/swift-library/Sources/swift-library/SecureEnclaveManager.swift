@@ -406,17 +406,17 @@ import CryptoKit
     - Returns: A boolean if the module has been inizializes correctly on success ('true') or not ('false'), or a 'SecureEnclaveError' on failure.
     */
     func initialize_module() -> Bool  {
-        if #available(macOS 10.15, *) {
-            do{
+        do {
+            if #available(macOS 10.15, iOS 14.0, *)  {
                 guard SecureEnclave.isAvailable else {
-                    throw SecureEnclaveError.runtimeError("Secure Enclave is unavailable on this device. ")
+                    throw SecureEnclaveError.runtimeError("Secure Enclave is unavailable on this device. Please make sure you are using a device with Secure Enclave and macOS higher 10.15 or iOS higher 14.0")
                 }
                 return true
-            }catch{
+            } else {
                 return false
             }
-        } else {
-            return true
+        }catch{
+            return false
         }
     }
 
