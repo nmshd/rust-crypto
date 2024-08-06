@@ -1,9 +1,9 @@
 //TODO use CAL once it can compile
 //use crate::common::traits::module_provider::Provider;
+use crate::common::traits::module_provider::Provider;
 #[cfg(feature = "hcvault")]
 use crate::nks::hcvault::NksProvider;
 use std::sync::{Arc, Mutex};
-use crate::common::traits::module_provider::Provider;
 
 /// Represents the different environments where a Network Key Storage (nks) can operate.
 ///
@@ -26,7 +26,6 @@ pub enum NksType {
 impl Default for NksType {
     #[allow(unreachable_code)]
     fn default() -> Self {
-
         #[cfg(feature = "hcvault")]
         return NksType::HCVault;
 

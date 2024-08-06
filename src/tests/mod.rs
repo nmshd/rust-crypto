@@ -1,7 +1,7 @@
-pub mod common;
+mod common;
 
 #[cfg(feature = "hsm")]
-pub mod hsm;
+mod hsm;
 
 #[cfg(feature = "tpm")]
 mod tpm;

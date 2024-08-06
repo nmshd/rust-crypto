@@ -56,10 +56,10 @@ impl Provider for TpmProvider {
     ) -> Result<(), SecurityModuleError> {
         let config = config.downcast_ref::<TpmConfig>().unwrap();
 
-        self.key_algo = Some(config.key_algorithm);
-        self.sym_algo = Some(config.sym_algorithm);
-        self.hash = Some(config.hash);
-        self.key_usages = Some(config.key_usages.clone());
+        self.key_algo = config.key_algorithm;
+        self.sym_algo = config.sym_algorithm;
+        self.hash = config.hash;
+        self.key_usages = config.key_usages.clone();
 
         let mut key_handle = NCRYPT_KEY_HANDLE::default();
         let alg_id: PCWSTR = match self.key_algo.as_ref().unwrap() {
@@ -79,7 +79,7 @@ impl Provider for TpmProvider {
 
         if unsafe {
             NCryptCreatePersistedKey(
-                self.handle.as_ref(),
+                self.provider_handle.as_ref(),
                 &mut key_handle,
                 alg_id,
                 key_cu16,
@@ -202,17 +202,17 @@ impl Provider for TpmProvider {
     fn load_key(&mut self, key_id: &str, config: Box<dyn Any>) -> Result<(), SecurityModuleError> {
         let config = config.downcast_ref::<TpmConfig>().unwrap();
 
-        self.key_algo = Some(config.key_algorithm);
-        self.sym_algo = Some(config.sym_algorithm);
-        self.hash = Some(config.hash);
-        self.key_usages = Some(config.key_usages.clone());
+        self.key_algo = config.key_algorithm;
+        self.sym_algo = config.sym_algorithm;
+        self.hash = config.hash;
+        self.key_usages = config.key_usages.clone();
 
         let mut key_handle = NCRYPT_KEY_HANDLE::default();
         let key_cu16 = PCWSTR(key_id.as_ptr() as *const u16);
 
         if unsafe {
             NCryptOpenKey(
-                *self.handle.as_ref().unwrap(),
+                *self.provider_handle.as_ref().unwrap(),
                 &mut key_handle,
                 key_cu16,
                 CERT_KEY_SPEC(0),

@@ -65,7 +65,7 @@ impl From<&str> for HsmType {
 ///
 /// - `name`: A `String` holding the name of the HSM instance.
 /// - `instance`: A boxed trait object that implements the `Provider` trait, representing the
-/// provider for this HSM instance.
+///   provider for this HSM instance.
 ///
 /// # Methods
 ///

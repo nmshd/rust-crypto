@@ -22,15 +22,16 @@ fn test_create_rsa_key() {
     let mut provider = TpmProvider::new("test_rsa_key".to_string());
 
     let config = TpmConfig::new(
-        AsymmetricEncryption::Rsa(KeyBits::Bits4096),
-        BlockCiphers::Aes(SymmetricMode::Gcm, KeyBits::Bits512),
-        Hash::Sha2(Sha2Bits::Sha256),
+        Some(AsymmetricEncryption::Rsa(KeyBits::Bits4096)),
+        Some(BlockCiphers::Aes(SymmetricMode::Gcm, KeyBits::Bits512)),
+        Some(Hash::Sha2(Sha2Bits::Sha256)),
         vec![
             KeyUsage::SignEncrypt,
             KeyUsage::ClientAuth,
             KeyUsage::Decrypt,
             KeyUsage::CreateX509,
-        ],
+        ]
+        .into(),
     );
 
     provider
@@ -46,15 +47,18 @@ fn test_create_ecdsa_key() {
     let mut provider = TpmProvider::new("test_ecdsa_key".to_string());
 
     let config = TpmConfig::new(
-        AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::Curve25519)),
-        BlockCiphers::Aes(SymmetricMode::Gcm, KeyBits::Bits512),
-        Hash::Sha2(Sha2Bits::Sha256),
+        Some(AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(
+            EccCurves::Curve25519,
+        ))),
+        Some(BlockCiphers::Aes(SymmetricMode::Gcm, KeyBits::Bits512)),
+        Some(Hash::Sha2(Sha2Bits::Sha256)),
         vec![
             KeyUsage::SignEncrypt,
             KeyUsage::ClientAuth,
             KeyUsage::Decrypt,
             KeyUsage::CreateX509,
-        ],
+        ]
+        .into(),
     );
 
     provider
@@ -70,10 +74,12 @@ fn test_create_ecdh_key() {
     let mut provider = TpmProvider::new("test_ecdh_key".to_string());
 
     let config = TpmConfig::new(
-        AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::Curve25519)),
-        BlockCiphers::Aes(SymmetricMode::Gcm, KeyBits::Bits512),
-        Hash::Sha2(Sha2Bits::Sha256),
-        vec![KeyUsage::SignEncrypt, KeyUsage::Decrypt],
+        Some(AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(
+            EccCurves::Curve25519,
+        ))),
+        Some(BlockCiphers::Aes(SymmetricMode::Gcm, KeyBits::Bits512)),
+        Some(Hash::Sha2(Sha2Bits::Sha256)),
+        vec![KeyUsage::SignEncrypt, KeyUsage::Decrypt].into(),
     );
     provider
         .initialize_module()
@@ -88,15 +94,16 @@ fn test_load_rsa_key() {
     let mut provider = TpmProvider::new("test_rsa_key".to_string());
 
     let config = TpmConfig::new(
-        AsymmetricEncryption::Rsa(KeyBits::Bits4096),
-        BlockCiphers::Aes(SymmetricMode::Gcm, KeyBits::Bits512),
-        Hash::Sha2(Sha2Bits::Sha256),
+        Some(AsymmetricEncryption::Rsa(KeyBits::Bits4096)),
+        Some(BlockCiphers::Aes(SymmetricMode::Gcm, KeyBits::Bits512)),
+        Some(Hash::Sha2(Sha2Bits::Sha256)),
         vec![
             KeyUsage::SignEncrypt,
             KeyUsage::ClientAuth,
             KeyUsage::Decrypt,
             KeyUsage::CreateX509,
-        ],
+        ]
+        .into(),
     );
 
     provider
@@ -112,15 +119,18 @@ fn test_load_ecdsa_key() {
     let mut provider = TpmProvider::new("test_ecdsa_key".to_string());
 
     let config = TpmConfig::new(
-        AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::Curve25519)),
-        BlockCiphers::Aes(SymmetricMode::Gcm, KeyBits::Bits512),
-        Hash::Sha2(Sha2Bits::Sha256),
+        Some(AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(
+            EccCurves::Curve25519,
+        ))),
+        Some(BlockCiphers::Aes(SymmetricMode::Gcm, KeyBits::Bits512)),
+        Some(Hash::Sha2(Sha2Bits::Sha256)),
         vec![
             KeyUsage::SignEncrypt,
             KeyUsage::ClientAuth,
             KeyUsage::Decrypt,
             KeyUsage::CreateX509,
-        ],
+        ]
+        .into(),
     );
 
     provider
@@ -136,10 +146,12 @@ fn test_load_ecdh_key() {
     let mut provider = TpmProvider::new("test_ecdh_key".to_string());
 
     let config = TpmConfig::new(
-        AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(EccCurves::Curve25519)),
-        BlockCiphers::Aes(SymmetricMode::Gcm, KeyBits::Bits512),
-        Hash::Sha2(Sha2Bits::Sha256),
-        vec![KeyUsage::SignEncrypt, KeyUsage::Decrypt],
+        Some(AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(
+            EccCurves::Curve25519,
+        ))),
+        Some(BlockCiphers::Aes(SymmetricMode::Gcm, KeyBits::Bits512)),
+        Some(Hash::Sha2(Sha2Bits::Sha256)),
+        vec![KeyUsage::SignEncrypt, KeyUsage::Decrypt].into(),
     );
 
     provider

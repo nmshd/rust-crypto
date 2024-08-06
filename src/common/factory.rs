@@ -26,6 +26,8 @@ pub enum SecurityModule {
     Tpm(TpmType),
     #[cfg(feature = "nks")]
     Nks,
+    #[cfg(feature = "android")]
+    Android,
 }
 
 /// Provides conversion from a string slice to a `SecurityModule` variant.
@@ -39,6 +41,8 @@ impl From<&str> for SecurityModule {
             "TPM" => SecurityModule::Tpm(TpmType::default()),
             #[cfg(feature = "hsm")]
             "HSM" => SecurityModule::Hsm(HsmType::default()),
+            #[cfg(feature = "android")]
+            "Android" => SecurityModule::Android,
             _ => panic!("Unsupported Security Module type"),
         }
     }

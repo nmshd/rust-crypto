@@ -26,7 +26,6 @@ pub mod provider;
 #[repr(C)]
 pub struct NksProvider {
     //TODO implement NksProvider struct
-
     /// A unique identifier for the cryptographic key managed by this provider.
     key_id: String,
     pub(crate) config: Option<Arc<dyn ProviderConfig + Sync + Send>>,
