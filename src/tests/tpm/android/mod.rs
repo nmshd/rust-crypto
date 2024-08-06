@@ -1,10 +1,10 @@
-use crate::common::crypto::{algorithms, KeyUsage};
+// use crate::common::crypto::{algorithms, KeyUsage};
 use crate::common::factory::SecModules;
 use crate::common::factory::SecurityModule;
-use crate::tpm::android::*;
+// use crate::tpm::android::*;
 use crate::tpm::core::instance::AndroidTpmType;
 use crate::tpm::core::instance::TpmType;
-use robusta_jni::convert::IntoJavaValue;
+// use robusta_jni::convert::IntoJavaValue;
 
 #[test]
 fn initializ_module_test1() {
@@ -21,10 +21,10 @@ fn initializ_module_test() {
 
     let x = security_module.unwrap();
     let mut provider = x.lock().unwrap();
-    let key_algorithm =
-        algorithms::encryption::AsymmetricEncryption::Rsa(algorithms::KeyBits::Bits1024);
-    let hash = algorithms::hashes::Hash::Sha1;
-    let key_usages = vec![KeyUsage::SignEncrypt];
+    // let key_algorithm =
+    //     algorithms::encryption::AsymmetricEncryption::Rsa(algorithms::KeyBits::Bits1024);
+    // let hash = algorithms::hashes::Hash::Sha1;
+    // let key_usages = vec![KeyUsage::SignEncrypt];
     provider.initialize_module().unwrap();
 }
 /*

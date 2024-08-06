@@ -33,7 +33,7 @@ pub struct TpmProvider {
     /// A unique identifier for the cryptographic key managed by this provider.
     key_id: String,
     pub(super) key_handle: Option<NCRYPT_KEY_HANDLE>,
-    pub(super) handle: Option<NCRYPT_PROV_HANDLE>,
+    pub(super) provider_handle: Option<NCRYPT_PROV_HANDLE>,
     pub(super) key_algo: Option<AsymmetricEncryption>,
     pub(super) sym_algo: Option<BlockCiphers>,
     pub(super) hash: Option<Hash>,
@@ -54,7 +54,7 @@ impl TpmProvider {
     pub fn new(key_id: String) -> Self {
         Self {
             key_id,
-            handle: None,
+            provider_handle: None,
             key_handle: None,
             key_algo: None,
             sym_algo: None,

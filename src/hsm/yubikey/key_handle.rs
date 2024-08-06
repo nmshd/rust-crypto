@@ -63,19 +63,18 @@ impl KeyHandle for YubiKeyProvider {
 
         //TODO After PIN input implementation in App, insert code for re-authentication
         let verify = yubikey.verify_pin(self.pin.as_ref());
-        if !verify.is_ok() {
+        if verify.is_err() {
             return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
                 "PIN verification failed".to_string(),
             )));
         }
         let auth = yubikey.authenticate(MgmKey::new(self.management_key.unwrap()).unwrap());
-        if !auth.is_ok() {
+        if auth.is_err() {
             return Err(SecurityModuleError::Hsm(HsmError::DeviceSpecific(
                 "Authentication  failed".to_string(),
             )));
         }
 
-        let signature: Result<Zeroizing<Vec<u8>>, yubikey::Error>;
         let mut vec_data: Vec<u8> = create_digest_info(data).unwrap();
         let algorithm_id: AlgorithmId;
 
@@ -83,7 +82,7 @@ impl KeyHandle for YubiKeyProvider {
             AsymmetricEncryption::Rsa(KeyBits::Bits1024) => {
                 algorithm_id = AlgorithmId::Rsa1024;
                 vec_data = apply_pkcs1v15_padding(&vec_data, BYTES_1024);
-                data = &vec_data.as_slice();
+                data = vec_data.as_slice();
             }
             AsymmetricEncryption::Rsa(KeyBits::Bits2048) => {
                 algorithm_id = AlgorithmId::Rsa2048;
@@ -103,7 +102,7 @@ impl KeyHandle for YubiKeyProvider {
                 )));
             }
         }
-        signature = piv::sign_data(
+        let signature: Result<Zeroizing<Vec<u8>>, yubikey::Error> = piv::sign_data(
             &mut yubikey,
             data,
             algorithm_id,
@@ -139,28 +138,24 @@ impl KeyHandle for YubiKeyProvider {
         let yubikey = self.yubikey.as_ref().unwrap();
         let mut yubikey = yubikey.lock().unwrap();
 
-        let decrypted: Result<Zeroizing<Vec<u8>>, &str>;
+        // let decrypted: Result<Zeroizing<Vec<u8>>, &str>;
         let key_algo = self.key_algo.unwrap();
 
-        match key_algo {
-            AsymmetricEncryption::Rsa(KeyBits::Bits1024) => {
-                decrypted = piv::decrypt_data(
-                    &mut yubikey,
-                    encrypted_data,
-                    piv::AlgorithmId::Rsa1024,
-                    piv::SlotId::Retired(self.slot_id.unwrap()),
-                )
-                .map_err(|_| "Failed to decrypt data");
-            }
-            AsymmetricEncryption::Rsa(KeyBits::Bits2048) => {
-                decrypted = piv::decrypt_data(
-                    &mut yubikey,
-                    encrypted_data,
-                    piv::AlgorithmId::Rsa2048,
-                    piv::SlotId::Retired(self.slot_id.unwrap()),
-                )
-                .map_err(|_| "Failed to decrypt data");
-            }
+        let decrypted = match key_algo {
+            AsymmetricEncryption::Rsa(KeyBits::Bits1024) => piv::decrypt_data(
+                &mut yubikey,
+                encrypted_data,
+                piv::AlgorithmId::Rsa1024,
+                piv::SlotId::Retired(self.slot_id.unwrap()),
+            )
+            .map_err(|_| "Failed to decrypt data"),
+            AsymmetricEncryption::Rsa(KeyBits::Bits2048) => piv::decrypt_data(
+                &mut yubikey,
+                encrypted_data,
+                piv::AlgorithmId::Rsa2048,
+                piv::SlotId::Retired(self.slot_id.unwrap()),
+            )
+            .map_err(|_| "Failed to decrypt data"),
             // The Yubikey do not support decryption with ECC, see:
             // https://docs.yubico.com/yesdk/users-manual/application-piv/apdu/auth-decrypt.html
             /*
@@ -172,7 +167,8 @@ impl KeyHandle for YubiKeyProvider {
                     "Key Algorithm not supported".to_string(),
                 )));
             }
-        }
+        };
+
         fn remove_pkcs1_padding(buffer: &[u8]) -> Result<Vec<u8>, &'static str> {
             let mut pos = 2; // Start nach dem ersten Padding-Byte `0x02`
             if buffer[0] != 0 {
@@ -341,9 +337,7 @@ fn apply_pkcs1v15_padding(data: &[u8], block_size: usize) -> Vec<u8> {
     let mut padded_data = Vec::with_capacity(block_size);
     padded_data.push(0x00);
     padded_data.push(0x01);
-    for _ in 0..padding_length {
-        padded_data.push(0xFF);
-    }
+    padded_data.resize(padded_data.len() + padding_length, 0xFF);
     padded_data.push(0x00);
     padded_data.extend_from_slice(data);
     padded_data

@@ -161,7 +161,7 @@ fn test_load_rsa_key_1024() {
 
     // load RSA-key
     provider
-        .load_key(&key_id, config)
+        .load_key(key_id, config)
         .expect("Failed to load RSA key");
 }
 
@@ -181,7 +181,7 @@ fn test_load_rsa_key_2048() {
 
     // load RSA-key
     provider
-        .load_key(&key_id, config)
+        .load_key(key_id, config)
         .expect("Failed to load RSA key");
 }
 

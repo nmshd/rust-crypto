@@ -46,6 +46,7 @@ pub trait KeyHandle: Send + Sync + Debug {
             "Method not implemented".to_owned(),
         ))
     }
+
     /// Decrypts the given encrypted data using the cryptographic key.
     ///
     /// # Arguments
@@ -59,6 +60,7 @@ pub trait KeyHandle: Send + Sync + Debug {
             "Method not implemented".to_owned(),
         ))
     }
+
     /// Encrypts the given data using the cryptographic key.
     ///
     /// # Arguments
@@ -72,6 +74,7 @@ pub trait KeyHandle: Send + Sync + Debug {
             "Method not implemented".to_owned(),
         ))
     }
+
     /// Verifies the signature of the given data using the cryptographic key.
     ///
     /// # Arguments
@@ -87,6 +90,26 @@ pub trait KeyHandle: Send + Sync + Debug {
         _data: &[u8],
         _signature: &[u8],
     ) -> Result<bool, SecurityModuleError> {
+        Err(SecurityModuleError::InitializationError(
+            "Method not implemented".to_owned(),
+        ))
+    }
+
+    /// TODO: Docs
+    /// # Returns
+    /// A `Result` containing the new key on success or a `SecurityModuleError` on failure.
+    #[tracing::instrument]
+    fn derive_key(&self) -> Result<Vec<u8>, SecurityModuleError> {
+        Err(SecurityModuleError::InitializationError(
+            "Method not implemented".to_owned(),
+        ))
+    }
+
+    /// TODO: Docs
+    /// # Returns
+    /// A `Result` containing the new keypair on success or a `SecurityModuleError` on failure.
+    #[tracing::instrument]
+    fn generate_exchange_keypair(&self) -> Result<(Vec<u8>, Vec<u8>), SecurityModuleError> {
         Err(SecurityModuleError::InitializationError(
             "Method not implemented".to_owned(),
         ))

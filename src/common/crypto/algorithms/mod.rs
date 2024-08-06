@@ -65,3 +65,36 @@ impl From<u32> for KeyBits {
         }
     }
 }
+
+impl From<KeyBits> for i32 {
+    fn from(value: KeyBits) -> Self {
+        match value {
+            KeyBits::Bits128 => 128,
+            KeyBits::Bits192 => 192,
+            KeyBits::Bits256 => 256,
+            KeyBits::Bits512 => 512,
+            KeyBits::Bits1024 => 1024,
+            KeyBits::Bits2048 => 2048,
+            KeyBits::Bits3072 => 3072,
+            KeyBits::Bits4096 => 4096,
+            KeyBits::Bits8192 => 8192,
+        }
+    }
+}
+
+impl From<i32> for KeyBits {
+    fn from(value: i32) -> Self {
+        match value {
+            128 => KeyBits::Bits128,
+            192 => KeyBits::Bits192,
+            256 => KeyBits::Bits256,
+            512 => KeyBits::Bits512,
+            1024 => KeyBits::Bits1024,
+            2048 => KeyBits::Bits2048,
+            3072 => KeyBits::Bits3072,
+            4096 => KeyBits::Bits4096,
+            8192 => KeyBits::Bits8192,
+            _ => unimplemented!("Unsupported key size"),
+        }
+    }
+}

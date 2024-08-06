@@ -22,10 +22,10 @@ pub mod win;
 
 #[derive(Debug, Clone, Default)]
 pub struct TpmConfig {
-    pub key_algorithm: AsymmetricEncryption,
-    pub sym_algorithm: BlockCiphers,
-    pub hash: Hash,
-    pub key_usages: Vec<KeyUsage>,
+    pub key_algorithm: Option<AsymmetricEncryption>,
+    pub sym_algorithm: Option<BlockCiphers>,
+    pub hash: Option<Hash>,
+    pub key_usages: Option<Vec<KeyUsage>>,
 }
 
 impl ProviderConfig for TpmConfig {
@@ -37,10 +37,10 @@ impl ProviderConfig for TpmConfig {
 impl TpmConfig {
     #[allow(clippy::new_ret_no_self)]
     pub fn new(
-        key_algorithm: AsymmetricEncryption,
-        sym_algorithm: BlockCiphers,
-        hash: Hash,
-        key_usages: Vec<KeyUsage>,
+        key_algorithm: Option<AsymmetricEncryption>,
+        sym_algorithm: Option<BlockCiphers>,
+        hash: Option<Hash>,
+        key_usages: Option<Vec<KeyUsage>>,
     ) -> Box<dyn Any> {
         Box::new(Self {
             key_algorithm,

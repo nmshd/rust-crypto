@@ -35,7 +35,7 @@ pub struct TpmProvider {
     /// A unique identifier for the cryptographic key managed by this provider.
     key_id: String,
     pub(super) key_handle: Option<Arc<Mutex<TssKeyHandle>>>,
-    pub(super) handle: Option<Arc<Mutex<Context>>>,
+    pub(super) provider_handle: Option<Arc<Mutex<Context>>>,
     pub(super) key_algorithm: Option<AsymmetricEncryption>,
     pub(super) sym_algorithm: Option<BlockCiphers>,
     pub(super) hash: Option<Hash>,
@@ -52,7 +52,7 @@ impl TpmProvider {
         Self {
             key_id,
             key_handle: None,
-            handle: None,
+            provider_handle: None,
             key_algorithm: None,
             sym_algorithm: None,
             hash: None,

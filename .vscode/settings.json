@@ -19,7 +19,7 @@
     },
     "editor.formatOnSave": true,
     "editor.formatOnPaste": true,
-    "files.autoSave": "off",
+    // "files.autoSave": "off",
     "html.format.wrapAttributes": "preserve-aligned",
     "xmlTools.splitAttributesOnFormat": true,
     "xmlTools.enforcePrettySelfClosingTagOnFormat": true,

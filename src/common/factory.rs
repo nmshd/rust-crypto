@@ -26,7 +26,8 @@ pub enum SecurityModule {
     Tpm(TpmType),
     #[cfg(feature = "nks")]
     Nks,
-
+    #[cfg(feature = "android")]
+    Android,
 }
 
 /// Provides conversion from a string slice to a `SecurityModule` variant.
@@ -40,6 +41,8 @@ impl From<&str> for SecurityModule {
             "TPM" => SecurityModule::Tpm(TpmType::default()),
             #[cfg(feature = "hsm")]
             "HSM" => SecurityModule::Hsm(HsmType::default()),
+            #[cfg(feature = "android")]
+            "Android" => SecurityModule::Android,
             _ => panic!("Unsupported Security Module type"),
         }
     }
@@ -135,9 +138,14 @@ impl SecModule {
             SecurityModule::Hsm(hsm_type) => Some(HsmInstance::create_instance(key_id, hsm_type)),
             #[cfg(feature = "tpm")]
             SecurityModule::Tpm(tpm_type) => Some(TpmInstance::create_instance(key_id, tpm_type)),
-            // _ => unimplemented!(),
             #[cfg(feature = "nks")]
-            SecurityModule::Nks => Some(Arc::new(Mutex::new(crate::nks::hcvault::NksProvider::new(key_id)))),
+            SecurityModule::Nks => Some(Arc::new(Mutex::new(
+                crate::nks::hcvault::NksProvider::new(key_id),
+            ))),
+            // #[cfg(feature = "android")]
+            // SecurityModule::Android => Some(AndroidInstance::create_instance(key_id),
+            #[allow(unreachable_patterns)]
+            _ => unimplemented!("{}", key_id),
         }
     }
 }
