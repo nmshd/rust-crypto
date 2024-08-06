@@ -142,10 +142,7 @@ impl SecModule {
             SecurityModule::Nks => Some(Arc::new(Mutex::new(
                 crate::nks::hcvault::NksProvider::new(key_id),
             ))),
-            // #[cfg(feature = "android")]
-            // SecurityModule::Android => Some(AndroidInstance::create_instance(key_id),
-            #[allow(unreachable_patterns)]
-            _ => unimplemented!("{}", key_id),
+            _ => unimplemented!(),
         }
     }
 }
