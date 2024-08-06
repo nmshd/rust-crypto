@@ -7,8 +7,11 @@ use crate::{
     },
     tpm::TpmConfig,
 };
-use std::any::Any;
-use std::sync::{Arc, Mutex};
+use std::{
+    any::Any,
+    str::FromStr,
+    sync::{Arc, Mutex},
+};
 use tracing::instrument;
 use tss_esapi::{
     attributes::{ObjectAttributesBuilder, SessionAttributesBuilder},
@@ -16,16 +19,17 @@ use tss_esapi::{
     handles::{KeyHandle as TssKeyHandle, PersistentTpmHandle},
     interface_types::{
         algorithm::{HashingAlgorithm, SymmetricMode},
+        dynamic_handles::Persistent,
         key_bits::AesKeyBits,
         resource_handles::{Hierarchy, Provision},
     },
     structures::{
-        Digest, EccPoint, HashScheme, KeyDerivationFunctionScheme, Private, PublicBuilder,
-        PublicKeyRsa, PublicRsaParameters, RsaExponent, RsaScheme,
+        Digest, EccPoint, HashScheme, KeyDerivationFunctionScheme, Private, Public, PublicBuilder,
+        PublicEccParameters, PublicKeyRsa, PublicRsaParameters, RsaExponent, RsaScheme,
+        SymmetricDefinition,
     },
     Context, TctiNameConf,
 };
-use tss_esapi::{interface_types::dynamic_handles::Persistent, structures::PublicEccParameters};
 
 /// Implements the `Provider` trait, providing cryptographic operations utilizing a TPM.
 impl Provider for TpmProvider {
@@ -55,10 +59,10 @@ impl Provider for TpmProvider {
     ) -> Result<(), SecurityModuleError> {
         let config = config.downcast_ref::<TpmConfig>().unwrap();
 
-        self.key_algorithm = Some(config.key_algorithm);
-        self.sym_algorithm = Some(config.sym_algorithm);
-        self.hash = Some(config.hash);
-        self.key_usages = Some(config.key_usages.clone());
+        self.key_algorithm = config.key_algorithm;
+        self.sym_algorithm = config.sym_algorithm;
+        self.hash = config.hash;
+        self.key_usages = config.key_usages.clone();
 
         let primary_pub = match self.key_algorithm.as_ref().unwrap() {
             AsymmetricEncryption::Rsa(key_bits) => PublicBuilder::new()
@@ -144,7 +148,7 @@ impl Provider for TpmProvider {
             .unwrap();
 
         let key_handle = self
-            .handle
+            .provider_handle
             .as_ref()
             .unwrap()
             .lock()
@@ -158,7 +162,7 @@ impl Provider for TpmProvider {
         self.key_handle = Some(Arc::new(Mutex::new(key_handle.key_handle)));
 
         self.key_id = key_handle.key_handle.value().to_string();
-        self.handle
+        self.provider_handle
             .as_ref()
             .unwrap()
             .lock()
@@ -197,14 +201,14 @@ impl Provider for TpmProvider {
     fn load_key(&mut self, key_id: &str, config: Box<dyn Any>) -> Result<(), SecurityModuleError> {
         let config = config.downcast_ref::<TpmConfig>().unwrap();
 
-        self.key_algorithm = Some(config.key_algorithm);
-        self.sym_algorithm = Some(config.sym_algorithm);
-        self.hash = Some(config.hash);
-        self.key_usages = Some(config.key_usages.clone());
+        self.key_algorithm = config.key_algorithm;
+        self.sym_algorithm = config.sym_algorithm;
+        self.hash = config.hash;
+        self.key_usages = config.key_usages.clone();
 
         // Start an authorization session
         let session = self
-            .handle
+            .provider_handle
             .as_ref()
             .unwrap()
             .lock()
@@ -214,7 +218,7 @@ impl Provider for TpmProvider {
                 None,
                 None,
                 SessionType::Hmac,
-                tss_esapi::structures::SymmetricDefinition::Aes {
+                SymmetricDefinition::Aes {
                     key_bits: AesKeyBits::Aes256,
                     mode: SymmetricMode::Cbc,
                 },
@@ -227,7 +231,7 @@ impl Provider for TpmProvider {
             .with_continue_session(true)
             .build();
 
-        self.handle
+        self.provider_handle
             .as_ref()
             .unwrap()
             .lock()
@@ -298,7 +302,7 @@ impl Provider for TpmProvider {
             .unwrap();
 
         let private = Private::default();
-        let public = tss_esapi::structures::Public::Ecc {
+        let public = Public::Ecc {
             object_attributes: obj_attributes,
             name_hashing_algorithm: self.hash.unwrap().into(),
             auth_policy: Digest::default(),
@@ -307,7 +311,7 @@ impl Provider for TpmProvider {
         };
 
         let key_handle = self
-            .handle
+            .provider_handle
             .as_ref()
             .unwrap()
             .lock()
@@ -332,12 +336,13 @@ impl Provider for TpmProvider {
     /// On failure, it returns a `SecurityModuleError`.
     #[instrument]
     fn initialize_module(&mut self) -> Result<(), SecurityModuleError> {
-        let tcti = TctiNameConf::from_environment_variable().unwrap();
+        // let tcti = TctiNameConf::from_environment_variable().unwrap();
+        let tcti = TctiNameConf::from_str("device:/dev/tpm0").unwrap();
 
         let context = Context::new(tcti)
             .map_err(|e| SecurityModuleError::InitializationError(e.to_string()))?;
 
-        self.handle = Some(Arc::new(Mutex::new(context)));
+        self.provider_handle = Some(Arc::new(Mutex::new(context)));
 
         Ok(())
     }

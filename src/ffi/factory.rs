@@ -41,7 +41,7 @@ pub unsafe extern "C" fn secmodules_get_instance(
     };
 
     let module = SecurityModule::from(module_type_str);
-  
+
     match SecModules::get_instance(key_id_str.to_string(), module, None) {
         Some(provider) => ProviderFFI::new(provider),
         None => ptr::null_mut(),

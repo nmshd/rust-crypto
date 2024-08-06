@@ -5,10 +5,17 @@ use crate::common::{
 };
 use tracing::instrument;
 use tss_esapi::{
-    interface_types::{algorithm::SymmetricMode, resource_handles::Hierarchy},
+    attributes::SessionAttributes,
+    constants::SessionType,
+    handles::ObjectHandle,
+    interface_types::{
+        algorithm::{HashingAlgorithm, SymmetricMode},
+        resource_handles::Hierarchy,
+    },
     structures::{
-        Data, EccParameter, EccSignature, HashScheme, InitialValue, MaxBuffer, PublicKeyRsa,
-        RsaDecryptionScheme, RsaSignature, Signature, SignatureScheme,
+        Auth, Data, EccParameter, EccSignature, HashScheme, InitialValue, MaxBuffer, PublicBuilder,
+        PublicKeyRsa, PublicRsaParametersBuilder, RsaDecryptionScheme, RsaSignature, Signature,
+        SignatureScheme, SymmetricDefinition,
     },
     traits::Marshall,
 };
@@ -27,7 +34,7 @@ impl KeyHandle for TpmProvider {
     fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         let key_handle = *self.key_handle.as_ref().unwrap().lock().unwrap();
         let ticket = self
-            .handle
+            .provider_handle
             .as_ref()
             .unwrap()
             .lock()
@@ -41,7 +48,7 @@ impl KeyHandle for TpmProvider {
 
         let signature = match self.key_algorithm.as_ref().unwrap() {
             AsymmetricEncryption::Rsa(_) => self
-                .handle
+                .provider_handle
                 .as_ref()
                 .unwrap()
                 .lock()
@@ -57,7 +64,7 @@ impl KeyHandle for TpmProvider {
                 .map_err(|e| SecurityModuleError::SigningError(e.to_string()))?,
             AsymmetricEncryption::Ecc(ecc_scheme) => {
                 let signature_scheme: SignatureScheme = (*ecc_scheme).into();
-                self.handle
+                self.provider_handle
                     .as_ref()
                     .unwrap()
                     .lock()
@@ -87,12 +94,11 @@ impl KeyHandle for TpmProvider {
 
         match self.key_algorithm.as_ref().unwrap() {
             AsymmetricEncryption::Rsa(_) => {
-                let scheme =
-                    RsaDecryptionScheme::Oaep(HashScheme::new(self.hash.unwrap().into()));
+                let scheme = RsaDecryptionScheme::Oaep(HashScheme::new(self.hash.unwrap().into()));
                 let pub_key = PublicKeyRsa::try_from(encrypted_data)
                     .map_err(|e| SecurityModuleError::DecryptionError(e.to_string()))?;
                 let decryption_result = self
-                    .handle
+                    .provider_handle
                     .as_ref()
                     .unwrap()
                     .lock()
@@ -111,7 +117,7 @@ impl KeyHandle for TpmProvider {
                 let initial_value = InitialValue::try_from(vec![0u8; 16])
                     .map_err(|e| SecurityModuleError::DecryptionError(e.to_string()))?;
                 let (decrypted_data, _) = self
-                    .handle
+                    .provider_handle
                     .as_ref()
                     .unwrap()
                     .lock()
@@ -145,12 +151,11 @@ impl KeyHandle for TpmProvider {
 
         match self.key_algorithm.as_ref().unwrap() {
             AsymmetricEncryption::Rsa(_) => {
-                let scheme =
-                    RsaDecryptionScheme::Oaep(HashScheme::new(self.hash.unwrap().into()));
+                let scheme = RsaDecryptionScheme::Oaep(HashScheme::new(self.hash.unwrap().into()));
                 let message = PublicKeyRsa::try_from(data)
                     .map_err(|e| SecurityModuleError::EncryptionError(e.to_string()))?;
                 let encryption_result = self
-                    .handle
+                    .provider_handle
                     .as_ref()
                     .unwrap()
                     .lock()
@@ -169,7 +174,7 @@ impl KeyHandle for TpmProvider {
                 let initial_value = InitialValue::try_from(vec![0u8; 16])
                     .map_err(|e| SecurityModuleError::EncryptionError(e.to_string()))?;
                 let (encrypted_data, _) = self
-                    .handle
+                    .provider_handle
                     .as_ref()
                     .unwrap()
                     .lock()
@@ -203,7 +208,7 @@ impl KeyHandle for TpmProvider {
     fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, SecurityModuleError> {
         let key_handle = *self.key_handle.as_ref().unwrap().lock().unwrap();
         let digest = self
-            .handle
+            .provider_handle
             .as_ref()
             .unwrap()
             .lock()
@@ -220,11 +225,9 @@ impl KeyHandle for TpmProvider {
             AsymmetricEncryption::Rsa(_) => {
                 let signature = PublicKeyRsa::try_from(signature)
                     .map_err(|e| SecurityModuleError::SignatureVerificationError(e.to_string()))?;
-                let rsa_signature =
-                    RsaSignature::create(self.hash.unwrap().into(), signature).map_err(
-                        |e| SecurityModuleError::SignatureVerificationError(e.to_string()),
-                    )?;
-                self.handle
+                let rsa_signature = RsaSignature::create(self.hash.unwrap().into(), signature)
+                    .map_err(|e| SecurityModuleError::SignatureVerificationError(e.to_string()))?;
+                self.provider_handle
                     .as_ref()
                     .unwrap()
                     .lock()
@@ -249,12 +252,13 @@ impl KeyHandle for TpmProvider {
                         })?,
                     ),
                 };
-                let ecc_signature = EccSignature::create(
-                    self.hash.unwrap().into(),
-                    signature_r,
-                    signature_s,
-                )
-                .map_err(|e| SecurityModuleError::SignatureVerificationError(e.to_string()))?;
+
+                let ecc_signature =
+                    EccSignature::create(self.hash.unwrap().into(), signature_r, signature_s)
+                        .map_err(|e| {
+                            SecurityModuleError::SignatureVerificationError(e.to_string())
+                        })?;
+
                 let signature = match signature_scheme {
                     SignatureScheme::EcDsa { .. } => Signature::EcDsa(ecc_signature),
                     SignatureScheme::EcDaa { .. } => Signature::EcDaa(ecc_signature),
@@ -262,7 +266,8 @@ impl KeyHandle for TpmProvider {
                     SignatureScheme::EcSchnorr { .. } => Signature::EcSchnorr(ecc_signature),
                     _ => unreachable!(),
                 };
-                self.handle
+
+                self.provider_handle
                     .as_ref()
                     .unwrap()
                     .lock()
@@ -273,5 +278,106 @@ impl KeyHandle for TpmProvider {
         };
 
         Ok(verification_result)
+    }
+
+    #[doc = " TODO: Docs"]
+    #[doc = " # Returns"]
+    #[doc = " A `Result` containing the new key id on success or a `SecurityModuleError` on failure."]
+    fn derive_key(&self) -> Result<Vec<u8>, SecurityModuleError> {
+        // Start an authentication session
+        let session = self
+            .provider_handle
+            .as_ref()
+            .unwrap()
+            .lock()
+            .unwrap()
+            .start_auth_session(
+                None,
+                None,
+                None,
+                SessionType::Hmac,
+                SymmetricDefinition::AES_256_CFB,
+                HashingAlgorithm::Sha256,
+            )
+            .unwrap();
+
+        // Set session attributes
+        let session_attributes = SessionAttributes::builder()
+            .with_decrypt(true)
+            .with_encrypt(true)
+            .build();
+
+        self.provider_handle
+            .as_ref()
+            .unwrap()
+            .lock()
+            .unwrap()
+            .tr_sess_set_attributes(session.unwrap(), session_attributes.0, session_attributes.1)
+            .unwrap();
+
+        // Set the password for the primary key
+        let primary_key_handle = *self.key_handle.as_ref().unwrap().lock().unwrap();
+
+        self.provider_handle
+            .as_ref()
+            .unwrap()
+            .lock()
+            .unwrap()
+            .tr_set_auth(ObjectHandle::from(primary_key_handle), Auth::default())
+            .unwrap();
+
+        // Define the attributes of the derived key
+        let derived_key_public = PublicBuilder::new()
+            .with_name_hashing_algorithm(HashingAlgorithm::Sha256)
+            .with_object_attributes(tss_esapi::attributes::ObjectAttributes(
+                tss_esapi::constants::tss::TPMA_OBJECT_DECRYPT
+                    | tss_esapi::constants::tss::TPMA_OBJECT_SIGN_ENCRYPT
+                    | tss_esapi::constants::tss::TPMA_OBJECT_SENSITIVEDATAORIGIN
+                    | tss_esapi::constants::tss::TPMA_OBJECT_USERWITHAUTH,
+            ))
+            .with_rsa_parameters(PublicRsaParametersBuilder::new().build().unwrap())
+            .build()
+            .unwrap();
+
+        // Create the derived key
+        let derived_key_result = self
+            .provider_handle
+            .as_ref()
+            .unwrap()
+            .lock()
+            .unwrap()
+            .create(
+                *self.key_handle.as_ref().unwrap().lock().unwrap(),
+                derived_key_public,
+                None,
+                None,
+                None,
+                None,
+            )
+            .unwrap();
+
+        Ok(derived_key_result.out_private.to_vec())
+    }
+
+    #[doc = " TODO: Docs"]
+    #[doc = " # Returns"]
+    #[doc = " A `Result` containing the new key on success or a `SecurityModuleError` on failure."]
+    fn generate_exchange_keypair(&self) -> Result<(Vec<u8>, Vec<u8>), SecurityModuleError> {
+        let result = self
+            .provider_handle
+            .as_ref()
+            .unwrap()
+            .lock()
+            .unwrap()
+            .ecdh_key_gen(*self.key_handle.as_ref().unwrap().lock().unwrap())
+            .unwrap();
+
+        let mut vec0 = result.0.x().to_vec();
+        vec0.append(&mut result.0.y().to_vec());
+
+        let mut vec1 = result.1.x().to_vec();
+        vec1.append(&mut result.1.y().to_vec());
+
+        Ok((vec0, vec1))
     }
 }
