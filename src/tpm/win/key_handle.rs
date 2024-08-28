@@ -2,6 +2,7 @@ use super::TpmProvider;
 use crate::{
     common::{error::SecurityModuleError, traits::key_handle::KeyHandle},
     tpm::core::error::TpmError,
+    tpm::win::execute_ncrypt_function,
 };
 use std::ptr::null_mut;
 use tracing::instrument;
@@ -108,39 +109,27 @@ impl KeyHandle for TpmProvider {
 
         // Determine the size of the signature
         let mut signature_size: u32 = 0;
-        if unsafe {
-            NCryptSignHash(
-                self.key_handle.as_ref(),
-                None,                  // No padding info
-                &hash,                 // Hash as a slice
-                None,                  // No signature buffer yet
-                &mut signature_size,   // Pointer to receive the size of the signature
-                NCRYPT_PAD_PKCS1_FLAG, // Padding flag
-            )
-        }
-        .is_err()
-        {
-            return Err(TpmError::Win(windows::core::Error::from_win32()).into());
-        }
+        execute_ncrypt_function!(NCryptSignHash(
+            self.key_handle.as_ref(),
+            None,                  // No padding info
+            &hash,                 // Hash as a slice
+            None,                  // No signature buffer yet
+            &mut signature_size,   // Pointer to receive the size of the signature
+            NCRYPT_PAD_PKCS1_FLAG, // Padding flag
+        ));
 
         // Allocate a buffer for the signature
         let mut signature = Vec::with_capacity(signature_size as usize);
 
         // Sign the hash
-        if unsafe {
-            NCryptSignHash(
-                self.key_handle.as_ref(),
-                None,                  // No padding info
-                &hash,                 // Hash as a slice
-                Some(&mut signature),  // Signature buffer as a mutable slice
-                &mut signature_size,   // Pointer to receive the actual size of the signature
-                NCRYPT_PAD_PKCS1_FLAG, // Padding flag
-            )
-        }
-        .is_err()
-        {
-            return Err(TpmError::Win(windows::core::Error::from_win32()).into());
-        }
+        execute_ncrypt_function!(NCryptSignHash(
+            self.key_handle.as_ref(),
+            None,                  // No padding info
+            &hash,                 // Hash as a slice
+            Some(&mut signature),  // Signature buffer as a mutable slice
+            &mut signature_size,   // Pointer to receive the actual size of the signature
+            NCRYPT_PAD_PKCS1_FLAG, // Padding flag
+        ));
 
         // Resize the signature buffer to the actual size
         signature.truncate(signature_size as usize);
@@ -164,39 +153,27 @@ impl KeyHandle for TpmProvider {
         let mut decrypted_data_len: u32 = 0;
 
         // First, determine the size of the decrypted data without actually decrypting
-        if unsafe {
-            NCryptDecrypt(
-                self.key_handle.as_ref(),
-                Some(encrypted_data), // Pass encrypted data as an Option<&[u8]>
-                None, // Padding information as Option<*const c_void>, adjust based on your encryption scheme
-                None, // Initially, no output buffer to get the required size
-                &mut decrypted_data_len, // Receives the required size of the output buffer
-                NCRYPT_FLAGS(0), // Flags, adjust as necessary
-            )
-        }
-        .is_err()
-        {
-            return Err(TpmError::Win(windows::core::Error::from_win32()).into());
-        }
+        execute_ncrypt_function!(NCryptDecrypt(
+            self.key_handle.as_ref(),
+            Some(encrypted_data),    // Pass encrypted data as an Option<&[u8]>
+            None, // Padding information as Option<*const c_void>, adjust based on your encryption scheme
+            None, // Initially, no output buffer to get the required size
+            &mut decrypted_data_len, // Receives the required size of the output buffer
+            NCRYPT_FLAGS(0), // Flags, adjust as necessary
+        ));
 
         // Allocate a buffer for the decrypted data
         let mut decrypted_data = vec![0u8; decrypted_data_len as usize];
 
         // Perform the actual decryption
-        if unsafe {
-            NCryptDecrypt(
-                self.key_handle.as_ref(),
-                Some(encrypted_data), // Again, pass encrypted data as an Option<&[u8]>
-                None, // Padding information as Option<*const c_void>, adjust based on your encryption scheme
-                Some(&mut decrypted_data), // Now provide the output buffer
-                &mut decrypted_data_len, // Receives the size of the decrypted data
-                NCRYPT_FLAGS(0), // Flags, adjust as necessary
-            )
-        }
-        .is_err()
-        {
-            return Err(TpmError::Win(windows::core::Error::from_win32()).into());
-        }
+        execute_ncrypt_function!(NCryptDecrypt(
+            self.key_handle.as_ref(),
+            Some(encrypted_data), // Again, pass encrypted data as an Option<&[u8]>
+            None, // Padding information as Option<*const c_void>, adjust based on your encryption scheme
+            Some(&mut decrypted_data), // Now provide the output buffer
+            &mut decrypted_data_len, // Receives the size of the decrypted data
+            NCRYPT_FLAGS(0), // Flags, adjust as necessary
+        ));
 
         // Resize the buffer to match the actual decrypted data length
         decrypted_data.resize(decrypted_data_len as usize, 0);
@@ -219,39 +196,27 @@ impl KeyHandle for TpmProvider {
     fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         // First call to determine the size of the encrypted data
         let mut encrypted_data_len: u32 = 0;
-        if unsafe {
-            NCryptEncrypt(
-                self.key_handle.as_ref(),
-                Some(data),              // Input data as a slice
-                None, // Padding information, adjust based on your encryption scheme
-                None, // Initially, no output buffer to get the required size
-                &mut encrypted_data_len, // Receive the required size of the output buffer
-                NCRYPT_FLAGS(0), // Flags, adjust as necessary
-            )
-        }
-        .is_err()
-        {
-            return Err(TpmError::Win(windows::core::Error::from_win32()).into());
-        }
+        execute_ncrypt_function!(NCryptEncrypt(
+            self.key_handle.as_ref(),
+            Some(data),              // Input data as a slice
+            None,                    // Padding information, adjust based on your encryption scheme
+            None,                    // Initially, no output buffer to get the required size
+            &mut encrypted_data_len, // Receive the required size of the output buffer
+            NCRYPT_FLAGS(0),         // Flags, adjust as necessary
+        ));
 
         // Allocate a buffer for the encrypted data
         let mut encrypted_data = vec![0u8; encrypted_data_len as usize];
 
         // Actual call to encrypt the data
-        if unsafe {
-            NCryptEncrypt(
-                self.key_handle.as_ref(),
-                Some(data),                // Input data as a slice
-                None, // Padding information, adjust based on your encryption scheme
-                Some(&mut encrypted_data), // Provide the output buffer
-                &mut encrypted_data_len, // Receives the size of the encrypted data
-                NCRYPT_FLAGS(0), // Flags, adjust as necessary
-            )
-        }
-        .is_err()
-        {
-            return Err(TpmError::Win(windows::core::Error::from_win32()).into());
-        }
+        execute_ncrypt_function!(NCryptEncrypt(
+            self.key_handle.as_ref(),
+            Some(data),                // Input data as a slice
+            None, // Padding information, adjust based on your encryption scheme
+            Some(&mut encrypted_data), // Provide the output buffer
+            &mut encrypted_data_len, // Receives the size of the encrypted data
+            NCRYPT_FLAGS(0), // Flags, adjust as necessary
+        ));
 
         // Resize the buffer to match the actual encrypted data length
         encrypted_data.resize(encrypted_data_len as usize, 0);
@@ -389,41 +354,29 @@ impl KeyHandle for TpmProvider {
         let mut key_blob_len: u32 = 0;
 
         // Determine the size of the buffer needed for the key blob
-        if unsafe {
-            NCryptExportKey(
-                *self.key_handle.as_ref().unwrap(),
-                NCRYPT_KEY_HANDLE::default(),
-                NCRYPT_OPAQUETRANSPORT_BLOB,
-                None,
-                None,
-                &mut key_blob_len,
-                NCRYPT_SILENT_FLAG,
-            )
-        }
-        .is_err()
-        {
-            return Err(TpmError::Win(windows::core::Error::from_win32()).into());
-        }
+        execute_ncrypt_function!(NCryptExportKey(
+            *self.key_handle.as_ref().unwrap(),
+            NCRYPT_KEY_HANDLE::default(),
+            NCRYPT_OPAQUETRANSPORT_BLOB,
+            None,
+            None,
+            &mut key_blob_len,
+            NCRYPT_SILENT_FLAG,
+        ));
 
         // Allocate buffer for the key blob
         let mut key_blob = vec![0u8; key_blob_len as usize];
 
         // Export the key blob
-        if unsafe {
-            NCryptExportKey(
-                self.key_handle.as_ref(),
-                NCRYPT_KEY_HANDLE::default(),
-                NCRYPT_OPAQUETRANSPORT_BLOB,
-                None,
-                Some(&mut key_blob),
-                &mut key_blob_len,
-                NCRYPT_SILENT_FLAG,
-            )
-        }
-        .is_err()
-        {
-            return Err(TpmError::Win(windows::core::Error::from_win32()).into());
-        }
+        execute_ncrypt_function!(NCryptExportKey(
+            self.key_handle.as_ref(),
+            NCRYPT_KEY_HANDLE::default(),
+            NCRYPT_OPAQUETRANSPORT_BLOB,
+            None,
+            Some(&mut key_blob),
+            &mut key_blob_len,
+            NCRYPT_SILENT_FLAG,
+        ));
 
         let mut bcrypt_key: BCRYPT_KEY_HANDLE = BCRYPT_KEY_HANDLE(null_mut());
 
@@ -499,41 +452,29 @@ impl KeyHandle for TpmProvider {
         let mut key_blob_len: u32 = 0;
 
         // Determine the size of the buffer needed for the key blob
-        if unsafe {
-            NCryptExportKey(
-                *self.key_handle.as_ref().unwrap(),
-                NCRYPT_KEY_HANDLE::default(),
-                NCRYPT_OPAQUETRANSPORT_BLOB,
-                None,
-                None,
-                &mut key_blob_len,
-                NCRYPT_SILENT_FLAG,
-            )
-        }
-        .is_err()
-        {
-            return Err(TpmError::Win(windows::core::Error::from_win32()).into());
-        }
+        execute_ncrypt_function!(NCryptExportKey(
+            *self.key_handle.as_ref().unwrap(),
+            NCRYPT_KEY_HANDLE::default(),
+            NCRYPT_OPAQUETRANSPORT_BLOB,
+            None,
+            None,
+            &mut key_blob_len,
+            NCRYPT_SILENT_FLAG,
+        ));
 
         // Allocate buffer for the key blob
         let mut key_blob = vec![0u8; key_blob_len as usize];
 
         // Export the key blob
-        if unsafe {
-            NCryptExportKey(
-                self.key_handle.as_ref(),
-                NCRYPT_KEY_HANDLE::default(),
-                NCRYPT_OPAQUETRANSPORT_BLOB,
-                None,
-                Some(&mut key_blob),
-                &mut key_blob_len,
-                NCRYPT_SILENT_FLAG,
-            )
-        }
-        .is_err()
-        {
-            return Err(TpmError::Win(windows::core::Error::from_win32()).into());
-        }
+        execute_ncrypt_function!(NCryptExportKey(
+            self.key_handle.as_ref(),
+            NCRYPT_KEY_HANDLE::default(),
+            NCRYPT_OPAQUETRANSPORT_BLOB,
+            None,
+            Some(&mut key_blob),
+            &mut key_blob_len,
+            NCRYPT_SILENT_FLAG,
+        ));
 
         let mut bcrypt_key: BCRYPT_KEY_HANDLE = BCRYPT_KEY_HANDLE(null_mut());
 
