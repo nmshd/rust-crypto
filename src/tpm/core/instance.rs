@@ -1,9 +1,11 @@
-use crate::common::traits::module_provider::Provider;
+use async_std::sync::Mutex;
+
 #[cfg(feature = "linux")]
 use crate::tpm::linux::TpmProvider;
 #[cfg(feature = "win")]
 use crate::tpm::win::TpmProvider as WinTpmProvider;
-use std::sync::{Arc, Mutex};
+use crate::{common::traits::module_provider::Provider, tpm::android::provider::AndroidProvider};
+use std::sync::Arc;
 
 /// Represents the different environments where a Trusted Platform Module (TPM) can operate.
 ///
@@ -110,7 +112,7 @@ impl TpmInstance {
     ///
     /// # Returns
     /// An `Arc<dyn Provider>` encapsulating the created TPM provider instance.
-    pub fn create_instance(key_id: String, tpm_type: &TpmType) -> Arc<Mutex<dyn Provider>> {
+    pub async fn create_instance(key_id: String, tpm_type: &TpmType) -> Arc<Mutex<dyn Provider>> {
         match tpm_type {
             #[cfg(feature = "win")]
             TpmType::Windows => {
@@ -126,9 +128,7 @@ impl TpmInstance {
             }
             #[cfg(feature = "android")]
             TpmType::Android(tpm_type) => match tpm_type {
-                AndroidTpmType::Keystore => Arc::new(Mutex::new(
-                    crate::tpm::android::AndroidProvider::new(key_id),
-                )),
+                AndroidTpmType::Keystore => Arc::new(Mutex::new(AndroidProvider::new(key_id))),
                 AndroidTpmType::Knox => todo!(),
             },
             TpmType::None => todo!(),

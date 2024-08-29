@@ -4,6 +4,7 @@ use crate::{
     tpm::core::error::TpmError,
     tpm::win::execute_ncrypt_function,
 };
+use async_trait::async_trait;
 use std::ptr::null_mut;
 use tracing::instrument;
 use windows::{
@@ -23,6 +24,7 @@ use windows::{
 
 /// Provides cryptographic operations for asymmetric keys on Windows,
 /// such as signing, encryption, decryption, and signature verification.
+#[async_trait]
 impl KeyHandle for TpmProvider {
     /// Signs data using the cryptographic key.
     ///
@@ -37,7 +39,7 @@ impl KeyHandle for TpmProvider {
     ///
     /// A `Result` containing the signature as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
     #[instrument]
-    fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
+    async fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         // Open an algorithm provider for SHA-512
         let mut alg_handle: BCRYPT_ALG_HANDLE = self.hash.unwrap().into();
         let hash_algo: PCWSTR = self.hash.unwrap().into();
@@ -149,7 +151,7 @@ impl KeyHandle for TpmProvider {
     ///
     /// A `Result` containing the decrypted data as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
     #[instrument]
-    fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
+    async fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         let mut decrypted_data_len: u32 = 0;
 
         // First, determine the size of the decrypted data without actually decrypting
@@ -193,7 +195,7 @@ impl KeyHandle for TpmProvider {
     ///
     /// A `Result` containing the encrypted data as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
     #[instrument]
-    fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
+    async fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         // First call to determine the size of the encrypted data
         let mut encrypted_data_len: u32 = 0;
         execute_ncrypt_function!(NCryptEncrypt(
@@ -239,7 +241,7 @@ impl KeyHandle for TpmProvider {
     /// A `Result` indicating whether the signature is valid (`true`) or not (`false`),
     /// or a `SecurityModuleError` on failure.
     #[instrument]
-    fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, SecurityModuleError> {
+    async fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, SecurityModuleError> {
         let mut alg_handle: BCRYPT_ALG_HANDLE = self.hash.unwrap().into();
         let alg_id: PCWSTR = self.hash.unwrap().into();
 
@@ -333,7 +335,7 @@ impl KeyHandle for TpmProvider {
         }
     }
 
-    fn derive_key(&self) -> Result<Vec<u8>, SecurityModuleError> {
+    async fn derive_key(&self) -> Result<Vec<u8>, SecurityModuleError> {
         // Open an algorithm provider for SHA-256, just like in sign_data
         let mut alg_handle: BCRYPT_ALG_HANDLE = self.hash.unwrap().into();
         let alg_id: PCWSTR = self.hash.unwrap().into();
@@ -431,7 +433,7 @@ impl KeyHandle for TpmProvider {
     #[doc = " TODO: Docs"]
     #[doc = " # Returns"]
     #[doc = " A `Result` containing the new keypair on success or a `SecurityModuleError` on failure."]
-    fn generate_exchange_keypair(&self) -> Result<(Vec<u8>, Vec<u8>), SecurityModuleError> {
+    async fn generate_exchange_keypair(&self) -> Result<(Vec<u8>, Vec<u8>), SecurityModuleError> {
         // Open an algorithm provider for SHA-256, just like in sign_data
         let mut alg_handle: BCRYPT_ALG_HANDLE = self.hash.unwrap().into();
         let alg_id: PCWSTR = self.hash.unwrap().into();

@@ -16,6 +16,7 @@ use crate::common::{
 use crate::hsm::core::instance::HsmType;
 #[cfg(feature = "tpm")]
 use crate::tpm::{core::instance::TpmType, TpmConfig};
+use async_std::task::block_on;
 use paste::paste;
 use test_case::test_case;
 
@@ -128,7 +129,8 @@ macro_rules! sign_and_verify_test {
         paste! {
             #[test_case($module ; $desc)]
             fn [<test_sign_and_verify_ $suffix>](module: SecurityModule) {
-                let provider = setup_security_module(module);
+                // Initialize the security module
+                let provider = block_on(setup_security_module(module));
 
                 let config = TpmConfig::new(
                     $encryption,
@@ -137,29 +139,37 @@ macro_rules! sign_and_verify_test {
                     Some($key_usage.to_vec()),
                 );
 
-                provider
-                    .lock()
-                    .unwrap()
-                    .initialize_module()
-                    .expect("Failed to initialize module");
-                provider
-                    .lock()
-                    .unwrap()
-                    .create_key("test_key", config)
-                    .expect("Failed to create key");
+                // Lock the provider and initialize the module
+                {
+                    let mut provider_lock = block_on(provider.lock());
+                    let init_result = block_on(provider_lock.initialize_module());
+                    init_result.expect("Failed to initialize module");
+                }
+
+                // Lock the provider and create a key
+                {
+                    let mut provider_lock = block_on(provider.lock());
+                    let create_key_result = block_on(provider_lock.create_key("test_key", config));
+                    create_key_result.expect("Failed to create key");
+                }
 
                 let data = b"Hello, World!";
-                let signature = provider
-                    .lock()
-                    .unwrap()
-                    .sign_data(data)
-                    .expect("Failed to sign data");
 
-                assert!(provider
-                    .lock()
-                    .unwrap()
-                    .verify_signature(data, &signature)
-                    .unwrap());
+                // Lock the provider and sign the data
+                let signature = {
+                    let provider_lock = block_on(provider.lock());
+                    let sign_result = block_on(provider_lock.sign_data(data));
+                    sign_result.expect("Failed to sign data")
+                };
+
+                // Lock the provider and verify the signature
+                let verification = {
+                    let provider_lock = block_on(provider.lock());
+                    let verify_result = block_on(provider_lock.verify_signature(data, &signature));
+                    verify_result.expect("Failed to verify signature")
+                };
+
+                assert!(verification, "Signature verification failed");
             }
         }
     };
@@ -203,7 +213,8 @@ macro_rules! encrypt_and_decrypt_test {
         paste! {
             #[test_case($module ; $desc)]
             fn [<test_encrypt_and_decrypt_ $suffix>](module: SecurityModule) {
-                let provider = setup_security_module(module);
+                // Initialize the security module
+                let provider = block_on(setup_security_module(module));
 
                 let config = TpmConfig::new(
                     $encryption,
@@ -212,29 +223,37 @@ macro_rules! encrypt_and_decrypt_test {
                     Some($key_usage.to_vec()),
                 );
 
-                provider
-                    .lock()
-                    .unwrap()
-                    .initialize_module()
-                    .expect("Failed to initialize module");
-                provider
-                    .lock()
-                    .unwrap()
-                    .create_key("test_key", config)
-                    .expect("Failed to create key");
+                // Lock the provider and initialize the module
+                {
+                    let mut provider_lock = block_on(provider.lock());
+                    let init_result = block_on(provider_lock.initialize_module());
+                    init_result.expect("Failed to initialize module");
+                }
+
+                // Lock the provider and create a key
+                {
+                    let mut provider_lock = block_on(provider.lock());
+                    let create_key_result = block_on(provider_lock.create_key("test_key", config));
+                    create_key_result.expect("Failed to create key");
+                }
 
                 let data = b"Hello, World!";
-                let encrypted_data = provider
-                    .lock()
-                    .unwrap()
-                    .encrypt_data(data)
-                    .expect("Failed to encrypt data");
-                let decrypted_data = provider
-                    .lock()
-                    .unwrap()
-                    .decrypt_data(&encrypted_data)
-                    .expect("Failed to decrypt data");
 
+                // Lock the provider and encrypt the data
+                let encrypted_data = {
+                    let provider_lock = block_on(provider.lock());
+                    let encrypt_result = block_on(provider_lock.encrypt_data(data));
+                    encrypt_result.expect("Failed to encrypt data")
+                };
+
+                // Lock the provider and decrypt the data
+                let decrypted_data = {
+                    let provider_lock = block_on(provider.lock());
+                    let decrypt_result = block_on(provider_lock.decrypt_data(&encrypted_data));
+                    decrypt_result.expect("Failed to decrypt data")
+                };
+
+                // Assert that the decrypted data matches the original data
                 assert_eq!(data, decrypted_data.as_slice());
             }
         }

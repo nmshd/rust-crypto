@@ -8,7 +8,8 @@ use crate::common::crypto::{
     },
     KeyUsage,
 };
-use std::sync::{Arc, Mutex};
+use async_std::sync::Mutex;
+use std::sync::Arc;
 use tss_esapi::{
     handles::KeyHandle as TssKeyHandle,
     interface_types::{

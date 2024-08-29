@@ -1,4 +1,7 @@
 use std::fmt;
+#[cfg(feature = "win")]
+use windows::core::Error;
+// use windows_core::Error;
 
 /// Represents errors that can occur when interacting with a Trusted Platform Module (TPM).
 ///
@@ -11,10 +14,10 @@ use std::fmt;
 pub enum TpmError {
     /// Error related to I/O operations, wrapping a `std::io::Error`.
     Io(std::io::Error),
-    /// Error originating from Windows API calls, wrapping a `windows::core::Error`.
+    /// Error originating from Windows API calls, wrapping a `Error`.
     /// This variant is only available on Windows platforms.
     #[cfg(feature = "win")]
-    Win(windows::core::Error),
+    Win(Error),
     /// Error occurring during TPM initialization, containing an error message.
     InitializationError(String),
     /// Error indicating that an attempted operation is unsupported, containing a description.

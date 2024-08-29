@@ -1,29 +1,32 @@
+use super::provider::AndroidProvider;
 use crate::{
     common::{
-        crypto::{
-            algorithms::encryption::{AsymmetricEncryption, BlockCiphers},
-            KeyUsage,
-        },
+        crypto::KeyUsage,
         error::SecurityModuleError,
-        traits::{key_handle::KeyHandle, module_provider::Provider},
+        traits::{key_handle::KeyHandle, module_provider_config::ProviderConfig},
     },
     tpm::{
         android::{
-            config::AndroidConfig,
-            wrapper::key_store::{signature::jni::Signature, store::jni::KeyStore},
+            config::{self, AndroidConfig},
+            utils::{load_iv, store_iv},
+            wrapper::{
+                self,
+                key_generation::iv_parameter_spec::jni::IvParameterSpec,
+                key_store::{signature::jni::Signature, store::jni::KeyStore},
+            },
+            ANDROID_KEYSTORE,
         },
         core::error::{ToTpmError, TpmError},
     },
 };
+use async_trait::async_trait;
 use robusta_jni::jni::objects::JObject;
-use std::any::Any;
 use tracing::{debug, info, instrument};
-use utils::{load_iv, store_iv, Padding};
-use wrapper::key_generation::iv_parameter_spec::jni::IvParameterSpec;
 
 /// Implementation of the `KeyHandle` trait for the `AndroidProvider` struct.
 /// All of the functions in this KeyHandle are basically re-implementations
 /// of the equivalent Java functions in the Android KeyStore API.
+#[async_trait]
 impl KeyHandle for AndroidProvider {
     /// Signs the given data using the Android KeyStore.
     ///
@@ -51,14 +54,16 @@ impl KeyHandle for AndroidProvider {
     ///
     /// Returns a `Result` containing the signed data as a `Vec<u8>` if successful, or a `SecurityModuleError` if an error occurs.
     #[instrument]
-    fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
+    async fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         // check that signing is allowed
         let config = self
             .config
             .as_ref()
-            .ok_or(SecurityModuleError::InitializationError(
-                "Module is not initialized".to_owned(),
-            ))?;
+            .unwrap()
+            .as_any()
+            .await
+            .downcast_ref::<AndroidConfig>()
+            .unwrap();
 
         if !config.key_usages.contains(&KeyUsage::SignEncrypt) {
             return Err(TpmError::UnsupportedOperation(
@@ -67,22 +72,14 @@ impl KeyHandle for AndroidProvider {
             .into());
         }
 
-        let env = config
-            .vm
-            .as_ref()
-            .ok_or_else(|| TpmError::InitializationError("Module is not initialized".to_owned()))?
-            .get_env()
-            .map_err(|_| {
-                TpmError::InitializationError(
-                    "Could not get java environment, this should never happen".to_owned(),
-                )
-            })?;
+        let vm = config.vm.as_ref().unwrap().lock().await;
+        let env = vm.get_env().unwrap();
 
         let key_store = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_string()).err_internal()?;
         key_store.load(&env, None).err_internal()?;
 
         let private_key = key_store
-            .getKey(&env, self.key_id.clone(), JObject::null())
+            .getKey(&env, self.key_id().to_string(), JObject::null())
             .err_internal()?;
 
         let signature_algorithm: Result<String, SecurityModuleError> = config.mode.into();
@@ -128,26 +125,20 @@ impl KeyHandle for AndroidProvider {
     ///
     /// Returns a `Result` containing the decrypted data as a `Vec<u8>` if successful, or a `SecurityModuleError` if an error occurs.
     #[instrument]
-    fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
+    async fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         info!("decrypting data");
 
         let config = self
             .config
             .as_ref()
-            .ok_or(SecurityModuleError::InitializationError(
-                "Module is not initialized".to_owned(),
-            ))?;
+            .unwrap()
+            .as_any()
+            .await
+            .downcast_ref::<AndroidConfig>()
+            .unwrap();
 
-        let env = config
-            .vm
-            .as_ref()
-            .ok_or_else(|| TpmError::InitializationError("Module is not initialized".to_owned()))?
-            .get_env()
-            .map_err(|_| {
-                TpmError::InitializationError(
-                    "Could not get java environment, this should never happen".to_owned(),
-                )
-            })?;
+        let vm = config.vm.as_ref().unwrap().lock().await;
+        let env = vm.get_env().unwrap();
 
         let cipher_mode: Result<String, SecurityModuleError> = config.mode.into();
 
@@ -163,7 +154,7 @@ impl KeyHandle for AndroidProvider {
         let decrypted = match config.mode {
             config::EncryptionMode::Sym(cipher_mode) => {
                 let key = key_store
-                    .getKey(&env, self.key_id.to_owned(), JObject::null())
+                    .getKey(&env, self.key_id().to_owned(), JObject::null())
                     .err_internal()?;
 
                 let (data, iv) = load_iv(encrypted_data, cipher_mode.into());
@@ -176,7 +167,7 @@ impl KeyHandle for AndroidProvider {
             }
             config::EncryptionMode::ASym { algo: _, digest: _ } => {
                 let key = key_store
-                    .getCertificate(&env, self.key_id.to_owned())
+                    .getCertificate(&env, self.key_id().to_owned())
                     .err_internal()?
                     .getPublicKey(&env)
                     .err_internal()?;
@@ -215,26 +206,20 @@ impl KeyHandle for AndroidProvider {
     ///
     /// Returns a `Result` containing the encrypted data as a `Vec<u8>` if successful, or a `SecurityModuleError` if an error occurs.
     #[instrument]
-    fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
+    async fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         info!("encrypting");
 
         let config = self
             .config
             .as_ref()
-            .ok_or(SecurityModuleError::InitializationError(
-                "Module is not initialized".to_owned(),
-            ))?;
+            .unwrap()
+            .as_any()
+            .await
+            .downcast_ref::<AndroidConfig>()
+            .unwrap();
 
-        let env = config
-            .vm
-            .as_ref()
-            .ok_or_else(|| TpmError::InitializationError("Module is not initialized".to_owned()))?
-            .get_env()
-            .map_err(|_| {
-                TpmError::InitializationError(
-                    "Could not get java environment, this should never happen".to_owned(),
-                )
-            })?;
+        let vm = config.vm.as_ref().unwrap().lock().await;
+        let env = vm.get_env().unwrap();
 
         info!("before getInstance");
 
@@ -255,7 +240,7 @@ impl KeyHandle for AndroidProvider {
         let encrypted = match config.mode {
             config::EncryptionMode::Sym(_) => {
                 let key = key_store
-                    .getKey(&env, self.key_id.to_owned(), JObject::null())
+                    .getKey(&env, self.key_id().to_owned(), JObject::null())
                     .err_internal()?;
                 cipher.init(&env, 1, key.raw.as_obj()).err_internal()?;
                 let iv = cipher.getIV(&env).err_internal()?;
@@ -264,7 +249,7 @@ impl KeyHandle for AndroidProvider {
             }
             config::EncryptionMode::ASym { algo: _, digest: _ } => {
                 let key = key_store
-                    .getCertificate(&env, self.key_id.to_owned())
+                    .getCertificate(&env, self.key_id().to_owned())
                     .err_internal()?
                     .getPublicKey(&env)
                     .err_internal()?;
@@ -304,26 +289,24 @@ impl KeyHandle for AndroidProvider {
     ///
     /// Returns a `Result` containing `true` if the signature is valid, `false` otherwise, or a `SecurityModuleError` if an error occurs.
     #[instrument]
-    fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, SecurityModuleError> {
+    async fn verify_signature(
+        &self,
+        data: &[u8],
+        signature: &[u8],
+    ) -> Result<bool, SecurityModuleError> {
         info!("verifiying");
 
         let config = self
             .config
             .as_ref()
-            .ok_or(SecurityModuleError::InitializationError(
-                "Module is not initialized".to_owned(),
-            ))?;
+            .unwrap()
+            .as_any()
+            .await
+            .downcast_ref::<AndroidConfig>()
+            .unwrap();
 
-        let env = config
-            .vm
-            .as_ref()
-            .ok_or_else(|| TpmError::InitializationError("Module is not initialized".to_owned()))?
-            .get_env()
-            .map_err(|_| {
-                TpmError::InitializationError(
-                    "Could not get java environment, this should never happen".to_owned(),
-                )
-            })?;
+        let vm = config.vm.as_ref().unwrap().lock().await;
+        let env = vm.get_env().unwrap();
 
         let key_store = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_string()).err_internal()?;
         key_store.load(&env, None).err_internal()?;
@@ -335,7 +318,7 @@ impl KeyHandle for AndroidProvider {
         let s = Signature::getInstance(&env, signature_algorithm.to_string()).err_internal()?;
 
         let cert = key_store
-            .getCertificate(&env, self.key_id.clone())
+            .getCertificate(&env, self.key_id().to_string())
             .err_internal()?;
 
         s.initVerify(&env, cert).err_internal()?;

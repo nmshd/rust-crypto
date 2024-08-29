@@ -1,4 +1,5 @@
 use arrayref::array_ref;
+use async_trait::async_trait;
 use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
 use ed25519_dalek::{Signature, Signer as EdSigner, SigningKey, Verifier, VerifyingKey};
@@ -10,8 +11,10 @@ use openssl::sign::{Signer as RSASigner, Verifier as RSAVerifier};
 use openssl::symm::{Cipher, Crypter, Mode};
 use rand::Rng;
 use sodiumoxide::crypto::box_;
+use tracing::instrument;
 use x25519_dalek::{StaticSecret as X25519StaticSecret, StaticSecret};
 
+use super::NksProvider;
 use crate::common::crypto::algorithms::encryption::{
     BlockCiphers, EccCurves, EccSchemeAlgorithm, SymmetricMode,
 };
@@ -24,8 +27,7 @@ use crate::common::{
 use crate::nks::NksConfig;
 use crate::SecurityModuleError::InitializationError;
 
-use super::NksProvider;
-
+#[async_trait]
 impl KeyHandle for NksProvider {
     /// Signs the given data using the configured key and algorithm.
     ///
@@ -36,17 +38,18 @@ impl KeyHandle for NksProvider {
     /// # Returns
     ///
     /// A `Result` containing the signature as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
-    #[tracing::instrument]
-    fn sign_data(&self, _data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
+    #[instrument]
+    async fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         if let Some(nks_config) = self
             .config
             .as_ref()
             .unwrap()
             .as_any()
+            .await
             .downcast_ref::<NksConfig>()
         {
             let key_algorithm = &nks_config.key_algorithm;
-            let data = _data;
+            let data = data;
             let hash = nks_config.hash;
 
             if self.private_key.is_empty() || data.is_empty() {
@@ -127,13 +130,14 @@ impl KeyHandle for NksProvider {
     /// # Returns
     ///
     /// A `Result` containing the decrypted data as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
-    #[tracing::instrument]
-    fn decrypt_data(&self, _encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
+    #[instrument]
+    async fn decrypt_data(&self, _encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         let config = self
             .config
             .as_ref()
             .unwrap()
             .as_any()
+            .await
             .downcast_ref::<NksConfig>()
             .unwrap();
 
@@ -357,13 +361,14 @@ impl KeyHandle for NksProvider {
     /// # Returns
     ///
     /// A `Result` containing the encrypted data as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
-    #[tracing::instrument]
-    fn encrypt_data(&self, _data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
+    #[instrument]
+    async fn encrypt_data(&self, _data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         let config = self
             .config
             .as_ref()
             .unwrap()
             .as_any()
+            .await
             .downcast_ref::<NksConfig>()
             .unwrap();
 
@@ -580,8 +585,8 @@ impl KeyHandle for NksProvider {
     /// # Returns
     ///
     /// A `Result` containing `true` if the signature is valid, `false` if it is invalid, or a `SecurityModuleError` on failure.
-    #[tracing::instrument]
-    fn verify_signature(
+    #[instrument]
+    async fn verify_signature(
         &self,
         _data: &[u8],
         _signature: &[u8],
@@ -591,6 +596,7 @@ impl KeyHandle for NksProvider {
             .as_ref()
             .unwrap()
             .as_any()
+            .await
             .downcast_ref::<NksConfig>()
         {
             let key_algorithm = &nks_config.key_algorithm;

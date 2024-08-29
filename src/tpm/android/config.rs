@@ -1,5 +1,7 @@
-use std::any::Any;
+use std::{any::Any, sync::Arc};
 
+use async_std::sync::Mutex;
+use async_trait::async_trait;
 use robusta_jni::jni::JavaVM;
 
 use crate::common::{
@@ -20,11 +22,12 @@ pub enum EncryptionMode {
     },
 }
 
+#[derive(Clone)]
 pub struct AndroidConfig {
     pub mode: EncryptionMode,
     pub key_usages: Vec<KeyUsage>,
     pub hardware_backed: bool,
-    pub vm: Option<JavaVM>,
+    pub vm: Option<Arc<Mutex<JavaVM>>>,
 }
 
 impl std::fmt::Debug for AndroidConfig {
@@ -37,8 +40,9 @@ impl std::fmt::Debug for AndroidConfig {
     }
 }
 
+#[async_trait]
 impl ProviderConfig for AndroidConfig {
-    fn as_any(&self) -> &dyn Any {
-        self
+    async fn as_any(&self) -> &dyn Any {
+        self as &dyn Any
     }
 }

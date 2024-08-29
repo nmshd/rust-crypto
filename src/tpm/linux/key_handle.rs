@@ -3,6 +3,7 @@ use crate::common::{
     crypto::algorithms::encryption::AsymmetricEncryption, error::SecurityModuleError,
     traits::key_handle::KeyHandle,
 };
+use async_trait::async_trait;
 use tracing::instrument;
 use tss_esapi::{
     attributes::SessionAttributes,
@@ -20,6 +21,7 @@ use tss_esapi::{
     traits::Marshall,
 };
 
+#[async_trait]
 impl KeyHandle for TpmProvider {
     /// Signs the given data using the cryptographic key managed by the TPM provider.
     ///
@@ -31,14 +33,14 @@ impl KeyHandle for TpmProvider {
     ///
     /// A `Result` containing the signature as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
     #[instrument]
-    fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
-        let key_handle = *self.key_handle.as_ref().unwrap().lock().unwrap();
+    async fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
+        let key_handle = *self.key_handle.as_ref().unwrap().lock().await;
         let ticket = self
             .provider_handle
             .as_ref()
             .unwrap()
             .lock()
-            .unwrap()
+            .await
             .hash(
                 MaxBuffer::try_from(data).unwrap(),
                 self.hash.unwrap().into(),
@@ -52,7 +54,7 @@ impl KeyHandle for TpmProvider {
                 .as_ref()
                 .unwrap()
                 .lock()
-                .unwrap()
+                .await
                 .sign(
                     key_handle,
                     ticket.0,
@@ -68,7 +70,7 @@ impl KeyHandle for TpmProvider {
                     .as_ref()
                     .unwrap()
                     .lock()
-                    .unwrap()
+                    .await
                     .sign(key_handle, ticket.0, signature_scheme, ticket.1)
                     .map_err(|e| SecurityModuleError::SigningError(e.to_string()))?
             }
@@ -89,8 +91,8 @@ impl KeyHandle for TpmProvider {
     ///
     /// A `Result` containing the decrypted data as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
     #[instrument]
-    fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
-        let key_handle = *self.key_handle.as_ref().unwrap().lock().unwrap();
+    async fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
+        let key_handle = *self.key_handle.as_ref().unwrap().lock().await;
 
         match self.key_algorithm.as_ref().unwrap() {
             AsymmetricEncryption::Rsa(_) => {
@@ -102,7 +104,7 @@ impl KeyHandle for TpmProvider {
                     .as_ref()
                     .unwrap()
                     .lock()
-                    .unwrap()
+                    .await
                     .rsa_decrypt(
                         key_handle,
                         pub_key,
@@ -121,7 +123,7 @@ impl KeyHandle for TpmProvider {
                     .as_ref()
                     .unwrap()
                     .lock()
-                    .unwrap()
+                    .await
                     .encrypt_decrypt_2(
                         key_handle,
                         true,
@@ -146,8 +148,8 @@ impl KeyHandle for TpmProvider {
     ///
     /// A `Result` containing the encrypted data as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
     #[instrument]
-    fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
-        let key_handle = *self.key_handle.as_ref().unwrap().lock().unwrap();
+    async fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
+        let key_handle = *self.key_handle.as_ref().unwrap().lock().await;
 
         match self.key_algorithm.as_ref().unwrap() {
             AsymmetricEncryption::Rsa(_) => {
@@ -159,7 +161,7 @@ impl KeyHandle for TpmProvider {
                     .as_ref()
                     .unwrap()
                     .lock()
-                    .unwrap()
+                    .await
                     .rsa_encrypt(
                         key_handle,
                         message,
@@ -178,7 +180,7 @@ impl KeyHandle for TpmProvider {
                     .as_ref()
                     .unwrap()
                     .lock()
-                    .unwrap()
+                    .await
                     .encrypt_decrypt_2(
                         key_handle,
                         false,
@@ -205,14 +207,18 @@ impl KeyHandle for TpmProvider {
     /// A `Result` containing a boolean indicating whether the signature is valid (`true`) or not (`false`),
     /// or a `SecurityModuleError` on failure.
     #[instrument]
-    fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, SecurityModuleError> {
-        let key_handle = *self.key_handle.as_ref().unwrap().lock().unwrap();
+    async fn verify_signature(
+        &self,
+        data: &[u8],
+        signature: &[u8],
+    ) -> Result<bool, SecurityModuleError> {
+        let key_handle = *self.key_handle.as_ref().unwrap().lock().await;
         let digest = self
             .provider_handle
             .as_ref()
             .unwrap()
             .lock()
-            .unwrap()
+            .await
             .hash(
                 MaxBuffer::try_from(data).unwrap(),
                 self.hash.unwrap().into(),
@@ -231,7 +237,7 @@ impl KeyHandle for TpmProvider {
                     .as_ref()
                     .unwrap()
                     .lock()
-                    .unwrap()
+                    .await
                     .verify_signature(key_handle, digest, Signature::RsaSsa(rsa_signature))
                     .is_ok()
             }
@@ -271,7 +277,7 @@ impl KeyHandle for TpmProvider {
                     .as_ref()
                     .unwrap()
                     .lock()
-                    .unwrap()
+                    .await
                     .verify_signature(key_handle, digest, signature)
                     .is_ok()
             }
@@ -283,14 +289,14 @@ impl KeyHandle for TpmProvider {
     #[doc = " TODO: Docs"]
     #[doc = " # Returns"]
     #[doc = " A `Result` containing the new key id on success or a `SecurityModuleError` on failure."]
-    fn derive_key(&self) -> Result<Vec<u8>, SecurityModuleError> {
+    async fn derive_key(&self) -> Result<Vec<u8>, SecurityModuleError> {
         // Start an authentication session
         let session = self
             .provider_handle
             .as_ref()
             .unwrap()
             .lock()
-            .unwrap()
+            .await
             .start_auth_session(
                 None,
                 None,
@@ -311,18 +317,18 @@ impl KeyHandle for TpmProvider {
             .as_ref()
             .unwrap()
             .lock()
-            .unwrap()
+            .await
             .tr_sess_set_attributes(session.unwrap(), session_attributes.0, session_attributes.1)
             .unwrap();
 
         // Set the password for the primary key
-        let primary_key_handle = *self.key_handle.as_ref().unwrap().lock().unwrap();
+        let primary_key_handle = *self.key_handle.as_ref().unwrap().lock().await;
 
         self.provider_handle
             .as_ref()
             .unwrap()
             .lock()
-            .unwrap()
+            .await
             .tr_set_auth(ObjectHandle::from(primary_key_handle), Auth::default())
             .unwrap();
 
@@ -345,9 +351,9 @@ impl KeyHandle for TpmProvider {
             .as_ref()
             .unwrap()
             .lock()
-            .unwrap()
+            .await
             .create(
-                *self.key_handle.as_ref().unwrap().lock().unwrap(),
+                *self.key_handle.as_ref().unwrap().lock().await,
                 derived_key_public,
                 None,
                 None,
@@ -362,14 +368,14 @@ impl KeyHandle for TpmProvider {
     #[doc = " TODO: Docs"]
     #[doc = " # Returns"]
     #[doc = " A `Result` containing the new key on success or a `SecurityModuleError` on failure."]
-    fn generate_exchange_keypair(&self) -> Result<(Vec<u8>, Vec<u8>), SecurityModuleError> {
+    async fn generate_exchange_keypair(&self) -> Result<(Vec<u8>, Vec<u8>), SecurityModuleError> {
         let result = self
             .provider_handle
             .as_ref()
             .unwrap()
             .lock()
-            .unwrap()
-            .ecdh_key_gen(*self.key_handle.as_ref().unwrap().lock().unwrap())
+            .await
+            .ecdh_key_gen(*self.key_handle.as_ref().unwrap().lock().await)
             .unwrap();
 
         let mut vec0 = result.0.x().to_vec();

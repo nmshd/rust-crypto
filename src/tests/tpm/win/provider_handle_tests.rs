@@ -1,3 +1,5 @@
+use async_std::task::block_on;
+
 use crate::{
     common::crypto::algorithms::{encryption::SymmetricMode, hashes::Sha2Bits, KeyBits},
     tpm::TpmConfig,
@@ -34,12 +36,8 @@ fn test_create_rsa_key() {
         .into(),
     );
 
-    provider
-        .initialize_module()
-        .expect("Failed to initialize module");
-    provider
-        .create_key("test_rsa_key", config)
-        .expect("Failed to create RSA key");
+    block_on(provider.initialize_module()).expect("Failed to initialize module");
+    block_on(provider.create_key("test_rsa_key", config)).expect("Failed to create RSA key");
 }
 
 #[test]
@@ -61,12 +59,8 @@ fn test_create_ecdsa_key() {
         .into(),
     );
 
-    provider
-        .initialize_module()
-        .expect("Failed to initialize module");
-    provider
-        .create_key("test_ecdsa_key", config)
-        .expect("Failed to create ECDSA key");
+    block_on(provider.initialize_module()).expect("Failed to initialize module");
+    block_on(provider.create_key("test_ecdsa_key", config)).expect("Failed to create ECDSA key");
 }
 
 #[test]
@@ -81,12 +75,8 @@ fn test_create_ecdh_key() {
         Some(Hash::Sha2(Sha2Bits::Sha256)),
         vec![KeyUsage::SignEncrypt, KeyUsage::Decrypt].into(),
     );
-    provider
-        .initialize_module()
-        .expect("Failed to initialize module");
-    provider
-        .create_key("test_ecdh_key", config)
-        .expect("Failed to create ECDH key");
+    block_on(provider.initialize_module()).expect("Failed to initialize module");
+    block_on(provider.create_key("test_ecdh_key", config)).expect("Failed to create ECDH key");
 }
 
 #[test]
@@ -106,12 +96,8 @@ fn test_load_rsa_key() {
         .into(),
     );
 
-    provider
-        .initialize_module()
-        .expect("Failed to initialize module");
-    provider
-        .load_key("test_rsa_key", config)
-        .expect("Failed to load RSA key");
+    block_on(provider.initialize_module()).expect("Failed to initialize module");
+    block_on(provider.load_key("test_rsa_key", config)).expect("Failed to load RSA key");
 }
 
 #[test]
@@ -133,12 +119,8 @@ fn test_load_ecdsa_key() {
         .into(),
     );
 
-    provider
-        .initialize_module()
-        .expect("Failed to initialize module");
-    provider
-        .load_key("test_ecdsa_key", config)
-        .expect("Failed to load ECDSA key");
+    block_on(provider.initialize_module()).expect("Failed to initialize module");
+    block_on(provider.load_key("test_ecdsa_key", config)).expect("Failed to load ECDSA key");
 }
 
 #[test]
@@ -154,10 +136,6 @@ fn test_load_ecdh_key() {
         vec![KeyUsage::SignEncrypt, KeyUsage::Decrypt].into(),
     );
 
-    provider
-        .initialize_module()
-        .expect("Failed to initialize module");
-    provider
-        .load_key("test_ecdh_key", config)
-        .expect("Failed to load ECDH key");
+    block_on(provider.initialize_module()).expect("Failed to initialize module");
+    block_on(provider.load_key("test_ecdh_key", config)).expect("Failed to load ECDH key");
 }

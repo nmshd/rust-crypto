@@ -3,15 +3,13 @@ use crate::{
     common::{
         crypto::{algorithms::encryption::AsymmetricEncryption, KeyUsage},
         error::SecurityModuleError,
-        traits::module_provider::Provider,
+        traits::{module_provider::Provider, module_provider_config::ProviderConfig},
     },
     tpm::TpmConfig,
 };
-use std::{
-    any::Any,
-    str::FromStr,
-    sync::{Arc, Mutex},
-};
+use async_std::sync::Mutex;
+use async_trait::async_trait;
+use std::{str::FromStr, sync::Arc};
 use tracing::instrument;
 use tss_esapi::{
     attributes::{ObjectAttributesBuilder, SessionAttributesBuilder},
@@ -32,6 +30,7 @@ use tss_esapi::{
 };
 
 /// Implements the `Provider` trait, providing cryptographic operations utilizing a TPM.
+#[async_trait]
 impl Provider for TpmProvider {
     /// Creates a new cryptographic key identified by `key_id`.
     ///
@@ -52,12 +51,12 @@ impl Provider for TpmProvider {
     /// A `Result` that, on success, contains `Ok(())`, indicating that the key was created successfully.
     /// On failure, it returns a `SecurityModuleError`.
     #[instrument]
-    fn create_key(
+    async fn create_key(
         &mut self,
         key_id: &str,
-        config: Box<dyn Any>,
+        config: Box<dyn ProviderConfig>,
     ) -> Result<(), SecurityModuleError> {
-        let config = config.downcast_ref::<TpmConfig>().unwrap();
+        let config = config.as_any().await.downcast_ref::<TpmConfig>().unwrap();
 
         self.key_algorithm = config.key_algorithm;
         self.sym_algorithm = config.sym_algorithm;
@@ -152,7 +151,7 @@ impl Provider for TpmProvider {
             .as_ref()
             .unwrap()
             .lock()
-            .unwrap()
+            .await
             .create_primary(Hierarchy::Owner, primary_pub, None, None, None, None)
             .unwrap();
 
@@ -166,10 +165,10 @@ impl Provider for TpmProvider {
             .as_ref()
             .unwrap()
             .lock()
-            .unwrap()
+            .await
             .evict_control(
                 Provision::Owner, // TPM owner authorization
-                (*self.key_handle.as_ref().unwrap().lock().unwrap()).into(),
+                (*self.key_handle.as_ref().unwrap().lock().await).into(),
                 persistent_handle, // Chosen persistent handle
             )
             .expect("Failed to make key persistent");
@@ -198,8 +197,12 @@ impl Provider for TpmProvider {
     /// A `Result` that, on success, contains `Ok(())`, indicating that the key was loaded successfully.
     /// On failure, it returns a `SecurityModuleError`.
     #[instrument]
-    fn load_key(&mut self, key_id: &str, config: Box<dyn Any>) -> Result<(), SecurityModuleError> {
-        let config = config.downcast_ref::<TpmConfig>().unwrap();
+    async fn load_key(
+        &mut self,
+        key_id: &str,
+        config: Box<dyn ProviderConfig>,
+    ) -> Result<(), SecurityModuleError> {
+        let config = config.as_any().await.downcast_ref::<TpmConfig>().unwrap();
 
         self.key_algorithm = config.key_algorithm;
         self.sym_algorithm = config.sym_algorithm;
@@ -212,7 +215,7 @@ impl Provider for TpmProvider {
             .as_ref()
             .unwrap()
             .lock()
-            .unwrap()
+            .await
             .start_auth_session(
                 None,
                 None,
@@ -235,7 +238,7 @@ impl Provider for TpmProvider {
             .as_ref()
             .unwrap()
             .lock()
-            .unwrap()
+            .await
             .tr_sess_set_attributes(session.unwrap(), session_attr.0, session_attr.1)
             .unwrap();
 
@@ -315,7 +318,7 @@ impl Provider for TpmProvider {
             .as_ref()
             .unwrap()
             .lock()
-            .unwrap()
+            .await
             .load(TssKeyHandle::Null, private, public)
             .unwrap();
 
@@ -335,7 +338,7 @@ impl Provider for TpmProvider {
     /// A `Result` that, on success, contains `Ok(())`, indicating that the module was initialized successfully.
     /// On failure, it returns a `SecurityModuleError`.
     #[instrument]
-    fn initialize_module(&mut self) -> Result<(), SecurityModuleError> {
+    async fn initialize_module(&mut self) -> Result<(), SecurityModuleError> {
         // let tcti = TctiNameConf::from_environment_variable().unwrap();
         let tcti = TctiNameConf::from_str("device:/dev/tpm0").unwrap();
 

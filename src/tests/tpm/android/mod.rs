@@ -1,3 +1,4 @@
+use async_std::task::block_on;
 // use crate::common::crypto::{algorithms, KeyUsage};
 use crate::common::factory::SecModules;
 use crate::common::factory::SecurityModule;
@@ -19,13 +20,13 @@ fn initializ_module_test() {
         None,
     );
 
-    let x = security_module.unwrap();
-    let mut provider = x.lock().unwrap();
+    let x = block_on(security_module).unwrap();
+    let mut provider = block_on(x.lock());
     // let key_algorithm =
     //     algorithms::encryption::AsymmetricEncryption::Rsa(algorithms::KeyBits::Bits1024);
     // let hash = algorithms::hashes::Hash::Sha1;
     // let key_usages = vec![KeyUsage::SignEncrypt];
-    provider.initialize_module().unwrap();
+    block_on(provider.initialize_module());
 }
 /*
 #[test]

@@ -1,3 +1,5 @@
+use async_trait::async_trait;
+
 use crate::common::crypto::algorithms::encryption::{AsymmetricEncryption, BlockCiphers};
 use crate::common::crypto::algorithms::hashes::Hash;
 use crate::common::crypto::KeyUsage;
@@ -26,10 +28,11 @@ pub struct NksConfig {
     pub key_algorithm_sym: Option<BlockCiphers>,
 }
 
+#[async_trait]
 impl ProviderConfig for NksConfig {
     /// Returns a reference to `self` as a trait object.
-    fn as_any(&self) -> &dyn Any {
-        self
+    async fn as_any(&self) -> &dyn Any {
+        self as &dyn Any
     }
 }
 

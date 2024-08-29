@@ -1,3 +1,4 @@
+use async_trait::async_trait;
 use std::{any::Any, fmt::Debug};
 
 /// Defines the interface for configuration data used by the `Provider` trait methods.
@@ -12,7 +13,8 @@ use std::{any::Any, fmt::Debug};
 ///
 /// Implementors of this trait must also implement the `Debug` trait to provide
 /// debugging information and the `Any` trait to support type-safe downcasting.
-pub trait ProviderConfig: Any + Debug {
+#[async_trait]
+pub trait ProviderConfig: Any + Debug + Send + Sync {
     /// Returns a reference to the underlying `Any` type.
     ///
     /// This method allows for downcasting the `Config` trait object to its concrete type.
@@ -21,5 +23,5 @@ pub trait ProviderConfig: Any + Debug {
     ///
     /// A reference to the `Any` trait object, which can then be downcast to the
     /// specific type implementing `Config`.
-    fn as_any(&self) -> &dyn Any;
+    async fn as_any(&self) -> &dyn Any;
 }

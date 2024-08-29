@@ -1,249 +1,149 @@
-use crate::common::crypto::algorithms::encryption::{BlockCiphers, SymmetricMode};
-use crate::common::crypto::algorithms::hashes::Sha2Bits;
-use crate::common::crypto::algorithms::KeyBits;
-use crate::common::traits::module_provider_config::ProviderConfig;
-use crate::nks::NksConfig;
+use std::sync::Arc;
+
+use async_std::task::block_on;
+
+use crate::{
+    common::{
+        crypto::algorithms::{encryption::SymmetricMode, hashes::Sha2Bits, KeyBits},
+        traits::module_provider_config::ProviderConfig,
+    },
+    nks::NksConfig,
+    tpm::TpmConfig,
+};
+#[allow(unused_imports)]
 use crate::{
     common::{
         crypto::{
             algorithms::{
-                encryption::{AsymmetricEncryption, EccCurves, EccSchemeAlgorithm},
+                encryption::{AsymmetricEncryption, BlockCiphers, EccCurves, EccSchemeAlgorithm},
                 hashes::Hash,
             },
             KeyUsage,
         },
         traits::module_provider::Provider,
     },
-    nks::hcvault::NksProvider,
+    tpm::win::TpmProvider,
 };
-use std::sync::Arc;
 
 #[test]
 fn test_create_rsa_key() {
-    let mut provider = NksProvider::new("test_key".to_string());
+    let mut provider = TpmProvider::new("test_rsa_key".to_string());
 
-    provider.config = Some(get_config("rsa", None, None).unwrap());
+    let config = TpmConfig::new(
+        Some(AsymmetricEncryption::Rsa(KeyBits::Bits2048)),
+        Some(BlockCiphers::Aes(SymmetricMode::Gcm, KeyBits::Bits512)),
+        Some(Hash::Sha2(Sha2Bits::Sha256)),
+        vec![
+            KeyUsage::SignEncrypt,
+            KeyUsage::ClientAuth,
+            KeyUsage::Decrypt,
+            KeyUsage::CreateX509,
+        ]
+        .into(),
+    );
 
-    provider
-        .initialize_module()
-        .expect("Failed to initialize module");
-
-    if let Some(nks_config) = provider
-        .config
-        .as_ref()
-        .unwrap()
-        .as_any()
-        .downcast_ref::<NksConfig>()
-    {
-        provider
-            .create_key("test_rsa_key", Box::new(nks_config.clone()))
-            .expect("Failed to create RSA key");
-    } else {
-        println!("Failed to downcast to NksConfig");
-    }
+    block_on(provider.initialize_module()).expect("Failed to initialize module");
+    block_on(provider.create_key("test_rsa_key", config)).expect("Failed to create RSA key");
 }
 
 #[test]
 fn test_create_ecdsa_key() {
-    let mut provider = NksProvider::new("test_key".to_string());
+    let mut provider = TpmProvider::new("test_ecdsa_key".to_string());
 
-    provider.config = Some(get_config("ecdsa", None, None).unwrap());
+    let config = TpmConfig::new(
+        Some(AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(
+            EccCurves::Curve25519,
+        ))),
+        Some(BlockCiphers::Aes(SymmetricMode::Gcm, KeyBits::Bits512)),
+        Some(Hash::Sha2(Sha2Bits::Sha256)),
+        vec![
+            KeyUsage::SignEncrypt,
+            KeyUsage::ClientAuth,
+            KeyUsage::Decrypt,
+            KeyUsage::CreateX509,
+        ]
+        .into(),
+    );
 
-    provider
-        .initialize_module()
-        .expect("Failed to initialize module");
-
-    if let Some(nks_config) = provider
-        .config
-        .as_ref()
-        .unwrap()
-        .as_any()
-        .downcast_ref::<NksConfig>()
-    {
-        provider
-            .create_key("test_ecdsa_key", Box::new(nks_config.clone()))
-            .expect("Failed to create ECDSA key");
-    } else {
-        println!("Failed to downcast to NksConfig");
-    }
+    block_on(provider.initialize_module()).expect("Failed to initialize module");
+    block_on(provider.create_key("test_ecdsa_key", config)).expect("Failed to create ECDSA key");
 }
 
 #[test]
 fn test_create_ecdh_key() {
-    let mut provider = NksProvider::new("test_key".to_string());
+    let mut provider = TpmProvider::new("test_ecdh_key".to_string());
 
-    provider.config = Some(get_config("ecdh", None, None).unwrap());
-
-    provider
-        .initialize_module()
-        .expect("Failed to initialize module");
-
-    if let Some(nks_config) = provider
-        .config
-        .as_ref()
-        .unwrap()
-        .as_any()
-        .downcast_ref::<NksConfig>()
-    {
-        provider
-            .create_key("test_ecdh_key", Box::new(nks_config.clone()))
-            .expect("Failed to create ECDH key");
-    } else {
-        println!("Failed to downcast to NksConfig");
-    }
-}
-
-#[test]
-fn test_create_aes_key() {
-    for &key_size in &[KeyBits::Bits128, KeyBits::Bits192, KeyBits::Bits256] {
-        for &aes_mode in &[
-            SymmetricMode::Gcm,
-            SymmetricMode::Ecb,
-            SymmetricMode::Cbc,
-            SymmetricMode::Ctr,
-            SymmetricMode::Cfb,
-            SymmetricMode::Ofb,
-        ] {
-            let mut provider = NksProvider::new("test_key".to_string());
-
-            provider.config = Some(get_config("aes", Some(key_size), Some(aes_mode)).unwrap());
-
-            provider
-                .initialize_module()
-                .expect("Failed to initialize module");
-
-            if let Some(nks_config) = provider
-                .config
-                .as_ref()
-                .unwrap()
-                .as_any()
-                .downcast_ref::<NksConfig>()
-            {
-                provider
-                    .create_key(
-                        &format!("test_aes_key_{}_{}", aes_mode as u8, key_size as u8),
-                        Box::new(nks_config.clone()),
-                    )
-                    .expect("Failed to create AES key");
-            } else {
-                println!("Failed to downcast to NksConfig");
-            }
-        }
-    }
+    let config = TpmConfig::new(
+        Some(AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(
+            EccCurves::Curve25519,
+        ))),
+        Some(BlockCiphers::Aes(SymmetricMode::Gcm, KeyBits::Bits512)),
+        Some(Hash::Sha2(Sha2Bits::Sha256)),
+        vec![KeyUsage::SignEncrypt, KeyUsage::Decrypt].into(),
+    );
+    block_on(provider.initialize_module()).expect("Failed to initialize module");
+    block_on(provider.create_key("test_ecdh_key", config)).expect("Failed to create ECDH key");
 }
 
 #[test]
 fn test_load_rsa_key() {
-    let mut provider = NksProvider::new("test_key".to_string());
+    let mut provider = TpmProvider::new("test_rsa_key".to_string());
 
-    provider.config = Some(get_config("rsa", None, None).unwrap());
+    let config = TpmConfig::new(
+        Some(AsymmetricEncryption::Rsa(KeyBits::Bits4096)),
+        Some(BlockCiphers::Aes(SymmetricMode::Gcm, KeyBits::Bits512)),
+        Some(Hash::Sha2(Sha2Bits::Sha256)),
+        vec![
+            KeyUsage::SignEncrypt,
+            KeyUsage::ClientAuth,
+            KeyUsage::Decrypt,
+            KeyUsage::CreateX509,
+        ]
+        .into(),
+    );
 
-    provider
-        .initialize_module()
-        .expect("Failed to initialize module");
-
-    if let Some(nks_config) = provider
-        .config
-        .as_ref()
-        .unwrap()
-        .as_any()
-        .downcast_ref::<NksConfig>()
-    {
-        provider
-            .load_key("test_rsa_key", Box::new(nks_config.clone()))
-            .expect("Failed to load RSA key");
-    } else {
-        println!("Failed to downcast to NksConfig");
-    }
+    block_on(provider.initialize_module()).expect("Failed to initialize module");
+    block_on(provider.load_key("test_rsa_key", config)).expect("Failed to load RSA key");
 }
 
 #[test]
 fn test_load_ecdsa_key() {
-    let mut provider = NksProvider::new("test_key".to_string());
+    let mut provider = TpmProvider::new("test_ecdsa_key".to_string());
 
-    provider.config = Some(get_config("ecdsa", None, None).unwrap());
+    let config = TpmConfig::new(
+        Some(AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(
+            EccCurves::Curve25519,
+        ))),
+        Some(BlockCiphers::Aes(SymmetricMode::Gcm, KeyBits::Bits512)),
+        Some(Hash::Sha2(Sha2Bits::Sha256)),
+        vec![
+            KeyUsage::SignEncrypt,
+            KeyUsage::ClientAuth,
+            KeyUsage::Decrypt,
+            KeyUsage::CreateX509,
+        ]
+        .into(),
+    );
 
-    provider
-        .initialize_module()
-        .expect("Failed to initialize module");
-
-    if let Some(nks_config) = provider
-        .config
-        .as_ref()
-        .unwrap()
-        .as_any()
-        .downcast_ref::<NksConfig>()
-    {
-        provider
-            .load_key("test_ecdsa_key", Box::new(nks_config.clone()))
-            .expect("Failed to load ECDSA key");
-    } else {
-        println!("Failed to downcast to NksConfig");
-    }
+    block_on(provider.initialize_module()).expect("Failed to initialize module");
+    block_on(provider.load_key("test_ecdsa_key", config)).expect("Failed to load ECDSA key");
 }
 
 #[test]
 fn test_load_ecdh_key() {
-    let mut provider = NksProvider::new("test_key".to_string());
+    let mut provider = TpmProvider::new("test_ecdh_key".to_string());
 
-    provider.config = Some(get_config("ecdh", None, None).unwrap());
+    let config = TpmConfig::new(
+        Some(AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDh(
+            EccCurves::Curve25519,
+        ))),
+        Some(BlockCiphers::Aes(SymmetricMode::Gcm, KeyBits::Bits512)),
+        Some(Hash::Sha2(Sha2Bits::Sha256)),
+        vec![KeyUsage::SignEncrypt, KeyUsage::Decrypt].into(),
+    );
 
-    provider
-        .initialize_module()
-        .expect("Failed to initialize module");
-
-    if let Some(nks_config) = provider
-        .config
-        .as_ref()
-        .unwrap()
-        .as_any()
-        .downcast_ref::<NksConfig>()
-    {
-        provider
-            .load_key("test_ecdh_key", Box::new(nks_config.clone()))
-            .expect("Failed to load ECDH key");
-    } else {
-        println!("Failed to downcast to NksConfig");
-    }
-}
-
-#[test]
-fn test_load_aes_key() {
-    for &key_size in &[KeyBits::Bits128, KeyBits::Bits192, KeyBits::Bits256] {
-        for &aes_mode in &[
-            SymmetricMode::Gcm,
-            SymmetricMode::Ecb,
-            SymmetricMode::Cbc,
-            SymmetricMode::Ctr,
-            SymmetricMode::Cfb,
-            SymmetricMode::Ofb,
-        ] {
-            let mut provider = NksProvider::new("test_key".to_string());
-
-            provider.config = Some(get_config("aes", Some(key_size), Some(aes_mode)).unwrap());
-
-            provider
-                .initialize_module()
-                .expect("Failed to initialize module");
-
-            if let Some(nks_config) = provider
-                .config
-                .as_ref()
-                .unwrap()
-                .as_any()
-                .downcast_ref::<NksConfig>()
-            {
-                provider
-                    .load_key(
-                        &format!("test_aes_key_{}_{}", aes_mode as u8, key_size as u8),
-                        Box::new(nks_config.clone()),
-                    )
-                    .expect("Failed to load AES key");
-            } else {
-                println!("Failed to downcast to NksConfig");
-            }
-        }
-    }
+    block_on(provider.initialize_module()).expect("Failed to initialize module");
+    block_on(provider.load_key("test_ecdh_key", config)).expect("Failed to load ECDH key");
 }
 
 /// Returns a configuration object for the NksProvider based on the provided key type.

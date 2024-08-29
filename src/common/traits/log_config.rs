@@ -1,5 +1,7 @@
 use std::{any::Any, fmt::Debug};
 
+use async_trait::async_trait;
+
 /// Defines the interface for configuration data used by the `Provider` trait methods.
 ///
 /// This trait allows for dynamic configuration structures to be passed to methods
@@ -12,6 +14,7 @@ use std::{any::Any, fmt::Debug};
 ///
 /// Implementors of this trait must also implement the `Debug` trait to provide
 /// debugging information and the `Any` trait to support type-safe downcasting.
+#[async_trait]
 pub trait LogConfig: Any + Debug {
-    fn setup_logging(&self);
+    async fn setup_logging(&self);
 }
