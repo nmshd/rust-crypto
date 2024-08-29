@@ -1,5 +1,6 @@
 use crate::common::error::SecurityModuleError;
 use std::fmt::Debug;
+use async_trait::async_trait;
 #[cfg(feature = "linux")]
 use tss_esapi::handles::KeyHandle as TssKeyHandle;
 #[cfg(feature = "win")]
@@ -32,6 +33,7 @@ pub enum GenericKeyHandle {
 /// modules that manage cryptographic keys, ensuring a consistent interface for key
 /// operations across different types of security modules. Implementors of this trait
 /// must ensure thread safety.
+#[async_trait]
 pub trait KeyHandle: Send + Sync + Debug {
     /// Signs the given data using the cryptographic key.
     ///
@@ -41,7 +43,7 @@ pub trait KeyHandle: Send + Sync + Debug {
     /// # Returns
     /// A `Result` containing the signature as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
     #[tracing::instrument]
-    fn sign_data(&self, _data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
+    async fn sign_data(&self, _data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         Err(SecurityModuleError::InitializationError(
             "Method not implemented".to_owned(),
         ))
@@ -55,7 +57,7 @@ pub trait KeyHandle: Send + Sync + Debug {
     /// # Returns
     /// A `Result` containing the decrypted data as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
     #[tracing::instrument]
-    fn decrypt_data(&self, _encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
+    async fn decrypt_data(&self, _encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         Err(SecurityModuleError::InitializationError(
             "Method not implemented".to_owned(),
         ))
@@ -69,7 +71,7 @@ pub trait KeyHandle: Send + Sync + Debug {
     /// # Returns
     /// A `Result` containing the encrypted data as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
     #[tracing::instrument]
-    fn encrypt_data(&self, _data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
+    async fn encrypt_data(&self, _data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         Err(SecurityModuleError::InitializationError(
             "Method not implemented".to_owned(),
         ))
@@ -85,7 +87,7 @@ pub trait KeyHandle: Send + Sync + Debug {
     /// A `Result` containing a boolean indicating whether the signature is valid (`true`) or not (`false`),
     /// or a `SecurityModuleError` on failure.
     #[tracing::instrument]
-    fn verify_signature(
+    async fn verify_signature(
         &self,
         _data: &[u8],
         _signature: &[u8],
@@ -99,7 +101,7 @@ pub trait KeyHandle: Send + Sync + Debug {
     /// # Returns
     /// A `Result` containing the new key on success or a `SecurityModuleError` on failure.
     #[tracing::instrument]
-    fn derive_key(&self) -> Result<Vec<u8>, SecurityModuleError> {
+    async fn derive_key(&self) -> Result<Vec<u8>, SecurityModuleError> {
         Err(SecurityModuleError::InitializationError(
             "Method not implemented".to_owned(),
         ))
@@ -109,7 +111,7 @@ pub trait KeyHandle: Send + Sync + Debug {
     /// # Returns
     /// A `Result` containing the new keypair on success or a `SecurityModuleError` on failure.
     #[tracing::instrument]
-    fn generate_exchange_keypair(&self) -> Result<(Vec<u8>, Vec<u8>), SecurityModuleError> {
+    async fn generate_exchange_keypair(&self) -> Result<(Vec<u8>, Vec<u8>), SecurityModuleError> {
         Err(SecurityModuleError::InitializationError(
             "Method not implemented".to_owned(),
         ))

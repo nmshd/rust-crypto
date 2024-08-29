@@ -1,28 +1,30 @@
 use super::NksProvider;
+use crate::{
+    common::{
+        crypto::algorithms::{
+            encryption::{
+                AsymmetricEncryption, BlockCiphers, EccCurves, EccSchemeAlgorithm, SymmetricMode,
+            },
+            KeyBits,
+        },
+        error::SecurityModuleError,
+        traits::{module_provider::Provider, module_provider_config::ProviderConfig},
+    },
+    nks::NksConfig,
+};
+use async_std::{
+    fs::{self, File},
+    io::ReadExt,
+    path::Path,
+};
+use async_trait::async_trait;
 use reqwest::Url;
 use serde_json::{json, Value};
-use std::any::Any;
-use std::fs;
-use std::fs::File;
-use std::io::Read;
-use std::path::Path;
-use std::str::FromStr;
-use std::string::String;
-use tokio::runtime::Runtime;
+use std::{str::FromStr, string::String};
 use tracing::instrument;
 
-use crate::common::crypto::algorithms::encryption::{
-    BlockCiphers, EccCurves, EccSchemeAlgorithm, SymmetricMode,
-};
-use crate::common::crypto::algorithms::KeyBits;
-use crate::common::traits::module_provider_config::ProviderConfig;
-use crate::common::{
-    crypto::algorithms::encryption::AsymmetricEncryption, error::SecurityModuleError,
-    traits::module_provider::Provider,
-};
-use crate::nks::NksConfig;
-
 /// Implements the `Provider` trait, providing cryptographic operations utilizing a nks.
+#[async_trait]
 impl Provider for NksProvider {
     /// Creates a new cryptographic key identified by `key_id` within the NksProvider.
     ///
@@ -46,19 +48,17 @@ impl Provider for NksProvider {
     /// provider.create_key("test_rsa_key", Box::new(config.clone())).expect("Failed to create RSA key");
     /// ```
     #[instrument]
-    fn create_key(
+    async fn create_key(
         &mut self,
         key_id: &str,
-        config: Box<dyn Any>,
+        config: Box<dyn ProviderConfig>,
     ) -> Result<(), SecurityModuleError> {
         let mut key_length: Option<KeyBits> = None;
         let mut cyphertype: Option<String> = None;
-        let config = config
-            .downcast_ref::<NksConfig>()
-            .ok_or(SecurityModuleError::NksError)?;
-        if let Some(nks_config) = config.as_any().downcast_ref::<NksConfig>() {
-            let runtime = Runtime::new().unwrap();
-            let get_and_save_keypair_result = runtime.block_on(get_and_save_key_pair(
+        let config = config.as_any().await.downcast_ref::<NksConfig>().unwrap();
+
+        if let Some(nks_config) = config.as_any().await.downcast_ref::<NksConfig>() {
+            let result = get_and_save_key_pair(
                 &nks_config.nks_token.clone(),
                 key_id,
                 match &nks_config.key_algorithm {
@@ -90,44 +90,45 @@ impl Provider for NksProvider {
                 key_length,
                 Url::parse(&nks_config.nks_address).unwrap(),
                 cyphertype,
-            ));
+            )
+            .await
+            .map_err(|e| {
+                println!("Failed to generate and save key pair: {}", e);
+                SecurityModuleError::NksError
+            })?;
+
+            let (result_string, new_token) = result;
+
             match key_length {
                 Some(kb) => println!("XXXXX Key length: {}", u32::from(kb)),
                 None => println!("XXXXX Key length: None"),
             }
-            match get_and_save_keypair_result {
-                Ok((result_string, new_token)) => {
-                    println!("Key pair generated and saved successfully.");
-                    self.secrets_json = Some(result_string.parse().unwrap());
-                    //safe token to config
-                    let config = NksConfig::new(
-                        new_token.clone(),
-                        nks_config.nks_address.clone(),
-                        nks_config.key_algorithm,
-                        nks_config.hash,
-                        nks_config.key_usages.clone(),
-                        nks_config.key_algorithm_sym,
-                    );
-                    self.config = Some(config);
-                    //save token in token.json for persistence
-                    let token_data = json!({
-                    "user_token": new_token.clone()
-                    });
-                    fs::write("token.json", token_data.to_string())
-                        .expect("Error writing to token.json");
-                    Ok(())
-                }
-                Err(err) => {
-                    println!("Failed to generate and save key pair: {}", err);
-                    Err(SecurityModuleError::NksError)
-                }
-            }
+
+            println!("Key pair generated and saved successfully.");
+            self.secrets_json = Some(result_string.parse().unwrap());
+            // save token to config
+            let config = NksConfig::new(
+                new_token.clone(),
+                nks_config.nks_address.clone(),
+                nks_config.key_algorithm,
+                nks_config.hash,
+                nks_config.key_usages.clone(),
+                nks_config.key_algorithm_sym,
+            );
+            self.config = Some(config);
+            // save token in token.json for persistence
+            let token_data = json!({
+                "user_token": new_token.clone()
+            });
+            fs::write("token.json", token_data.to_string())
+                .await
+                .expect("Error writing to token.json");
+            Ok(())
         } else {
             println!("Failed to downcast to NksConfig");
             Err(SecurityModuleError::NksError)
         }
     }
-
     /// Loads an existing cryptographic key identified by `key_id` from the NksProvider.
     ///
     /// This function retrieves an existing cryptographic key from the NksProvider, using the settings
@@ -150,7 +151,11 @@ impl Provider for NksProvider {
     /// provider.load_key("test_rsa_key", Box::new(config.clone())).expect("Failed to load RSA key");
     /// ```
     #[instrument]
-    fn load_key(&mut self, key_id: &str, _config: Box<dyn Any>) -> Result<(), SecurityModuleError> {
+    async fn load_key(
+        &mut self,
+        key_id: &str,
+        _config: Box<dyn ProviderConfig>,
+    ) -> Result<(), SecurityModuleError> {
         // Check if secrets_json is None
         if let Some(secrets_json) = &self.secrets_json {
             // Iterate over the secrets_json object
@@ -195,54 +200,49 @@ impl Provider for NksProvider {
     /// provider.initialize_module().expect("Failed to initialize module");
     /// ```
     #[instrument]
-    fn initialize_module(&mut self) -> Result<(), SecurityModuleError> {
+    async fn initialize_module(&mut self) -> Result<(), SecurityModuleError> {
         if let Some(nks_config) = self
             .config
             .as_ref()
             .unwrap()
             .as_any()
+            .await
             .downcast_ref::<NksConfig>()
         {
-            //get address and token from config
+            // get address and token from config
             let nks_address_str = nks_config.nks_address.clone();
             let nks_address = Some(Url::from_str(nks_address_str.as_str()).unwrap());
             let mut nks_token = nks_config.nks_token.clone();
             if nks_token.is_empty() {
                 println!("Token field in config is empty. checking for token.json...");
                 // Check if token file exists
-                let tokens_file_path = Box::new(Path::new("token.json")); // Adjust the path as needed
-                if Path::new(&*tokens_file_path).exists() {
+                let tokens_file_path = Path::new("token.json"); // Adjust the path as needed
+                if tokens_file_path.exists().await {
                     println!("Tokens file exists.");
-                    nks_token = get_user_token_from_file().unwrap();
+                    nks_token = get_user_token_from_file().await.unwrap();
                 } else {
                     println!("Token file does not exist. Generating token...");
                     // Token field empty and no token in token.json, generate token using API
-                    let runtime = Runtime::new().unwrap();
                     let nks_address = nks_address.clone().ok_or(SecurityModuleError::NksError)?;
-                    match runtime.block_on(get_token(nks_address.clone())) {
-                        Ok(token) => {
-                            nks_token = token;
-                        }
-                        Err(err) => {
-                            println!("Failed to get tokens from API: {}", err);
-                            return Err(SecurityModuleError::NksError);
-                        }
-                    }
+                    nks_token = get_token(nks_address.clone()).await.map_err(|err| {
+                        println!("Failed to get tokens from API: {}", err);
+                        SecurityModuleError::NksError
+                    })?;
                 }
             }
-            //store current secrets
-            let runtime = Runtime::new().unwrap();
-            match runtime.block_on(get_secrets(nks_token.as_str(), &nks_address_str)) {
-                Ok((secrets_json, new_token)) => {
-                    self.secrets_json = Some(secrets_json.parse().unwrap());
-                    nks_token = new_token;
-                }
-                Err(err) => {
+
+            // store current secrets
+            let (secrets_json, new_token) = get_secrets(nks_token.as_str(), &nks_address_str)
+                .await
+                .map_err(|err| {
                     println!("Failed to get secrets: {}", err);
-                    return Err(SecurityModuleError::NksError);
-                }
-            }
-            //safe token to config
+                    SecurityModuleError::NksError
+                })?;
+
+            self.secrets_json = Some(secrets_json.parse().unwrap());
+            nks_token = new_token;
+
+            // save token to config
             let config = NksConfig::new(
                 nks_token.clone(),
                 nks_config.nks_address.clone(),
@@ -252,11 +252,15 @@ impl Provider for NksProvider {
                 nks_config.key_algorithm_sym,
             );
             self.config = Some(config);
-            //save token in token.json for persistence
+
+            // save token in token.json for persistence
             let token_data = json!({
                 "user_token": nks_token.clone()
             });
-            fs::write("token.json", token_data.to_string()).expect("Error writing to token.json");
+            fs::write("token.json", token_data.to_string())
+                .await
+                .expect("Error writing to token.json");
+
             println!("Nks initialized successfully.");
             Ok(())
         } else {
@@ -285,10 +289,10 @@ impl Provider for NksProvider {
 ///     println!("User token not found");
 /// }
 /// ```
-fn get_user_token_from_file() -> Option<String> {
-    let mut file = File::open("token.json").ok()?;
+async fn get_user_token_from_file() -> Option<String> {
+    let mut file = File::open("token.json").await.ok()?;
     let mut contents = String::new();
-    file.read_to_string(&mut contents).ok()?;
+    file.read_to_string(&mut contents).await.ok()?;
 
     let json: Value = serde_json::from_str(&contents).ok()?;
 
@@ -410,6 +414,7 @@ async fn get_and_save_key_pair(
                     "user_token": new_token.as_str().unwrap()
                 });
                 fs::write("token.json", token_data.to_string())
+                    .await
                     .expect("Error writing to token.json");
                 return Err(format!(
                     "Server returned status code: {}. Message: {}",

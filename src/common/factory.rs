@@ -3,11 +3,9 @@ use super::traits::{log_config::LogConfig, module_provider::Provider};
 use crate::hsm::core::instance::{HsmInstance, HsmType};
 #[cfg(feature = "tpm")]
 use crate::tpm::core::instance::{TpmInstance, TpmType};
+use async_std::sync::Mutex;
 use once_cell::sync::Lazy;
-use std::{
-    collections::HashMap,
-    sync::{Arc, Mutex},
-};
+use std::{collections::HashMap, sync::Arc};
 
 type ProviderArc = Arc<Mutex<dyn Provider>>;
 type SecurityModuleMap = HashMap<SecurityModule, ProviderArc>;
@@ -79,27 +77,34 @@ impl SecModules {
     ///
     /// An `Option` containing an `Arc<Mutex<dyn Provider>>` to the requested module instance,
     /// or `None` if the module type is not supported or an error occurs during instance creation.
-    pub fn get_instance(
+    pub async fn get_instance(
         key_id: String,
         module: SecurityModule,
         log: Option<Box<dyn LogConfig>>,
     ) -> Option<Arc<Mutex<dyn Provider>>> {
         // Initialize logging once
-        if !*LOGGING_INITIALIZED.lock().unwrap() {
-            if let Some(log_inst) = log {
-                log_inst.setup_logging();
+        {
+            let should_initialize = !*LOGGING_INITIALIZED.lock().await;
+            if should_initialize {
+                if let Some(log_inst) = log {
+                    log_inst.setup_logging().await;
+                }
+                *LOGGING_INITIALIZED.lock().await = true;
             }
-            *LOGGING_INITIALIZED.lock().unwrap() = true;
         }
 
-        // Check if requested instance is in cache. If not, create a new instance
-        let mut instances = INSTANCES.lock().unwrap();
-        if !instances.contains_key(&module) {
-            let instance = SecModule::create_instance(key_id, &module);
-            instances.insert(module.clone(), instance?);
+        // Check if requested instance is in cache
+        if let Some(instance) = INSTANCES.lock().await.get(&module).cloned() {
+            return Some(instance);
         }
 
-        instances.get(&module).cloned()
+        // If not in cache, create a new instance
+        let instance = SecModule::create_instance(key_id, &module).await?;
+
+        // Insert the new instance into the cache
+        INSTANCES.lock().await.insert(module, instance.clone());
+
+        Some(instance)
     }
 }
 
@@ -129,7 +134,7 @@ impl SecModule {
     ///
     /// An `Arc<Mutex<dyn Provider>>` representing the created module instance,
     /// or `None` if the module type is not supported or an error occurs during instance creation.
-    fn create_instance(
+    async fn create_instance(
         key_id: String,
         module: &SecurityModule,
     ) -> Option<Arc<Mutex<dyn Provider>>> {
@@ -137,7 +142,9 @@ impl SecModule {
             #[cfg(feature = "hsm")]
             SecurityModule::Hsm(hsm_type) => Some(HsmInstance::create_instance(key_id, hsm_type)),
             #[cfg(feature = "tpm")]
-            SecurityModule::Tpm(tpm_type) => Some(TpmInstance::create_instance(key_id, tpm_type)),
+            SecurityModule::Tpm(tpm_type) => {
+                Some(TpmInstance::create_instance(key_id, tpm_type).await)
+            }
             #[cfg(feature = "nks")]
             SecurityModule::Nks => Some(Arc::new(Mutex::new(
                 crate::nks::hcvault::NksProvider::new(key_id),

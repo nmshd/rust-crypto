@@ -1,3 +1,5 @@
+use async_trait::async_trait;
+
 use crate::common::{
     crypto::{
         algorithms::{
@@ -28,9 +30,10 @@ pub struct TpmConfig {
     pub key_usages: Option<Vec<KeyUsage>>,
 }
 
+#[async_trait]
 impl ProviderConfig for TpmConfig {
-    fn as_any(&self) -> &dyn Any {
-        self
+    async fn as_any(&self) -> &dyn Any {
+        self as &dyn Any
     }
 }
 
@@ -41,7 +44,7 @@ impl TpmConfig {
         sym_algorithm: Option<BlockCiphers>,
         hash: Option<Hash>,
         key_usages: Option<Vec<KeyUsage>>,
-    ) -> Box<dyn Any> {
+    ) -> Box<dyn ProviderConfig> {
         Box::new(Self {
             key_algorithm,
             sym_algorithm,

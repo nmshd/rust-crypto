@@ -1,6 +1,7 @@
-use super::key_handle::KeyHandle;
+use super::{key_handle::KeyHandle, module_provider_config::ProviderConfig};
 use crate::common::error::SecurityModuleError;
-use std::{any::Any, fmt::Debug};
+use async_trait::async_trait;
+use std::fmt::Debug;
 
 /// Defines the interface for a security module provider.
 ///
@@ -11,6 +12,7 @@ use std::{any::Any, fmt::Debug};
 ///
 /// Implementors of this trait must also implement the `KeyHandle` trait to provide
 /// cryptographic key operations.
+#[async_trait]
 pub trait Provider: Send + Sync + KeyHandle + Debug {
     /// Creates a new cryptographic key identified by `key_id`.
     ///
@@ -26,8 +28,12 @@ pub trait Provider: Send + Sync + KeyHandle + Debug {
     ///
     /// A `Result` that, on success, contains `Ok(())`, indicating that the key was created successfully.
     /// On failure, it returns a `SecurityModuleError`.
-    fn create_key(&mut self, key_id: &str, config: Box<dyn Any>)
-        -> Result<(), SecurityModuleError>;
+    // #[tracing::instrument]
+    async fn create_key(
+        &mut self,
+        key_id: &str,
+        config: Box<dyn ProviderConfig>,
+    ) -> Result<(), SecurityModuleError>;
 
     /// Loads an existing cryptographic key identified by `key_id`.
     ///
@@ -43,7 +49,12 @@ pub trait Provider: Send + Sync + KeyHandle + Debug {
     ///
     /// A `Result` that, on success, contains `Ok(())`, indicating that the key was loaded successfully.
     /// On failure, it returns a `SecurityModuleError`.
-    fn load_key(&mut self, key_id: &str, config: Box<dyn Any>) -> Result<(), SecurityModuleError>;
+    // #[tracing::instrument]
+    async fn load_key(
+        &mut self,
+        key_id: &str,
+        config: Box<dyn ProviderConfig>,
+    ) -> Result<(), SecurityModuleError>;
 
     /// Initializes the security module and returns a handle for further operations.
     ///
@@ -54,5 +65,6 @@ pub trait Provider: Send + Sync + KeyHandle + Debug {
     ///
     /// A `Result` that, on success, contains `Ok(())`, indicating that the module was initialized successfully.
     /// On failure, it returns a `SecurityModuleError`.
-    fn initialize_module(&mut self) -> Result<(), SecurityModuleError>;
+    // #[tracing::instrument]
+    async fn initialize_module(&mut self) -> Result<(), SecurityModuleError>;
 }

@@ -156,24 +156,30 @@ macro_rules! create_key_test {
             paste! {
                 #[test_case($module ; $desc)]
                 fn [<$test_name _ $suffix>](module: SecurityModule) {
-                    let provider = setup_security_module(module);
+                    use async_std::task::block_on;
 
-                    let config = TpmConfig::new(
-                        $encryption,
-                        Some(BlockCiphers::Aes(AES_MODE, AES_KEY_BITS)),
-                        Some(Hash::Sha2(SHA2_BITS)),
-                        Some($key_usage.to_vec()),
-                    );
+                    block_on(async {
+                        // Initialize the security module
+                        let provider = setup_security_module(module).await;
 
-                    let mut provider_lock = provider.lock().unwrap();
+                        let config = TpmConfig::new(
+                            $encryption,
+                            Some(BlockCiphers::Aes(AES_MODE, AES_KEY_BITS)),
+                            Some(Hash::Sha2(SHA2_BITS)),
+                            Some($key_usage.to_vec()),
+                        );
 
-                    provider_lock
-                        .initialize_module()
-                        .expect("Failed to initialize module");
+                        // Lock the provider
+                        let mut provider_lock = provider.lock().await;
 
-                    provider_lock
-                        .create_key("test_key", config)
-                        .expect("Failed to create key");
+                        // Initialize the module
+                        provider_lock.initialize_module().await
+                            .expect("Failed to initialize module");
+
+                        // Create a key
+                        provider_lock.create_key("test_key", config).await
+                            .expect("Failed to create key");
+                    });
                 }
             }
         )+
@@ -229,7 +235,10 @@ macro_rules! load_key_test {
             paste! {
                 #[test_case($module ; $desc)]
                 fn [<$test_name _ $suffix>](module: SecurityModule) {
-                    let provider = setup_security_module(module);
+                    use async_std::task::block_on;
+
+                    // Initialize the security module
+                    let provider = block_on(setup_security_module(module));
 
                     let config = TpmConfig::new(
                         $encryption,
@@ -240,15 +249,16 @@ macro_rules! load_key_test {
 
                     info!("{:?}", config);
 
-                    let mut provider_lock = provider.lock().unwrap();
+                    // Lock the provider
+                    let mut provider_lock = block_on(provider.lock());
 
-                    provider_lock
-                        .initialize_module()
-                        .expect("Failed to initialize module");
+                    // Initialize the module
+                    let init_result = block_on(provider_lock.initialize_module());
+                    init_result.expect("Failed to initialize module");
 
-                    provider_lock
-                        .load_key("test_key", config)
-                        .expect("Failed to load key");
+                    // Load the key
+                    let load_key_result = block_on(provider_lock.load_key("test_key", config));
+                    load_key_result.expect("Failed to load key");
                 }
             }
         )+

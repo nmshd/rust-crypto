@@ -1,6 +1,6 @@
 use crate::common::crypto::algorithms::encryption::AsymmetricEncryption;
 use ::yubikey::{piv::RetiredSlotId, YubiKey};
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use tracing::instrument;
 
 pub mod key_handle;

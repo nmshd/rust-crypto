@@ -6,22 +6,20 @@ use crate::{
             KeyUsage,
         },
         error::SecurityModuleError,
-        traits::module_provider::Provider,
+        traits::{module_provider::Provider, module_provider_config::ProviderConfig},
     },
     tpm::{core::error::TpmError, win::execute_ncrypt_function, TpmConfig},
 };
-
-use std::any::Any;
+use async_trait::async_trait;
 use tracing::instrument;
 use windows::{
     core::PCWSTR,
     Win32::Security::Cryptography::{
-        NCryptCreatePersistedKey, NCryptFinalizeKey, NCryptGetProperty, NCryptOpenKey,
-        NCryptOpenStorageProvider, NCryptSetProperty, BCRYPT_ECDH_ALGORITHM,
-        BCRYPT_ECDSA_ALGORITHM, CERT_KEY_SPEC, MS_PLATFORM_CRYPTO_PROVIDER,
-        NCRYPT_ALLOW_DECRYPT_FLAG, NCRYPT_ALLOW_SIGNING_FLAG, NCRYPT_CERTIFICATE_PROPERTY,
-        NCRYPT_FLAGS, NCRYPT_KEY_HANDLE, NCRYPT_KEY_USAGE_PROPERTY, NCRYPT_LENGTH_PROPERTY,
-        NCRYPT_MACHINE_KEY_FLAG, NCRYPT_OVERWRITE_KEY_FLAG, NCRYPT_PROV_HANDLE,
+        NCryptCreatePersistedKey, NCryptFinalizeKey, NCryptOpenKey, NCryptOpenStorageProvider,
+        NCryptSetProperty, BCRYPT_ECDH_ALGORITHM, BCRYPT_ECDSA_ALGORITHM, CERT_KEY_SPEC,
+        MS_PLATFORM_CRYPTO_PROVIDER, NCRYPT_ALLOW_DECRYPT_FLAG, NCRYPT_ALLOW_SIGNING_FLAG,
+        NCRYPT_CERTIFICATE_PROPERTY, NCRYPT_FLAGS, NCRYPT_KEY_HANDLE, NCRYPT_KEY_USAGE_PROPERTY,
+        NCRYPT_LENGTH_PROPERTY, NCRYPT_OVERWRITE_KEY_FLAG, NCRYPT_PROV_HANDLE,
         NCRYPT_RSA_ALGORITHM, NCRYPT_SILENT_FLAG,
     },
 };
@@ -31,6 +29,7 @@ use windows::{
 /// This implementation is specific to the Windows platform and utilizes the Windows CNG API
 /// to interact with the Trusted Platform Module (TPM) for key management and cryptographic
 /// operations.
+#[async_trait]
 impl Provider for TpmProvider {
     /// Creates a new cryptographic key identified by `key_id`.
     ///
@@ -51,12 +50,12 @@ impl Provider for TpmProvider {
     /// A `Result` that, on success, contains `Ok(())`, indicating that the key was created successfully.
     /// On failure, it returns a `SecurityModuleError`.
     #[instrument]
-    fn create_key(
+    async fn create_key(
         &mut self,
         key_id: &str,
-        config: Box<dyn Any>,
+        config: Box<dyn ProviderConfig>,
     ) -> Result<(), SecurityModuleError> {
-        let config = config.downcast_ref::<TpmConfig>().unwrap();
+        let config = config.as_any().await.downcast_ref::<TpmConfig>().unwrap();
 
         self.key_algo = config.key_algorithm;
         self.sym_algo = config.sym_algorithm;
@@ -65,6 +64,7 @@ impl Provider for TpmProvider {
 
         let mut key_handle = NCRYPT_KEY_HANDLE::default();
         let alg_id: PCWSTR = match self.key_algo.as_ref().unwrap() {
+            AsymmetricEncryption::Rsa(_) => NCRYPT_RSA_ALGORITHM,
             AsymmetricEncryption::Rsa(_) => NCRYPT_RSA_ALGORITHM,
             AsymmetricEncryption::Ecc(ecc_scheme) => match ecc_scheme {
                 EccSchemeAlgorithm::EcDsa(_) => BCRYPT_ECDSA_ALGORITHM,
@@ -84,9 +84,29 @@ impl Provider for TpmProvider {
             //NCRYPT_OVERWRITE_KEY_FLAG | NCRYPT_MACHINE_KEY_FLAG, // The program does not have the permissions.
             NCRYPT_OVERWRITE_KEY_FLAG,
         ));
+        execute_ncrypt_function!(NCryptCreatePersistedKey(
+            self.provider_handle.as_ref(),
+            &mut key_handle,
+            alg_id,
+            key_cu16,
+            CERT_KEY_SPEC(0),
+            //NCRYPT_OVERWRITE_KEY_FLAG | NCRYPT_MACHINE_KEY_FLAG, // The program does not have the permissions.
+            NCRYPT_OVERWRITE_KEY_FLAG,
+        ));
 
         if let AsymmetricEncryption::Rsa(key_bits) = self.key_algo.as_ref().unwrap() {
-            let mut key_length: u32 = (*key_bits).into();
+            let key_length: u32 = (*key_bits).into();
+            let key_length_bytes = key_length.to_le_bytes();
+
+            //TODO Write code that tests that the RSA-Key is not too long for current TPM provider.
+
+            execute_ncrypt_function!(NCryptSetProperty(
+                key_handle,             // Convert the handle into the expected parameter type
+                NCRYPT_LENGTH_PROPERTY, // Convert the property name into the expected parameter type
+                &key_length_bytes,      // Provide the property value as a byte slice
+                NCRYPT_SILENT_FLAG,     // Flags
+            ));
+            let key_length: u32 = (*key_bits).into();
             let key_length_bytes = key_length.to_le_bytes();
 
             //TODO Write code that tests that the RSA-Key is not too long for current TPM provider.
@@ -168,8 +188,12 @@ impl Provider for TpmProvider {
     /// A `Result` that, on success, contains `Ok(())`, indicating that the key was loaded successfully.
     /// On failure, it returns a `SecurityModuleError`.
     #[instrument]
-    fn load_key(&mut self, key_id: &str, config: Box<dyn Any>) -> Result<(), SecurityModuleError> {
-        let config = config.downcast_ref::<TpmConfig>().unwrap();
+    async fn load_key(
+        &mut self,
+        key_id: &str,
+        config: Box<dyn ProviderConfig>,
+    ) -> Result<(), SecurityModuleError> {
+        let config = config.as_any().await.downcast_ref::<TpmConfig>().unwrap();
 
         self.key_algo = config.key_algorithm;
         self.sym_algo = config.sym_algorithm;
@@ -179,6 +203,13 @@ impl Provider for TpmProvider {
         let mut key_handle = NCRYPT_KEY_HANDLE::default();
         let key_cu16 = PCWSTR(key_id.as_ptr() as *const u16);
 
+        execute_ncrypt_function!(NCryptOpenKey(
+            *self.provider_handle.as_ref().unwrap(),
+            &mut key_handle,
+            key_cu16,
+            CERT_KEY_SPEC(0),
+            NCRYPT_FLAGS(0),
+        ));
         execute_ncrypt_function!(NCryptOpenKey(
             *self.provider_handle.as_ref().unwrap(),
             &mut key_handle,
@@ -240,7 +271,7 @@ impl Provider for TpmProvider {
     /// A `Result` that, on success, contains `Ok(())`, indicating that the module was initialized successfully.
     /// On failure, it returns a `SecurityModuleError`.
     #[instrument]
-    fn initialize_module(&mut self) -> Result<(), SecurityModuleError> {
+    async fn initialize_module(&mut self) -> Result<(), SecurityModuleError> {
         let mut handle = NCRYPT_PROV_HANDLE::default();
 
         execute_ncrypt_function!(NCryptOpenStorageProvider(

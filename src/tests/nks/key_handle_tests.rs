@@ -23,26 +23,20 @@ fn test_sign_and_verify_rsa() {
     let mut provider = NksProvider::new("test_key".to_string());
     provider.config =
         Some(crate::tests::nks::provider_handle_tests::get_config("rsa", None, None).unwrap());
-    provider
-        .initialize_module()
-        .expect("Failed to initialize module");
+    async_std::task::block_on(provider.initialize_module()).expect("Failed to initialize module");
 
-    if let Some(nks_config) = provider
-        .config
-        .as_ref()
-        .unwrap()
-        .as_any()
+    if let Some(nks_config) = async_std::task::block_on(provider.config.as_ref().unwrap().as_any())
         .downcast_ref::<NksConfig>()
     {
-        provider
-            .load_key("test_rsa_key", Box::new(nks_config.clone()))
+        async_std::task::block_on(provider.load_key("test_rsa_key", Box::new(nks_config.clone())))
             .expect("Failed to load RSA key");
     } else {
         println!("Failed to downcast to NksConfig");
     }
     let data = b"Hello, World!";
-    let signature = provider.sign_data(data).expect("Failed to sign data");
-    assert!(provider.verify_signature(data, &signature).unwrap());
+    let signature =
+        async_std::task::block_on(provider.sign_data(data)).expect("Failed to sign data");
+    assert!(async_std::task::block_on(provider.verify_signature(data, &signature)).unwrap());
 }
 
 #[test]
@@ -50,28 +44,19 @@ fn test_sign_and_verify_ecdsa() {
     let mut provider = NksProvider::new("test_key".to_string());
     provider.config =
         Some(crate::tests::nks::provider_handle_tests::get_config("ecdsa", None, None).unwrap());
-    provider
-        .initialize_module()
-        .expect("Failed to initialize module");
+    async_std::task::block_on(provider.initialize_module()).expect("Failed to initialize module");
 
-    let nks_config = provider
-        .config
-        .as_ref()
-        .unwrap()
-        .as_any()
+    let nks_config = async_std::task::block_on(provider.config.as_ref().unwrap().as_any())
         .downcast_ref::<NksConfig>()
-        .cloned();
+        .unwrap();
 
-    if let Some(nks_config) = nks_config {
-        provider
-            .load_key("test_ecdsa_key", Box::new(nks_config.clone()))
-            .expect("Failed to load ECDSA key");
-    } else {
-        println!("Failed to downcast to NksConfig");
-    }
+    async_std::task::block_on(provider.load_key("test_ecdsa_key", Box::new(nks_config.clone())))
+        .expect("Failed to load ECDSA key");
+
     let data = b"Hello, World!";
-    let signature = provider.sign_data(data).expect("Failed to sign data");
-    assert!(provider.verify_signature(data, &signature).unwrap());
+    let signature =
+        async_std::task::block_on(provider.sign_data(data)).expect("Failed to sign data");
+    assert!(async_std::task::block_on(provider.verify_signature(data, &signature)).unwrap());
 }
 
 #[test]
@@ -81,28 +66,21 @@ fn test_encrypt_and_decrypt_rsa() {
     provider.config =
         Some(crate::tests::nks::provider_handle_tests::get_config("rsa", None, None).unwrap());
 
-    provider
-        .initialize_module()
-        .expect("Failed to initialize module");
+    async_std::task::block_on(provider.initialize_module()).expect("Failed to initialize module");
 
-    if let Some(nks_config) = provider
-        .config
-        .as_ref()
-        .unwrap()
-        .as_any()
+    if let Some(nks_config) = async_std::task::block_on(provider.config.as_ref().unwrap().as_any())
         .downcast_ref::<NksConfig>()
     {
-        provider
-            .load_key("test_rsa_key", Box::new(nks_config.clone()))
+        async_std::task::block_on(provider.load_key("test_rsa_key", Box::new(nks_config.clone())))
             .expect("Failed to load RSA key");
     } else {
         println!("Failed to downcast to NksConfig");
     }
 
     let data = b"Hello, World!";
-    let encrypted_data = provider.encrypt_data(data).expect("Failed to encrypt data");
-    let decrypted_data = provider
-        .decrypt_data(&encrypted_data)
+    let encrypted_data =
+        async_std::task::block_on(provider.encrypt_data(data)).expect("Failed to encrypt data");
+    let decrypted_data = async_std::task::block_on(provider.decrypt_data(&encrypted_data))
         .expect("Failed to decrypt data");
     assert_eq!(data, decrypted_data.as_slice())
 }
@@ -114,30 +92,55 @@ fn test_encrypt_and_decrypt_ecdh() {
     provider.config =
         Some(crate::tests::nks::provider_handle_tests::get_config("ecdh", None, None).unwrap());
 
-    provider
-        .initialize_module()
-        .expect("Failed to initialize module");
+    async_std::task::block_on(provider.initialize_module()).expect("Failed to initialize module");
 
-    if let Some(nks_config) = provider
-        .config
-        .as_ref()
-        .unwrap()
-        .as_any()
+    if let Some(nks_config) = async_std::task::block_on(provider.config.as_ref().unwrap().as_any())
         .downcast_ref::<NksConfig>()
     {
-        provider
-            .load_key("test_ecdh_key", Box::new(nks_config.clone()))
+        async_std::task::block_on(provider.load_key("test_ecdh_key", Box::new(nks_config.clone())))
             .expect("Failed to load ecdh key");
     } else {
         println!("Failed to downcast to NksConfig");
     }
 
     let data = b"Hello, World!";
-    let encrypted_data = provider.encrypt_data(data).expect("Failed to encrypt data");
-    let decrypted_data = provider
-        .decrypt_data(&encrypted_data)
+    let encrypted_data =
+        async_std::task::block_on(provider.encrypt_data(data)).expect("Failed to encrypt data");
+    let decrypted_data = async_std::task::block_on(provider.decrypt_data(&encrypted_data))
         .expect("Failed to decrypt data");
     assert_eq!(data, decrypted_data.as_slice())
+}
+
+fn test_encrypt_and_decrypt_aes(mode: SymmetricMode, key_sizes: &[KeyBits]) {
+    for &key_size in key_sizes {
+        let mut provider = NksProvider::new(format!("aes_{}", mode as u8));
+        provider.config = Some(
+            crate::tests::nks::provider_handle_tests::get_config("aes", Some(key_size), Some(mode))
+                .unwrap(),
+        );
+        async_std::task::block_on(provider.initialize_module())
+            .expect("Failed to initialize module");
+
+        if let Some(nks_config) =
+            async_std::task::block_on(provider.config.as_ref().unwrap().as_any())
+                .downcast_ref::<NksConfig>()
+        {
+            async_std::task::block_on(provider.load_key(
+                &format!("test_aes_key_{}_{}", mode as u8, key_size as u8),
+                Box::new(nks_config.clone()),
+            ))
+            .expect("Failed to load AES key");
+        } else {
+            println!("Failed to downcast to NksConfig");
+        }
+
+        let data = b"Hello, World!";
+        let encrypted_data =
+            async_std::task::block_on(provider.encrypt_data(data)).expect("Failed to encrypt data");
+        let decrypted_data = async_std::task::block_on(provider.decrypt_data(&encrypted_data))
+            .expect("Failed to decrypt data");
+        assert_eq!(data, decrypted_data.as_slice())
+    }
 }
 
 #[test]
@@ -188,39 +191,4 @@ fn test_encrypt_and_decrypt_aes_ctr() {
     );
 }
 
-fn test_encrypt_and_decrypt_aes(mode: SymmetricMode, key_sizes: &[KeyBits]) {
-    for &key_size in key_sizes {
-        let mut provider = NksProvider::new(format!("aes_{}", mode as u8));
-        provider.config = Some(
-            crate::tests::nks::provider_handle_tests::get_config("aes", Some(key_size), Some(mode))
-                .unwrap(),
-        );
-        provider
-            .initialize_module()
-            .expect("Failed to initialize module");
 
-        if let Some(nks_config) = provider
-            .config
-            .as_ref()
-            .unwrap()
-            .as_any()
-            .downcast_ref::<NksConfig>()
-        {
-            provider
-                .load_key(
-                    &format!("test_aes_key_{}_{}", mode as u8, key_size as u8),
-                    Box::new(nks_config.clone()),
-                )
-                .expect("Failed to load AES key");
-        } else {
-            println!("Failed to downcast to NksConfig");
-        }
-
-        let data = b"Hello, World!";
-        let encrypted_data = provider.encrypt_data(data).expect("Failed to encrypt data");
-        let decrypted_data = provider
-            .decrypt_data(&encrypted_data)
-            .expect("Failed to decrypt data");
-        assert_eq!(data, decrypted_data.as_slice())
-    }
-}

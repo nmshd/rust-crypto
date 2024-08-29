@@ -14,7 +14,7 @@ use ::yubikey::{
 };
 use base64::{engine::general_purpose, Engine};
 use std::any::Any;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use tracing::instrument;
 use x509_cert::der::Encode;
 use yubikey::MgmKey;

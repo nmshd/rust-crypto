@@ -1,9 +1,11 @@
+use async_std::sync::Mutex;
+
 //TODO use CAL once it can compile
 //use crate::common::traits::module_provider::Provider;
 use crate::common::traits::module_provider::Provider;
 #[cfg(feature = "hcvault")]
 use crate::nks::hcvault::NksProvider;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 /// Represents the different environments where a Network Key Storage (nks) can operate.
 ///
@@ -71,7 +73,7 @@ impl NksInstance {
     ///
     /// # Returns
     /// An `Arc<dyn Provider>` encapsulating the created nks provider instance.
-    pub fn create_instance(key_id: String, tpm_type: &NksType) -> Arc<Mutex<dyn Provider>> {
+    pub async fn create_instance(key_id: String, tpm_type: &NksType) -> Arc<Mutex<dyn Provider>> {
         match tpm_type {
             #[cfg(feature = "hcvault")]
             NksType::HCVault => {

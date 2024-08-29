@@ -1,25 +1,21 @@
 use crate::{
     common::{
-        crypto::{
-            algorithms::encryption::{AsymmetricEncryption, BlockCiphers},
-            KeyUsage,
-        },
+        crypto::algorithms::encryption::{AsymmetricEncryption, BlockCiphers},
         error::SecurityModuleError,
-        traits::{key_handle::KeyHandle, module_provider::Provider},
+        traits::{module_provider::Provider, module_provider_config::ProviderConfig},
     },
     tpm::{
         android::{
-            config::AndroidConfig,
-            wrapper::key_store::{signature::jni::Signature, store::jni::KeyStore},
+            config::{self, AndroidConfig},
+            utils::Padding,
+            wrapper::{self},
+            ANDROID_KEYSTORE,
         },
         core::error::{ToTpmError, TpmError},
     },
 };
-use robusta_jni::jni::objects::JObject;
-use std::any::Any;
+use async_trait::async_trait;
 use tracing::{debug, info, instrument};
-use utils::{load_iv, store_iv, Padding};
-use wrapper::key_generation::iv_parameter_spec::jni::IvParameterSpec;
 
 /// A TPM-based cryptographic provider for managing cryptographic keys and performing
 /// cryptographic operations in an Android environment.
@@ -31,8 +27,8 @@ use wrapper::key_generation::iv_parameter_spec::jni::IvParameterSpec;
 /// cryptographic operations on Android.
 #[derive(Debug)]
 pub(crate) struct AndroidProvider {
-    key_id: String,
-    config: Option<AndroidConfig>,
+    pub key_id: String,
+    pub config: Option<AndroidConfig>,
 }
 
 impl AndroidProvider {
@@ -54,10 +50,18 @@ impl AndroidProvider {
         }
     }
 
-    fn apply_config(&mut self, config: AndroidConfig) -> Result<(), SecurityModuleError> {
-        // TODO: verify config
-        self.config = Some(config);
-        Ok(())
+    // fn apply_config(&mut self, config: AndroidConfig) -> Result<(), SecurityModuleError> {
+    //     // TODO: verify config
+    //     self.config = Some(config.into());
+    //     Ok(())
+    // }
+
+    pub(crate) fn key_id(&self) -> &str {
+        &self.key_id
+    }
+
+    pub(crate) fn set_config(&mut self, config: Option<AndroidConfig>) {
+        self.config = config;
     }
 }
 
@@ -65,6 +69,7 @@ impl AndroidProvider {
 ///
 /// This struct provides methods for key generation, key loading, and module initialization
 /// specific to Android.
+#[async_trait]
 impl Provider for AndroidProvider {
     /// Generates a key with the parameters specified when the module was initialized.
     ///
@@ -96,28 +101,22 @@ impl Provider for AndroidProvider {
     ///
     /// Returns `Ok(())` if the key generation is successful, otherwise returns an error of type `SecurityModuleError`.
     #[instrument]
-    fn create_key(
+    async fn create_key(
         &mut self,
         key_id: &str,
-        config: Box<dyn Any>,
+        config: Box<dyn ProviderConfig>,
     ) -> Result<(), SecurityModuleError> {
         info!("generating key! {}", key_id);
 
         // load config
-        let config = *config
-            .downcast::<AndroidConfig>()
-            .map_err(|_| SecurityModuleError::InitializationError("Wrong Config".to_owned()))?;
+        let config = config
+            .as_any()
+            .await
+            .downcast_ref::<AndroidConfig>()
+            .unwrap();
 
-        let env = config
-            .vm
-            .as_ref()
-            .expect("cannot happen, already checked")
-            .get_env()
-            .map_err(|_| {
-                TpmError::InitializationError(
-                    "Could not get java environment, this should never happen".to_owned(),
-                )
-            })?;
+        let vm = config.vm.as_ref().unwrap().lock().await;
+        let env = vm.get_env().unwrap();
 
         // build up key specs
         let mut kps_builder =
@@ -215,8 +214,10 @@ impl Provider for AndroidProvider {
             }
         }
 
+        drop(vm);
+
         debug!("key generated");
-        self.apply_config(config)?;
+        self.set_config(Some(config.clone()));
 
         Ok(())
     }
@@ -231,14 +232,20 @@ impl Provider for AndroidProvider {
     ///
     /// Returns `Ok(())` if the key loading is successful, otherwise returns an error of type `SecurityModuleError`.
     #[instrument]
-    fn load_key(&mut self, key_id: &str, config: Box<dyn Any>) -> Result<(), SecurityModuleError> {
+    async fn load_key(
+        &mut self,
+        key_id: &str,
+        config: Box<dyn ProviderConfig>,
+    ) -> Result<(), SecurityModuleError> {
         key_id.clone_into(&mut self.key_id);
 
         // load config
-        let config = *config
-            .downcast::<AndroidConfig>()
-            .map_err(|_| SecurityModuleError::InitializationError("Wrong Config".to_owned()))?;
-        self.apply_config(config)?;
+        let config = config
+            .as_any()
+            .await
+            .downcast_ref::<AndroidConfig>()
+            .unwrap();
+        self.set_config(Some(config.clone()));
 
         Ok(())
     }
@@ -256,7 +263,7 @@ impl Provider for AndroidProvider {
     ///
     /// Returns `Ok(())` if the module initialization is successful, otherwise returns an error of type `SecurityModuleError`.
     #[instrument]
-    fn initialize_module(&mut self) -> Result<(), SecurityModuleError> {
+    async fn initialize_module(&mut self) -> Result<(), SecurityModuleError> {
         Ok(())
     }
 }

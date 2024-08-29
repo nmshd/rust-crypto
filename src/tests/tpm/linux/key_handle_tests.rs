@@ -1,3 +1,5 @@
+use async_std::task::block_on;
+
 use crate::{
     common::crypto::algorithms::{encryption::SymmetricMode, hashes::Sha2Bits, KeyBits},
     tpm::TpmConfig,
@@ -28,17 +30,13 @@ fn test_sign_and_verify_rsa() {
         Some(vec![KeyUsage::SignEncrypt, KeyUsage::ClientAuth]),
     );
 
-    provider
-        .initialize_module()
-        .expect("Failed to initialize module");
-    provider
-        .create_key("test_rsa_key", config)
-        .expect("Failed to create RSA key");
+    block_on(provider.initialize_module()).expect("Failed to initialize module");
+    block_on(provider.create_key("test_rsa_key", config)).expect("Failed to create RSA key");
 
     let data = b"Hello, World!";
-    let signature = provider.sign_data(data).expect("Failed to sign data");
+    let signature = block_on(provider.sign_data(data)).expect("Failed to sign data");
 
-    assert!(provider.verify_signature(data, &signature).unwrap());
+    assert!(block_on(provider.verify_signature(data, &signature)).unwrap());
 }
 
 #[test]
@@ -54,17 +52,13 @@ fn test_sign_and_verify_ecdsa() {
         Some(vec![KeyUsage::SignEncrypt, KeyUsage::ClientAuth]),
     );
 
-    provider
-        .initialize_module()
-        .expect("Failed to initialize module");
-    provider
-        .create_key("test_ecdsa_key", config)
-        .expect("Failed to create ECDSA key");
+    block_on(provider.initialize_module()).expect("Failed to initialize module");
+    block_on(provider.create_key("test_ecdsa_key", config)).expect("Failed to create ECDSA key");
 
     let data = b"Hello, World!";
-    let signature = provider.sign_data(data).expect("Failed to sign data");
+    let signature = block_on(provider.sign_data(data)).expect("Failed to sign data");
 
-    assert!(provider.verify_signature(data, &signature).unwrap());
+    assert!(block_on(provider.verify_signature(data, &signature)).unwrap());
 }
 
 #[test]
@@ -82,18 +76,13 @@ fn test_encrypt_and_decrypt_rsa() {
         ]),
     );
 
-    provider
-        .initialize_module()
-        .expect("Failed to initialize module");
-    provider
-        .create_key("test_rsa_key", config)
-        .expect("Failed to create RSA key");
+    block_on(provider.initialize_module()).expect("Failed to initialize module");
+    block_on(provider.create_key("test_rsa_key", config)).expect("Failed to create RSA key");
 
     let data = b"Hello, World!";
-    let encrypted_data = provider.encrypt_data(data).expect("Failed to encrypt data");
-    let decrypted_data = provider
-        .decrypt_data(&encrypted_data)
-        .expect("Failed to decrypt data");
+    let encrypted_data = block_on(provider.encrypt_data(data)).expect("Failed to encrypt data");
+    let decrypted_data =
+        block_on(provider.decrypt_data(&encrypted_data)).expect("Failed to decrypt data");
 
     assert_eq!(data, decrypted_data.as_slice());
 }
@@ -115,18 +104,13 @@ fn test_encrypt_and_decrypt_ecdh() {
         ]),
     );
 
-    provider
-        .initialize_module()
-        .expect("Failed to initialize module");
-    provider
-        .create_key("test_ecdh_key", config)
-        .expect("Failed to create ECDH key");
+    block_on(provider.initialize_module()).expect("Failed to initialize module");
+    block_on(provider.create_key("test_ecdh_key", config)).expect("Failed to create ECDH key");
 
     let data = b"Hello, World!";
-    let encrypted_data = provider.encrypt_data(data).expect("Failed to encrypt data");
-    let decrypted_data = provider
-        .decrypt_data(&encrypted_data)
-        .expect("Failed to decrypt data");
+    let encrypted_data = block_on(provider.encrypt_data(data)).expect("Failed to encrypt data");
+    let decrypted_data =
+        block_on(provider.decrypt_data(&encrypted_data)).expect("Failed to decrypt data");
 
     assert_eq!(data, decrypted_data.as_slice());
 }

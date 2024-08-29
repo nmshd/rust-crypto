@@ -1,3 +1,5 @@
+use async_std::{sync::Mutex, task::block_on};
+
 use crate::{
     common::traits::{
         key_handle::KeyHandle, module_provider::Provider, module_provider_config::ProviderConfig,
@@ -5,10 +7,9 @@ use crate::{
     tpm::TpmConfig,
 };
 use std::{
-    any::Any,
     ffi::{c_void, CStr},
     os::raw::c_char,
-    sync::{Arc, Mutex},
+    sync::Arc,
 };
 
 #[repr(C)]
@@ -25,8 +26,11 @@ impl ProviderFFI {
     /// deallocation of the provider.
     #[no_mangle]
     pub unsafe fn new(provider: Arc<Mutex<dyn Provider>>) -> *mut ProviderFFI {
+        // Synchronously lock the provider using block_on
+        let mut provider_lock = block_on(provider.lock());
+
         Box::into_raw(Box::new(ProviderFFI {
-            provider: (&mut *provider.lock().unwrap()) as *mut dyn Provider,
+            provider: (&mut *provider_lock) as *mut dyn Provider,
             key_handle: None,
         }))
     }
@@ -41,7 +45,10 @@ impl ProviderFFI {
 pub unsafe extern "C" fn initialize_module(provider_ffi: *mut ProviderFFI) -> i32 {
     let provider_ffi = &mut *provider_ffi;
 
-    match (*provider_ffi.provider).initialize_module() {
+    // Synchronously initialize the module using block_on
+    let result = block_on((*provider_ffi.provider).initialize_module());
+
+    match result {
         Ok(_) => 0,
         Err(_) => 1,
     }
@@ -87,14 +94,18 @@ pub unsafe extern "C" fn create_key(
         Err(_) => return -1, // Error handling for invalid UTF-8
     };
 
-    // Cast the void pointer back to Box<dyn Config>
-    let config: Box<dyn Any> = {
+    // Cast the void pointer back to Box<dyn ProviderConfig>
+    let config: Box<dyn ProviderConfig> = {
         // Convert it back to a Box to properly handle the ownership
-        let boxed_config: Box<Box<dyn Any>> = Box::from_raw(config as *mut Box<dyn Any>);
+        let boxed_config: Box<Box<dyn ProviderConfig>> =
+            Box::from_raw(config as *mut Box<dyn ProviderConfig>);
         *boxed_config
     };
 
-    match (*provider.provider).create_key(key_id_str, config) {
+    // Synchronously handle the async create_key call
+    let result = block_on((*provider.provider).create_key(key_id_str, config));
+
+    match result {
         Ok(_) => 0,
         Err(_) => 1,
     }
@@ -121,14 +132,18 @@ pub unsafe extern "C" fn load_key(
         Err(_) => return -1, // Error handling for invalid UTF-8
     };
 
-    // Cast the void pointer back to Box<dyn Config>
-    let config: Box<dyn Any> = {
+    // Cast the void pointer back to Box<dyn ProviderConfig>
+    let config: Box<dyn ProviderConfig> = {
         // Convert it back to a Box to properly handle the ownership
-        let boxed_config: Box<Box<dyn Any>> = Box::from_raw(config as *mut Box<dyn Any>);
+        let boxed_config: Box<Box<dyn ProviderConfig>> =
+            Box::from_raw(config as *mut Box<dyn ProviderConfig>);
         *boxed_config
     };
 
-    match (*provider.provider).load_key(key_id_str, config) {
+    // Synchronously handle the async load_key call
+    let result = block_on((*provider.provider).load_key(key_id_str, config));
+
+    match result {
         Ok(_) => 0,
         Err(_) => 1,
     }
@@ -151,10 +166,19 @@ pub unsafe extern "C" fn key_handle_sign_data(
     }
 
     let provider = &mut *provider_ffi;
-    let key_handle = &*provider.key_handle.unwrap();
+
+    // Ensure the key_handle is available
+    let key_handle = match provider.key_handle.as_mut() {
+        Some(kh) => &mut **kh,
+        None => return -4, // Key handle not available
+    };
+
     let data_slice = std::slice::from_raw_parts(data, data_len);
 
-    match key_handle.sign_data(data_slice) {
+    // Synchronously handle the async sign_data call using block_on
+    let result = block_on(key_handle.sign_data(data_slice));
+
+    match result {
         Ok(signature) => {
             if signature.len() > output_capacity {
                 return -2; // Buffer too small
@@ -184,10 +208,19 @@ pub unsafe extern "C" fn key_handle_encrypt_data(
     }
 
     let provider = &mut *provider_ffi;
-    let key_handle = &*provider.key_handle.unwrap();
+
+    // Ensure the key_handle is available
+    let key_handle = match provider.key_handle.as_mut() {
+        Some(kh) => &mut **kh,
+        None => return -4, // Key handle not available
+    };
+
     let data_slice = std::slice::from_raw_parts(data, data_len);
 
-    match key_handle.encrypt_data(data_slice) {
+    // Synchronously handle the async encrypt_data call using block_on
+    let result = block_on(key_handle.encrypt_data(data_slice));
+
+    match result {
         Ok(encrypted_data) => {
             if encrypted_data.len() > output_capacity {
                 return -2; // Buffer too small
@@ -216,18 +249,27 @@ pub unsafe extern "C" fn key_handle_verify_signature(
     }
 
     let provider = &mut *provider_ffi;
-    let key_handle = &*provider.key_handle.unwrap();
+
+    // Ensure the key_handle is available
+    let key_handle = match provider.key_handle.as_mut() {
+        Some(kh) => &mut **kh,
+        None => return -4, // Key handle not available
+    };
+
     let data_slice = std::slice::from_raw_parts(data, data_len);
     let signature_slice = std::slice::from_raw_parts(signature, signature_len);
 
-    match key_handle.verify_signature(data_slice, signature_slice) {
+    // Synchronously handle the async verify_signature call using block_on
+    let result = block_on(key_handle.verify_signature(data_slice, signature_slice));
+
+    match result {
         Ok(valid) => {
             if valid {
-                0
+                0 // Signature is valid
             } else {
-                -3
+                -3 // Signature is invalid
             }
-        } // 0 for valid, -3 for invalid signature
+        }
         Err(_) => -2, // Operation failed
     }
 }

@@ -9,7 +9,9 @@ use crate::{
     },
     SecModules,
 };
-use std::sync::{Arc, Mutex};
+use async_std::sync::Mutex;
+use async_trait::async_trait;
+use std::sync::Arc;
 use tracing::Level;
 use tracing_appender::rolling;
 use tracing_subscriber::FmtSubscriber;
@@ -23,8 +25,9 @@ impl Logger {
     }
 }
 
+#[async_trait]
 impl LogConfig for Logger {
-    fn setup_logging(&self) {
+    async fn setup_logging(&self) {
         let file_appender = rolling::daily("./logs", "output.log");
         let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
         let subscriber = FmtSubscriber::builder()
@@ -36,7 +39,7 @@ impl LogConfig for Logger {
     }
 }
 
-pub fn setup_security_module(module: SecurityModule) -> Arc<Mutex<dyn Provider>> {
+pub async fn setup_security_module(module: SecurityModule) -> Arc<Mutex<dyn Provider>> {
     let log = Logger::new_boxed();
     match module {
         #[cfg(feature = "hsm")]
@@ -51,6 +54,7 @@ pub fn setup_security_module(module: SecurityModule) -> Arc<Mutex<dyn Provider>>
                 SecurityModule::Tpm(TpmType::Linux),
                 Some(log),
             )
+            .await
             .unwrap(),
             #[cfg(feature = "win")]
             TpmType::Windows => SecModules::get_instance(
@@ -58,6 +62,7 @@ pub fn setup_security_module(module: SecurityModule) -> Arc<Mutex<dyn Provider>>
                 SecurityModule::Tpm(TpmType::Windows),
                 Some(log),
             )
+            .await
             .unwrap(),
             TpmType::None => unimplemented!(),
             #[cfg(feature = "android")]
