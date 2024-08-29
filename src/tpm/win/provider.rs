@@ -8,19 +8,21 @@ use crate::{
         error::SecurityModuleError,
         traits::module_provider::Provider,
     },
-    tpm::{core::error::TpmError, TpmConfig},
+    tpm::{core::error::TpmError, win::execute_ncrypt_function, TpmConfig},
 };
+
 use std::any::Any;
 use tracing::instrument;
 use windows::{
     core::PCWSTR,
     Win32::Security::Cryptography::{
-        NCryptCreatePersistedKey, NCryptFinalizeKey, NCryptOpenKey, NCryptOpenStorageProvider,
-        NCryptSetProperty, BCRYPT_ECDH_ALGORITHM, BCRYPT_ECDSA_ALGORITHM, CERT_KEY_SPEC,
-        MS_PLATFORM_CRYPTO_PROVIDER, NCRYPT_ALLOW_DECRYPT_FLAG, NCRYPT_ALLOW_SIGNING_FLAG,
-        NCRYPT_CERTIFICATE_PROPERTY, NCRYPT_FLAGS, NCRYPT_KEY_HANDLE, NCRYPT_KEY_USAGE_PROPERTY,
-        NCRYPT_LENGTH_PROPERTY, NCRYPT_MACHINE_KEY_FLAG, NCRYPT_OVERWRITE_KEY_FLAG,
-        NCRYPT_PROV_HANDLE, NCRYPT_SILENT_FLAG,
+        NCryptCreatePersistedKey, NCryptFinalizeKey, NCryptGetProperty, NCryptOpenKey,
+        NCryptOpenStorageProvider, NCryptSetProperty, BCRYPT_ECDH_ALGORITHM,
+        BCRYPT_ECDSA_ALGORITHM, CERT_KEY_SPEC, MS_PLATFORM_CRYPTO_PROVIDER,
+        NCRYPT_ALLOW_DECRYPT_FLAG, NCRYPT_ALLOW_SIGNING_FLAG, NCRYPT_CERTIFICATE_PROPERTY,
+        NCRYPT_FLAGS, NCRYPT_KEY_HANDLE, NCRYPT_KEY_USAGE_PROPERTY, NCRYPT_LENGTH_PROPERTY,
+        NCRYPT_MACHINE_KEY_FLAG, NCRYPT_OVERWRITE_KEY_FLAG, NCRYPT_PROV_HANDLE,
+        NCRYPT_RSA_ALGORITHM, NCRYPT_SILENT_FLAG,
     },
 };
 
@@ -63,11 +65,7 @@ impl Provider for TpmProvider {
 
         let mut key_handle = NCRYPT_KEY_HANDLE::default();
         let alg_id: PCWSTR = match self.key_algo.as_ref().unwrap() {
-            AsymmetricEncryption::Rsa(key_bits) => {
-                let key_bits_u32: u32 = (*key_bits).into();
-                let rsa_alg_id: String = format!("RSA{}", key_bits_u32);
-                PCWSTR(rsa_alg_id.as_ptr() as *const u16)
-            }
+            AsymmetricEncryption::Rsa(_) => NCRYPT_RSA_ALGORITHM,
             AsymmetricEncryption::Ecc(ecc_scheme) => match ecc_scheme {
                 EccSchemeAlgorithm::EcDsa(_) => BCRYPT_ECDSA_ALGORITHM,
                 EccSchemeAlgorithm::EcDh(_) => BCRYPT_ECDH_ALGORITHM,
@@ -77,103 +75,74 @@ impl Provider for TpmProvider {
 
         let key_cu16 = PCWSTR(key_id.as_ptr() as *const u16);
 
-        if unsafe {
-            NCryptCreatePersistedKey(
-                self.provider_handle.as_ref(),
-                &mut key_handle,
-                alg_id,
-                key_cu16,
-                CERT_KEY_SPEC(0),
-                NCRYPT_OVERWRITE_KEY_FLAG | NCRYPT_MACHINE_KEY_FLAG,
-            )
-        }
-        .is_err()
-        {
-            return Err(TpmError::Win(windows::core::Error::from_win32()).into());
-        }
+        execute_ncrypt_function!(NCryptCreatePersistedKey(
+            self.provider_handle.as_ref(),
+            &mut key_handle,
+            alg_id,
+            key_cu16,
+            CERT_KEY_SPEC(0),
+            //NCRYPT_OVERWRITE_KEY_FLAG | NCRYPT_MACHINE_KEY_FLAG, // The program does not have the permissions.
+            NCRYPT_OVERWRITE_KEY_FLAG,
+        ));
 
         if let AsymmetricEncryption::Rsa(key_bits) = self.key_algo.as_ref().unwrap() {
-            // Set the key length for RSA keys
-            let key_length: u32 = (*key_bits).into();
-            let key_length_bytes = key_length.to_le_bytes(); // Convert the key length to bytes
-            if unsafe {
-                NCryptSetProperty(
-                    key_handle,             // Convert the handle into the expected parameter type
-                    NCRYPT_LENGTH_PROPERTY, // Convert the property name into the expected parameter type
-                    &key_length_bytes,      // Provide the property value as a byte slice
-                    NCRYPT_SILENT_FLAG,     // Flags
-                )
-            }
-            .is_err()
-            {
-                return Err(TpmError::Win(windows::core::Error::from_win32()).into());
+            let mut key_length: u32 = (*key_bits).into();
+            let key_length_bytes = key_length.to_le_bytes();
+
+            //TODO Write code that tests that the RSA-Key is not too long for current TPM provider.
+
+            execute_ncrypt_function!(NCryptSetProperty(
+                key_handle,             // Convert the handle into the expected parameter type
+                NCRYPT_LENGTH_PROPERTY, // Convert the property name into the expected parameter type
+                &key_length_bytes,      // Provide the property value as a byte slice
+                NCRYPT_SILENT_FLAG,     // Flags
+            ));
+        }
+
+        //TODO Set EcDsa or EcDh Properties.
+
+        for usage in self.key_usages.as_ref().unwrap() {
+            match usage {
+                KeyUsage::ClientAuth => {
+                    execute_ncrypt_function!(NCryptSetProperty(
+                        key_handle,
+                        NCRYPT_KEY_USAGE_PROPERTY,
+                        &NCRYPT_ALLOW_SIGNING_FLAG.to_le_bytes(),
+                        NCRYPT_SILENT_FLAG,
+                    ));
+                }
+                KeyUsage::Decrypt => {
+                    execute_ncrypt_function!(NCryptSetProperty(
+                        key_handle,
+                        NCRYPT_KEY_USAGE_PROPERTY,
+                        &NCRYPT_ALLOW_DECRYPT_FLAG.to_le_bytes(),
+                        NCRYPT_SILENT_FLAG,
+                    ));
+                }
+                KeyUsage::SignEncrypt => {
+                    execute_ncrypt_function!(NCryptSetProperty(
+                        key_handle,
+                        NCRYPT_KEY_USAGE_PROPERTY,
+                        &NCRYPT_ALLOW_SIGNING_FLAG.to_le_bytes(),
+                        NCRYPT_SILENT_FLAG,
+                    ));
+                }
+                KeyUsage::CreateX509 => {
+                    //TODO NCRYPT_CERTIFICATE_PROPERTY sets a Blob with the x.509 certificate.
+                    // See <https://learn.microsoft.com/en-us/windows/win32/seccng/key-storage-property-identifiers>;
+                    /* execute_ncrypt_function!(dbg!(NCryptSetProperty(
+                        key_handle,
+                        NCRYPT_CERTIFICATE_PROPERTY,
+                        &NCRYPT_ALLOW_SIGNING_FLAG.to_le_bytes(),
+                        NCRYPT_SILENT_FLAG,
+                    ))); */
+                }
             }
         }
 
         // Finalize the key creation
         if unsafe { NCryptFinalizeKey(key_handle, NCRYPT_FLAGS(0)) }.is_err() {
             return Err(TpmError::Win(windows::core::Error::from_win32()).into());
-        }
-
-        for usage in self.key_usages.as_ref().unwrap() {
-            match usage {
-                KeyUsage::ClientAuth => {
-                    if unsafe {
-                        NCryptSetProperty(
-                            key_handle,
-                            NCRYPT_KEY_USAGE_PROPERTY,
-                            &NCRYPT_ALLOW_SIGNING_FLAG.to_le_bytes(),
-                            NCRYPT_SILENT_FLAG,
-                        )
-                    }
-                    .is_err()
-                    {
-                        return Err(TpmError::Win(windows::core::Error::from_win32()).into());
-                    }
-                }
-                KeyUsage::Decrypt => {
-                    if unsafe {
-                        NCryptSetProperty(
-                            key_handle,
-                            NCRYPT_KEY_USAGE_PROPERTY,
-                            &NCRYPT_ALLOW_DECRYPT_FLAG.to_le_bytes(),
-                            NCRYPT_SILENT_FLAG,
-                        )
-                    }
-                    .is_err()
-                    {
-                        return Err(TpmError::Win(windows::core::Error::from_win32()).into());
-                    }
-                }
-                KeyUsage::SignEncrypt => {
-                    if unsafe {
-                        NCryptSetProperty(
-                            key_handle,
-                            NCRYPT_KEY_USAGE_PROPERTY,
-                            &NCRYPT_ALLOW_SIGNING_FLAG.to_le_bytes(),
-                            NCRYPT_SILENT_FLAG,
-                        )
-                    }
-                    .is_err()
-                    {
-                        return Err(TpmError::Win(windows::core::Error::from_win32()).into());
-                    }
-                }
-                KeyUsage::CreateX509 => {
-                    if unsafe {
-                        NCryptSetProperty(
-                            key_handle,
-                            NCRYPT_CERTIFICATE_PROPERTY,
-                            &NCRYPT_ALLOW_SIGNING_FLAG.to_le_bytes(),
-                            NCRYPT_SILENT_FLAG,
-                        )
-                    }
-                    .is_err()
-                    {
-                        return Err(TpmError::Win(windows::core::Error::from_win32()).into());
-                    }
-                }
-            }
         }
 
         self.key_handle = Some(key_handle);
@@ -210,78 +179,48 @@ impl Provider for TpmProvider {
         let mut key_handle = NCRYPT_KEY_HANDLE::default();
         let key_cu16 = PCWSTR(key_id.as_ptr() as *const u16);
 
-        if unsafe {
-            NCryptOpenKey(
-                *self.provider_handle.as_ref().unwrap(),
-                &mut key_handle,
-                key_cu16,
-                CERT_KEY_SPEC(0),
-                NCRYPT_FLAGS(0),
-            )
-        }
-        .is_err()
-        {
-            return Err(TpmError::Win(windows::core::Error::from_win32()).into());
-        }
+        execute_ncrypt_function!(NCryptOpenKey(
+            *self.provider_handle.as_ref().unwrap(),
+            &mut key_handle,
+            key_cu16,
+            CERT_KEY_SPEC(0),
+            NCRYPT_FLAGS(0),
+        ));
 
         // Set key usages
         for usage in self.key_usages.as_ref().unwrap() {
             match usage {
                 KeyUsage::ClientAuth => {
-                    if unsafe {
-                        NCryptSetProperty(
-                            key_handle,
-                            NCRYPT_KEY_USAGE_PROPERTY,
-                            &NCRYPT_ALLOW_SIGNING_FLAG.to_le_bytes(),
-                            NCRYPT_SILENT_FLAG,
-                        )
-                    }
-                    .is_err()
-                    {
-                        return Err(TpmError::Win(windows::core::Error::from_win32()).into());
-                    }
+                    execute_ncrypt_function!(NCryptSetProperty(
+                        key_handle,
+                        NCRYPT_KEY_USAGE_PROPERTY,
+                        &NCRYPT_ALLOW_SIGNING_FLAG.to_le_bytes(),
+                        NCRYPT_SILENT_FLAG,
+                    ))
                 }
                 KeyUsage::Decrypt => {
-                    if unsafe {
-                        NCryptSetProperty(
-                            key_handle,
-                            NCRYPT_KEY_USAGE_PROPERTY,
-                            &NCRYPT_ALLOW_DECRYPT_FLAG.to_le_bytes(),
-                            NCRYPT_SILENT_FLAG,
-                        )
-                    }
-                    .is_err()
-                    {
-                        return Err(TpmError::Win(windows::core::Error::from_win32()).into());
-                    }
+                    execute_ncrypt_function!(NCryptSetProperty(
+                        key_handle,
+                        NCRYPT_KEY_USAGE_PROPERTY,
+                        &NCRYPT_ALLOW_DECRYPT_FLAG.to_le_bytes(),
+                        NCRYPT_SILENT_FLAG,
+                    ))
                 }
                 KeyUsage::SignEncrypt => {
-                    if unsafe {
-                        NCryptSetProperty(
-                            key_handle,
-                            NCRYPT_KEY_USAGE_PROPERTY,
-                            &NCRYPT_ALLOW_SIGNING_FLAG.to_le_bytes(),
-                            NCRYPT_SILENT_FLAG,
-                        )
-                    }
-                    .is_err()
-                    {
-                        return Err(TpmError::Win(windows::core::Error::from_win32()).into());
-                    }
+                    execute_ncrypt_function!(NCryptSetProperty(
+                        key_handle,
+                        NCRYPT_KEY_USAGE_PROPERTY,
+                        &NCRYPT_ALLOW_SIGNING_FLAG.to_le_bytes(),
+                        NCRYPT_SILENT_FLAG,
+                    ))
                 }
                 KeyUsage::CreateX509 => {
-                    if unsafe {
-                        NCryptSetProperty(
-                            key_handle,
-                            NCRYPT_CERTIFICATE_PROPERTY,
-                            &NCRYPT_ALLOW_SIGNING_FLAG.to_le_bytes(),
-                            NCRYPT_SILENT_FLAG,
-                        )
-                    }
-                    .is_err()
-                    {
-                        return Err(TpmError::Win(windows::core::Error::from_win32()).into());
-                    }
+                    execute_ncrypt_function!(NCryptSetProperty(
+                        key_handle,
+                        NCRYPT_CERTIFICATE_PROPERTY,
+                        &NCRYPT_ALLOW_SIGNING_FLAG.to_le_bytes(),
+                        NCRYPT_SILENT_FLAG,
+                    ))
                 }
             }
         }
@@ -304,11 +243,13 @@ impl Provider for TpmProvider {
     fn initialize_module(&mut self) -> Result<(), SecurityModuleError> {
         let mut handle = NCRYPT_PROV_HANDLE::default();
 
-        if unsafe { NCryptOpenStorageProvider(&mut handle, MS_PLATFORM_CRYPTO_PROVIDER, 0) }
-            .is_err()
-        {
-            return Err(TpmError::Win(windows::core::Error::from_win32()).into());
-        }
+        execute_ncrypt_function!(NCryptOpenStorageProvider(
+            &mut handle,
+            MS_PLATFORM_CRYPTO_PROVIDER,
+            0
+        ));
+
+        self.provider_handle = Some(handle);
 
         Ok(())
     }

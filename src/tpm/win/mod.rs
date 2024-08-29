@@ -122,3 +122,14 @@ impl From<AsymmetricEncryption> for PCWSTR {
         }
     }
 }
+
+/// Wraps NCrypt function calls with unsafe block, potential [`Error`](windows::core::Error) with [`TpmError`](crate::tpm::core::error::TpmError) and returns said error if any.
+macro_rules! execute_ncrypt_function {
+    ($cng_function:expr) => {
+        if let Err(e) = unsafe { $cng_function } {
+            return Err(TpmError::Win(e).into());
+        }
+    };
+}
+
+pub(self) use execute_ncrypt_function;

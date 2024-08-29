@@ -22,7 +22,7 @@ fn test_create_rsa_key() {
     let mut provider = TpmProvider::new("test_rsa_key".to_string());
 
     let config = TpmConfig::new(
-        Some(AsymmetricEncryption::Rsa(KeyBits::Bits4096)),
+        Some(AsymmetricEncryption::Rsa(KeyBits::Bits2048)),
         Some(BlockCiphers::Aes(SymmetricMode::Gcm, KeyBits::Bits512)),
         Some(Hash::Sha2(Sha2Bits::Sha256)),
         vec![
