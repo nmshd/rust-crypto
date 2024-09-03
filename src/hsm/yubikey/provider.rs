@@ -5,15 +5,16 @@ use crate::common::{
         KeyBits,
     },
     error::SecurityModuleError,
-    traits::module_provider::Provider,
+    traits::{module_provider::Provider, module_provider_config::ProviderConfig},
 };
 use crate::hsm::{core::error::HsmError, HsmProviderConfig};
 use ::yubikey::{
     piv::{self, AlgorithmId, RetiredSlotId, SlotId},
     Error, YubiKey,
 };
+use async_std::sync::Mutex;
+use async_trait::async_trait;
 use base64::{engine::general_purpose, Engine};
-use std::any::Any;
 use std::sync::Arc;
 use tracing::instrument;
 use x509_cert::der::Encode;
@@ -71,6 +72,7 @@ const SLOTSU32: [u32; 20] = [
 ///
 /// This implementation interacts with a YubiKey device for key management and cryptographic
 /// operations.
+#[async_trait]
 impl Provider for YubiKeyProvider {
     /// Creates a new cryptographic key identified by the provider given key_id.
     ///
@@ -95,12 +97,12 @@ impl Provider for YubiKeyProvider {
     /// We also coded a method, which can remove any stored key from the Yubikey.
 
     #[instrument]
-    fn create_key(
+    async fn create_key(
         &mut self,
         key_id: &str,
-        config: Box<dyn Any>,
+        config: Box<dyn ProviderConfig>,
     ) -> Result<(), SecurityModuleError> {
-        if let Some(hsm_config) = config.downcast_ref::<HsmProviderConfig>() {
+        if let Some(hsm_config) = config.as_any().await.downcast_ref::<HsmProviderConfig>() {
             self.key_algo = Some(hsm_config.key_algorithm);
             let key_algo = self.key_algo;
 
@@ -116,8 +118,8 @@ impl Provider for YubiKeyProvider {
             let slot_id;
             let algorithm: AlgorithmId;
 
-            if self.load_key(key_id, config).is_err() {
-                let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
+            if self.load_key(key_id, config).await.is_err() {
+                let mut yubikey = self.yubikey.as_ref().unwrap().lock().await;
                 let _ = yubikey.verify_pin(self.pin.as_ref());
                 let _ = yubikey.authenticate(MgmKey::new(self.management_key.unwrap()).unwrap());
                 match get_free_slot(&mut yubikey) {
@@ -203,7 +205,7 @@ impl Provider for YubiKeyProvider {
                 }
             };
 
-            let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
+            let mut yubikey = self.yubikey.as_ref().unwrap().lock().await;
             let (slot_id, pkey) = generate_key(&mut yubikey, algorithm, slot_id).unwrap();
             self.slot_id = Some(slot_id);
             self.pkey = pkey;
@@ -245,10 +247,14 @@ impl Provider for YubiKeyProvider {
     /// A `Result` that, on success, contains `Ok(())`, indicating that the key was loaded successfully.
     /// On failure, it returns a `SecurityModuleError`.
     #[instrument]
-    fn load_key(&mut self, key_id: &str, config: Box<dyn Any>) -> Result<(), SecurityModuleError> {
-        if let Some(hsm_config) = config.downcast_ref::<HsmProviderConfig>() {
+    async fn load_key(
+        &mut self,
+        key_id: &str,
+        config: Box<dyn ProviderConfig>,
+    ) -> Result<(), SecurityModuleError> {
+        if let Some(hsm_config) = config.as_any().await.downcast_ref::<HsmProviderConfig>() {
             self.key_algo = Some(hsm_config.key_algorithm);
-            let mut yubikey = self.yubikey.as_ref().unwrap().lock().unwrap();
+            let mut yubikey = self.yubikey.as_ref().unwrap().lock().await;
             let mut found = false;
             for i in 10..20 {
                 let _ = yubikey.verify_pin(self.pin.as_ref());
@@ -324,7 +330,7 @@ impl Provider for YubiKeyProvider {
     /// A `Result` that, on success, contains `Ok(())`, indicating that the module was initialized successfully.
     /// On failure, it returns a Yubikey based `Error`.
     #[instrument]
-    fn initialize_module(&mut self) -> Result<(), SecurityModuleError> {
+    async fn initialize_module(&mut self) -> Result<(), SecurityModuleError> {
         let yubi = YubiKey::open().map_err(|_| Error::NotFound);
         let mut yubikey: YubiKey;
         match yubi {

@@ -1,4 +1,5 @@
 use crate::common::traits::module_provider::Provider;
+use async_std::sync::Mutex;
 use std::sync::Arc;
 
 /// Represents the types of HSMs supported by the HSM system.
