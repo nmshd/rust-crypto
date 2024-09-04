@@ -4,7 +4,9 @@ use async_std::sync::Mutex;
 use crate::tpm::linux::TpmProvider;
 #[cfg(feature = "win")]
 use crate::tpm::win::TpmProvider as WinTpmProvider;
-use crate::{common::traits::module_provider::Provider, tpm::android::provider::AndroidProvider};
+#[cfg(feature = "android")]
+use crate::tpm::android::provider::AndroidProvider;
+use crate::common::traits::module_provider::Provider;
 use std::sync::Arc;
 
 /// Represents the different environments where a Trusted Platform Module (TPM) can operate.

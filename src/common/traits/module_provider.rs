@@ -1,70 +1,100 @@
-use super::{key_handle::KeyHandle, module_provider_config::ProviderConfig};
+use super::{
+    key_handle::{DHKeyExchange, KeyHandle, KeyPairHandle},
+    module_provider_config::ProviderConfig,
+};
 use crate::common::error::SecurityModuleError;
 use async_trait::async_trait;
 use std::fmt::Debug;
 
+struct KeySpec;
+struct KeyPairSpec;
+struct DHSpec;
+
 /// Defines the interface for a security module provider.
 ///
-/// This trait encapsulates operations related to cryptographic processing, such as
-/// data encryption/decryption and signing/verification, as well as key management through
-/// a `ProviderHandle`. It ensures a unified approach to interacting with different types
+/// This trait encapsulates operations related to cryptographic key creation and storage. It ensures a unified approach to interacting with different types
 /// of security modules.
-///
-/// Implementors of this trait must also implement the `KeyHandle` trait to provide
-/// cryptographic key operations.
-#[async_trait]
-pub trait Provider: Send + Sync + KeyHandle + Debug {
-    /// Creates a new cryptographic key identified by `key_id`.
+pub trait Provider: Debug {
+    /// Creates a new symmetric key identified by `key_id`.
     ///
     /// # Arguments
     ///
     /// * `key_id` - A string slice that uniquely identifies the key to be created.
-    /// * `key_algorithm` - The asymmetric encryption algorithm to be used for the key.
-    /// * `sym_algorithm` - An optional symmetric encryption algorithm to be used with the key.
-    /// * `hash` - An optional hash algorithm to be used with the key.
-    /// * `key_usages` - A vector of `AppKeyUsage` values specifying the intended usages for the key.
+    /// * `spec` - The key specification.
     ///
     /// # Returns
     ///
-    /// A `Result` that, on success, contains `Ok(())`, indicating that the key was created successfully.
+    /// A `Result` that, on success, contains a `KeyHandle`, allowing further operations with this key.
     /// On failure, it returns a `SecurityModuleError`.
-    // #[tracing::instrument]
-    async fn create_key(
+    fn create_key(
         &mut self,
         key_id: &str,
-        config: Box<dyn ProviderConfig>,
-    ) -> Result<(), SecurityModuleError>;
+        spec: KeySpec,
+    ) -> Result<Box<dyn KeyHandle>, SecurityModuleError>;
 
-    /// Loads an existing cryptographic key identified by `key_id`.
+    /// Loads an existing symmetric key identified by `key_id`.
     ///
     /// # Arguments
     ///
     /// * `key_id` - A string slice that uniquely identifies the key to be loaded.
-    /// * `key_algorithm` - The asymmetric encryption algorithm used for the key.
-    /// * `sym_algorithm` - An optional symmetric encryption algorithm used with the key.
-    /// * `hash` - An optional hash algorithm used with the key.
-    /// * `key_usages` - A vector of `AppKeyUsage` values specifying the intended usages for the key.
+    /// * `spec` - The key specification.
     ///
     /// # Returns
     ///
-    /// A `Result` that, on success, contains `Ok(())`, indicating that the key was loaded successfully.
+    /// A `Result` that, on success, contains a `KeyHandle`, allowing further operations with this key.
     /// On failure, it returns a `SecurityModuleError`.
-    // #[tracing::instrument]
-    async fn load_key(
+    fn load_key(
         &mut self,
         key_id: &str,
-        config: Box<dyn ProviderConfig>,
-    ) -> Result<(), SecurityModuleError>;
+        spec: KeySpec,
+    ) -> Result<Box<dyn KeyHandle>, SecurityModuleError>;
 
-    /// Initializes the security module and returns a handle for further operations.
+    /// Creates a new asymmetric key pair identified by `key_id`.
     ///
-    /// This method should be called before performing any other operations with the security module.
-    /// It initializes the module and prepares it for use.
+    /// # Arguments
+    ///
+    /// * `key_id` - A string slice that uniquely identifies the keypair to be created.
+    /// * `spec` - The key specification.
     ///
     /// # Returns
     ///
-    /// A `Result` that, on success, contains `Ok(())`, indicating that the module was initialized successfully.
+    /// A `Result` that, on success, contains a `KeyPairHandle`, allowing further operations with this key pair.
     /// On failure, it returns a `SecurityModuleError`.
-    // #[tracing::instrument]
-    async fn initialize_module(&mut self) -> Result<(), SecurityModuleError>;
+    fn create_key_pair(
+        &mut self,
+        key_id: &str,
+        spec: KeyPairSpec,
+    ) -> Result<Box<dyn KeyPairHandle>, SecurityModuleError>;
+
+    /// Loads an existing asymmetric keypair identified by `key_id`.
+    ///
+    /// # Arguments
+    ///
+    /// * `key_id` - A string slice that uniquely identifies the keypair to be loaded.
+    /// * `spec` - The key specification.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` that, on success, contains a `KeyPairHandle`, allowing further operations with this key pair.
+    /// On failure, it returns a `SecurityModuleError`.
+    fn load_key_pair(
+        &mut self,
+        key_id: &str,
+        spec: KeyPairSpec,
+    ) -> Result<Box<dyn KeyPairHandle>, SecurityModuleError>;
+
+    /// Generates a key pair suited for a Diffie-Hellman Key Exchange
+    ///
+    /// # Arguments
+    ///
+    /// * `spec` - A specification for the exchange process and resulting symmetric key
+    ///
+    /// # Returns
+    ///
+    /// A `Result` that, on success, contains a `DHKeyExchange`, allowing further operations with this key pair.
+    /// On failure, it returns a `SecurityModuleError`.
+    fn start_dh_exchange(
+        &mut self,
+        spec: DHSpec,
+    ) -> Result<Box<dyn DHKeyExchange>, SecurityModuleError>;
 }

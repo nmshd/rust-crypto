@@ -1,6 +1,6 @@
 use crate::common::error::SecurityModuleError;
-use std::fmt::Debug;
 use async_trait::async_trait;
+use std::fmt::Debug;
 #[cfg(feature = "linux")]
 use tss_esapi::handles::KeyHandle as TssKeyHandle;
 #[cfg(feature = "win")]
@@ -26,15 +26,7 @@ pub enum GenericKeyHandle {
     YubiKey(Box<dyn KeyHandle>),
 }
 
-/// Defines a common interface for cryptographic key operations.
-///
-/// This trait specifies methods for key operations such as signing data, encrypting,
-/// decrypting, and verifying signatures. It's designed to be implemented by security
-/// modules that manage cryptographic keys, ensuring a consistent interface for key
-/// operations across different types of security modules. Implementors of this trait
-/// must ensure thread safety.
-#[async_trait]
-pub trait KeyHandle: Send + Sync + Debug {
+pub trait ISignVerify: Debug {
     /// Signs the given data using the cryptographic key.
     ///
     /// # Arguments
@@ -42,40 +34,7 @@ pub trait KeyHandle: Send + Sync + Debug {
     ///
     /// # Returns
     /// A `Result` containing the signature as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
-    #[tracing::instrument]
-    async fn sign_data(&self, _data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
-        Err(SecurityModuleError::InitializationError(
-            "Method not implemented".to_owned(),
-        ))
-    }
-
-    /// Decrypts the given encrypted data using the cryptographic key.
-    ///
-    /// # Arguments
-    /// * `encrypted_data` - A byte slice representing the data to be decrypted.
-    ///
-    /// # Returns
-    /// A `Result` containing the decrypted data as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
-    #[tracing::instrument]
-    async fn decrypt_data(&self, _encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
-        Err(SecurityModuleError::InitializationError(
-            "Method not implemented".to_owned(),
-        ))
-    }
-
-    /// Encrypts the given data using the cryptographic key.
-    ///
-    /// # Arguments
-    /// * `data` - A byte slice representing the data to be encrypted.
-    ///
-    /// # Returns
-    /// A `Result` containing the encrypted data as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
-    #[tracing::instrument]
-    async fn encrypt_data(&self, _data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
-        Err(SecurityModuleError::InitializationError(
-            "Method not implemented".to_owned(),
-        ))
-    }
+    fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError>;
 
     /// Verifies the signature of the given data using the cryptographic key.
     ///
@@ -86,34 +45,51 @@ pub trait KeyHandle: Send + Sync + Debug {
     /// # Returns
     /// A `Result` containing a boolean indicating whether the signature is valid (`true`) or not (`false`),
     /// or a `SecurityModuleError` on failure.
-    #[tracing::instrument]
-    async fn verify_signature(
+    fn verify_signature(
         &self,
         _data: &[u8],
         _signature: &[u8],
-    ) -> Result<bool, SecurityModuleError> {
-        Err(SecurityModuleError::InitializationError(
-            "Method not implemented".to_owned(),
-        ))
-    }
+    ) -> Result<bool, SecurityModuleError>;
+}
 
-    /// TODO: Docs
+trait IEncryptDecrypt: Debug {
+    /// Encrypts the given data using the cryptographic key.
+    ///
+    /// # Arguments
+    /// * `data` - A byte slice representing the data to be encrypted.
+    ///
     /// # Returns
-    /// A `Result` containing the new key on success or a `SecurityModuleError` on failure.
-    #[tracing::instrument]
-    async fn derive_key(&self) -> Result<Vec<u8>, SecurityModuleError> {
-        Err(SecurityModuleError::InitializationError(
-            "Method not implemented".to_owned(),
-        ))
-    }
+    /// A `Result` containing the encrypted data as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
+    fn encrypt_data(&self, _data: &[u8]) -> Result<Vec<u8>, SecurityModuleError>;
 
-    /// TODO: Docs
+    /// Decrypts the given encrypted data using the cryptographic key.
+    ///
+    /// # Arguments
+    /// * `encrypted_data` - A byte slice representing the data to be decrypted.
+    ///
     /// # Returns
-    /// A `Result` containing the new keypair on success or a `SecurityModuleError` on failure.
-    #[tracing::instrument]
-    async fn generate_exchange_keypair(&self) -> Result<(Vec<u8>, Vec<u8>), SecurityModuleError> {
-        Err(SecurityModuleError::InitializationError(
-            "Method not implemented".to_owned(),
-        ))
-    }
+    /// A `Result` containing the decrypted data as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
+    fn decrypt_data(&self, _encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError>;
+}
+
+/// Defines a common interface for cryptographic key operations.
+///
+/// This trait specifies methods for key operations such as signing data, encrypting,
+/// decrypting, and verifying signatures. It's designed to be implemented by security
+/// modules that manage cryptographic keys, ensuring a consistent interface for key
+/// operations across different types of security modules. Implementors of this trait
+/// must ensure thread safety.
+pub trait KeyHandle: IEncryptDecrypt {
+    fn extract_key(&self) -> Result<Vec<u8>, SecurityModuleError>;
+}
+
+pub trait KeyPairHandle: IEncryptDecrypt + ISignVerify {
+    fn get_public_key(&self) -> Result<Vec<u8>, SecurityModuleError>;
+    fn extract_key(&self) -> Result<Vec<u8>, SecurityModuleError>;
+}
+
+pub trait DHKeyExchange {
+    fn get_public_key(&self) -> Result<Vec<u8>, SecurityModuleError>;
+    fn add_external(&mut self, external_key: &[u8]) -> Result<(), SecurityModuleError>;
+    fn finalize(self) -> Box<dyn KeyHandle>;
 }
