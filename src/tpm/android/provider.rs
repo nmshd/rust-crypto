@@ -151,10 +151,18 @@ impl Provider for AndroidProvider {
                             )
                             .err_internal()?;
                     }
-                    BlockCiphers::TripleDes(_)
-                    | BlockCiphers::Rc2(_)
-                    | BlockCiphers::Camellia(_, _) => {
-                        Err(TpmError::UnsupportedOperation("not supported".to_owned()))?
+                    BlockCiphers::TripleDes(_) => {
+                        kps_builder = kps_builder
+                            .set_block_modes(&env, vec!["CBC".to_owned()])
+                            .err_internal()?
+                            .set_encryption_paddings(
+                                &env,
+                                vec![config_mode.as_ref().unwrap().to_string()],
+                            )
+                            .err_internal()?;
+                    }
+                    BlockCiphers::Rc2(_) | BlockCiphers::Camellia(_, _) => {
+                        return Err(TpmError::UnsupportedOperation("not supported".to_owned()))?;
                     }
                 };
                 kps_builder = kps_builder
