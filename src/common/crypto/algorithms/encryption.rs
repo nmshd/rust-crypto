@@ -33,7 +33,7 @@ use serde::{Deserialize, Serialize};
 
 #[repr(C)]
 #[derive(Clone, Debug, Copy)]
-pub enum AsymmetricEncryption {
+pub enum AsymmetricSigningSpec {
     /// RSA encryption with selectable key sizes.
     ///
     /// Allows specifying the key size for RSA encryption through the `KeyBits` enum,
@@ -48,108 +48,41 @@ pub enum AsymmetricEncryption {
     /// potentially including various algorithms and curves such as P-256, P-384, and others.
     /// ECC is known for providing the same level of security as RSA but with smaller key sizes,
     /// leading to faster computations and lower power consumption.
-    Ecc(EccSchemeAlgorithm),
+    Ecc {
+        scheme: EccSigningScheme,
+        curve: EccCurves,
+    },
 }
 
-impl Default for AsymmetricEncryption {
-    fn default() -> Self {
-        Self::Ecc(Default::default())
-    }
+#[repr(C)]
+#[derive(Clone, Debug, Copy)]
+pub enum AsymmetricSpec {
+    /// RSA encryption with selectable key sizes.
+    ///
+    /// Allows specifying the key size for RSA encryption through the `KeyBits` enum,
+    /// supporting various standard key lengths for different security needs. RSA is widely used
+    /// for secure data transmission and is known for its simplicity and strong security properties,
+    /// provided a sufficiently large key size is used.
+    Rsa(KeyBits),
+
+    /// Represents Elliptic Curve Cryptography (ECC) encryption.
+    ///
+    /// ECC offers encryption methods based on elliptic curves over finite fields,
+    /// potentially including various algorithms and curves such as P-256, P-384, and others.
+    /// ECC is known for providing the same level of security as RSA but with smaller key sizes,
+    /// leading to faster computations and lower power consumption.
+    Ecc(EccCurves),
 }
 
-impl AsymmetricEncryption {
-    /// Retrieves the RSA key size if the asymmetric encryption method is RSA.
-    ///
-    /// # Returns
-    ///
-    /// An `Option<KeyBits>` representing the key size of the RSA encryption. Returns `None`
-    /// if the encryption method is not RSA.
-    pub fn rsa_key_bits(&self) -> Option<KeyBits> {
-        match self {
-            AsymmetricEncryption::Rsa(key_bits) => Some(*key_bits),
-            _ => None,
-        }
-    }
-
-    /// Retrieves the ECC scheme algorithm if the asymmetric encryption method is ECC.
-    ///
-    /// This method extracts the specific ECC scheme algorithm used, such as ECDSA, ECDH, etc.
-    ///
-    /// # Returns
-    ///
-    /// An `Option<EccSchemeAlgorithm>` representing the ECC scheme. Returns `None`
-    /// if the encryption method is not ECC.
-    pub fn ecc_scheme(&self) -> Option<EccSchemeAlgorithm> {
-        match self {
-            AsymmetricEncryption::Ecc(ecc_scheme) => Some(*ecc_scheme),
-            _ => None,
-        }
-    }
-
-    /// Retrieves the elliptic curve used if the asymmetric encryption method is ECC.
-    ///
-    /// For ECC schemes that specify a curve, this method returns the curve being used. It supports
-    /// multiple ECC schemes and their associated curves.
-    ///
-    /// # Returns
-    ///
-    /// An `Option<EccCurves>` representing the elliptic curve used. Returns `None`
-    /// if the encryption method is not ECC or if the ECC scheme does not specify a curve.
-    pub fn ecc_curve(&self) -> Option<EccCurves> {
-        match self {
-            AsymmetricEncryption::Ecc(ecc_scheme) => match ecc_scheme {
-                EccSchemeAlgorithm::EcDsa(curve) => Some(*curve),
-                EccSchemeAlgorithm::EcDh(curve) => Some(*curve),
-                EccSchemeAlgorithm::EcDaa(curve) => Some(*curve),
-                EccSchemeAlgorithm::Sm2(curve) => Some(*curve),
-                EccSchemeAlgorithm::EcSchnorr(curve) => Some(*curve),
-                EccSchemeAlgorithm::EcMqv(curve) => Some(*curve),
-                EccSchemeAlgorithm::Null => None,
-            },
-            _ => None,
-        }
-    }
-}
-
-/// Enum representing the ECC scheme interface type.
-///
-/// Defines various algorithms that can be used in conjunction with Elliptic Curve Cryptography (ECC),
-/// including signature schemes, key exchange protocols, and more. This allows for flexible cryptographic
-/// configurations tailored to different security requirements and performance constraints.
-///
-/// # Examples
-///
-/// Selecting an ECC scheme:
-///
-/// ```
-/// use tpm_poc::common::crypto::algorithms::encryption::EccSchemeAlgorithm;
-/// use tpm_poc::common::crypto::algorithms::encryption::EccCurves;
-///
-/// let scheme = EccSchemeAlgorithm::EcDsa(EccCurves::Secp256k1);
-/// ```
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum EccSchemeAlgorithm {
+pub enum EccSigningScheme {
     /// ECDSA: Elliptic Curve Digital Signature Algorithm.
-    EcDsa(EccCurves),
-    /// ECDH: Elliptic Curve Diffie-Hellman for key agreement.
-    EcDh(EccCurves),
+    EcDsa,
     /// ECDAA: Elliptic Curve Direct Anonymous Attestation.
-    EcDaa(EccCurves),
-    /// SM2: A Chinese cryptographic standard for digital signatures and key exchange.
-    Sm2(EccCurves),
+    EcDaa,
     /// EC-Schnorr: A Schnorr signature scheme variant using elliptic curves.
-    EcSchnorr(EccCurves),
-    /// ECMQV: Elliptic Curve Menezes-Qu-Vanstone, a key agreement scheme.
-    EcMqv(EccCurves),
-    /// Null: A placeholder or default value indicating no ECC scheme.
-    Null,
-}
-
-impl Default for EccSchemeAlgorithm {
-    fn default() -> Self {
-        Self::EcDsa(EccCurves::Curve25519)
-    }
+    EcSchnorr,
 }
 
 /// Specifies the curve types for Elliptic Curve Digital Signature Algorithm (ECDSA).

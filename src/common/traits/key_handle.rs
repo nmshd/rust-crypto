@@ -26,6 +26,7 @@ pub enum GenericKeyHandle {
     YubiKey(Box<dyn KeyHandle>),
 }
 
+#[async_trait]
 pub trait ISignVerify: Debug {
     /// Signs the given data using the cryptographic key.
     ///
@@ -34,7 +35,7 @@ pub trait ISignVerify: Debug {
     ///
     /// # Returns
     /// A `Result` containing the signature as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
-    fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError>;
+    async fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError>;
 
     /// Verifies the signature of the given data using the cryptographic key.
     ///
@@ -45,13 +46,14 @@ pub trait ISignVerify: Debug {
     /// # Returns
     /// A `Result` containing a boolean indicating whether the signature is valid (`true`) or not (`false`),
     /// or a `SecurityModuleError` on failure.
-    fn verify_signature(
+    async fn verify_signature(
         &self,
         _data: &[u8],
         _signature: &[u8],
     ) -> Result<bool, SecurityModuleError>;
 }
 
+#[async_trait]
 trait IEncryptDecrypt: Debug {
     /// Encrypts the given data using the cryptographic key.
     ///
@@ -60,7 +62,7 @@ trait IEncryptDecrypt: Debug {
     ///
     /// # Returns
     /// A `Result` containing the encrypted data as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
-    fn encrypt_data(&self, _data: &[u8]) -> Result<Vec<u8>, SecurityModuleError>;
+    async fn encrypt_data(&self, _data: &[u8]) -> Result<Vec<u8>, SecurityModuleError>;
 
     /// Decrypts the given encrypted data using the cryptographic key.
     ///
@@ -69,7 +71,7 @@ trait IEncryptDecrypt: Debug {
     ///
     /// # Returns
     /// A `Result` containing the decrypted data as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
-    fn decrypt_data(&self, _encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError>;
+    async fn decrypt_data(&self, _encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError>;
 }
 
 /// Defines a common interface for cryptographic key operations.
@@ -79,17 +81,29 @@ trait IEncryptDecrypt: Debug {
 /// modules that manage cryptographic keys, ensuring a consistent interface for key
 /// operations across different types of security modules. Implementors of this trait
 /// must ensure thread safety.
+
+#[async_trait]
 pub trait KeyHandle: IEncryptDecrypt {
-    fn extract_key(&self) -> Result<Vec<u8>, SecurityModuleError>;
+    async fn extract_key(&self) -> Result<Vec<u8>, SecurityModuleError>;
 }
 
+#[async_trait]
 pub trait KeyPairHandle: IEncryptDecrypt + ISignVerify {
-    fn get_public_key(&self) -> Result<Vec<u8>, SecurityModuleError>;
-    fn extract_key(&self) -> Result<Vec<u8>, SecurityModuleError>;
+    async fn get_public_key(&self) -> Result<Vec<u8>, SecurityModuleError>;
+    async fn extract_key(&self) -> Result<Vec<u8>, SecurityModuleError>;
 }
 
+#[async_trait]
 pub trait DHKeyExchange {
-    fn get_public_key(&self) -> Result<Vec<u8>, SecurityModuleError>;
-    fn add_external(&mut self, external_key: &[u8]) -> Result<(), SecurityModuleError>;
-    fn finalize(self) -> Box<dyn KeyHandle>;
+    /// Get the public key of the internal key pair to use for the other party
+    async fn get_public_key(&self) -> Result<Vec<u8>, SecurityModuleError>;
+
+    /// add an external public point and compute the shared secret. The raw secret is returned to use in another round of the key exchange
+    fn add_external(&mut self, external_key: &[u8]) -> Result<Vec<u8>, SecurityModuleError>;
+
+    /// add the final external Keypair, derive a symmetric key from the shared secret and store the key
+    fn add_external_final(
+        self,
+        external_key: &[u8],
+    ) -> Result<Box<dyn KeyHandle>, SecurityModuleError>;
 }

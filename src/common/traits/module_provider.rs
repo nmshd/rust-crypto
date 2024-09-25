@@ -1,20 +1,24 @@
-use super::{
-    key_handle::{DHKeyExchange, KeyHandle, KeyPairHandle},
-    module_provider_config::ProviderConfig,
+use super::key_handle::{DHKeyExchange, KeyHandle, KeyPairHandle};
+use crate::common::{
+    config::{AlgorithmMetadata, DHSpec, KeyPairSpec, KeySpec, ProviderConfig},
+    error::SecurityModuleError,
 };
-use crate::common::error::SecurityModuleError;
 use async_trait::async_trait;
-use std::fmt::Debug;
 
-struct KeySpec;
-struct KeyPairSpec;
-struct DHSpec;
+#[async_trait]
+pub trait ProviderFactory {
+    fn get_name(&self) -> String;
+    async fn get_capabilities(&mut self) -> AlgorithmMetadata;
+    async fn check_config(&mut self, config: &ProviderConfig) -> bool;
+    async fn create_provider(self, config: ProviderConfig) -> Box<dyn Provider>;
+}
 
 /// Defines the interface for a security module provider.
 ///
 /// This trait encapsulates operations related to cryptographic key creation and storage. It ensures a unified approach to interacting with different types
 /// of security modules.
-pub trait Provider: Debug {
+#[async_trait]
+pub trait Provider {
     /// Creates a new symmetric key identified by `key_id`.
     ///
     /// # Arguments
@@ -26,9 +30,8 @@ pub trait Provider: Debug {
     ///
     /// A `Result` that, on success, contains a `KeyHandle`, allowing further operations with this key.
     /// On failure, it returns a `SecurityModuleError`.
-    fn create_key(
+    async fn create_key(
         &mut self,
-        key_id: &str,
         spec: KeySpec,
     ) -> Result<Box<dyn KeyHandle>, SecurityModuleError>;
 
@@ -43,11 +46,7 @@ pub trait Provider: Debug {
     ///
     /// A `Result` that, on success, contains a `KeyHandle`, allowing further operations with this key.
     /// On failure, it returns a `SecurityModuleError`.
-    fn load_key(
-        &mut self,
-        key_id: &str,
-        spec: KeySpec,
-    ) -> Result<Box<dyn KeyHandle>, SecurityModuleError>;
+    async fn load_key(&mut self, key_id: &str) -> Result<Box<dyn KeyHandle>, SecurityModuleError>;
 
     /// Creates a new asymmetric key pair identified by `key_id`.
     ///
@@ -60,9 +59,8 @@ pub trait Provider: Debug {
     ///
     /// A `Result` that, on success, contains a `KeyPairHandle`, allowing further operations with this key pair.
     /// On failure, it returns a `SecurityModuleError`.
-    fn create_key_pair(
+    async fn create_key_pair(
         &mut self,
-        key_id: &str,
         spec: KeyPairSpec,
     ) -> Result<Box<dyn KeyPairHandle>, SecurityModuleError>;
 
@@ -77,10 +75,9 @@ pub trait Provider: Debug {
     ///
     /// A `Result` that, on success, contains a `KeyPairHandle`, allowing further operations with this key pair.
     /// On failure, it returns a `SecurityModuleError`.
-    fn load_key_pair(
+    async fn load_key_pair(
         &mut self,
         key_id: &str,
-        spec: KeyPairSpec,
     ) -> Result<Box<dyn KeyPairHandle>, SecurityModuleError>;
 
     /// Generates a key pair suited for a Diffie-Hellman Key Exchange
@@ -93,7 +90,7 @@ pub trait Provider: Debug {
     ///
     /// A `Result` that, on success, contains a `DHKeyExchange`, allowing further operations with this key pair.
     /// On failure, it returns a `SecurityModuleError`.
-    fn start_dh_exchange(
+    async fn start_dh_exchange(
         &mut self,
         spec: DHSpec,
     ) -> Result<Box<dyn DHKeyExchange>, SecurityModuleError>;
