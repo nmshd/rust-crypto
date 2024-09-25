@@ -54,6 +54,7 @@ pub mod core;
 /// Provides support for Nitrokey HSM devices.
 pub mod nitrokey;
 
+use async_trait::async_trait;
 use std::any::Any;
 
 /// Provides support for YubiKey HSM devices (conditionally compiled with the `yubi` feature).
@@ -67,9 +68,10 @@ pub struct HsmProviderConfig {
     pub(super) key_algorithm: AsymmetricEncryption,
 }
 
+#[async_trait]
 impl ProviderConfig for HsmProviderConfig {
     /// Returns a reference to the dynamic `Any` trait object.
-    fn as_any(&self) -> &dyn std::any::Any {
+    async fn as_any(&self) -> &dyn std::any::Any {
         self
     }
 }

@@ -16,6 +16,7 @@ use ::yubikey::{
     piv::{AlgorithmId, SlotId},
     MgmKey,
 };
+use async_trait::async_trait;
 use base64::{engine::general_purpose, Engine};
 use openssl::{
     ec::EcKey,
@@ -47,11 +48,12 @@ const BYTES_2048: usize = 256;
 /// A `Result` containing the signature as a `Vec<u8>` on success, or a `yubikey::Error` on failure.
 ///
 
+#[async_trait]
 impl KeyHandle for YubiKeyProvider {
     #[instrument]
-    fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
+    async fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         let yubikey = self.yubikey.as_ref().unwrap();
-        let mut yubikey = yubikey.lock().unwrap();
+        let mut yubikey = yubikey.lock().await;
         let data = data.to_vec();
         let key_algo = self.key_algo.unwrap();
 
@@ -134,9 +136,9 @@ impl KeyHandle for YubiKeyProvider {
     ///
     /// A `Result` containing the decrypted data as a `Vec<u8>` on success, or a `yubikey::Error` on failure.
     #[instrument]
-    fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
+    async fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         let yubikey = self.yubikey.as_ref().unwrap();
-        let mut yubikey = yubikey.lock().unwrap();
+        let mut yubikey = yubikey.lock().await;
 
         // let decrypted: Result<Zeroizing<Vec<u8>>, &str>;
         let key_algo = self.key_algo.unwrap();
@@ -216,7 +218,7 @@ impl KeyHandle for YubiKeyProvider {
     /// A `Result` containing the encrypted data as a `Vec<u8>` on success, or a `yubikey::Error` on failure.
     /// Möglicher Fehler: Müssen Daten vor dem returnen noch in Base64 umgewandelt werden?
     #[instrument]
-    fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
+    async fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         match self.key_algo.unwrap() {
             AsymmetricEncryption::Rsa(KeyBits::Bits1024)
             | AsymmetricEncryption::Rsa(KeyBits::Bits2048) => {
@@ -252,7 +254,11 @@ impl KeyHandle for YubiKeyProvider {
     /// A `Result` indicating whether the signature is valid (`true`) or not (`false`),
     /// or a `SecurityModuleError` on failure.
     #[instrument]
-    fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, SecurityModuleError> {
+    async fn verify_signature(
+        &self,
+        data: &[u8],
+        signature: &[u8],
+    ) -> Result<bool, SecurityModuleError> {
         match self.key_algo.unwrap() {
             AsymmetricEncryption::Rsa(KeyBits::Bits1024)
             | AsymmetricEncryption::Rsa(KeyBits::Bits2048) => {

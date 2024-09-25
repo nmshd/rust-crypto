@@ -53,7 +53,7 @@ impl KeyHandle for AndroidProvider {
     /// # Returns
     ///
     /// Returns a `Result` containing the signed data as a `Vec<u8>` if successful, or a `SecurityModuleError` if an error occurs.
-    #[instrument]
+    #[instrument(skip(data))]
     async fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         // check that signing is allowed
         let config = self
@@ -96,7 +96,6 @@ impl KeyHandle for AndroidProvider {
         let data_bytes = data.to_vec().into_boxed_slice();
 
         s.update(&env, data_bytes).err_internal()?;
-        debug!("Signature Init: {}", s.toString(&env).unwrap());
 
         let output = s.sign(&env).err_internal()?;
 
@@ -124,7 +123,7 @@ impl KeyHandle for AndroidProvider {
     /// # Returns
     ///
     /// Returns a `Result` containing the decrypted data as a `Vec<u8>` if successful, or a `SecurityModuleError` if an error occurs.
-    #[instrument]
+    #[instrument(skip(encrypted_data))]
     async fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         info!("decrypting data");
 
@@ -167,9 +166,7 @@ impl KeyHandle for AndroidProvider {
             }
             config::EncryptionMode::ASym { algo: _, digest: _ } => {
                 let key = key_store
-                    .getCertificate(&env, self.key_id().to_owned())
-                    .err_internal()?
-                    .getPublicKey(&env)
+                    .getKey(&env, self.key_id.to_owned(), JObject::null())
                     .err_internal()?;
                 cipher.init(&env, 2, key.raw.as_obj()).err_internal()?;
 
@@ -179,7 +176,6 @@ impl KeyHandle for AndroidProvider {
             }
         };
 
-        debug!("decrypted data: {:?}", decrypted);
         Ok(decrypted)
     }
 
@@ -205,7 +201,7 @@ impl KeyHandle for AndroidProvider {
     /// # Returns
     ///
     /// Returns a `Result` containing the encrypted data as a `Vec<u8>` if successful, or a `SecurityModuleError` if an error occurs.
-    #[instrument]
+    #[instrument(skip(data))]
     async fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         info!("encrypting");
 
@@ -258,7 +254,6 @@ impl KeyHandle for AndroidProvider {
             }
         };
 
-        debug!("encrypted: {:?}", encrypted);
         Ok(encrypted)
     }
 
@@ -288,7 +283,7 @@ impl KeyHandle for AndroidProvider {
     /// # Returns
     ///
     /// Returns a `Result` containing `true` if the signature is valid, `false` otherwise, or a `SecurityModuleError` if an error occurs.
-    #[instrument]
+    #[instrument(skip(data, signature))]
     async fn verify_signature(
         &self,
         data: &[u8],
@@ -322,14 +317,12 @@ impl KeyHandle for AndroidProvider {
             .err_internal()?;
 
         s.initVerify(&env, cert).err_internal()?;
-        debug!("Signature Init: {}", s.toString(&env).unwrap());
 
         let data_bytes = data.to_vec().into_boxed_slice();
         s.update(&env, data_bytes).err_internal()?;
 
         let signature_boxed = signature.to_vec().into_boxed_slice();
         let output = s.verify(&env, signature_boxed).err_internal()?;
-        debug!("Signature verified: {:?}", output);
 
         Ok(output)
     }

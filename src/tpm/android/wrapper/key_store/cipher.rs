@@ -28,7 +28,7 @@ pub mod jni {
         /// # Arguments
         ///
         /// * `env` - The JNIEnv object.
-        /// * `transformation` - the name of the transformation, e.g., DES/CBC/PKCS5Padding. See the Cipher section in the Java Cryptography 
+        /// * `transformation` - the name of the transformation, e.g., DES/CBC/PKCS5Padding. See the Cipher section in the Java Cryptography
         ///   Architecture Standard Algorithm Name Documentation for information about standard transformation names.
         ///
         /// # Returns
@@ -55,8 +55,7 @@ pub mod jni {
             &self,
             env: &'borrow JNIEnv<'env>,
             opmode: i32,
-            #[input_type("Ljava/security/Key;")] 
-            key: JObject,
+            #[input_type("Ljava/security/Key;")] key: JObject,
         ) -> JniResult<()> {
         }
 
@@ -70,7 +69,7 @@ pub mod jni {
             env.call_method(
                 self.raw.as_obj(),
                 "init",
-                "(ILjava/security/Key;Ljava/security/AlgorithmParameters;)V",
+                "(ILjava/security/Key;Ljava/security/AlgorithmParameterSpec;)V",
                 &[
                     JValue::Int(opmode),
                     JValue::Object(key.raw.as_obj()),
