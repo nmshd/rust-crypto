@@ -9,7 +9,7 @@ use async_trait::async_trait;
 pub trait ProviderFactory {
     fn get_name(&self) -> String;
     async fn get_capabilities(&mut self) -> AlgorithmMetadata;
-    async fn check_config(&mut self, config: &ProviderConfig) -> bool;
+    async fn check_config(&mut self, config: ProviderConfig) -> bool;
     async fn create_provider(self, config: ProviderConfig) -> Box<dyn Provider>;
 }
 
@@ -46,7 +46,8 @@ pub trait Provider {
     ///
     /// A `Result` that, on success, contains a `KeyHandle`, allowing further operations with this key.
     /// On failure, it returns a `SecurityModuleError`.
-    async fn load_key(&mut self, key_id: &str) -> Result<Box<dyn KeyHandle>, SecurityModuleError>;
+    async fn load_key(&mut self, key_id: String)
+        -> Result<Box<dyn KeyHandle>, SecurityModuleError>;
 
     /// Creates a new asymmetric key pair identified by `key_id`.
     ///
@@ -77,7 +78,7 @@ pub trait Provider {
     /// On failure, it returns a `SecurityModuleError`.
     async fn load_key_pair(
         &mut self,
-        key_id: &str,
+        key_id: String,
     ) -> Result<Box<dyn KeyPairHandle>, SecurityModuleError>;
 
     /// Generates a key pair suited for a Diffie-Hellman Key Exchange

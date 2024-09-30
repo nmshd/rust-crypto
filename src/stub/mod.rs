@@ -9,7 +9,7 @@ use crate::common::{
     },
 };
 
-pub struct StubProviderFactory;
+pub struct StubProviderFactory {}
 
 #[async_trait]
 impl ProviderFactory for StubProviderFactory {
@@ -18,7 +18,7 @@ impl ProviderFactory for StubProviderFactory {
     }
 
     async fn get_capabilities(&mut self) -> AlgorithmMetadata {
-        return AlgorithmMetadata;
+        return AlgorithmMetadata {};
     }
 
     async fn check_config(&mut self, config: &ProviderConfig) -> bool {
@@ -26,11 +26,11 @@ impl ProviderFactory for StubProviderFactory {
     }
 
     async fn create_provider(self, config: ProviderConfig) -> Box<dyn Provider> {
-        return Box::new(StubProvider);
+        return Box::new(StubProvider {});
     }
 }
 
-pub struct StubProvider;
+pub struct StubProvider {}
 
 #[async_trait]
 impl Provider for StubProvider {
@@ -41,7 +41,7 @@ impl Provider for StubProvider {
         todo!()
     }
 
-    async fn load_key(&mut self, id: &str) -> Result<Box<dyn KeyHandle>, SecurityModuleError> {
+    async fn load_key(&mut self, id: String) -> Result<Box<dyn KeyHandle>, SecurityModuleError> {
         todo!()
     }
 
@@ -54,7 +54,7 @@ impl Provider for StubProvider {
 
     async fn load_key_pair(
         &mut self,
-        id: &str,
+        id: String,
     ) -> Result<Box<dyn KeyPairHandle>, SecurityModuleError> {
         todo!()
     }
