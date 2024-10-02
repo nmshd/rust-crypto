@@ -1,5 +1,7 @@
 use super::KeyBits;
 use serde::{Deserialize, Serialize};
+use std::cmp::{Eq, PartialEq};
+use std::hash::Hash;
 
 /// Represents the available encryption algorithms.
 ///
@@ -32,8 +34,8 @@ use serde::{Deserialize, Serialize};
 /// facilitating interfacing with C code or when ABI compatibility is required.
 
 #[repr(C)]
-#[derive(Clone, Debug, Copy)]
-pub enum AsymmetricSigningSpec {
+#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash)]
+pub enum AsymmetricKeySpec {
     /// RSA encryption with selectable key sizes.
     ///
     /// Allows specifying the key size for RSA encryption through the `KeyBits` enum,
@@ -50,28 +52,8 @@ pub enum AsymmetricSigningSpec {
     /// leading to faster computations and lower power consumption.
     Ecc {
         scheme: EccSigningScheme,
-        curve: EccCurves,
+        curve: EccCurve,
     },
-}
-
-#[repr(C)]
-#[derive(Clone, Debug, Copy)]
-pub enum AsymmetricSpec {
-    /// RSA encryption with selectable key sizes.
-    ///
-    /// Allows specifying the key size for RSA encryption through the `KeyBits` enum,
-    /// supporting various standard key lengths for different security needs. RSA is widely used
-    /// for secure data transmission and is known for its simplicity and strong security properties,
-    /// provided a sufficiently large key size is used.
-    Rsa(KeyBits),
-
-    /// Represents Elliptic Curve Cryptography (ECC) encryption.
-    ///
-    /// ECC offers encryption methods based on elliptic curves over finite fields,
-    /// potentially including various algorithms and curves such as P-256, P-384, and others.
-    /// ECC is known for providing the same level of security as RSA but with smaller key sizes,
-    /// leading to faster computations and lower power consumption.
-    Ecc(EccCurves),
 }
 
 #[repr(C)]
@@ -95,9 +77,9 @@ pub enum EccSigningScheme {
 /// Selecting an ECDSA curve:
 ///
 /// ```
-/// use tpm_poc::common::crypto::algorithms::encryption::EccCurves;
+/// use tpm_poc::common::crypto::algorithms::encryption::EccCurve;
 ///
-/// let curve_type = EccCurves::Secp256k1;
+/// let curve_type = EccCurve::Secp256k1;
 /// ```
 ///
 /// # Note
@@ -105,7 +87,7 @@ pub enum EccSigningScheme {
 /// Uses `#[repr(C)]` for C language compatibility.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
-pub enum EccCurves {
+pub enum EccCurve {
     /// NIST P-256 curve.
     P256,
     /// NIST P-384 curve.
@@ -131,28 +113,34 @@ pub enum EccCurves {
     Frp256v1,
 }
 
-/// Represents the available block cipher algorithms.
+/// Represents the available cipher algorithms.
 ///
-/// This enum provides a C-compatible representation of various block cipher algorithms supported,
-/// including AES, Triple DES, DES, RC2, and Camellia. Each algorithm can be configured with specific modes of operation and key sizes.
-/// It is designed for flexibility, allowing for easy extension to include additional block cipher algorithms.
+/// This enum provides a C-compatible representation of various algorithms supported,
+/// including AES, ChaCha20 variants, Triple DES, DES, RC2, and Camellia. Some algorithms can be configured with specific modes of operation and key sizes.
+/// It is designed for flexibility, allowing for easy extension to include additional cipher algorithms.
+/// Stream ciphers encrypt plaintext one bit or byte at a time, offering different security and performance characteristics compared to block ciphers.
+/// XChaCha20 is the recommended stream cipher for new applications due to its strong security profile.
 ///
 /// # Examples
 ///
-/// Using `BlockCiphers` with AES in CBC mode and a 256-bit key:
+/// Using `Cipher` with AES in CBC mode and a 256-bit key:
 ///
-/// ```rust
-/// use tpm_poc::common::crypto::algorithms::{KeyBits,encryption::{BlockCiphers, SymmetricMode}};
+/// ```
+/// use tpm_poc::common::crypto::algorithms::{KeyBits,encryption::{Cipher, SymmetricMode}};
 ///
-/// let cipher = BlockCiphers::Aes(SymmetricMode::Cbc, KeyBits::Bits256);
+/// fn main() {
+///     let cipher = Cipher::Aes(SymmetricMode::Cbc, KeyBits::Bits256);
+/// }
 /// ```
 ///
-/// Using `BlockCiphers` with Triple DES in EDE3 mode:
+/// Using `Cipher` with ChaCha20:
 ///
-/// ```rust
-/// use tpm_poc::common::crypto::algorithms::encryption::{BlockCiphers, TripleDesNumKeys};
+/// ```
+/// use tpm_poc::common::crypto::algorithms::encryption::Cipher;
 ///
-/// let cipher = BlockCiphers::TripleDes(TripleDesNumKeys::Tdes3);
+/// fn main() {
+///     let cipher = Cipher::Chacha20;
+/// }
 /// ```
 ///
 /// # Note
@@ -160,8 +148,8 @@ pub enum EccCurves {
 /// Marked with `#[repr(C)]` to ensure it has the same memory layout as a C enum,
 /// facilitating ABI compatibility and interfacing with C code.
 #[repr(C)]
-#[derive(Clone, Debug, Copy)]
-pub enum BlockCiphers {
+#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash)]
+pub enum Cipher {
     /// AES (Advanced Encryption Standard) block cipher with selectable key sizes and modes.
     Aes(SymmetricMode, KeyBits),
     /// Triple DES block cipher, either in two-key or three-key configurations.
@@ -172,11 +160,23 @@ pub enum BlockCiphers {
     Rc2(Rc2KeyBits),
     /// Camellia block cipher with selectable key sizes.
     Camellia(SymmetricMode, KeyBits),
+    /// RC4 stream cipher.
+    ///
+    /// Once widely used, RC4 is now considered insecure due to vulnerabilities that have
+    /// been discovered over time. It is included here for legacy support and should not
+    /// be used for new applications requiring secure encryption.
+    Rc4,
+    /// ChaCha20 stream cipher.
+    ///
+    /// Provides strong security and high performance, making it suitable for a wide
+    /// range of modern applications. ChaCha20 is recommended for use when a secure and
+    /// efficient stream cipher is required.
+    Chacha20(ChCha20Mode),
 }
 
-impl Default for BlockCiphers {
+impl Default for Cipher {
     fn default() -> Self {
-        Self::Aes(SymmetricMode::Gcm, KeyBits::Bits4096)
+        Self::Aes(SymmetricMode::Gcm, KeyBits::Bits256)
     }
 }
 
@@ -199,7 +199,7 @@ impl Default for BlockCiphers {
 ///
 /// `#[repr(C)]` attribute is used for C compatibility.
 #[repr(C)]
-#[derive(Clone, Debug, Default, Copy)]
+#[derive(Clone, Debug, Default, Copy, PartialEq, Eq, Hash)]
 pub enum SymmetricMode {
     /// AES in Galois/Counter Mode (GCM) with selectable key sizes.
     /// GCM is preferred for its performance and security, providing both encryption and authentication.
@@ -250,7 +250,7 @@ pub enum SymmetricMode {
 ///
 /// Uses `#[repr(C)]` for C language compatibility.
 #[repr(C)]
-#[derive(Clone, Debug, Copy)]
+#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash)]
 pub enum TripleDesNumKeys {
     /// Two-key Triple DES, using two different keys for encryption.
     Tdes2,
@@ -277,7 +277,7 @@ pub enum TripleDesNumKeys {
 ///
 /// Marked with `#[repr(C)]` to ensure compatibility with C-based environments.
 #[repr(C)]
-#[derive(Clone, Debug, Copy)]
+#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash)]
 pub enum Rc2KeyBits {
     /// RC2 with a 40-bit key.
     Rc2_40,
@@ -287,38 +287,9 @@ pub enum Rc2KeyBits {
     Rc2_128,
 }
 
-/// Represents the available stream cipher algorithms.
-///
-/// This enum provides a C-compatible representation of stream cipher algorithms such as RC4 and ChaCha20.
-/// Stream ciphers encrypt plaintext one bit or byte at a time, offering different security and performance characteristics compared to block ciphers.
-/// ChaCha20 is recommended for new applications due to its strong security profile.
-///
-/// # Examples
-///
-/// Using ChaCha20 stream cipher:
-///
-/// ```rust
-/// use tpm_poc::common::crypto::algorithms::encryption::StreamCiphers;
-///
-/// let cipher = StreamCiphers::Chacha20;
-/// ```
-///
-/// # Note
-///
-/// `#[repr(C)]` attribute is used for C compatibility, important for interoperability with C-based systems.
-#[repr(C)]
-#[derive(Clone)]
-pub enum StreamCiphers {
-    /// RC4 stream cipher.
-    ///
-    /// Once widely used, RC4 is now considered insecure due to vulnerabilities that have
-    /// been discovered over time. It is included here for legacy support and should not
-    /// be used for new applications requiring secure encryption.
-    Rc4,
-    /// ChaCha20 stream cipher.
-    ///
-    /// Provides strong security and high performance, making it suitable for a wide
-    /// range of modern applications. ChaCha20 is recommended for use when a secure and
-    /// efficient stream cipher is required.
-    Chacha20,
+/// Specifies ChaCha20 Variant.
+#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash)]
+pub enum ChCha20Mode {
+    ChaCha20Poly1305,
+    XChaCha20Poly1305,
 }
