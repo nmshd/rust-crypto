@@ -1,4 +1,4 @@
-use crate::common::error::SecurityModuleError;
+use crate::common::{error::SecurityModuleError, DHExchange};
 use async_trait::async_trait;
 use std::fmt::Debug;
 #[cfg(feature = "linux")]
@@ -23,7 +23,7 @@ pub enum GenericKeyHandle {
     #[cfg(feature = "win")]
     Windows(NCRYPT_KEY_HANDLE),
     #[cfg(feature = "yubi")]
-    YubiKey(Box<dyn KeyHandle>),
+    YubiKey(Box<dyn KeyHandleImpl>),
 }
 
 #[async_trait]
@@ -48,13 +48,13 @@ pub trait ISignVerify: Debug {
     /// or a `SecurityModuleError` on failure.
     async fn verify_signature(
         &self,
-        _data: &[u8],
-        _signature: &[u8],
+        data: &[u8],
+        signature: &[u8],
     ) -> Result<bool, SecurityModuleError>;
 }
 
 #[async_trait]
-trait IEncryptDecrypt: Debug {
+pub trait IEncryptDecrypt: Debug {
     /// Encrypts the given data using the cryptographic key.
     ///
     /// # Arguments
@@ -62,7 +62,7 @@ trait IEncryptDecrypt: Debug {
     ///
     /// # Returns
     /// A `Result` containing the encrypted data as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
-    async fn encrypt_data(&self, _data: &[u8]) -> Result<Vec<u8>, SecurityModuleError>;
+    async fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError>;
 
     /// Decrypts the given encrypted data using the cryptographic key.
     ///
@@ -71,7 +71,7 @@ trait IEncryptDecrypt: Debug {
     ///
     /// # Returns
     /// A `Result` containing the decrypted data as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
-    async fn decrypt_data(&self, _encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError>;
+    async fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError>;
 }
 
 /// Defines a common interface for cryptographic key operations.
@@ -83,18 +83,19 @@ trait IEncryptDecrypt: Debug {
 /// must ensure thread safety.
 
 #[async_trait]
-pub trait KeyHandle: IEncryptDecrypt {
+pub trait KeyHandleImpl: IEncryptDecrypt {
     async fn extract_key(&self) -> Result<Vec<u8>, SecurityModuleError>;
 }
 
 #[async_trait]
-pub trait KeyPairHandle: IEncryptDecrypt + ISignVerify {
+pub trait KeyPairHandleImpl: IEncryptDecrypt + ISignVerify {
     async fn get_public_key(&self) -> Result<Vec<u8>, SecurityModuleError>;
     async fn extract_key(&self) -> Result<Vec<u8>, SecurityModuleError>;
+    async fn start_dh_exchange(&self) -> Result<DHExchange, SecurityModuleError>;
 }
 
 #[async_trait]
-pub trait DHKeyExchange {
+pub trait DHKeyExchangeImpl {
     /// Get the public key of the internal key pair to use for the other party
     async fn get_public_key(&self) -> Result<Vec<u8>, SecurityModuleError>;
 
@@ -105,5 +106,5 @@ pub trait DHKeyExchange {
     fn add_external_final(
         self,
         external_key: &[u8],
-    ) -> Result<Box<dyn KeyHandle>, SecurityModuleError>;
+    ) -> Result<Box<dyn KeyHandleImpl>, SecurityModuleError>;
 }
