@@ -46,4 +46,14 @@ pub struct ProviderConfig {
 #[derive(Clone, Copy, Debug)]
 pub enum ProviderImplConfig {
     Android {},
+    Stub {},
+}
+
+impl ProviderImplConfig {
+    pub(super) fn name(&self) -> String {
+        match self {
+            ProviderImplConfig::Android {} => "ANDROID_PROVIDER".to_owned(),
+            ProviderImplConfig::Stub {} => "STUB_PROVIDER".to_owned(),
+        }
+    }
 }
