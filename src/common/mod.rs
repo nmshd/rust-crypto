@@ -1,3 +1,6 @@
+#![allow(unused)]
+#![allow(dead_code)]
+
 use config::{KeyPairSpec, KeySpec};
 use error::SecurityModuleError;
 use traits::key_handle::{DHKeyExchangeImpl, KeyHandleImpl, KeyPairHandleImpl};
@@ -7,7 +10,7 @@ pub mod config;
 pub mod crypto;
 pub mod error;
 pub mod factory;
-pub mod traits;
+pub(super) mod traits;
 
 macro_rules! delegate {
     ($(pub async fn $method:ident(&self $(,$arg:ident: $type:ty)* $(,)?) $(-> $ret:ty)?;)+) => {
@@ -90,7 +93,7 @@ impl Provider {
 }
 
 pub struct KeyPairHandle {
-    implementation: Box<dyn KeyPairHandleImpl>,
+    pub(crate) implementation: Box<dyn KeyPairHandleImpl>,
 }
 
 /// Abstraction of asymmetric key pair handles.
