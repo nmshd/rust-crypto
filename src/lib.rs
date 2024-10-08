@@ -1,3 +1,6 @@
+#![allow(unused)]
+#![allow(dead_code)]
+
 pub mod common;
 #[cfg(feature = "ffi")]
 pub mod ffi;
