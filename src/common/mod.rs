@@ -1,5 +1,4 @@
 use config::{KeyPairSpec, KeySpec};
-use config::{ProviderConfig, ProviderImplConfig};
 use error::SecurityModuleError;
 use traits::key_handle::{DHKeyExchangeImpl, KeyHandleImpl, KeyPairHandleImpl};
 use traits::module_provider::ProviderImpl;
