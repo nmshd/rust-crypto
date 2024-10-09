@@ -1,11 +1,16 @@
 use std::collections::HashMap;
 
+use once_cell::sync::Lazy;
+
 use super::{
-    config::{ProviderConfig, ProviderImplConfig},
+    config::{self, ProviderConfig, ProviderImplConfig},
     traits::module_provider::ProviderFactory,
     Provider,
 };
 use crate::stub::StubProviderFactory;
+
+static ALL_PROVIDERS: Lazy<Vec<Box<dyn ProviderFactory>>> =
+    Lazy::new(|| vec![Box::new(StubProviderFactory {})]);
 
 fn provider_supports_capabilities(
     provider_capabilities: &ProviderConfig,
@@ -26,26 +31,44 @@ fn provider_supports_capabilities(
 
 /// Returns a provider which supports the given requierements.
 ///
-/// This function returns a provider if any provider supports the given requirements and
-/// the hash map contains as key said providers name.
+/// This function returns the first provider, which supports the given requirements and has a [ProviderImplConfig].
 ///
 /// * `conf` - A provider config that the provider must at least contain.
-/// * `impl_conf_map` - A [HashMap] where the keys must be provider names and the values must be said providers specific configuration.
+/// * `impl_conf_vec` - A `Vec` of [ProviderImplConfig]. Only providers, which have [ProviderImplConfig] are returned.
+///
+/// # Example
+/// ```
+/// use crypto_layer::common::{
+///     config::*,
+///     factory::*,
+/// };
+///
+/// fn main() {
+///     let specific_provider_config = vec![ProviderImplConfig::Stub {}, ProviderImplConfig::Android {}];
+///     let provider_config = ProviderConfig {
+///        min_security_level: SecurityLevel::Software,
+///        max_security_level: SecurityLevel::Hardware,
+///        supported_asym_spec: HashSet::new(),
+///        supported_ciphers: HashSet::new(),
+///        supported_hashes: HashSet::new(),
+///     };
+///     let provider = create_provider(provider_config, specific_provider_config).unwrap();
+/// }
+/// ```
 pub async fn create_provider(
     conf: ProviderConfig,
-    impl_conf_map: HashMap<String, ProviderImplConfig>,
+    impl_conf_vec: Vec<ProviderImplConfig>,
 ) -> Option<Provider> {
-    let all_providers = vec![Box::new(StubProviderFactory {})];
-    for mut provider in all_providers {
-        let provider_name = provider.get_name();
-        let impl_conf = match impl_conf_map.get(&provider_name) {
-            Some(impl_conf) => *impl_conf,
+    for provider in ALL_PROVIDERS.iter() {
+        let name = provider.get_name();
+        let config = match impl_conf_vec.iter().find(|e| e.name() == name) {
+            Some(config) => config.clone(),
             None => continue,
         };
-        let provider_caps = provider.get_capabilities(impl_conf).await;
+        let provider_caps = provider.get_capabilities(config).await;
         if provider_supports_capabilities(&provider_caps, &conf) {
             return Some(Provider {
-                implementation: provider.create_provider(impl_conf).await,
+                implementation: provider.create_provider(config).await,
             });
         }
     }
@@ -60,9 +83,7 @@ pub async fn create_provider_from_name(
     name: String,
     impl_conf: ProviderImplConfig,
 ) -> Option<Provider> {
-    let all_providers = vec![Box::new(StubProviderFactory {})];
-    for provider in all_providers {
-        // ALL_PROVIDERS is a compile time list of enabled providers
+    for provider in ALL_PROVIDERS.iter() {
         if provider.get_name() == name {
             return Some(Provider {
                 implementation: provider.create_provider(impl_conf).await,
