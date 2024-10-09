@@ -1,5 +1,9 @@
+use async_std::sync::Mutex;
 use std::cmp::{Eq, Ord, PartialEq, PartialOrd};
 use std::collections::HashSet;
+use std::sync::Arc;
+
+use robusta_jni::jni::JavaVM;
 
 use super::crypto::algorithms::{
     encryption::{AsymmetricKeySpec, Cipher},
@@ -43,7 +47,7 @@ pub struct ProviderConfig {
     pub supported_asym_spec: HashSet<AsymmetricKeySpec>,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone)]
 pub enum ProviderImplConfig {
-    Android {},
+    Android { vm: Arc<Mutex<JavaVM>> },
 }

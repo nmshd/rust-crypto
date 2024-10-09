@@ -25,7 +25,7 @@ fn provider_supports_capabilities(
 pub async fn create_provider(conf: ProviderConfig, impl_conf: ProviderImplConfig) -> Provider {
     let all_providers = vec![Box::new(StubProviderFactory {})];
     for mut provider in all_providers {
-        let provider_caps = provider.get_capabilities(impl_conf).await;
+        let provider_caps = provider.get_capabilities(impl_conf.clone()).await;
         if provider_supports_capabilities(&provider_caps, &conf) {
             return Provider {
                 implementation: provider.create_provider(impl_conf).await,
