@@ -1,5 +1,6 @@
 use std::{collections::HashSet, fmt::Debug, sync::Arc};
 
+use crate::tpm::android::android_logger::setup_logging;
 use crate::{
     common::{
         config::{KeyPairSpec, KeySpec, ProviderConfig, ProviderImplConfig, SecurityLevel},
@@ -49,6 +50,7 @@ impl ProviderFactory for AndroidProviderFactory {
     }
 
     async fn create_provider(self, impl_config: ProviderImplConfig) -> Box<dyn ProviderImpl> {
+        setup_logging();
         Box::new(AndroidProvider {
             java_vm: match impl_config {
                 ProviderImplConfig::Android { vm } => vm,
@@ -91,7 +93,10 @@ impl ProviderImpl for AndroidProvider {
         info!("generating key: {}", key_id);
 
         let vm = self.java_vm.lock().await;
-        let env = vm.get_env().unwrap();
+        let thread = vm.attach_current_thread().expect("Thread attach failed");
+        let env = vm.get_env().expect("Get env failed");
+
+        info!("got env");
 
         // build up key specs
         let mut kps_builder =
@@ -163,6 +168,7 @@ impl ProviderImpl for AndroidProvider {
 
         let vm = self.java_vm.lock().await;
         let env = vm.get_env().unwrap();
+        let thread = vm.attach_current_thread().unwrap();
 
         // build up key specs
         let mut kps_builder =

@@ -4,6 +4,7 @@ use super::{
     Provider,
 };
 use crate::stub::StubProviderFactory;
+use crate::tpm::android::provider::AndroidProviderFactory;
 
 fn provider_supports_capabilities(
     provider_capabilities: &ProviderConfig,
@@ -23,7 +24,7 @@ fn provider_supports_capabilities(
 }
 
 pub async fn create_provider(conf: ProviderConfig, impl_conf: ProviderImplConfig) -> Provider {
-    let all_providers = vec![Box::new(StubProviderFactory {})];
+    let all_providers = vec![Box::new(AndroidProviderFactory {})];
     for mut provider in all_providers {
         let provider_caps = provider.get_capabilities(impl_conf.clone()).await;
         if provider_supports_capabilities(&provider_caps, &conf) {
@@ -36,7 +37,7 @@ pub async fn create_provider(conf: ProviderConfig, impl_conf: ProviderImplConfig
 }
 
 pub async fn create_provider_from_name(name: String, impl_conf: ProviderImplConfig) -> Provider {
-    let all_providers = vec![Box::new(StubProviderFactory {})];
+    let all_providers = vec![Box::new(AndroidProviderFactory {})];
     for provider in all_providers {
         // ALL_PROVIDERS is a compile time list of enabled providers
         if provider.get_name() == name {

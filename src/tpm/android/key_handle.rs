@@ -46,6 +46,7 @@ impl KeyHandleImpl for AndroidKeyHandle {
 
         let vm = self.java_vm.lock().await;
         let env = vm.get_env().unwrap();
+        let thread = vm.attach_current_thread().unwrap();
 
         let key_store = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_owned()).err_internal()?;
         key_store.load(&env, None).err_internal()?;
@@ -73,6 +74,7 @@ impl KeyHandleImpl for AndroidKeyHandle {
 
     async fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         let vm = self.java_vm.lock().await;
+        let thread = vm.attach_current_thread().unwrap();
         let env = vm.get_env().unwrap();
 
         let cipher_mode: Result<String, SecurityModuleError> = self.spec.cipher.into();
@@ -112,6 +114,7 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
         info!("signing");
 
         let vm = self.java_vm.lock().await;
+        let thread = vm.attach_current_thread().unwrap();
         let env = vm.get_env().unwrap();
 
         let key_store = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_string()).err_internal()?;
@@ -145,6 +148,7 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
         info!("verifiying");
 
         let vm = self.java_vm.lock().await;
+        let thread = vm.attach_current_thread().unwrap();
         let env = vm.get_env().unwrap();
 
         let key_store = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_string()).err_internal()?;
@@ -174,6 +178,7 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
         info!("encrypting");
 
         let vm = self.java_vm.lock().await;
+        let thread = vm.attach_current_thread().unwrap();
         let env = vm.get_env().unwrap();
 
         let key_store = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_owned()).err_internal()?;
@@ -202,6 +207,7 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
         info!("decrypting");
 
         let vm = self.java_vm.lock().await;
+        let thread = vm.attach_current_thread().unwrap();
         let env = vm.get_env().unwrap();
 
         let key_store = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_owned()).err_internal()?;
@@ -229,6 +235,7 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
         info!("getting public key");
 
         let vm = self.java_vm.lock().await;
+        let thread = vm.attach_current_thread().unwrap();
         let env = vm.get_env().unwrap();
 
         let key_store = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_owned()).err_internal()?;

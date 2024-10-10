@@ -23,7 +23,7 @@ pub enum TpmError {
     /// Error indicating that an attempted operation is unsupported, containing a description.
     UnsupportedOperation(String),
     /// Error indicating that an internal error occured, possibly caused by ffi bindings
-    InternalError(Box<dyn std::error::Error>),
+    InternalError(Box<dyn std::error::Error + Send + Sync>),
 }
 
 impl fmt::Display for TpmError {

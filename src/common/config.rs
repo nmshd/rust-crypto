@@ -3,6 +3,7 @@ use std::cmp::{Eq, Ord, PartialEq, PartialOrd};
 use std::collections::HashSet;
 use std::sync::Arc;
 
+#[cfg(feature = "android")]
 use robusta_jni::jni::JavaVM;
 
 use super::crypto::algorithms::{
@@ -49,5 +50,7 @@ pub struct ProviderConfig {
 
 #[derive(Clone)]
 pub enum ProviderImplConfig {
+    None,
+    #[cfg(feature = "android")]
     Android { vm: Arc<Mutex<JavaVM>> },
 }
