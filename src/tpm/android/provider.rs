@@ -167,8 +167,8 @@ impl ProviderImpl for AndroidProvider {
         info!("generating key pair! {}", key_id);
 
         let vm = self.java_vm.lock().await;
-        let env = vm.get_env().unwrap();
         let thread = vm.attach_current_thread().unwrap();
+        let env = vm.get_env().unwrap();
 
         // build up key specs
         let mut kps_builder =
@@ -180,11 +180,11 @@ impl ProviderImpl for AndroidProvider {
                 kps_builder = kps_builder
                     .set_digests(&env, vec![spec.signing_hash.into()])
                     .err_internal()?
-                    .set_signature_paddings(&env, vec![Padding::PKCS1.into()])
+                    .set_signature_paddings(&env, vec!["PKCS1".into()])
                     .err_internal()?
                     .set_encryption_paddings(&env, vec![Padding::PKCS1.into()])
                     .err_internal()?
-                    .set_key_size(&env, _key_bits as i32)
+                    .set_key_size(&env, _key_bits.into())
                     .err_internal()?;
             }
             AsymmetricKeySpec::Ecc { scheme, curve } => {
