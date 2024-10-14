@@ -35,7 +35,7 @@ impl ProviderFactory for StubProviderFactory {
         };
     }
 
-    async fn create_provider(self, impl_config: ProviderImplConfig) -> Box<dyn ProviderImpl> {
+    async fn create_provider(&self, impl_config: ProviderImplConfig) -> Box<dyn ProviderImpl> {
         return Box::new(StubProvider {});
     }
 }

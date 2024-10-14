@@ -7,14 +7,14 @@ use crate::common::{
 };
 
 #[async_trait]
-pub trait ProviderFactory {
+pub trait ProviderFactory: Send + Sync {
     fn get_name(&self) -> String;
 
     /// Returns security level and supported algorithms of a provider.
     ///
     /// [ProviderConfig] returned stores in HashSets all Hashes, Ciphers and AsymmetricKeySpecs a provider supports.
-    async fn get_capabilities(&mut self, impl_config: ProviderImplConfig) -> ProviderConfig;
-    async fn create_provider(self, impl_config: ProviderImplConfig) -> Box<dyn ProviderImpl>;
+    async fn get_capabilities(&self, impl_config: ProviderImplConfig) -> ProviderConfig;
+    async fn create_provider(&self, impl_config: ProviderImplConfig) -> Box<dyn ProviderImpl>;
 }
 
 /// Defines the interface for a security module provider.

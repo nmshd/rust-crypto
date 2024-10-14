@@ -50,7 +50,16 @@ pub struct ProviderConfig {
 
 #[derive(Clone)]
 pub enum ProviderImplConfig {
-    None,
     #[cfg(feature = "android")]
     Android { vm: Arc<Mutex<JavaVM>> },
+    Stub {},
+}
+
+impl ProviderImplConfig {
+    pub(super) fn name(&self) -> String {
+        match self {
+            ProviderImplConfig::Android {vm: _} => "ANDROID_PROVIDER".to_owned(),
+            ProviderImplConfig::Stub {} => "STUB_PROVIDER".to_owned(),
+        }
+    }
 }
