@@ -1,5 +1,10 @@
+use async_std::sync::Mutex;
 use std::cmp::{Eq, Ord, PartialEq, PartialOrd};
 use std::collections::HashSet;
+use std::sync::Arc;
+
+#[cfg(feature = "android")]
+use robusta_jni::jni::JavaVM;
 
 use super::crypto::algorithms::{
     encryption::{AsymmetricKeySpec, Cipher},
@@ -43,16 +48,17 @@ pub struct ProviderConfig {
     pub supported_asym_spec: HashSet<AsymmetricKeySpec>,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone)]
 pub enum ProviderImplConfig {
-    Android {},
+    #[cfg(feature = "android")]
+    Android { vm: Arc<Mutex<JavaVM>> },
     Stub {},
 }
 
 impl ProviderImplConfig {
     pub(super) fn name(&self) -> String {
         match self {
-            ProviderImplConfig::Android {} => "ANDROID_PROVIDER".to_owned(),
+            ProviderImplConfig::Android {vm: _} => "ANDROID_PROVIDER".to_owned(),
             ProviderImplConfig::Stub {} => "STUB_PROVIDER".to_owned(),
         }
     }

@@ -25,7 +25,7 @@ impl ProviderFactory for StubProviderFactory {
         return PROVIDER_NAME.to_owned();
     }
 
-    async fn get_capabilities(&self, impl_config: ProviderImplConfig) -> ProviderConfig {
+    async fn get_capabilities(&mut self, impl_config: ProviderImplConfig) -> ProviderConfig {
         return ProviderConfig {
             min_security_level: SecurityLevel::Software,
             max_security_level: SecurityLevel::Software,

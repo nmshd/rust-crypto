@@ -8,6 +8,7 @@ use super::{
     Provider,
 };
 use crate::stub::StubProviderFactory;
+use crate::tpm::android::provider::AndroidProviderFactory;
 
 static ALL_PROVIDERS: Lazy<Vec<Box<dyn ProviderFactory>>> =
     Lazy::new(|| vec![Box::new(StubProviderFactory {})]);

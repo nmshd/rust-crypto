@@ -35,7 +35,7 @@ macro_rules! delegate {
 /// [Provider] itself is a wrapper around the structs which implement [ProviderImpl].
 /// This is done for compatibility with other programming languages (mainly dart).
 pub struct Provider {
-    implementation: Box<dyn ProviderImpl>,
+    pub(crate) implementation: Box<dyn ProviderImpl>,
 }
 
 impl Provider {
@@ -122,7 +122,7 @@ impl KeyPairHandle {
 }
 
 pub struct KeyHandle {
-    implementation: Box<dyn KeyHandleImpl>,
+    pub(crate) implementation: Box<dyn KeyHandleImpl>,
 }
 
 impl KeyHandle {
@@ -141,5 +141,5 @@ impl KeyHandle {
 }
 
 pub struct DHExchange {
-    implementation: Box<dyn DHKeyExchangeImpl>,
+    pub(crate) implementation: Box<dyn DHKeyExchangeImpl>,
 }

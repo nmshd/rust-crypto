@@ -1,0 +1,14 @@
+[package]
+name = "cal_flutter_plugin"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+flutter_rust_bridge = "=2.4.0"
+crypto-layer = { path = "../../", features = ["tpm", "android"]}
+robusta_jni = "0.2"
+libloading = "*"
+async-std = "1.12.0"
