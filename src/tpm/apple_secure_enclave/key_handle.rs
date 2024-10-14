@@ -9,7 +9,9 @@ use crate::common::{
     traits::key_handle::KeyPairHandleImpl,
 };
 
-struct AppleSecureEnclaveKeyPair {}
+pub(crate) struct AppleSecureEnclaveKeyPair {
+    pub(super) key_handle: SecKey,
+}
 
 #[async_trait]
 impl KeyPairHandleImpl for AppleSecureEnclaveKeyPair {

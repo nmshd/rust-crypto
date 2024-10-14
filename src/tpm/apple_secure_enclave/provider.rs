@@ -1,13 +1,20 @@
 use std::collections::HashSet;
 
 use async_trait::async_trait;
-use security_framework::key::SecKey;
+use security_framework::{
+    access_control::{self, ProtectionMode, SecAccessControl},
+    item::Location,
+    key::{GenerateKeyOptions, KeyType, SecKey},
+};
 
 use crate::common::{
     config::{KeyPairSpec, KeySpec, ProviderConfig, ProviderImplConfig, SecurityLevel},
     error::SecurityModuleError,
     traits::module_provider::{ProviderFactory, ProviderImpl},
+    KeyPairHandle,
 };
+
+use crate::tpm::apple_secure_enclave::key_handle::AppleSecureEnclaveKeyPair;
 
 struct AppleSecureEnclaveFactory {}
 
@@ -54,7 +61,35 @@ impl ProviderImpl for AppleSecureEnclaveProvider {
         &mut self,
         spec: KeyPairSpec,
     ) -> Result<KeyPairHandle, SecurityModuleError> {
-        todo!()
+        //TODO save spec
+
+        let access_controll = match SecAccessControl::create_with_protection(
+            Some(ProtectionMode::AccessibleAfterFirstUnlockThisDeviceOnly),
+            0,
+        ) {
+            Ok(access_control) => access_control,
+            Err(e) => return Err(SecurityModuleError::InitializationError(e.to_string())),
+        };
+
+        let key_options = GenerateKeyOptions {
+            key_type: Some(KeyType::ec()),
+            size_in_bits: Some(256),
+            label: None,
+            token: None,
+            location: Some(Location::DataProtectionKeychain),
+            access_control: Some(access_controll),
+        };
+
+        let sec_key: SecKey = match SecKey::new(&key_options) {
+            Ok(sec_key) => sec_key,
+            Err(e) => Err(SecurityModuleError::InitializationError(e.to_string())),
+        };
+
+        Ok(KeyPairHandle {
+            implementation: Box::new(AppleSecureEnclaveKeyPair {
+                key_handle: sec_key,
+            }),
+        })
     }
 
     async fn load_key_pair(
