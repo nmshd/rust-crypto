@@ -54,6 +54,8 @@ pub enum ProviderImplConfig {
     Android {
         vm: Arc<Mutex<JavaVM>>,
     },
+    #[cfg(feature = "apple-secure-enclave")]
+    AppleSecureEnclave {},
     Stub {},
 }
 
@@ -63,6 +65,7 @@ impl ProviderImplConfig {
             #[cfg(feature = "android")]
             ProviderImplConfig::Android { vm: _ } => "ANDROID_PROVIDER".to_owned(),
             ProviderImplConfig::Stub {} => "STUB_PROVIDER".to_owned(),
+            ProviderImplConfig::AppleSecureEnclave {} => "APPLE_SECURE_ENCLAVE".to_owned(),
         }
     }
 }

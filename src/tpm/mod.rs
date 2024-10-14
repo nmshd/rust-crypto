@@ -18,3 +18,6 @@ pub mod linux;
 pub mod macos;
 #[cfg(feature = "win")]
 pub mod win;
+
+#[cfg(feature = "apple-secure-enclave")]
+pub mod apple_secure_enclave;
