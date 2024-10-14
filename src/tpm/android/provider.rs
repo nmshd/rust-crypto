@@ -35,7 +35,7 @@ impl ProviderFactory for AndroidProviderFactory {
         "AndroidProvider".to_owned()
     }
 
-    async fn get_capabilities(&mut self, impl_config: ProviderImplConfig) -> ProviderConfig {
+    async fn get_capabilities(&self, impl_config: ProviderImplConfig) -> ProviderConfig {
         ProviderConfig {
             min_security_level: SecurityLevel::Hardware,
             max_security_level: SecurityLevel::Hardware,
@@ -49,7 +49,7 @@ impl ProviderFactory for AndroidProviderFactory {
         }
     }
 
-    async fn create_provider(self, impl_config: ProviderImplConfig) -> Box<dyn ProviderImpl> {
+    async fn create_provider(&self, impl_config: ProviderImplConfig) -> Box<dyn ProviderImpl> {
         setup_logging();
         Box::new(AndroidProvider {
             java_vm: match impl_config {

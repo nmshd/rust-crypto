@@ -8,6 +8,7 @@ use super::{
     Provider,
 };
 use crate::stub::StubProviderFactory;
+#[cfg(feature = "android")]
 use crate::tpm::android::provider::AndroidProviderFactory;
 
 static ALL_PROVIDERS: Lazy<Vec<Box<dyn ProviderFactory>>> =
@@ -66,7 +67,7 @@ pub async fn create_provider(
             Some(config) => config.clone(),
             None => continue,
         };
-        let provider_caps = provider.get_capabilities(config).await;
+        let provider_caps = provider.get_capabilities(config.clone()).await;
         if provider_supports_capabilities(&provider_caps, &conf) {
             return Some(Provider {
                 implementation: provider.create_provider(config).await,
