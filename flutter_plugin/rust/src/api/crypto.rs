@@ -30,7 +30,7 @@ pub async fn get_provider() -> Provider {
 
     let impl_config = ProviderImplConfig::Android { vm: Arc::new(Mutex::new(get_java_vm())) };
 
-    create_provider(config, impl_config).await
+    create_provider(config, vec![impl_config]).await.unwrap()
 }
 
 pub async fn create_key_pair(provider: &mut Provider) -> Result<KeyPairHandle, crypto_layer::common::error::SecurityModuleError> {
