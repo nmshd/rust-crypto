@@ -121,7 +121,7 @@ impl KeyPairHandle {
     }
 
     /// Returns the id of the key pair, which can be used with [Provider::load_key_pair].
-    pub fn id(&self) -> String {
+    pub fn id(&self) -> Result<String, SecurityModuleError> {
         self.implementation.id()
     }
 }
@@ -145,7 +145,7 @@ impl KeyHandle {
     }
 
     /// Returns the id of the key, which can be used with [Provider::load_key].
-    pub fn id(&self) -> String {
+    pub fn id(&self) -> Result<String, SecurityModuleError> {
         self.implementation.id()
     }
 }
