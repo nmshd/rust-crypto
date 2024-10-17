@@ -9,6 +9,11 @@ use security_framework::{
 
 use crate::common::{
     config::{KeyPairSpec, KeySpec, ProviderConfig, ProviderImplConfig, SecurityLevel},
+    crypto::algorithms::{
+        encryption::{AsymmetricKeySpec, EccCurve, EccSigningScheme},
+        hashes::{CryptoHash, Sha2Bits},
+        KeyBits,
+    },
     error::SecurityModuleError,
     traits::module_provider::{ProviderFactory, ProviderImpl},
     KeyPairHandle,
@@ -34,8 +39,11 @@ impl ProviderFactory for AppleSecureEnclaveFactory {
             max_security_level: SecurityLevel::Hardware,
             min_security_level: SecurityLevel::Hardware,
             supported_ciphers: HashSet::new(),
-            supported_asym_spec: HashSet::from([]),
-            supported_hashes: HashSet::from([]),
+            supported_asym_spec: HashSet::from([AsymmetricKeySpec::Ecc {
+                scheme: EccSigningScheme::EcDsa,
+                curve: EccCurve::P256,
+            }]),
+            supported_hashes: HashSet::from([CryptoHash::Sha2(Sha2Bits::Sha256)]),
         }
     }
 
@@ -61,7 +69,17 @@ impl ProviderImpl for AppleSecureEnclaveProvider {
         &mut self,
         spec: KeyPairSpec,
     ) -> Result<KeyPairHandle, SecurityModuleError> {
-        //TODO save spec
+        debug_assert_eq!(
+            spec,
+            KeyPairSpec {
+                asym_spec: AsymmetricKeySpec::Ecc {
+                    scheme: EccSigningScheme::EcDsa,
+                    curve: EccCurve::P256
+                },
+                cipher: None,
+                signing_hash: CryptoHash::Sha2(Sha2Bits::Sha256)
+            }
+        );
 
         let access_controll = match SecAccessControl::create_with_protection(
             Some(ProtectionMode::AccessibleAfterFirstUnlockThisDeviceOnly),

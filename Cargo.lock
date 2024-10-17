@@ -461,6 +461,7 @@ dependencies = [
  "async-std",
  "async-trait",
  "base64 0.22.1",
+ "core-foundation 0.10.0",
  "ed25519-dalek",
  "futures",
  "getrandom",

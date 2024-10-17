@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 
 use async_trait::async_trait;
+use security_framework::key::Algorithm;
 use security_framework::key::SecKey;
 
 use crate::common::{
@@ -16,7 +17,13 @@ pub(crate) struct AppleSecureEnclaveKeyPair {
 #[async_trait]
 impl KeyPairHandleImpl for AppleSecureEnclaveKeyPair {
     async fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
-        todo!()
+        match self
+            .key_handle
+            .create_signature(Algorithm::ECDSASignatureDigestX962SHA256, data)
+        {
+            Ok(data) => Ok(data),
+            Err(e) => Err(SecurityModuleError::SigningError(e.description())),
+        }
     }
 
     async fn verify_signature(
@@ -24,7 +31,16 @@ impl KeyPairHandleImpl for AppleSecureEnclaveKeyPair {
         data: &[u8],
         signature: &[u8],
     ) -> Result<bool, SecurityModuleError> {
-        todo!()
+        match self.key_handle.verify_signature(
+            Algorithm::ECDSASignatureDigestX962SHA256,
+            data,
+            signature,
+        ) {
+            Ok(result) => Ok(result),
+            Err(e) => Err(SecurityModuleError::SignatureVerificationError(
+                e.description(),
+            )),
+        }
     }
 
     async fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
@@ -36,7 +52,14 @@ impl KeyPairHandleImpl for AppleSecureEnclaveKeyPair {
     }
 
     async fn get_public_key(&self) -> Result<Vec<u8>, SecurityModuleError> {
-        todo!()
+        let public_key: SecKey = self
+            .key_handle
+            .public_key()
+            .ok_or(SecurityModuleError::UnsupportedAlgorithm)?;
+        let external_representation = public_key
+            .external_representation()
+            .ok_or(SecurityModuleError::UnsupportedAlgorithm)?;
+        external_representation.bytes().clone()
     }
 
     async fn extract_key(&self) -> Result<Vec<u8>, SecurityModuleError> {
