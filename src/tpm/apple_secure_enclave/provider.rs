@@ -17,7 +17,7 @@ use crate::common::{
     },
     error::SecurityModuleError,
     traits::module_provider::{ProviderFactory, ProviderImpl},
-    KeyPairHandle,
+    DHExchange, KeyHandle, KeyPairHandle,
 };
 
 use crate::tpm::apple_secure_enclave::key_handle::AppleSecureEnclaveKeyPair;
@@ -70,18 +70,6 @@ impl ProviderImpl for AppleSecureEnclaveProvider {
         &mut self,
         spec: KeyPairSpec,
     ) -> Result<KeyPairHandle, SecurityModuleError> {
-        debug_assert_eq!(
-            spec,
-            KeyPairSpec {
-                asym_spec: AsymmetricKeySpec::Ecc {
-                    scheme: EccSigningScheme::EcDsa,
-                    curve: EccCurve::P256
-                },
-                cipher: None,
-                signing_hash: CryptoHash::Sha2(Sha2Bits::Sha256)
-            }
-        );
-
         let access_controll = match SecAccessControl::create_with_protection(
             Some(ProtectionMode::AccessibleAfterFirstUnlockThisDeviceOnly),
             0,
@@ -101,7 +89,7 @@ impl ProviderImpl for AppleSecureEnclaveProvider {
 
         let sec_key: SecKey = match SecKey::new(&key_options) {
             Ok(sec_key) => sec_key,
-            Err(e) => Err(SecurityModuleError::InitializationError(e.to_string())),
+            Err(e) => return Err(SecurityModuleError::InitializationError(e.to_string())),
         };
 
         Ok(KeyPairHandle {
@@ -115,7 +103,7 @@ impl ProviderImpl for AppleSecureEnclaveProvider {
         &mut self,
         key_id: String,
     ) -> Result<KeyPairHandle, SecurityModuleError> {
-        let label = match BASE64_STANDARD.decode(key_id) {
+        let label = match BASE64_STANDARD.decode(&key_id) {
             Ok(label) => label,
             Err(e) => return Err(SecurityModuleError::InitializationError(e.to_string())), //TODO Change this error.
         };
@@ -136,7 +124,7 @@ impl ProviderImpl for AppleSecureEnclaveProvider {
             None => {
                 return Err(SecurityModuleError::InitializationError(format!(
                     "Failed to find security key with label: {}",
-                    &label
+                    &key_id
                 )))
             }
         };
@@ -158,9 +146,9 @@ impl ProviderImpl for AppleSecureEnclaveProvider {
         };
 
         Ok(KeyPairHandle {
-            implementation: AppleSecureEnclaveKeyPair {
+            implementation: Box::new(AppleSecureEnclaveKeyPair {
                 key_handle: sec_key,
-            },
+            }),
         })
     }
 

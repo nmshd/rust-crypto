@@ -9,6 +9,7 @@ use crate::common::{
     config::{KeyPairSpec, KeySpec},
     error::SecurityModuleError,
     traits::key_handle::KeyPairHandleImpl,
+    DHExchange,
 };
 
 pub(crate) struct AppleSecureEnclaveKeyPair {
@@ -23,7 +24,9 @@ impl KeyPairHandleImpl for AppleSecureEnclaveKeyPair {
             .create_signature(Algorithm::ECDSASignatureDigestX962SHA256, data)
         {
             Ok(data) => Ok(data),
-            Err(e) => Err(SecurityModuleError::SigningError(e.description())),
+            Err(e) => Err(SecurityModuleError::SigningError(
+                e.description().to_string(),
+            )),
         }
     }
 
@@ -39,7 +42,7 @@ impl KeyPairHandleImpl for AppleSecureEnclaveKeyPair {
         ) {
             Ok(result) => Ok(result),
             Err(e) => Err(SecurityModuleError::SignatureVerificationError(
-                e.description(),
+                e.description().to_string(),
             )),
         }
     }
@@ -60,7 +63,7 @@ impl KeyPairHandleImpl for AppleSecureEnclaveKeyPair {
         let external_representation = public_key
             .external_representation()
             .ok_or(SecurityModuleError::UnsupportedAlgorithm)?;
-        external_representation.bytes().clone()
+        Ok(Vec::from(external_representation.bytes()))
     }
 
     async fn extract_key(&self) -> Result<Vec<u8>, SecurityModuleError> {
@@ -72,7 +75,7 @@ impl KeyPairHandleImpl for AppleSecureEnclaveKeyPair {
     }
 
     fn id(&self) -> Result<String, SecurityModuleError> {
-        match self.application_label() {
+        match self.key_handle.application_label() {
             None => Err(SecurityModuleError::KeyError),
             Some(bytes) => Ok(BASE64_STANDARD.encode(bytes)),
         }
