@@ -33,7 +33,7 @@ pub trait KeyHandleImpl: Send + Sync {
     async fn extract_key(&self) -> Result<Vec<u8>, SecurityModuleError>;
 
     /// Returns the id of the key, which can be used with `load_key`.
-    fn id(&self) -> String;
+    fn id(&self) -> Result<String, SecurityModuleError>;
 }
 
 #[async_trait]
@@ -84,7 +84,7 @@ pub trait KeyPairHandleImpl: Send + Sync {
     fn start_dh_exchange(&self) -> Result<DHExchange, SecurityModuleError>;
 
     /// Returns the id of the key pair, which can be used with `load_key_pair`.
-    fn id(&self) -> String;
+    fn id(&self) -> Result<String, SecurityModuleError>;
 }
 
 #[async_trait]
