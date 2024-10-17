@@ -1,9 +1,10 @@
 use std::collections::HashSet;
 
 use async_trait::async_trait;
+use base64::prelude::*;
 use security_framework::{
     access_control::{self, ProtectionMode, SecAccessControl},
-    item::Location,
+    item::{ItemClass, ItemSearchOptions, KeyClass, Location, Reference, SearchResult},
     key::{GenerateKeyOptions, KeyType, SecKey},
 };
 
@@ -114,7 +115,53 @@ impl ProviderImpl for AppleSecureEnclaveProvider {
         &mut self,
         key_id: String,
     ) -> Result<KeyPairHandle, SecurityModuleError> {
-        todo!()
+        let label = match BASE64_STANDARD.decode(key_id) {
+            Ok(label) => label,
+            Err(e) => return Err(SecurityModuleError::InitializationError(e.to_string())), //TODO Change this error.
+        };
+
+        let search_results: Vec<SearchResult> = match ItemSearchOptions::new()
+            .class(ItemClass::key())
+            .key_class(KeyClass::symmetric())
+            .load_refs(true)
+            .application_label(&label)
+            .search()
+        {
+            Ok(search_results) => search_results,
+            Err(e) => return Err(SecurityModuleError::InitializationError(e.to_string())),
+        };
+
+        let first_search_result: SearchResult = match search_results.into_iter().next() {
+            Some(result) => result,
+            None => {
+                return Err(SecurityModuleError::InitializationError(format!(
+                    "Failed to find security key with label: {}",
+                    &label
+                )))
+            }
+        };
+
+        let sec_key: SecKey = match first_search_result {
+            SearchResult::Ref(reference) => match reference {
+                Reference::Key(sec_key) => sec_key,
+                _ => {
+                    return Err(SecurityModuleError::InitializationError(
+                        "Failed to find security key in reference.".to_owned(),
+                    ))
+                }
+            },
+            _ => {
+                return Err(SecurityModuleError::InitializationError(
+                    "Failed to find reference in search.".to_owned(),
+                ))
+            }
+        };
+
+        Ok(KeyPairHandle {
+            implementation: AppleSecureEnclaveKeyPair {
+                key_handle: sec_key,
+            },
+        })
     }
 
     async fn import_key(
@@ -131,7 +178,7 @@ impl ProviderImpl for AppleSecureEnclaveProvider {
         public_key: &[u8],
         private_key: &[u8],
     ) -> Result<KeyPairHandle, SecurityModuleError> {
-        todo!()
+        Err(SecurityModuleError::UnsupportedAlgorithm)
     }
 
     async fn import_public_key(
@@ -139,7 +186,7 @@ impl ProviderImpl for AppleSecureEnclaveProvider {
         spec: KeyPairSpec,
         public_key: &[u8],
     ) -> Result<KeyPairHandle, SecurityModuleError> {
-        todo!()
+        Err(SecurityModuleError::UnsupportedAlgorithm)
     }
 
     async fn start_ephemeral_dh_exchange(

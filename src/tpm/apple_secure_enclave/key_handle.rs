@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 
 use async_trait::async_trait;
+use base64::prelude::*;
 use security_framework::key::Algorithm;
 use security_framework::key::SecKey;
 
@@ -68,5 +69,12 @@ impl KeyPairHandleImpl for AppleSecureEnclaveKeyPair {
 
     fn start_dh_exchange(&self) -> Result<DHExchange, SecurityModuleError> {
         Err(SecurityModuleError::UnsupportedAlgorithm)
+    }
+
+    fn id(&self) -> Result<String, SecurityModuleError> {
+        match self.application_label() {
+            None => Err(SecurityModuleError::KeyError),
+            Some(bytes) => Ok(BASE64_STANDARD.encode(bytes)),
+        }
     }
 }
