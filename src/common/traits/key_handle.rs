@@ -31,6 +31,9 @@ pub trait KeyHandleImpl: Send + Sync {
     async fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError>;
 
     async fn extract_key(&self) -> Result<Vec<u8>, SecurityModuleError>;
+
+    /// Returns the id of the key, which can be used with `load_key`.
+    fn id(&self) -> String;
 }
 
 #[async_trait]
@@ -79,6 +82,9 @@ pub trait KeyPairHandleImpl: Send + Sync {
     async fn get_public_key(&self) -> Result<Vec<u8>, SecurityModuleError>;
     async fn extract_key(&self) -> Result<Vec<u8>, SecurityModuleError>;
     fn start_dh_exchange(&self) -> Result<DHExchange, SecurityModuleError>;
+
+    /// Returns the id of the key pair, which can be used with `load_key_pair`.
+    fn id(&self) -> String;
 }
 
 #[async_trait]
