@@ -137,4 +137,8 @@ impl KeyPairHandleImpl for StubKeyPairHandle {
     fn start_dh_exchange(&self) -> Result<DHExchange, SecurityModuleError> {
         todo!()
     }
+
+    fn id(&self) -> Result<String, SecurityModuleError> {
+        Ok("RANDOM_KEY_ID".to_owned())
+    }
 }
