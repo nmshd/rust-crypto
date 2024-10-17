@@ -10,9 +10,15 @@ use super::{
 use crate::stub::StubProviderFactory;
 #[cfg(feature = "android")]
 use crate::tpm::android::provider::AndroidProviderFactory;
+#[cfg(feature = "apple-secure-enclave")]
+use crate::tpm::apple_secure_enclave::provider::AppleSecureEnclaveFactory;
 
-static ALL_PROVIDERS: Lazy<Vec<Box<dyn ProviderFactory>>> =
-    Lazy::new(|| vec![Box::new(StubProviderFactory {})]);
+static ALL_PROVIDERS: Lazy<Vec<Box<dyn ProviderFactory>>> = Lazy::new(|| {
+    vec![
+        Box::new(StubProviderFactory {}),
+        Box::new(AppleSecureEnclaveFactory {}),
+    ]
+});
 
 fn provider_supports_capabilities(
     provider_capabilities: &ProviderConfig,

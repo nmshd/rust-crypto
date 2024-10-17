@@ -22,7 +22,7 @@ use crate::common::{
 
 use crate::tpm::apple_secure_enclave::key_handle::AppleSecureEnclaveKeyPair;
 
-struct AppleSecureEnclaveFactory {}
+pub(crate) struct AppleSecureEnclaveFactory {}
 
 #[async_trait]
 impl ProviderFactory for AppleSecureEnclaveFactory {
@@ -54,7 +54,7 @@ impl ProviderFactory for AppleSecureEnclaveFactory {
 }
 
 #[derive(Debug)]
-struct AppleSecureEnclaveProvider {}
+pub(crate) struct AppleSecureEnclaveProvider {}
 
 #[async_trait]
 impl ProviderImpl for AppleSecureEnclaveProvider {
