@@ -16,6 +16,7 @@ use crate::tpm::apple_secure_enclave::provider::AppleSecureEnclaveFactory;
 static ALL_PROVIDERS: Lazy<Vec<Box<dyn ProviderFactory>>> = Lazy::new(|| {
     vec![
         Box::new(StubProviderFactory {}),
+        #[cfg(feature = "apple-secure-enclave")]
         Box::new(AppleSecureEnclaveFactory {}),
     ]
 });
