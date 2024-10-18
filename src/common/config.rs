@@ -70,3 +70,14 @@ impl ProviderImplConfig {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_security_level_order() {
+        assert!(SecurityLevel::Unsafe < SecurityLevel::Software);
+        assert!(SecurityLevel::Software < SecurityLevel::Hardware);
+    }
+}
