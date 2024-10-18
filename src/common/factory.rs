@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use once_cell::sync::Lazy;
 
 use super::{
@@ -18,8 +16,8 @@ fn provider_supports_capabilities(
     provider_capabilities: &ProviderConfig,
     needed_capabilities: &ProviderConfig,
 ) -> bool {
-    provider_capabilities.max_security_level >= needed_capabilities.max_security_level
-        && provider_capabilities.min_security_level <= needed_capabilities.min_security_level
+    provider_capabilities.max_security_level <= needed_capabilities.max_security_level
+        && provider_capabilities.min_security_level >= needed_capabilities.min_security_level
         && needed_capabilities
             .supported_asym_spec
             .is_subset(&provider_capabilities.supported_asym_spec)
@@ -40,13 +38,17 @@ fn provider_supports_capabilities(
 ///
 /// # Example
 /// ```
+/// use std::collections::HashSet;
+///
+/// use async_std::task::block_on;
+///
 /// use crypto_layer::common::{
 ///     config::*,
 ///     factory::*,
 /// };
 ///
 /// fn main() {
-///     let specific_provider_config = vec![ProviderImplConfig::Stub {}, ProviderImplConfig::Android {}];
+///     let specific_provider_config = vec![ProviderImplConfig::Stub {}];
 ///     let provider_config = ProviderConfig {
 ///        min_security_level: SecurityLevel::Software,
 ///        max_security_level: SecurityLevel::Hardware,
@@ -54,7 +56,7 @@ fn provider_supports_capabilities(
 ///        supported_ciphers: HashSet::new(),
 ///        supported_hashes: HashSet::new(),
 ///     };
-///     let provider = create_provider(provider_config, specific_provider_config).unwrap();
+///     let provider = block_on(create_provider(provider_config, specific_provider_config)).unwrap();
 /// }
 /// ```
 pub async fn create_provider(
