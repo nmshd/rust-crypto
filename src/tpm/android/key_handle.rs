@@ -110,6 +110,10 @@ impl KeyHandleImpl for AndroidKeyHandle {
     async fn extract_key(&self) -> Result<Vec<u8>, SecurityModuleError> {
         todo!()
     }
+
+    fn id(&self) -> Result<String, SecurityModuleError> {
+        Ok(self.key_id.clone())
+    }
 }
 
 #[async_trait]
@@ -261,5 +265,9 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
 
     fn start_dh_exchange(&self) -> Result<DHExchange, SecurityModuleError> {
         todo!()
+    }
+
+    fn id(&self) -> Result<String, SecurityModuleError> {
+        Ok(self.key_id.clone())
     }
 }

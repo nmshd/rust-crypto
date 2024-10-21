@@ -12,8 +12,13 @@ use crate::stub::StubProviderFactory;
 #[cfg(feature = "android")]
 use crate::tpm::android::provider::AndroidProviderFactory;
 
-static ALL_PROVIDERS: Lazy<Vec<Box<dyn ProviderFactory>>> =
-    Lazy::new(|| vec![Box::new(StubProviderFactory {})]);
+static ALL_PROVIDERS: Lazy<Vec<Box<dyn ProviderFactory>>> = Lazy::new(|| {
+    vec![
+        #[cfg(feature = "android")]
+        Box::new(AndroidProviderFactory {}),
+        Box::new(StubProviderFactory {}),
+    ]
+});
 
 #[cfg_attr(feature = "flutter", frb(non_opaque))]
 fn provider_supports_capabilities(
