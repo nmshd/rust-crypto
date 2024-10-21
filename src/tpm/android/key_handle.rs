@@ -24,15 +24,18 @@ use crate::{
 };
 use async_std::sync::Mutex;
 use async_trait::async_trait;
+use flutter_rust_bridge::frb;
 use robusta_jni::jni::{objects::JObject, JavaVM};
 use tracing::{debug, info, instrument};
 
+#[cfg_attr(feature = "flutter", frb(non_opaque))]
 pub(crate) struct AndroidKeyHandle {
     pub(crate) key_id: String,
     pub(crate) spec: KeySpec,
     pub(crate) java_vm: Arc<Mutex<JavaVM>>,
 }
 
+#[cfg_attr(feature = "flutter", frb(non_opaque))]
 pub(crate) struct AndroidKeyPairHandle {
     pub(crate) key_id: String,
     pub(crate) spec: KeyPairSpec,
@@ -40,6 +43,7 @@ pub(crate) struct AndroidKeyPairHandle {
 }
 
 #[async_trait]
+#[cfg_attr(feature = "flutter", frb(non_opaque))]
 impl KeyHandleImpl for AndroidKeyHandle {
     async fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         info!("encrypting");
@@ -109,6 +113,7 @@ impl KeyHandleImpl for AndroidKeyHandle {
 }
 
 #[async_trait]
+#[cfg_attr(feature = "flutter", frb(non_opaque))]
 impl KeyPairHandleImpl for AndroidKeyPairHandle {
     async fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         info!("signing");

@@ -1,5 +1,3 @@
-use std::{collections::HashSet, fmt::Debug, sync::Arc};
-
 use crate::tpm::android::android_logger::setup_logging;
 use crate::{
     common::{
@@ -24,12 +22,16 @@ use crate::{
 };
 use async_std::sync::Mutex;
 use async_trait::async_trait;
+use flutter_rust_bridge::frb;
 use robusta_jni::jni::JavaVM;
+use std::{collections::HashSet, fmt::Debug, sync::Arc};
 use tracing::{debug, info, instrument};
 
-pub(crate) struct AndroidProviderFactory;
+#[cfg_attr(feature = "flutter", frb(non_opaque))]
+pub(crate) struct AndroidProviderFactory {}
 
 #[async_trait]
+#[cfg_attr(feature = "flutter", frb(non_opaque))]
 impl ProviderFactory for AndroidProviderFactory {
     fn get_name(&self) -> String {
         "AndroidProvider".to_owned()
@@ -68,6 +70,7 @@ impl ProviderFactory for AndroidProviderFactory {
 /// for operations like signing, encryption, and decryption.
 /// It provides a secure and hardware-backed solution for managing cryptographic keys and performing
 /// cryptographic operations on Android.
+#[cfg_attr(feature = "flutter", frb(non_opaque))]
 pub(crate) struct AndroidProvider {
     java_vm: Arc<Mutex<JavaVM>>,
 }
@@ -85,6 +88,7 @@ impl Debug for AndroidProvider {
 /// This struct provides methods for key generation, key loading, and module initialization
 /// specific to Android.
 #[async_trait]
+#[cfg_attr(feature = "flutter", frb(non_opaque))]
 impl ProviderImpl for AndroidProvider {
     #[instrument]
     async fn create_key(&mut self, spec: KeySpec) -> Result<KeyHandle, SecurityModuleError> {

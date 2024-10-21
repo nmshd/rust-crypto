@@ -1,6 +1,6 @@
-use async_trait::async_trait;
-
 use crate::common::{error::SecurityModuleError, DHExchange};
+use async_trait::async_trait;
+use flutter_rust_bridge::frb;
 
 /// Defines a common interface for cryptographic key operations.
 ///
@@ -9,8 +9,8 @@ use crate::common::{error::SecurityModuleError, DHExchange};
 /// modules that manage cryptographic keys, ensuring a consistent interface for key
 /// operations across different types of security modules. Implementors of this trait
 /// must ensure thread safety.
-
 #[async_trait]
+#[cfg_attr(feature = "flutter", frb(non_opaque))]
 pub trait KeyHandleImpl: Send + Sync {
     /// Encrypts the given data using the cryptographic key.
     ///
@@ -34,6 +34,7 @@ pub trait KeyHandleImpl: Send + Sync {
 }
 
 #[async_trait]
+#[cfg_attr(feature = "flutter", frb(non_opaque))]
 pub trait KeyPairHandleImpl: Send + Sync {
     /// Signs the given data using the cryptographic key.
     ///
@@ -82,6 +83,7 @@ pub trait KeyPairHandleImpl: Send + Sync {
 }
 
 #[async_trait]
+#[cfg_attr(feature = "flutter", frb(non_opaque))]
 pub trait DHKeyExchangeImpl: Send + Sync {
     /// Get the public key of the internal key pair to use for the other party
     async fn get_public_key(&self) -> Result<Vec<u8>, SecurityModuleError>;

@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use flutter_rust_bridge::{frb, RustAutoOpaqueNom};
 use once_cell::sync::Lazy;
 
 use super::{
@@ -14,6 +15,7 @@ use crate::tpm::android::provider::AndroidProviderFactory;
 static ALL_PROVIDERS: Lazy<Vec<Box<dyn ProviderFactory>>> =
     Lazy::new(|| vec![Box::new(StubProviderFactory {})]);
 
+#[cfg_attr(feature = "flutter", frb(non_opaque))]
 fn provider_supports_capabilities(
     provider_capabilities: &ProviderConfig,
     needed_capabilities: &ProviderConfig,
@@ -57,6 +59,7 @@ fn provider_supports_capabilities(
 ///     let provider = create_provider(provider_config, specific_provider_config).unwrap();
 /// }
 /// ```
+// #[cfg_attr(feature = "flutter", frb)]
 pub async fn create_provider(
     conf: ProviderConfig,
     impl_conf_vec: Vec<ProviderImplConfig>,
@@ -69,6 +72,11 @@ pub async fn create_provider(
         };
         let provider_caps = provider.get_capabilities(config.clone()).await;
         if provider_supports_capabilities(&provider_caps, &conf) {
+            #[cfg(feature = "flutter")]
+            return Some(Provider {
+                implementation: RustAutoOpaqueNom::new(provider.create_provider(config).await),
+            });
+            #[cfg(not(feature = "flutter"))]
             return Some(Provider {
                 implementation: provider.create_provider(config).await,
             });
@@ -81,12 +89,18 @@ pub async fn create_provider(
 ///
 /// * `name` - Name of the provider. See `get_name()`.
 /// * `impl_config` - Specif configuration for said provider.
+// #[cfg_attr(feature = "flutter", frb(non_opaque))]
 pub async fn create_provider_from_name(
     name: String,
     impl_conf: ProviderImplConfig,
 ) -> Option<Provider> {
     for provider in ALL_PROVIDERS.iter() {
         if provider.get_name() == name {
+            #[cfg(feature = "flutter")]
+            return Some(Provider {
+                implementation: RustAutoOpaqueNom::new(provider.create_provider(impl_conf).await),
+            });
+            #[cfg(not(feature = "flutter"))]
             return Some(Provider {
                 implementation: provider.create_provider(impl_conf).await,
             });

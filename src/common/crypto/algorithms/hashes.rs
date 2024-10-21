@@ -1,3 +1,5 @@
+use flutter_rust_bridge::frb;
+
 /// Represents the available hashing algorithms.
 ///
 /// This enum provides a C-compatible representation of various hashing algorithms,
@@ -9,6 +11,7 @@
 /// Prefer using more secure algorithms like SHA-2 or SHA-3 for cryptographic purposes.
 #[repr(C)]
 #[derive(Clone, Debug, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "flutter", frb(non_opaque))]
 pub enum CryptoHash {
     /// SHA-1 hashing algorithm.
     ///

@@ -1,8 +1,10 @@
 #![allow(unused)]
 #![allow(dead_code)]
 
+use async_std::task::block_on;
 use config::{KeyPairSpec, KeySpec};
 use error::SecurityModuleError;
+use flutter_rust_bridge::{frb, RustAutoOpaqueNom};
 use traits::key_handle::{DHKeyExchangeImpl, KeyHandleImpl, KeyPairHandleImpl};
 use traits::module_provider::ProviderImpl;
 
@@ -23,7 +25,7 @@ macro_rules! delegate {
     ($(pub async fn $method:ident(&mut self $(,$arg:ident: $type:ty)* $(,)?) $(-> $ret:ty)?;)+) => {
         $(
             pub async fn $method(&mut self $(,$arg: $type)*) $(-> $ret)? {
-                self.implementation.$method($($arg),*).await
+                self.implementation.write().await.$method($($arg),*).await
             }
         )+
     };
@@ -34,17 +36,18 @@ macro_rules! delegate {
 /// [Provider] abstracts hardware, software and network based keystores.
 /// [Provider] itself is a wrapper around the structs which implement [ProviderImpl].
 /// This is done for compatibility with other programming languages (mainly dart).
+#[cfg_attr(feature = "flutter", frb(opaque))]
 pub struct Provider {
-    pub(crate) implementation: Box<dyn ProviderImpl>,
+    pub implementation: RustAutoOpaqueNom<Box<dyn ProviderImpl>>,
 }
 
 impl Provider {
     pub async fn create_key(&mut self, spec: KeySpec) -> Result<KeyHandle, SecurityModuleError> {
-        self.implementation.create_key(spec).await
+        self.implementation.write().await.create_key(spec).await
     }
 
     pub async fn load_key(&mut self, id: String) -> Result<KeyHandle, SecurityModuleError> {
-        self.implementation.load_key(id).await
+        self.implementation.write().await.load_key(id).await
     }
 
     delegate! {
@@ -88,12 +91,13 @@ impl Provider {
     }
 
     pub fn provider_name(&self) -> String {
-        self.implementation.provider_name()
+        block_on(self.implementation.write()).provider_name()
     }
 }
 
+#[cfg_attr(feature = "flutter", frb(non_opaque))]
 pub struct KeyPairHandle {
-    pub(crate) implementation: Box<dyn KeyPairHandleImpl>,
+    pub implementation: Box<dyn KeyPairHandleImpl>,
 }
 
 /// Abstraction of asymmetric key pair handles.
@@ -121,6 +125,7 @@ impl KeyPairHandle {
     }
 }
 
+#[cfg_attr(feature = "flutter", frb(non_opaque))]
 pub struct KeyHandle {
     pub(crate) implementation: Box<dyn KeyHandleImpl>,
 }
@@ -140,6 +145,7 @@ impl KeyHandle {
     }
 }
 
+#[cfg_attr(feature = "flutter", frb(non_opaque))]
 pub struct DHExchange {
     pub(crate) implementation: Box<dyn DHKeyExchangeImpl>,
 }

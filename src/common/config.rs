@@ -2,6 +2,7 @@ use async_std::sync::Mutex;
 use std::cmp::{Eq, Ord, PartialEq, PartialOrd};
 use std::collections::HashSet;
 use std::sync::Arc;
+use flutter_rust_bridge::frb;
 
 #[cfg(feature = "android")]
 use robusta_jni::jni::JavaVM;
@@ -18,6 +19,7 @@ use super::crypto::algorithms::{
 /// * [SecurityLevel::Network]: Provider uses a network key store (Hashicorp).
 /// * [SecurityLevel::Unsafe]: Provder uses software fallback.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "flutter", frb(non_opaque))]
 pub enum SecurityLevel {
     /// Highest security level
     Hardware = 4,
@@ -27,12 +29,14 @@ pub enum SecurityLevel {
 }
 
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "flutter", frb(non_opaque))]
 pub struct KeySpec {
     pub cipher: Cipher,
     pub signing_hash: CryptoHash,
 }
 
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "flutter", frb(non_opaque))]
 pub struct KeyPairSpec {
     pub asym_spec: AsymmetricKeySpec,
     pub cipher: Option<Cipher>,
@@ -40,6 +44,7 @@ pub struct KeyPairSpec {
 }
 
 #[derive(Clone, Debug)]
+#[cfg_attr(feature = "flutter", frb(non_opaque))]
 pub struct ProviderConfig {
     pub max_security_level: SecurityLevel,
     pub min_security_level: SecurityLevel,
@@ -49,6 +54,7 @@ pub struct ProviderConfig {
 }
 
 #[derive(Clone)]
+#[cfg_attr(feature = "flutter", frb(opaque))]
 pub enum ProviderImplConfig {
     #[cfg(feature = "android")]
     Android {

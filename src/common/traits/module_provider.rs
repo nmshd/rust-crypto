@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use flutter_rust_bridge::frb;
 
 use crate::common::{
     config::{KeyPairSpec, KeySpec, ProviderConfig, ProviderImplConfig},
@@ -7,6 +8,7 @@ use crate::common::{
 };
 
 #[async_trait]
+#[cfg_attr(feature = "flutter", frb(non_opaque))]
 pub trait ProviderFactory: Send + Sync {
     fn get_name(&self) -> String;
 
@@ -22,6 +24,7 @@ pub trait ProviderFactory: Send + Sync {
 /// This trait encapsulates operations related to cryptographic key creation and storage. It ensures a unified approach to interacting with different types
 /// of security modules.
 #[async_trait]
+#[cfg_attr(feature = "flutter", frb(non_opaque))]
 pub trait ProviderImpl: Send + Sync {
     /// Creates a new symmetric key identified by `key_id`.
     ///

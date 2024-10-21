@@ -4,6 +4,7 @@
 use std::{collections::HashSet, hash::Hash};
 
 use async_trait::async_trait;
+use flutter_rust_bridge::frb;
 
 use crate::common::{
     config::{KeyPairSpec, KeySpec, ProviderConfig, ProviderImplConfig, SecurityLevel},
@@ -17,6 +18,7 @@ use crate::common::{
 
 const PROVIDER_NAME: &str = "STUB_PROVIDER";
 
+#[cfg_attr(feature = "flutter", frb(opaque))]
 pub struct StubProviderFactory {}
 
 #[async_trait]
@@ -40,6 +42,7 @@ impl ProviderFactory for StubProviderFactory {
     }
 }
 
+#[cfg_attr(feature = "flutter", frb(opaque))]
 pub struct StubProvider {}
 
 #[async_trait]
@@ -57,7 +60,7 @@ impl ProviderImpl for StubProvider {
         spec: KeyPairSpec,
     ) -> Result<KeyPairHandle, SecurityModuleError> {
         Ok(KeyPairHandle {
-            implementation: Box::new(StubKeyPairHandle),
+            implementation: Box::new(StubKeyPairHandle {}),
         })
     }
 
@@ -102,7 +105,8 @@ impl ProviderImpl for StubProvider {
     }
 }
 
-struct StubKeyPairHandle;
+#[cfg_attr(feature = "flutter", frb(opaque))]
+struct StubKeyPairHandle {}
 
 #[async_trait]
 impl KeyPairHandleImpl for StubKeyPairHandle {

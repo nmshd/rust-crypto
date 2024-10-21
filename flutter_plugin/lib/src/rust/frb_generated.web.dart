@@ -6,12 +6,24 @@
 // Static analysis wrongly picks the IO variant, thus ignore this
 // ignore_for_file: argument_type_not_assignable
 
-import 'api/crypto.dart';
-import 'api/simple.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'frb_generated.dart';
+import 'lib.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_web.dart';
+import 'third_party/crypto_layer/common.dart';
+import 'third_party/crypto_layer/common/config.dart';
+import 'third_party/crypto_layer/common/crypto/algorithms.dart';
+import 'third_party/crypto_layer/common/crypto/algorithms/encryption.dart';
+import 'third_party/crypto_layer/common/crypto/algorithms/hashes.dart';
+import 'third_party/crypto_layer/common/crypto/pkcs/standards.dart';
+import 'third_party/crypto_layer/common/error.dart';
+import 'third_party/crypto_layer/common/factory.dart';
+import 'third_party/crypto_layer/common/traits/key_handle.dart';
+import 'third_party/crypto_layer/common/traits/module_provider.dart';
+import 'third_party/crypto_layer/stub.dart';
+import 'third_party/crypto_layer/tpm/android/wrapper/key_store/cipher/jni.dart';
+import 'third_party/crypto_layer/tpm/core/error.dart';
 
 abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   RustLibApiImplPlatform({
@@ -22,19 +34,108 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   });
 
   CrossPlatformFinalizerArg
-      get rust_arc_decrement_strong_count_KeyPairHandlePtr => wire
-          .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle;
+      get rust_arc_decrement_strong_count_BoxProviderImplPtr => wire
+          .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBoxdynProviderImpl;
+
+  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_AutoLocalPtr =>
+      wire.rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLifetimeableAutoLocalstaticstatic;
+
+  CrossPlatformFinalizerArg
+      get rust_arc_decrement_strong_count_PinBoxFutureOutputBoxProviderImplAsyncTraitPtr =>
+          wire.rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputBoxdynProviderImplSendasync_trait;
+
+  CrossPlatformFinalizerArg
+      get rust_arc_decrement_strong_count_PinBoxFutureOutputProviderConfigAsyncTraitPtr =>
+          wire.rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputProviderConfigSendasync_trait;
+
+  CrossPlatformFinalizerArg
+      get rust_arc_decrement_strong_count_PinBoxFutureOutputResultBoxKeyHandleImplSecurityModuleErrorAsyncTraitPtr =>
+          wire.rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultBoxdynKeyHandleImplSecurityModuleErrorSendasync_trait;
+
+  CrossPlatformFinalizerArg
+      get rust_arc_decrement_strong_count_PinBoxFutureOutputResultDhExchangeSecurityModuleErrorAsyncTraitPtr =>
+          wire.rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultDHExchangeSecurityModuleErrorSendasync_trait;
+
+  CrossPlatformFinalizerArg
+      get rust_arc_decrement_strong_count_PinBoxFutureOutputResultKeyHandleSecurityModuleErrorAsyncTraitPtr =>
+          wire.rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultKeyHandleSecurityModuleErrorSendasync_trait;
+
+  CrossPlatformFinalizerArg
+      get rust_arc_decrement_strong_count_PinBoxFutureOutputResultKeyPairHandleSecurityModuleErrorAsyncTraitPtr =>
+          wire.rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultKeyPairHandleSecurityModuleErrorSendasync_trait;
+
+  CrossPlatformFinalizerArg
+      get rust_arc_decrement_strong_count_PinBoxFutureOutputResultVecU8SecurityModuleErrorAsyncTraitPtr =>
+          wire.rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultVecu8SecurityModuleErrorSendasync_trait;
 
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_ProviderPtr => wire
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider;
 
   CrossPlatformFinalizerArg
+      get rust_arc_decrement_strong_count_ProviderImplConfigPtr => wire
+          .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplConfig;
+
+  CrossPlatformFinalizerArg
       get rust_arc_decrement_strong_count_SecurityModuleErrorPtr => wire
           .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSecurityModuleError;
 
+  CrossPlatformFinalizerArg
+      get rust_arc_decrement_strong_count_StubProviderPtr => wire
+          .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStubProvider;
+
+  CrossPlatformFinalizerArg
+      get rust_arc_decrement_strong_count_StubProviderFactoryPtr => wire
+          .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStubProviderFactory;
+
+  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_TPtr => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerT;
+
+  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_TpmErrorPtr => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTpmError;
+
   @protected
-  KeyPairHandle
-      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle(
+  BoxProviderImpl
+      dco_decode_AutoExplicit_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBoxdynProviderImpl(
+          dynamic raw);
+
+  @protected
+  AutoLocal
+      dco_decode_AutoExplicit_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLifetimeableAutoLocalstaticstatic(
+          dynamic raw);
+
+  @protected
+  PinBoxFutureOutputBoxProviderImplAsyncTrait
+      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputBoxdynProviderImplSendasync_trait(
+          dynamic raw);
+
+  @protected
+  PinBoxFutureOutputProviderConfigAsyncTrait
+      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputProviderConfigSendasync_trait(
+          dynamic raw);
+
+  @protected
+  PinBoxFutureOutputResultBoxKeyHandleImplSecurityModuleErrorAsyncTrait
+      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultBoxdynKeyHandleImplSecurityModuleErrorSendasync_trait(
+          dynamic raw);
+
+  @protected
+  PinBoxFutureOutputResultDhExchangeSecurityModuleErrorAsyncTrait
+      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultDHExchangeSecurityModuleErrorSendasync_trait(
+          dynamic raw);
+
+  @protected
+  PinBoxFutureOutputResultKeyHandleSecurityModuleErrorAsyncTrait
+      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultKeyHandleSecurityModuleErrorSendasync_trait(
+          dynamic raw);
+
+  @protected
+  PinBoxFutureOutputResultKeyPairHandleSecurityModuleErrorAsyncTrait
+      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultKeyPairHandleSecurityModuleErrorSendasync_trait(
+          dynamic raw);
+
+  @protected
+  PinBoxFutureOutputResultVecU8SecurityModuleErrorAsyncTrait
+      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultVecu8SecurityModuleErrorSendasync_trait(
           dynamic raw);
 
   @protected
@@ -43,8 +144,32 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
           dynamic raw);
 
   @protected
+  ProviderImplConfig
+      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplConfig(
+          dynamic raw);
+
+  @protected
   SecurityModuleError
       dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSecurityModuleError(
+          dynamic raw);
+
+  @protected
+  StubProvider
+      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStubProvider(
+          dynamic raw);
+
+  @protected
+  StubProviderFactory
+      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStubProviderFactory(
+          dynamic raw);
+
+  @protected
+  T dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerT(
+      dynamic raw);
+
+  @protected
+  TpmError
+      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTpmError(
           dynamic raw);
 
   @protected
@@ -53,13 +178,87 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
           dynamic raw);
 
   @protected
-  KeyPairHandle
-      dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle(
+  StubProvider
+      dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStubProvider(
           dynamic raw);
 
   @protected
-  KeyPairHandle
-      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle(
+  Provider
+      dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
+          dynamic raw);
+
+  @protected
+  StubProvider
+      dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStubProvider(
+          dynamic raw);
+
+  @protected
+  StubProviderFactory
+      dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStubProviderFactory(
+          dynamic raw);
+
+  @protected
+  TpmError
+      dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTpmError(
+          dynamic raw);
+
+  @protected
+  DHKeyExchangeImpl dco_decode_DynTrait_DHKeyExchangeImpl(dynamic raw);
+
+  @protected
+  KeyHandleImpl dco_decode_DynTrait_KeyHandleImpl(dynamic raw);
+
+  @protected
+  KeyPairHandleImpl dco_decode_DynTrait_KeyPairHandleImpl(dynamic raw);
+
+  @protected
+  AutoLocal
+      dco_decode_Lifetimeable_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAutoLocalstaticstatic(
+          dynamic raw);
+
+  @protected
+  BoxProviderImpl
+      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBoxdynProviderImpl(
+          dynamic raw);
+
+  @protected
+  AutoLocal
+      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLifetimeableAutoLocalstaticstatic(
+          dynamic raw);
+
+  @protected
+  PinBoxFutureOutputBoxProviderImplAsyncTrait
+      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputBoxdynProviderImplSendasync_trait(
+          dynamic raw);
+
+  @protected
+  PinBoxFutureOutputProviderConfigAsyncTrait
+      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputProviderConfigSendasync_trait(
+          dynamic raw);
+
+  @protected
+  PinBoxFutureOutputResultBoxKeyHandleImplSecurityModuleErrorAsyncTrait
+      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultBoxdynKeyHandleImplSecurityModuleErrorSendasync_trait(
+          dynamic raw);
+
+  @protected
+  PinBoxFutureOutputResultDhExchangeSecurityModuleErrorAsyncTrait
+      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultDHExchangeSecurityModuleErrorSendasync_trait(
+          dynamic raw);
+
+  @protected
+  PinBoxFutureOutputResultKeyHandleSecurityModuleErrorAsyncTrait
+      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultKeyHandleSecurityModuleErrorSendasync_trait(
+          dynamic raw);
+
+  @protected
+  PinBoxFutureOutputResultKeyPairHandleSecurityModuleErrorAsyncTrait
+      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultKeyPairHandleSecurityModuleErrorSendasync_trait(
+          dynamic raw);
+
+  @protected
+  PinBoxFutureOutputResultVecU8SecurityModuleErrorAsyncTrait
+      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultVecu8SecurityModuleErrorSendasync_trait(
           dynamic raw);
 
   @protected
@@ -68,21 +267,191 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
           dynamic raw);
 
   @protected
+  ProviderImplConfig
+      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplConfig(
+          dynamic raw);
+
+  @protected
   SecurityModuleError
       dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSecurityModuleError(
           dynamic raw);
 
   @protected
+  StubProvider
+      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStubProvider(
+          dynamic raw);
+
+  @protected
+  StubProviderFactory
+      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStubProviderFactory(
+          dynamic raw);
+
+  @protected
+  T dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerT(
+      dynamic raw);
+
+  @protected
+  TpmError
+      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTpmError(
+          dynamic raw);
+
+  @protected
+  Set<AsymmetricKeySpec> dco_decode_Set_asymmetric_key_spec(dynamic raw);
+
+  @protected
+  Set<Cipher> dco_decode_Set_cipher(dynamic raw);
+
+  @protected
+  Set<CryptoHash> dco_decode_Set_crypto_hash(dynamic raw);
+
+  @protected
   String dco_decode_String(dynamic raw);
 
   @protected
+  DHKeyExchangeImpl dco_decode_TraitDef_DHKeyExchangeImpl(dynamic raw);
+
+  @protected
+  KeyHandleImpl dco_decode_TraitDef_KeyHandleImpl(dynamic raw);
+
+  @protected
+  KeyPairHandleImpl dco_decode_TraitDef_KeyPairHandleImpl(dynamic raw);
+
+  @protected
+  ProviderFactory dco_decode_TraitDef_ProviderFactory(dynamic raw);
+
+  @protected
+  ProviderImpl dco_decode_TraitDef_ProviderImpl(dynamic raw);
+
+  @protected
+  ToTpmError dco_decode_TraitDef_ToTpmError(dynamic raw);
+
+  @protected
+  AsymmetricKeySpec dco_decode_asymmetric_key_spec(dynamic raw);
+
+  @protected
   bool dco_decode_bool(dynamic raw);
+
+  @protected
+  DHKeyExchangeImpl dco_decode_box_DynTrait_DHKeyExchangeImpl(dynamic raw);
+
+  @protected
+  KeyHandleImpl dco_decode_box_DynTrait_KeyHandleImpl(dynamic raw);
+
+  @protected
+  KeyPairHandleImpl dco_decode_box_DynTrait_KeyPairHandleImpl(dynamic raw);
+
+  @protected
+  Provider
+      dco_decode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
+          dynamic raw);
+
+  @protected
+  Cipher dco_decode_box_autoadd_cipher(dynamic raw);
+
+  @protected
+  KeyHandle dco_decode_box_autoadd_key_handle(dynamic raw);
+
+  @protected
+  KeyPairHandle dco_decode_box_autoadd_key_pair_handle(dynamic raw);
+
+  @protected
+  KeyPairSpec dco_decode_box_autoadd_key_pair_spec(dynamic raw);
+
+  @protected
+  KeySpec dco_decode_box_autoadd_key_spec(dynamic raw);
+
+  @protected
+  ProviderConfig dco_decode_box_autoadd_provider_config(dynamic raw);
+
+  @protected
+  Cipher dco_decode_cipher(dynamic raw);
+
+  @protected
+  CryptoHash dco_decode_crypto_hash(dynamic raw);
+
+  @protected
+  DHExchange dco_decode_dh_exchange(dynamic raw);
+
+  @protected
+  DHKeyExchangeImplImplementor dco_decode_dh_key_exchange_impl_implementor(
+      dynamic raw);
+
+  @protected
+  EccCurve dco_decode_ecc_curve(dynamic raw);
+
+  @protected
+  EccSigningScheme dco_decode_ecc_signing_scheme(dynamic raw);
+
+  @protected
+  int dco_decode_i_32(dynamic raw);
+
+  @protected
+  KeyBits dco_decode_key_bits(dynamic raw);
+
+  @protected
+  KeyHandle dco_decode_key_handle(dynamic raw);
+
+  @protected
+  KeyHandleImplImplementor dco_decode_key_handle_impl_implementor(dynamic raw);
+
+  @protected
+  KeyPairHandle dco_decode_key_pair_handle(dynamic raw);
+
+  @protected
+  KeyPairHandleImplImplementor dco_decode_key_pair_handle_impl_implementor(
+      dynamic raw);
+
+  @protected
+  KeyPairSpec dco_decode_key_pair_spec(dynamic raw);
+
+  @protected
+  KeySpec dco_decode_key_spec(dynamic raw);
+
+  @protected
+  List<ProviderImplConfig>
+      dco_decode_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplConfig(
+          dynamic raw);
+
+  @protected
+  List<AsymmetricKeySpec> dco_decode_list_asymmetric_key_spec(dynamic raw);
+
+  @protected
+  List<Cipher> dco_decode_list_cipher(dynamic raw);
+
+  @protected
+  List<CryptoHash> dco_decode_list_crypto_hash(dynamic raw);
 
   @protected
   List<int> dco_decode_list_prim_u_8_loose(dynamic raw);
 
   @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
+
+  @protected
+  OidType dco_decode_oid_type(dynamic raw);
+
+  @protected
+  Provider?
+      dco_decode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
+          dynamic raw);
+
+  @protected
+  Cipher? dco_decode_opt_box_autoadd_cipher(dynamic raw);
+
+  @protected
+  ProviderConfig dco_decode_provider_config(dynamic raw);
+
+  @protected
+  SecurityLevel dco_decode_security_level(dynamic raw);
+
+  @protected
+  Sha2Bits dco_decode_sha_2_bits(dynamic raw);
+
+  @protected
+  Sha3Bits dco_decode_sha_3_bits(dynamic raw);
+
+  @protected
+  SymmetricMode dco_decode_symmetric_mode(dynamic raw);
 
   @protected
   int dco_decode_u_8(dynamic raw);
@@ -94,8 +463,48 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BigInt dco_decode_usize(dynamic raw);
 
   @protected
-  KeyPairHandle
-      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle(
+  BoxProviderImpl
+      sse_decode_AutoExplicit_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBoxdynProviderImpl(
+          SseDeserializer deserializer);
+
+  @protected
+  AutoLocal
+      sse_decode_AutoExplicit_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLifetimeableAutoLocalstaticstatic(
+          SseDeserializer deserializer);
+
+  @protected
+  PinBoxFutureOutputBoxProviderImplAsyncTrait
+      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputBoxdynProviderImplSendasync_trait(
+          SseDeserializer deserializer);
+
+  @protected
+  PinBoxFutureOutputProviderConfigAsyncTrait
+      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputProviderConfigSendasync_trait(
+          SseDeserializer deserializer);
+
+  @protected
+  PinBoxFutureOutputResultBoxKeyHandleImplSecurityModuleErrorAsyncTrait
+      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultBoxdynKeyHandleImplSecurityModuleErrorSendasync_trait(
+          SseDeserializer deserializer);
+
+  @protected
+  PinBoxFutureOutputResultDhExchangeSecurityModuleErrorAsyncTrait
+      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultDHExchangeSecurityModuleErrorSendasync_trait(
+          SseDeserializer deserializer);
+
+  @protected
+  PinBoxFutureOutputResultKeyHandleSecurityModuleErrorAsyncTrait
+      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultKeyHandleSecurityModuleErrorSendasync_trait(
+          SseDeserializer deserializer);
+
+  @protected
+  PinBoxFutureOutputResultKeyPairHandleSecurityModuleErrorAsyncTrait
+      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultKeyPairHandleSecurityModuleErrorSendasync_trait(
+          SseDeserializer deserializer);
+
+  @protected
+  PinBoxFutureOutputResultVecU8SecurityModuleErrorAsyncTrait
+      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultVecu8SecurityModuleErrorSendasync_trait(
           SseDeserializer deserializer);
 
   @protected
@@ -104,8 +513,32 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
           SseDeserializer deserializer);
 
   @protected
+  ProviderImplConfig
+      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplConfig(
+          SseDeserializer deserializer);
+
+  @protected
   SecurityModuleError
       sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSecurityModuleError(
+          SseDeserializer deserializer);
+
+  @protected
+  StubProvider
+      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStubProvider(
+          SseDeserializer deserializer);
+
+  @protected
+  StubProviderFactory
+      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStubProviderFactory(
+          SseDeserializer deserializer);
+
+  @protected
+  T sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerT(
+      SseDeserializer deserializer);
+
+  @protected
+  TpmError
+      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTpmError(
           SseDeserializer deserializer);
 
   @protected
@@ -114,13 +547,89 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
           SseDeserializer deserializer);
 
   @protected
-  KeyPairHandle
-      sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle(
+  StubProvider
+      sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStubProvider(
           SseDeserializer deserializer);
 
   @protected
-  KeyPairHandle
-      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle(
+  Provider
+      sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
+          SseDeserializer deserializer);
+
+  @protected
+  StubProvider
+      sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStubProvider(
+          SseDeserializer deserializer);
+
+  @protected
+  StubProviderFactory
+      sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStubProviderFactory(
+          SseDeserializer deserializer);
+
+  @protected
+  TpmError
+      sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTpmError(
+          SseDeserializer deserializer);
+
+  @protected
+  DHKeyExchangeImpl sse_decode_DynTrait_DHKeyExchangeImpl(
+      SseDeserializer deserializer);
+
+  @protected
+  KeyHandleImpl sse_decode_DynTrait_KeyHandleImpl(SseDeserializer deserializer);
+
+  @protected
+  KeyPairHandleImpl sse_decode_DynTrait_KeyPairHandleImpl(
+      SseDeserializer deserializer);
+
+  @protected
+  AutoLocal
+      sse_decode_Lifetimeable_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAutoLocalstaticstatic(
+          SseDeserializer deserializer);
+
+  @protected
+  BoxProviderImpl
+      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBoxdynProviderImpl(
+          SseDeserializer deserializer);
+
+  @protected
+  AutoLocal
+      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLifetimeableAutoLocalstaticstatic(
+          SseDeserializer deserializer);
+
+  @protected
+  PinBoxFutureOutputBoxProviderImplAsyncTrait
+      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputBoxdynProviderImplSendasync_trait(
+          SseDeserializer deserializer);
+
+  @protected
+  PinBoxFutureOutputProviderConfigAsyncTrait
+      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputProviderConfigSendasync_trait(
+          SseDeserializer deserializer);
+
+  @protected
+  PinBoxFutureOutputResultBoxKeyHandleImplSecurityModuleErrorAsyncTrait
+      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultBoxdynKeyHandleImplSecurityModuleErrorSendasync_trait(
+          SseDeserializer deserializer);
+
+  @protected
+  PinBoxFutureOutputResultDhExchangeSecurityModuleErrorAsyncTrait
+      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultDHExchangeSecurityModuleErrorSendasync_trait(
+          SseDeserializer deserializer);
+
+  @protected
+  PinBoxFutureOutputResultKeyHandleSecurityModuleErrorAsyncTrait
+      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultKeyHandleSecurityModuleErrorSendasync_trait(
+          SseDeserializer deserializer);
+
+  @protected
+  PinBoxFutureOutputResultKeyPairHandleSecurityModuleErrorAsyncTrait
+      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultKeyPairHandleSecurityModuleErrorSendasync_trait(
+          SseDeserializer deserializer);
+
+  @protected
+  PinBoxFutureOutputResultVecU8SecurityModuleErrorAsyncTrait
+      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultVecu8SecurityModuleErrorSendasync_trait(
           SseDeserializer deserializer);
 
   @protected
@@ -129,21 +638,183 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
           SseDeserializer deserializer);
 
   @protected
+  ProviderImplConfig
+      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplConfig(
+          SseDeserializer deserializer);
+
+  @protected
   SecurityModuleError
       sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSecurityModuleError(
           SseDeserializer deserializer);
 
   @protected
+  StubProvider
+      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStubProvider(
+          SseDeserializer deserializer);
+
+  @protected
+  StubProviderFactory
+      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStubProviderFactory(
+          SseDeserializer deserializer);
+
+  @protected
+  T sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerT(
+      SseDeserializer deserializer);
+
+  @protected
+  TpmError
+      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTpmError(
+          SseDeserializer deserializer);
+
+  @protected
+  Set<AsymmetricKeySpec> sse_decode_Set_asymmetric_key_spec(
+      SseDeserializer deserializer);
+
+  @protected
+  Set<Cipher> sse_decode_Set_cipher(SseDeserializer deserializer);
+
+  @protected
+  Set<CryptoHash> sse_decode_Set_crypto_hash(SseDeserializer deserializer);
+
+  @protected
   String sse_decode_String(SseDeserializer deserializer);
 
   @protected
+  AsymmetricKeySpec sse_decode_asymmetric_key_spec(
+      SseDeserializer deserializer);
+
+  @protected
   bool sse_decode_bool(SseDeserializer deserializer);
+
+  @protected
+  DHKeyExchangeImpl sse_decode_box_DynTrait_DHKeyExchangeImpl(
+      SseDeserializer deserializer);
+
+  @protected
+  KeyHandleImpl sse_decode_box_DynTrait_KeyHandleImpl(
+      SseDeserializer deserializer);
+
+  @protected
+  KeyPairHandleImpl sse_decode_box_DynTrait_KeyPairHandleImpl(
+      SseDeserializer deserializer);
+
+  @protected
+  Provider
+      sse_decode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
+          SseDeserializer deserializer);
+
+  @protected
+  Cipher sse_decode_box_autoadd_cipher(SseDeserializer deserializer);
+
+  @protected
+  KeyHandle sse_decode_box_autoadd_key_handle(SseDeserializer deserializer);
+
+  @protected
+  KeyPairHandle sse_decode_box_autoadd_key_pair_handle(
+      SseDeserializer deserializer);
+
+  @protected
+  KeyPairSpec sse_decode_box_autoadd_key_pair_spec(
+      SseDeserializer deserializer);
+
+  @protected
+  KeySpec sse_decode_box_autoadd_key_spec(SseDeserializer deserializer);
+
+  @protected
+  ProviderConfig sse_decode_box_autoadd_provider_config(
+      SseDeserializer deserializer);
+
+  @protected
+  Cipher sse_decode_cipher(SseDeserializer deserializer);
+
+  @protected
+  CryptoHash sse_decode_crypto_hash(SseDeserializer deserializer);
+
+  @protected
+  DHExchange sse_decode_dh_exchange(SseDeserializer deserializer);
+
+  @protected
+  DHKeyExchangeImplImplementor sse_decode_dh_key_exchange_impl_implementor(
+      SseDeserializer deserializer);
+
+  @protected
+  EccCurve sse_decode_ecc_curve(SseDeserializer deserializer);
+
+  @protected
+  EccSigningScheme sse_decode_ecc_signing_scheme(SseDeserializer deserializer);
+
+  @protected
+  int sse_decode_i_32(SseDeserializer deserializer);
+
+  @protected
+  KeyBits sse_decode_key_bits(SseDeserializer deserializer);
+
+  @protected
+  KeyHandle sse_decode_key_handle(SseDeserializer deserializer);
+
+  @protected
+  KeyHandleImplImplementor sse_decode_key_handle_impl_implementor(
+      SseDeserializer deserializer);
+
+  @protected
+  KeyPairHandle sse_decode_key_pair_handle(SseDeserializer deserializer);
+
+  @protected
+  KeyPairHandleImplImplementor sse_decode_key_pair_handle_impl_implementor(
+      SseDeserializer deserializer);
+
+  @protected
+  KeyPairSpec sse_decode_key_pair_spec(SseDeserializer deserializer);
+
+  @protected
+  KeySpec sse_decode_key_spec(SseDeserializer deserializer);
+
+  @protected
+  List<ProviderImplConfig>
+      sse_decode_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplConfig(
+          SseDeserializer deserializer);
+
+  @protected
+  List<AsymmetricKeySpec> sse_decode_list_asymmetric_key_spec(
+      SseDeserializer deserializer);
+
+  @protected
+  List<Cipher> sse_decode_list_cipher(SseDeserializer deserializer);
+
+  @protected
+  List<CryptoHash> sse_decode_list_crypto_hash(SseDeserializer deserializer);
 
   @protected
   List<int> sse_decode_list_prim_u_8_loose(SseDeserializer deserializer);
 
   @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
+
+  @protected
+  OidType sse_decode_oid_type(SseDeserializer deserializer);
+
+  @protected
+  Provider?
+      sse_decode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
+          SseDeserializer deserializer);
+
+  @protected
+  Cipher? sse_decode_opt_box_autoadd_cipher(SseDeserializer deserializer);
+
+  @protected
+  ProviderConfig sse_decode_provider_config(SseDeserializer deserializer);
+
+  @protected
+  SecurityLevel sse_decode_security_level(SseDeserializer deserializer);
+
+  @protected
+  Sha2Bits sse_decode_sha_2_bits(SseDeserializer deserializer);
+
+  @protected
+  Sha3Bits sse_decode_sha_3_bits(SseDeserializer deserializer);
+
+  @protected
+  SymmetricMode sse_decode_symmetric_mode(SseDeserializer deserializer);
 
   @protected
   int sse_decode_u_8(SseDeserializer deserializer);
@@ -155,12 +826,58 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BigInt sse_decode_usize(SseDeserializer deserializer);
 
   @protected
-  int sse_decode_i_32(SseDeserializer deserializer);
+  void
+      sse_encode_AutoExplicit_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBoxdynProviderImpl(
+          BoxProviderImpl self, SseSerializer serializer);
 
   @protected
   void
-      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle(
-          KeyPairHandle self, SseSerializer serializer);
+      sse_encode_AutoExplicit_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLifetimeableAutoLocalstaticstatic(
+          AutoLocal self, SseSerializer serializer);
+
+  @protected
+  void
+      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputBoxdynProviderImplSendasync_trait(
+          PinBoxFutureOutputBoxProviderImplAsyncTrait self,
+          SseSerializer serializer);
+
+  @protected
+  void
+      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputProviderConfigSendasync_trait(
+          PinBoxFutureOutputProviderConfigAsyncTrait self,
+          SseSerializer serializer);
+
+  @protected
+  void
+      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultBoxdynKeyHandleImplSecurityModuleErrorSendasync_trait(
+          PinBoxFutureOutputResultBoxKeyHandleImplSecurityModuleErrorAsyncTrait
+              self,
+          SseSerializer serializer);
+
+  @protected
+  void
+      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultDHExchangeSecurityModuleErrorSendasync_trait(
+          PinBoxFutureOutputResultDhExchangeSecurityModuleErrorAsyncTrait self,
+          SseSerializer serializer);
+
+  @protected
+  void
+      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultKeyHandleSecurityModuleErrorSendasync_trait(
+          PinBoxFutureOutputResultKeyHandleSecurityModuleErrorAsyncTrait self,
+          SseSerializer serializer);
+
+  @protected
+  void
+      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultKeyPairHandleSecurityModuleErrorSendasync_trait(
+          PinBoxFutureOutputResultKeyPairHandleSecurityModuleErrorAsyncTrait
+              self,
+          SseSerializer serializer);
+
+  @protected
+  void
+      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultVecu8SecurityModuleErrorSendasync_trait(
+          PinBoxFutureOutputResultVecU8SecurityModuleErrorAsyncTrait self,
+          SseSerializer serializer);
 
   @protected
   void
@@ -169,8 +886,33 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
+      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplConfig(
+          ProviderImplConfig self, SseSerializer serializer);
+
+  @protected
+  void
       sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSecurityModuleError(
           SecurityModuleError self, SseSerializer serializer);
+
+  @protected
+  void
+      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStubProvider(
+          StubProvider self, SseSerializer serializer);
+
+  @protected
+  void
+      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStubProviderFactory(
+          StubProviderFactory self, SseSerializer serializer);
+
+  @protected
+  void
+      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerT(
+          T self, SseSerializer serializer);
+
+  @protected
+  void
+      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTpmError(
+          TpmError self, SseSerializer serializer);
 
   @protected
   void
@@ -179,13 +921,99 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
-      sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle(
-          KeyPairHandle self, SseSerializer serializer);
+      sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStubProvider(
+          StubProvider self, SseSerializer serializer);
 
   @protected
   void
-      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle(
-          KeyPairHandle self, SseSerializer serializer);
+      sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
+          Provider self, SseSerializer serializer);
+
+  @protected
+  void
+      sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStubProvider(
+          StubProvider self, SseSerializer serializer);
+
+  @protected
+  void
+      sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStubProviderFactory(
+          StubProviderFactory self, SseSerializer serializer);
+
+  @protected
+  void
+      sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTpmError(
+          TpmError self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_DynTrait_DHKeyExchangeImpl(
+      DHKeyExchangeImpl self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_DynTrait_KeyHandleImpl(
+      KeyHandleImpl self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_DynTrait_KeyPairHandleImpl(
+      KeyPairHandleImpl self, SseSerializer serializer);
+
+  @protected
+  void
+      sse_encode_Lifetimeable_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAutoLocalstaticstatic(
+          AutoLocal self, SseSerializer serializer);
+
+  @protected
+  void
+      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBoxdynProviderImpl(
+          BoxProviderImpl self, SseSerializer serializer);
+
+  @protected
+  void
+      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLifetimeableAutoLocalstaticstatic(
+          AutoLocal self, SseSerializer serializer);
+
+  @protected
+  void
+      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputBoxdynProviderImplSendasync_trait(
+          PinBoxFutureOutputBoxProviderImplAsyncTrait self,
+          SseSerializer serializer);
+
+  @protected
+  void
+      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputProviderConfigSendasync_trait(
+          PinBoxFutureOutputProviderConfigAsyncTrait self,
+          SseSerializer serializer);
+
+  @protected
+  void
+      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultBoxdynKeyHandleImplSecurityModuleErrorSendasync_trait(
+          PinBoxFutureOutputResultBoxKeyHandleImplSecurityModuleErrorAsyncTrait
+              self,
+          SseSerializer serializer);
+
+  @protected
+  void
+      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultDHExchangeSecurityModuleErrorSendasync_trait(
+          PinBoxFutureOutputResultDhExchangeSecurityModuleErrorAsyncTrait self,
+          SseSerializer serializer);
+
+  @protected
+  void
+      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultKeyHandleSecurityModuleErrorSendasync_trait(
+          PinBoxFutureOutputResultKeyHandleSecurityModuleErrorAsyncTrait self,
+          SseSerializer serializer);
+
+  @protected
+  void
+      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultKeyPairHandleSecurityModuleErrorSendasync_trait(
+          PinBoxFutureOutputResultKeyPairHandleSecurityModuleErrorAsyncTrait
+              self,
+          SseSerializer serializer);
+
+  @protected
+  void
+      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultVecu8SecurityModuleErrorSendasync_trait(
+          PinBoxFutureOutputResultVecU8SecurityModuleErrorAsyncTrait self,
+          SseSerializer serializer);
 
   @protected
   void
@@ -194,14 +1022,155 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
+      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplConfig(
+          ProviderImplConfig self, SseSerializer serializer);
+
+  @protected
+  void
       sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSecurityModuleError(
           SecurityModuleError self, SseSerializer serializer);
+
+  @protected
+  void
+      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStubProvider(
+          StubProvider self, SseSerializer serializer);
+
+  @protected
+  void
+      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStubProviderFactory(
+          StubProviderFactory self, SseSerializer serializer);
+
+  @protected
+  void
+      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerT(
+          T self, SseSerializer serializer);
+
+  @protected
+  void
+      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTpmError(
+          TpmError self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_Set_asymmetric_key_spec(
+      Set<AsymmetricKeySpec> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_Set_cipher(Set<Cipher> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_Set_crypto_hash(
+      Set<CryptoHash> self, SseSerializer serializer);
 
   @protected
   void sse_encode_String(String self, SseSerializer serializer);
 
   @protected
+  void sse_encode_asymmetric_key_spec(
+      AsymmetricKeySpec self, SseSerializer serializer);
+
+  @protected
   void sse_encode_bool(bool self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_DynTrait_DHKeyExchangeImpl(
+      DHKeyExchangeImpl self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_DynTrait_KeyHandleImpl(
+      KeyHandleImpl self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_DynTrait_KeyPairHandleImpl(
+      KeyPairHandleImpl self, SseSerializer serializer);
+
+  @protected
+  void
+      sse_encode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
+          Provider self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_cipher(Cipher self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_key_handle(
+      KeyHandle self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_key_pair_handle(
+      KeyPairHandle self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_key_pair_spec(
+      KeyPairSpec self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_key_spec(KeySpec self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_provider_config(
+      ProviderConfig self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_cipher(Cipher self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_crypto_hash(CryptoHash self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_dh_exchange(DHExchange self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_dh_key_exchange_impl_implementor(
+      DHKeyExchangeImplImplementor self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_ecc_curve(EccCurve self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_ecc_signing_scheme(
+      EccSigningScheme self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_i_32(int self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_key_bits(KeyBits self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_key_handle(KeyHandle self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_key_handle_impl_implementor(
+      KeyHandleImplImplementor self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_key_pair_handle(KeyPairHandle self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_key_pair_handle_impl_implementor(
+      KeyPairHandleImplImplementor self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_key_pair_spec(KeyPairSpec self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_key_spec(KeySpec self, SseSerializer serializer);
+
+  @protected
+  void
+      sse_encode_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplConfig(
+          List<ProviderImplConfig> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_asymmetric_key_spec(
+      List<AsymmetricKeySpec> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_cipher(List<Cipher> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_crypto_hash(
+      List<CryptoHash> self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_prim_u_8_loose(List<int> self, SseSerializer serializer);
@@ -211,6 +1180,34 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       Uint8List self, SseSerializer serializer);
 
   @protected
+  void sse_encode_oid_type(OidType self, SseSerializer serializer);
+
+  @protected
+  void
+      sse_encode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
+          Provider? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_cipher(
+      Cipher? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_provider_config(
+      ProviderConfig self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_security_level(SecurityLevel self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_sha_2_bits(Sha2Bits self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_sha_3_bits(Sha3Bits self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_symmetric_mode(SymmetricMode self, SseSerializer serializer);
+
+  @protected
   void sse_encode_u_8(int self, SseSerializer serializer);
 
   @protected
@@ -218,9 +1215,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_usize(BigInt self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_i_32(int self, SseSerializer serializer);
 }
 
 // Section: wire_class
@@ -228,16 +1222,112 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 class RustLibWire implements BaseWire {
   RustLibWire.fromExternalLibrary(ExternalLibrary lib);
 
-  void rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle(
+  void rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBoxdynProviderImpl(
           int ptr) =>
       wasmModule
-          .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle(
+          .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBoxdynProviderImpl(
               ptr);
 
-  void rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle(
+  void rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBoxdynProviderImpl(
           int ptr) =>
       wasmModule
-          .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle(
+          .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBoxdynProviderImpl(
+              ptr);
+
+  void rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLifetimeableAutoLocalstaticstatic(
+          int ptr) =>
+      wasmModule
+          .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLifetimeableAutoLocalstaticstatic(
+              ptr);
+
+  void rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLifetimeableAutoLocalstaticstatic(
+          int ptr) =>
+      wasmModule
+          .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLifetimeableAutoLocalstaticstatic(
+              ptr);
+
+  void rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputBoxdynProviderImplSendasync_trait(
+          int ptr) =>
+      wasmModule
+          .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputBoxdynProviderImplSendasync_trait(
+              ptr);
+
+  void rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputBoxdynProviderImplSendasync_trait(
+          int ptr) =>
+      wasmModule
+          .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputBoxdynProviderImplSendasync_trait(
+              ptr);
+
+  void rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputProviderConfigSendasync_trait(
+          int ptr) =>
+      wasmModule
+          .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputProviderConfigSendasync_trait(
+              ptr);
+
+  void rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputProviderConfigSendasync_trait(
+          int ptr) =>
+      wasmModule
+          .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputProviderConfigSendasync_trait(
+              ptr);
+
+  void rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultBoxdynKeyHandleImplSecurityModuleErrorSendasync_trait(
+          int ptr) =>
+      wasmModule
+          .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultBoxdynKeyHandleImplSecurityModuleErrorSendasync_trait(
+              ptr);
+
+  void rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultBoxdynKeyHandleImplSecurityModuleErrorSendasync_trait(
+          int ptr) =>
+      wasmModule
+          .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultBoxdynKeyHandleImplSecurityModuleErrorSendasync_trait(
+              ptr);
+
+  void rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultDHExchangeSecurityModuleErrorSendasync_trait(
+          int ptr) =>
+      wasmModule
+          .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultDHExchangeSecurityModuleErrorSendasync_trait(
+              ptr);
+
+  void rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultDHExchangeSecurityModuleErrorSendasync_trait(
+          int ptr) =>
+      wasmModule
+          .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultDHExchangeSecurityModuleErrorSendasync_trait(
+              ptr);
+
+  void rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultKeyHandleSecurityModuleErrorSendasync_trait(
+          int ptr) =>
+      wasmModule
+          .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultKeyHandleSecurityModuleErrorSendasync_trait(
+              ptr);
+
+  void rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultKeyHandleSecurityModuleErrorSendasync_trait(
+          int ptr) =>
+      wasmModule
+          .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultKeyHandleSecurityModuleErrorSendasync_trait(
+              ptr);
+
+  void rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultKeyPairHandleSecurityModuleErrorSendasync_trait(
+          int ptr) =>
+      wasmModule
+          .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultKeyPairHandleSecurityModuleErrorSendasync_trait(
+              ptr);
+
+  void rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultKeyPairHandleSecurityModuleErrorSendasync_trait(
+          int ptr) =>
+      wasmModule
+          .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultKeyPairHandleSecurityModuleErrorSendasync_trait(
+              ptr);
+
+  void rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultVecu8SecurityModuleErrorSendasync_trait(
+          int ptr) =>
+      wasmModule
+          .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultVecu8SecurityModuleErrorSendasync_trait(
+              ptr);
+
+  void rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultVecu8SecurityModuleErrorSendasync_trait(
+          int ptr) =>
+      wasmModule
+          .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultVecu8SecurityModuleErrorSendasync_trait(
               ptr);
 
   void rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
@@ -252,6 +1342,18 @@ class RustLibWire implements BaseWire {
           .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
               ptr);
 
+  void rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplConfig(
+          int ptr) =>
+      wasmModule
+          .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplConfig(
+              ptr);
+
+  void rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplConfig(
+          int ptr) =>
+      wasmModule
+          .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplConfig(
+              ptr);
+
   void rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSecurityModuleError(
           int ptr) =>
       wasmModule
@@ -263,6 +1365,54 @@ class RustLibWire implements BaseWire {
       wasmModule
           .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSecurityModuleError(
               ptr);
+
+  void rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStubProvider(
+          int ptr) =>
+      wasmModule
+          .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStubProvider(
+              ptr);
+
+  void rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStubProvider(
+          int ptr) =>
+      wasmModule
+          .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStubProvider(
+              ptr);
+
+  void rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStubProviderFactory(
+          int ptr) =>
+      wasmModule
+          .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStubProviderFactory(
+              ptr);
+
+  void rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStubProviderFactory(
+          int ptr) =>
+      wasmModule
+          .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStubProviderFactory(
+              ptr);
+
+  void rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerT(
+          int ptr) =>
+      wasmModule
+          .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerT(
+              ptr);
+
+  void rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerT(
+          int ptr) =>
+      wasmModule
+          .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerT(
+              ptr);
+
+  void rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTpmError(
+          int ptr) =>
+      wasmModule
+          .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTpmError(
+              ptr);
+
+  void rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTpmError(
+          int ptr) =>
+      wasmModule
+          .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTpmError(
+              ptr);
 }
 
 @JS('wasm_bindgen')
@@ -272,11 +1422,75 @@ external RustLibWasmModule get wasmModule;
 @anonymous
 extension type RustLibWasmModule._(JSObject _) implements JSObject {
   external void
-      rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle(
+      rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBoxdynProviderImpl(
           int ptr);
 
   external void
-      rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle(
+      rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBoxdynProviderImpl(
+          int ptr);
+
+  external void
+      rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLifetimeableAutoLocalstaticstatic(
+          int ptr);
+
+  external void
+      rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLifetimeableAutoLocalstaticstatic(
+          int ptr);
+
+  external void
+      rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputBoxdynProviderImplSendasync_trait(
+          int ptr);
+
+  external void
+      rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputBoxdynProviderImplSendasync_trait(
+          int ptr);
+
+  external void
+      rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputProviderConfigSendasync_trait(
+          int ptr);
+
+  external void
+      rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputProviderConfigSendasync_trait(
+          int ptr);
+
+  external void
+      rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultBoxdynKeyHandleImplSecurityModuleErrorSendasync_trait(
+          int ptr);
+
+  external void
+      rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultBoxdynKeyHandleImplSecurityModuleErrorSendasync_trait(
+          int ptr);
+
+  external void
+      rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultDHExchangeSecurityModuleErrorSendasync_trait(
+          int ptr);
+
+  external void
+      rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultDHExchangeSecurityModuleErrorSendasync_trait(
+          int ptr);
+
+  external void
+      rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultKeyHandleSecurityModuleErrorSendasync_trait(
+          int ptr);
+
+  external void
+      rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultKeyHandleSecurityModuleErrorSendasync_trait(
+          int ptr);
+
+  external void
+      rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultKeyPairHandleSecurityModuleErrorSendasync_trait(
+          int ptr);
+
+  external void
+      rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultKeyPairHandleSecurityModuleErrorSendasync_trait(
+          int ptr);
+
+  external void
+      rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultVecu8SecurityModuleErrorSendasync_trait(
+          int ptr);
+
+  external void
+      rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPinBoxFutureOutputResultVecu8SecurityModuleErrorSendasync_trait(
           int ptr);
 
   external void
@@ -288,10 +1502,50 @@ extension type RustLibWasmModule._(JSObject _) implements JSObject {
           int ptr);
 
   external void
+      rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplConfig(
+          int ptr);
+
+  external void
+      rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplConfig(
+          int ptr);
+
+  external void
       rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSecurityModuleError(
           int ptr);
 
   external void
       rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSecurityModuleError(
+          int ptr);
+
+  external void
+      rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStubProvider(
+          int ptr);
+
+  external void
+      rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStubProvider(
+          int ptr);
+
+  external void
+      rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStubProviderFactory(
+          int ptr);
+
+  external void
+      rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStubProviderFactory(
+          int ptr);
+
+  external void
+      rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerT(
+          int ptr);
+
+  external void
+      rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerT(
+          int ptr);
+
+  external void
+      rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTpmError(
+          int ptr);
+
+  external void
+      rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTpmError(
           int ptr);
 }

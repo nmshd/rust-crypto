@@ -159,7 +159,7 @@ impl From<Cipher> for Result<String, SecurityModuleError> {
 
 pub(crate) fn get_cipher_name(cipher: Cipher) -> Result<String, SecurityModuleError> {
     match cipher {
-        Cipher::Aes(mode, _) => Ok(format!("AES")),
+        Cipher::Aes(mode, _) => Ok("AES".to_string()),
         Cipher::TripleDes(_) => Ok("DESede".to_string()),
         Cipher::Des => Ok("DES".to_string()),
         _ => Err(TpmError::UnsupportedOperation("Unsupported cipher".to_owned()).into()),
