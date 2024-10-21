@@ -123,6 +123,11 @@ impl KeyPairHandle {
     pub async fn get_public_key(&self) -> Result<Vec<u8>, SecurityModuleError> {
         self.implementation.get_public_key().await
     }
+
+    /// Returns the id of the key pair, which can be used with [Provider::load_key_pair].
+    pub fn id(&self) -> Result<String, SecurityModuleError> {
+        self.implementation.id()
+    }
 }
 
 #[cfg_attr(feature = "flutter", frb(non_opaque))]
@@ -142,6 +147,11 @@ impl KeyHandle {
             &self,
             encrypted_data: &[u8],
         ) -> Result<Vec<u8>, SecurityModuleError>;
+    }
+
+    /// Returns the id of the key, which can be used with [Provider::load_key].
+    pub fn id(&self) -> Result<String, SecurityModuleError> {
+        self.implementation.id()
     }
 }
 

@@ -16,17 +16,24 @@ use std::hash::Hash;
 /// Basic usage for RSA (assuming `RsaBits` is defined):
 ///
 /// ```
-/// use tpm_poc::common::crypto::algorithms::{KeyBits, encryption::AsymmetricEncryption};
+/// use crypto_layer::common::crypto::algorithms::{KeyBits, encryption::AsymmetricKeySpec};
 ///
-/// let encryption_method = AsymmetricEncryption::Rsa(KeyBits::Bits2048);
+/// fn main() {
+///    let encryption_method = AsymmetricKeySpec::Rsa(KeyBits::Bits2048);
+/// }
 /// ```
 ///
 /// Basic usage for ECC:
 ///
 /// ```
-/// use tpm_poc::common::crypto::algorithms::encryption::{AsymmetricEncryption, EccSchemeAlgorithm, EccCurves};
+/// use crypto_layer::common::crypto::algorithms::encryption::{AsymmetricKeySpec, EccSigningScheme, EccCurve};
 ///
-/// let encryption_method = AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::Secp256k1));
+/// fn main() {
+///    let encryption_method = AsymmetricKeySpec::Ecc{
+///         scheme: EccSigningScheme::EcDsa,
+///         curve: EccCurve::P256,
+///     };
+/// }
 /// ```
 ///
 /// # Note
@@ -80,9 +87,11 @@ pub enum EccSigningScheme {
 /// Selecting an ECDSA curve:
 ///
 /// ```
-/// use tpm_poc::common::crypto::algorithms::encryption::EccCurve;
+/// use crypto_layer::common::crypto::algorithms::encryption::EccCurve;
 ///
-/// let curve_type = EccCurve::Secp256k1;
+/// fn main() {
+///     let curve_type = EccCurve::P256;
+/// }
 /// ```
 ///
 /// # Note
@@ -130,7 +139,7 @@ pub enum EccCurve {
 /// Using `Cipher` with AES in CBC mode and a 256-bit key:
 ///
 /// ```
-/// use tpm_poc::common::crypto::algorithms::{KeyBits,encryption::{Cipher, SymmetricMode}};
+/// use crypto_layer::common::crypto::algorithms::{KeyBits,encryption::{Cipher, SymmetricMode}};
 ///
 /// fn main() {
 ///     let cipher = Cipher::Aes(SymmetricMode::Cbc, KeyBits::Bits256);
@@ -140,7 +149,7 @@ pub enum EccCurve {
 /// Using `Cipher` with ChaCha20:
 ///
 /// ```
-/// use tpm_poc::common::crypto::algorithms::encryption::Cipher;
+/// use crypto_layer::common::crypto::algorithms::encryption::Cipher;
 ///
 /// fn main() {
 ///     let cipher = Cipher::Chacha20;
@@ -195,9 +204,11 @@ impl Default for Cipher {
 /// Selecting AES in GCM mode:
 ///
 /// ```rust
-/// use tpm_poc::common::crypto::algorithms::encryption::SymmetricMode;
+/// use crypto_layer::common::crypto::algorithms::encryption::SymmetricMode;
 ///
-/// let mode = SymmetricMode::Gcm;
+/// fn main() {
+///     let mode = SymmetricMode::Gcm;
+/// }
 /// ```
 ///
 /// # Note
@@ -247,9 +258,11 @@ pub enum SymmetricMode {
 /// Selecting a Triple DES configuration with three keys:
 ///
 /// ```rust
-/// use tpm_poc::common::crypto::algorithms::encryption::TripleDesNumKeys;
+/// use crypto_layer::common::crypto::algorithms::encryption::TripleDesNumKeys;
 ///
-/// let des_config = TripleDesNumKeys::Tdes3;
+/// fn main() {
+///     let des_config = TripleDesNumKeys::Tdes3;
+/// }
 /// ```
 ///
 /// # Note
@@ -275,9 +288,11 @@ pub enum TripleDesNumKeys {
 /// Selecting an RC2 key size of 128 bits:
 ///
 /// ```rust
-/// use tpm_poc::common::crypto::algorithms::encryption:: Rc2KeyBits;
+/// use crypto_layer::common::crypto::algorithms::encryption:: Rc2KeyBits;
 ///
-/// let key_size = Rc2KeyBits::Rc2_128;
+/// fn main() {
+///     let key_size = Rc2KeyBits::Rc2_128;
+/// }
 /// ```
 ///
 /// # Note
