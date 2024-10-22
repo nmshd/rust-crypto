@@ -99,6 +99,23 @@ pub mod jni {
             )?;
             Ok(())
         }
+
+        pub fn set_entry(
+            &self,
+            env: &JNIEnv,
+            alias: String,
+            entry: JObject,
+            param: Option<JObject>,
+        ) -> JniResult<()> {
+            let param_obj = param.unwrap_or(JObject::null());
+            env.call_method(
+                self.raw.as_obj(),
+                "setEntry",
+                "(Ljava/lang/String;Ljava/security/KeyStore$Entry;Ljava/security/KeyStore$ProtectionParameter;)V",
+                &[Into::into(env.new_string(alias)?), Into::into(entry), Into::into(param_obj)],
+            )?;
+            Ok(())
+        }
     }
 
     /// Represents a Certificate object in Java.

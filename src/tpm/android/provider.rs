@@ -1,4 +1,3 @@
-use crate::tpm::android::android_logger::setup_logging;
 use crate::{
     common::{
         config::{KeyPairSpec, KeySpec, ProviderConfig, ProviderImplConfig, SecurityLevel},
@@ -23,9 +22,12 @@ use crate::{
 use async_std::sync::Mutex;
 use async_trait::async_trait;
 use flutter_rust_bridge::frb;
+use nanoid::nanoid;
 use robusta_jni::jni::JavaVM;
 use std::{collections::HashSet, fmt::Debug, sync::Arc};
 use tracing::{debug, info, instrument};
+
+use super::android_logger::setup_logging;
 
 #[cfg_attr(feature = "flutter", frb(non_opaque))]
 pub(crate) struct AndroidProviderFactory {}
@@ -92,7 +94,7 @@ impl Debug for AndroidProvider {
 impl ProviderImpl for AndroidProvider {
     #[instrument]
     async fn create_key(&mut self, spec: KeySpec) -> Result<KeyHandle, SecurityModuleError> {
-        let key_id = "key_id".to_owned();
+        let key_id = nanoid!(10);
 
         info!("generating key: {}", key_id);
 
@@ -167,7 +169,7 @@ impl ProviderImpl for AndroidProvider {
         &mut self,
         spec: KeyPairSpec,
     ) -> Result<KeyPairHandle, SecurityModuleError> {
-        let key_id = "key_id".to_owned();
+        let key_id = nanoid!(10);
         info!("generating key pair! {}", key_id);
 
         let vm = self.java_vm.lock().await;
@@ -253,8 +255,34 @@ impl ProviderImpl for AndroidProvider {
         spec: KeySpec,
         data: &[u8],
     ) -> Result<KeyHandle, SecurityModuleError> {
-        // TODO: import key
-        todo!("import key")
+        let vm = self.java_vm.lock().await;
+        let thread = vm.attach_current_thread().unwrap();
+        let env = vm.get_env().unwrap();
+
+        let id = nanoid!(10);
+
+        let key = wrapper::key_generation::secret_key_spec::jni::SecretKeySpec::new(
+            &env,
+            data.to_vec(),
+            get_cipher_name(spec.cipher)?,
+        )
+        .err_internal()?;
+
+        let key_store = wrapper::key_store::store::jni::KeyStore::getInstance(
+            &env,
+            ANDROID_KEYSTORE.to_owned(),
+        )
+        .err_internal()?;
+
+        key_store.set_entry(&env, id.clone(), key.raw.as_obj(), None);
+
+        Ok(KeyHandle {
+            implementation: Box::new(AndroidKeyHandle {
+                key_id: id,
+                java_vm: self.java_vm.clone(),
+                spec,
+            }),
+        })
     }
 
     #[instrument]

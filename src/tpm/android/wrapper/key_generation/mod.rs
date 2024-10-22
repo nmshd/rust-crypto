@@ -7,4 +7,5 @@ pub mod key_gen_parameter_spec;
 pub mod key_generator;
 pub mod key_pair;
 pub mod key_pair_generator;
+pub mod secret_key_spec;
 pub mod secure_random;
