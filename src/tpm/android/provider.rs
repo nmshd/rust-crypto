@@ -6,8 +6,8 @@ use crate::{
             KeyBits,
         },
         error::SecurityModuleError,
-        traits::module_provider::ProviderImplEnum,
-        DHExchange, KeyHandle, KeyPairHandle,
+        traits::module_provider::{ProviderFactory, ProviderImpl, ProviderImplEnum},
+        DHExchange, KeyHandle, KeyPairHandle, Provider,
     },
     tpm::{
         android::{
@@ -30,12 +30,12 @@ use super::android_logger::setup_logging;
 
 pub(crate) struct AndroidProviderFactory {}
 
-impl AndroidProviderFactory {
-    pub(crate) fn get_name(&self) -> String {
+impl ProviderFactory for AndroidProviderFactory {
+    fn get_name(&self) -> String {
         "AndroidProvider".to_owned()
     }
 
-    pub(crate) fn get_capabilities(&self, impl_config: ProviderImplConfig) -> ProviderConfig {
+    fn get_capabilities(&self, impl_config: ProviderImplConfig) -> ProviderConfig {
         ProviderConfig {
             min_security_level: SecurityLevel::Hardware,
             max_security_level: SecurityLevel::Hardware,
@@ -49,7 +49,7 @@ impl AndroidProviderFactory {
         }
     }
 
-    pub(crate) fn create_provider(&self, impl_config: ProviderImplConfig) -> ProviderImplEnum {
+    fn create_provider(&self, impl_config: ProviderImplConfig) -> ProviderImplEnum {
         setup_logging();
         Into::into(AndroidProvider {
             java_vm: match impl_config {
@@ -84,9 +84,9 @@ impl Debug for AndroidProvider {
 ///
 /// This struct provides methods for key generation, key loading, and module initialization
 /// specific to Android.
-impl AndroidProvider {
+impl ProviderImpl for AndroidProvider {
     #[instrument]
-    pub(crate) fn create_key(&mut self, spec: KeySpec) -> Result<KeyHandle, SecurityModuleError> {
+    fn create_key(&mut self, spec: KeySpec) -> Result<KeyHandle, SecurityModuleError> {
         let key_id = nanoid!(10);
 
         info!("generating key: {}", key_id);
@@ -158,10 +158,7 @@ impl AndroidProvider {
         })
     }
 
-    pub(crate) fn create_key_pair(
-        &mut self,
-        spec: KeyPairSpec,
-    ) -> Result<KeyPairHandle, SecurityModuleError> {
+    fn create_key_pair(&mut self, spec: KeyPairSpec) -> Result<KeyPairHandle, SecurityModuleError> {
         let key_id = nanoid!(10);
         info!("generating key pair! {}", key_id);
 
@@ -228,26 +225,19 @@ impl AndroidProvider {
     ///
     /// Returns `Ok(())` if the key loading is successful, otherwise returns an error of type `SecurityModuleError`.
     #[instrument]
-    pub(crate) fn load_key(&mut self, key_id: String) -> Result<KeyHandle, SecurityModuleError> {
+    fn load_key(&mut self, key_id: String) -> Result<KeyHandle, SecurityModuleError> {
         // TODO: Somehow load the Keyspec from Storage
         todo!("load keyspec from storage")
     }
 
     #[instrument]
-    pub(crate) fn load_key_pair(
-        &mut self,
-        key_id: String,
-    ) -> Result<KeyPairHandle, SecurityModuleError> {
+    fn load_key_pair(&mut self, key_id: String) -> Result<KeyPairHandle, SecurityModuleError> {
         // TODO: Somehow load the Keyspec from Storage
         todo!("load keyspec from storage")
     }
 
     #[instrument]
-    pub(crate) fn import_key(
-        &mut self,
-        spec: KeySpec,
-        data: &[u8],
-    ) -> Result<KeyHandle, SecurityModuleError> {
+    fn import_key(&mut self, spec: KeySpec, data: &[u8]) -> Result<KeyHandle, SecurityModuleError> {
         let vm = self.java_vm.lock().unwrap();
         let thread = vm.attach_current_thread().unwrap();
         let env = vm.get_env().unwrap();
@@ -279,7 +269,7 @@ impl AndroidProvider {
     }
 
     #[instrument]
-    pub(crate) fn import_key_pair(
+    fn import_key_pair(
         &mut self,
         spec: KeyPairSpec,
         public_key: &[u8],
@@ -290,7 +280,7 @@ impl AndroidProvider {
     }
 
     #[instrument]
-    pub(crate) fn import_public_key(
+    fn import_public_key(
         &mut self,
         spec: KeyPairSpec,
         public_key: &[u8],
@@ -300,7 +290,7 @@ impl AndroidProvider {
     }
 
     #[instrument]
-    pub(crate) fn start_ephemeral_dh_exchange(
+    fn start_ephemeral_dh_exchange(
         &mut self,
         spec: KeyPairSpec,
     ) -> Result<DHExchange, SecurityModuleError> {
@@ -308,7 +298,7 @@ impl AndroidProvider {
         todo!("start ephemeral dh exchange")
     }
 
-    pub(crate) fn provider_name(&self) -> String {
+    fn provider_name(&self) -> String {
         "AndroidProvider".to_owned()
     }
 }

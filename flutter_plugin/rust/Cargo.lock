@@ -634,6 +634,7 @@ dependencies = [
  "async-std",
  "async-trait",
  "derive_more",
+ "enum_dispatch",
  "flutter_rust_bridge",
  "flutter_rust_bridge_codegen",
  "libloading",

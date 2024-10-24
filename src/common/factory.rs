@@ -5,7 +5,7 @@ use once_cell::sync::Lazy;
 
 use super::{
     config::{self, ProviderConfig, ProviderImplConfig},
-    traits::module_provider::ProviderFactoryEnum,
+    traits::module_provider::{ProviderFactory, ProviderFactoryEnum},
     Provider,
 };
 use crate::stub::StubProviderFactory;
@@ -73,26 +73,17 @@ pub fn create_provider(
     impl_conf_vec: Vec<ProviderImplConfig>,
 ) -> Option<Provider> {
     for provider in ALL_PROVIDERS.iter() {
-        let name = match provider {
-            ProviderFactoryEnum::StubProviderFactory(f) => f.get_name(),
-            ProviderFactoryEnum::AndroidProviderFactory(f) => f.get_name(),
-        };
+        let name = provider.get_name();
 
         let config = match impl_conf_vec.iter().find(|e| e.name() == name) {
             Some(config) => config.clone(),
             None => continue,
         };
-        let provider_caps = match provider {
-            ProviderFactoryEnum::StubProviderFactory(f) => f.get_capabilities(config.clone()),
-            ProviderFactoryEnum::AndroidProviderFactory(f) => f.get_capabilities(config.clone()),
-        };
+        let provider_caps = provider.get_capabilities(config.clone());
 
         if provider_supports_capabilities(&provider_caps, &conf) {
             return Some(Provider {
-                implementation: match provider {
-                    ProviderFactoryEnum::StubProviderFactory(f) => f.create_provider(config),
-                    ProviderFactoryEnum::AndroidProviderFactory(f) => f.create_provider(config),
-                },
+                implementation: provider.create_provider(config),
             });
         }
     }
@@ -106,17 +97,11 @@ pub fn create_provider(
 // #[cfg_attr(feature = "flutter", frb(non_opaque))]
 pub fn create_provider_from_name(name: String, impl_conf: ProviderImplConfig) -> Option<Provider> {
     for provider in ALL_PROVIDERS.iter() {
-        let p_name = match provider {
-            ProviderFactoryEnum::StubProviderFactory(f) => f.get_name(),
-            ProviderFactoryEnum::AndroidProviderFactory(f) => f.get_name(),
-        };
+        let p_name = provider.get_name();
 
         if p_name == name {
             return Some(Provider {
-                implementation: match provider {
-                    ProviderFactoryEnum::StubProviderFactory(f) => f.create_provider(impl_conf),
-                    ProviderFactoryEnum::AndroidProviderFactory(f) => f.create_provider(impl_conf),
-                },
+                implementation: provider.create_provider(impl_conf),
             });
         }
     }

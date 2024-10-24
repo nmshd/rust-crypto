@@ -6,6 +6,7 @@ use crate::{
         config::{KeyPairSpec, KeySpec},
         crypto::KeyUsage,
         error::SecurityModuleError,
+        traits::key_handle::{KeyHandleImpl, KeyPairHandleImpl},
         DHExchange,
     },
     tpm::{
@@ -38,8 +39,8 @@ pub(crate) struct AndroidKeyPairHandle {
     pub(crate) java_vm: Arc<Mutex<JavaVM>>,
 }
 
-impl AndroidKeyHandle {
-    pub(crate) fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
+impl KeyHandleImpl for AndroidKeyHandle {
+    fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         info!("encrypting");
 
         let vm = self.java_vm.lock().unwrap();
@@ -70,10 +71,7 @@ impl AndroidKeyHandle {
         Ok(encrypted)
     }
 
-    pub(crate) fn decrypt_data(
-        &self,
-        encrypted_data: &[u8],
-    ) -> Result<Vec<u8>, SecurityModuleError> {
+    fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         let vm = self.java_vm.lock().unwrap();
         let thread = vm.attach_current_thread().unwrap();
         let env = vm.get_env().unwrap();
@@ -104,17 +102,17 @@ impl AndroidKeyHandle {
         Ok(decrypted)
     }
 
-    pub(crate) fn extract_key(&self) -> Result<Vec<u8>, SecurityModuleError> {
+    fn extract_key(&self) -> Result<Vec<u8>, SecurityModuleError> {
         todo!()
     }
 
-    pub(crate) fn id(&self) -> Result<String, SecurityModuleError> {
+    fn id(&self) -> Result<String, SecurityModuleError> {
         Ok(self.key_id.clone())
     }
 }
 
-impl AndroidKeyPairHandle {
-    pub(crate) fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
+impl KeyPairHandleImpl for AndroidKeyPairHandle {
+    fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         info!("signing");
 
         let vm = self.java_vm.lock().unwrap();
@@ -144,11 +142,7 @@ impl AndroidKeyPairHandle {
         Ok(output)
     }
 
-    pub(crate) fn verify_signature(
-        &self,
-        data: &[u8],
-        signature: &[u8],
-    ) -> Result<bool, SecurityModuleError> {
+    fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, SecurityModuleError> {
         info!("verifiying");
 
         let vm = self.java_vm.lock().unwrap();
@@ -178,10 +172,7 @@ impl AndroidKeyPairHandle {
         Ok(output)
     }
 
-    pub(crate) fn encrypt_data(
-        &self,
-        encryped_data: &[u8],
-    ) -> Result<Vec<u8>, SecurityModuleError> {
+    fn encrypt_data(&self, encryped_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         info!("encrypting");
 
         let vm = self.java_vm.lock().unwrap();
@@ -210,10 +201,7 @@ impl AndroidKeyPairHandle {
         Ok(encrypted)
     }
 
-    pub(crate) fn decrypt_data(
-        &self,
-        encrypted_data: &[u8],
-    ) -> Result<Vec<u8>, SecurityModuleError> {
+    fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         info!("decrypting");
 
         let vm = self.java_vm.lock().unwrap();
@@ -241,7 +229,7 @@ impl AndroidKeyPairHandle {
         Ok(decrypted)
     }
 
-    pub(crate) fn get_public_key(&self) -> Result<Vec<u8>, SecurityModuleError> {
+    fn get_public_key(&self) -> Result<Vec<u8>, SecurityModuleError> {
         info!("getting public key");
 
         let vm = self.java_vm.lock().unwrap();
@@ -260,15 +248,15 @@ impl AndroidKeyPairHandle {
         todo!("turn public key into bytes");
     }
 
-    pub(crate) fn extract_key(&self) -> Result<Vec<u8>, SecurityModuleError> {
+    fn extract_key(&self) -> Result<Vec<u8>, SecurityModuleError> {
         todo!()
     }
 
-    pub(crate) fn start_dh_exchange(&self) -> Result<DHExchange, SecurityModuleError> {
+    fn start_dh_exchange(&self) -> Result<DHExchange, SecurityModuleError> {
         todo!()
     }
 
-    pub(crate) fn id(&self) -> Result<String, SecurityModuleError> {
+    fn id(&self) -> Result<String, SecurityModuleError> {
         Ok(self.key_id.clone())
     }
 }

@@ -6,8 +6,11 @@ use config::{KeyPairSpec, KeySpec};
 use error::SecurityModuleError;
 use flutter_rust_bridge::{frb, RustAutoOpaqueNom};
 use paste::paste;
-use traits::key_handle::{DHKeyExchangeImplEnum, KeyHandleImplEnum, KeyPairHandleImplEnum};
-use traits::module_provider::ProviderImplEnum;
+use traits::key_handle::{
+    DHKeyExchangeImplEnum, KeyHandleImpl, KeyHandleImplEnum, KeyPairHandleImpl,
+    KeyPairHandleImplEnum,
+};
+use traits::module_provider::{ProviderImpl, ProviderImplEnum};
 
 pub mod config;
 pub mod crypto;
@@ -36,24 +39,14 @@ macro_rules! delegate_enum {
     ($enum_type:ty, $(pub fn $method:ident(&self $(,$arg:ident: $type:ty)* $(,)?) $(-> $ret:ty)?;)+) => {
         $(
             pub fn $method(&self $(,$arg: $type)*) $(-> $ret)? {
-                paste! {
-                match self.implementation {
-                    [<$enum_type ImplEnum>]::[<Android $enum_type>](ref v) => v.$method($($arg),*),
-                    [<$enum_type ImplEnum>]::[<Stub $enum_type>](ref v) => v.$method($($arg),*),
-                }
-                }
+                self.implementation.$method($($arg),*)
             }
         )+
     };
     ($enum_type:ty, $(pub fn $method:ident(&mut self $(,$arg:ident: $type:ty)* $(,)?) $(-> $ret:ty)?;)+) => {
         $(
             pub fn $method(&mut self $(,$arg: $type)*) $(-> $ret)? {
-                paste! {
-                match self.implementation {
-                    [<$enum_type ImplEnum>]::[<Android $enum_type>](ref mut v) => v.$method($($arg),*),
-                    [<$enum_type ImplEnum>]::[<Stub $enum_type>](ref mut v) => v.$method($($arg),*),
-                }
-                }
+                self.implementation.$method($($arg),*)
             }
         )+
     };
