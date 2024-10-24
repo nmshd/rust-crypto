@@ -23,7 +23,7 @@ pub enum TpmError {
     /// Error indicating that an attempted operation is unsupported, containing a description.
     UnsupportedOperation(String),
     /// Error indicating that an internal error occured, possibly caused by ffi bindings
-    InternalError(Box<dyn std::error::Error + Send + Sync>),
+    InternalError(String),
 }
 
 impl fmt::Display for TpmError {
@@ -50,7 +50,7 @@ impl TpmError {
 }
 
 /// A trait to allow ergonomic conversions to TpmError
-pub trait ToTpmError<T> {
+pub(crate) trait ToTpmError<T> {
     /// Wrap any error in TpmError::InternalError
     /// the wrapped error can be accessed througth the error trait
     fn err_internal(self) -> Result<T, TpmError>;

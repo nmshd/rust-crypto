@@ -1,5 +1,11 @@
-use crate::common::{error::SecurityModuleError, DHExchange};
+use crate::{
+    common::{error::SecurityModuleError, DHExchange},
+    stub::{StubKeyHandle, StubKeyPairHandle},
+    tpm::android::key_handle::{AndroidKeyHandle, AndroidKeyPairHandle},
+};
 use async_trait::async_trait;
+use derive_more::derive::From;
+use enum_dispatch::enum_dispatch;
 use flutter_rust_bridge::frb;
 
 /// Defines a common interface for cryptographic key operations.
@@ -9,9 +15,8 @@ use flutter_rust_bridge::frb;
 /// modules that manage cryptographic keys, ensuring a consistent interface for key
 /// operations across different types of security modules. Implementors of this trait
 /// must ensure thread safety.
-#[async_trait]
-#[cfg_attr(feature = "flutter", frb(non_opaque))]
-pub trait KeyHandleImpl: Send + Sync {
+#[enum_dispatch(KeyHandleImplEnum)]
+pub(crate) trait KeyHandleImpl: Send + Sync {
     /// Encrypts the given data using the cryptographic key.
     ///
     /// # Arguments
@@ -19,7 +24,7 @@ pub trait KeyHandleImpl: Send + Sync {
     ///
     /// # Returns
     /// A `Result` containing the encrypted data as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
-    async fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError>;
+    fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError>;
 
     /// Decrypts the given encrypted data using the cryptographic key.
     ///
@@ -28,17 +33,22 @@ pub trait KeyHandleImpl: Send + Sync {
     ///
     /// # Returns
     /// A `Result` containing the decrypted data as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
-    async fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError>;
+    fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError>;
 
-    async fn extract_key(&self) -> Result<Vec<u8>, SecurityModuleError>;
+    fn extract_key(&self) -> Result<Vec<u8>, SecurityModuleError>;
 
     /// Returns the id of the key, which can be used with `load_key`.
     fn id(&self) -> Result<String, SecurityModuleError>;
 }
 
-#[async_trait]
-#[cfg_attr(feature = "flutter", frb(non_opaque))]
-pub trait KeyPairHandleImpl: Send + Sync {
+#[enum_dispatch]
+pub(crate) enum KeyHandleImplEnum {
+    StubKeyHandle,
+    AndroidKeyHandle,
+}
+
+#[enum_dispatch(KeyPairHandleImplEnum)]
+pub(crate) trait KeyPairHandleImpl: Send + Sync {
     /// Signs the given data using the cryptographic key.
     ///
     /// # Arguments
@@ -46,7 +56,7 @@ pub trait KeyPairHandleImpl: Send + Sync {
     ///
     /// # Returns
     /// A `Result` containing the signature as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
-    async fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError>;
+    fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError>;
 
     /// Verifies the signature of the given data using the cryptographic key.
     ///
@@ -57,11 +67,7 @@ pub trait KeyPairHandleImpl: Send + Sync {
     /// # Returns
     /// A `Result` containing a boolean indicating whether the signature is valid (`true`) or not (`false`),
     /// or a `SecurityModuleError` on failure.
-    async fn verify_signature(
-        &self,
-        data: &[u8],
-        signature: &[u8],
-    ) -> Result<bool, SecurityModuleError>;
+    fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, SecurityModuleError>;
 
     /// Encrypts the given data using the cryptographic key.
     ///
@@ -70,7 +76,7 @@ pub trait KeyPairHandleImpl: Send + Sync {
     ///
     /// # Returns
     /// A `Result` containing the encrypted data as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
-    async fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError>;
+    fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError>;
 
     /// Decrypts the given encrypted data using the cryptographic key.
     ///
@@ -79,27 +85,36 @@ pub trait KeyPairHandleImpl: Send + Sync {
     ///
     /// # Returns
     /// A `Result` containing the decrypted data as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
-    async fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError>;
-    async fn get_public_key(&self) -> Result<Vec<u8>, SecurityModuleError>;
-    async fn extract_key(&self) -> Result<Vec<u8>, SecurityModuleError>;
+    fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError>;
+    fn get_public_key(&self) -> Result<Vec<u8>, SecurityModuleError>;
+    fn extract_key(&self) -> Result<Vec<u8>, SecurityModuleError>;
     fn start_dh_exchange(&self) -> Result<DHExchange, SecurityModuleError>;
 
     /// Returns the id of the key pair, which can be used with `load_key_pair`.
     fn id(&self) -> Result<String, SecurityModuleError>;
 }
 
-#[async_trait]
-#[cfg_attr(feature = "flutter", frb(non_opaque))]
-pub trait DHKeyExchangeImpl: Send + Sync {
+#[enum_dispatch]
+pub(crate) enum KeyPairHandleImplEnum {
+    StubKeyPairHandle,
+    AndroidKeyPairHandle,
+}
+
+pub(crate) trait DHKeyExchangeImpl: Send + Sync {
     /// Get the public key of the internal key pair to use for the other party
-    async fn get_public_key(&self) -> Result<Vec<u8>, SecurityModuleError>;
+    fn get_public_key(&self) -> Result<Vec<u8>, SecurityModuleError>;
 
     /// add an external public point and compute the shared secret. The raw secret is returned to use in another round of the key exchange
-    async fn add_external(&mut self, external_key: &[u8]) -> Result<Vec<u8>, SecurityModuleError>;
+    fn add_external(&mut self, external_key: &[u8]) -> Result<Vec<u8>, SecurityModuleError>;
 
     /// add the final external Keypair, derive a symmetric key from the shared secret and store the key
-    async fn add_external_final(
+    fn add_external_final(
         self,
         external_key: &[u8],
-    ) -> Result<Box<dyn KeyHandleImpl>, SecurityModuleError>;
+    ) -> Result<KeyHandleImplEnum, SecurityModuleError>;
+}
+
+pub(crate) enum DHKeyExchangeImplEnum {
+    Android,
+    Stub,
 }

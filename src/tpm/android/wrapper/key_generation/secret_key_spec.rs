@@ -12,15 +12,15 @@ pub(crate) mod jni {
     /// Represents the `SecretKeySpec` class in Java.
     #[derive(Signature, TryIntoJavaValue, IntoJavaValue, TryFromJavaValue)]
     #[package(javax.crypto.spec)]
-    pub struct SecretKeySpec<'env: 'borrow, 'borrow> {
+    pub(crate) struct SecretKeySpec<'env: 'borrow, 'borrow> {
         #[instance]
-        pub raw: AutoLocal<'env, 'borrow>,
+        pub(crate) raw: AutoLocal<'env, 'borrow>,
     }
 
     impl<'env: 'borrow, 'borrow> SecretKeySpec<'env, 'borrow> {
         /// Constructs a new `SecretKeySpec` instance.
         #[constructor]
-        pub extern "java" fn new(
+        pub(crate) extern "java" fn new(
             env: &'borrow JNIEnv<'env>,
             key: Vec<u8>,
             algorithm: String,
@@ -28,9 +28,9 @@ pub(crate) mod jni {
         }
 
         /// Returns the algorithm name of the `SecretKeySpec` instance.
-        pub extern "java" fn getAlgorithm(&self, env: &JNIEnv<'env>) -> JniResult<String> {}
+        pub(crate) extern "java" fn getAlgorithm(&self, env: &JNIEnv<'env>) -> JniResult<String> {}
 
         /// Returns the Key material of the `SecretKeySpec` instance.
-        pub extern "java" fn getEncoded(&self, env: &JNIEnv<'env>) -> JniResult<Vec<u8>> {}
+        pub(crate) extern "java" fn getEncoded(&self, env: &JNIEnv<'env>) -> JniResult<Vec<u8>> {}
     }
 }

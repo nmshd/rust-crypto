@@ -2,7 +2,7 @@ use robusta_jni::bridge;
 
 #[bridge]
 /// This module contains the JNI bindings for the Signature class in the Java security package.
-pub mod jni {
+pub(crate) mod jni {
     use crate::tpm::android::wrapper::key_store::store::jni::Certificate;
     use robusta_jni::{
         convert::{IntoJavaValue, Signature as JavaSignature, TryFromJavaValue, TryIntoJavaValue},
@@ -16,9 +16,9 @@ pub mod jni {
     /// Represents a Signature object in Java.
     #[derive(JavaSignature, TryIntoJavaValue, IntoJavaValue, TryFromJavaValue)]
     #[package(java.security)]
-    pub struct Signature<'env: 'borrow, 'borrow> {
+    pub(crate) struct Signature<'env: 'borrow, 'borrow> {
         #[instance]
-        pub raw: AutoLocal<'env, 'borrow>,
+        pub(crate) raw: AutoLocal<'env, 'borrow>,
     }
 
     impl<'env: 'borrow, 'borrow> Signature<'env, 'borrow> {
@@ -32,7 +32,7 @@ pub mod jni {
         /// # Returns
         ///
         /// Returns a Result containing the Signature instance if successful, or an error if it fails.
-        pub extern "java" fn getInstance(
+        pub(crate) extern "java" fn getInstance(
             env: &'borrow JNIEnv<'env>,
             algorithm: String,
         ) -> JniResult<Self> {
@@ -50,7 +50,7 @@ pub mod jni {
         /// # Returns
         ///
         /// Returns a Result containing the signed data as a Vec<u8> if successful, or an error if it fails.
-        pub fn sign(&self, env: &JNIEnv) -> JniResult<Vec<u8>> {
+        pub(crate) fn sign(&self, env: &JNIEnv) -> JniResult<Vec<u8>> {
             let result = env.call_method(self.raw.as_obj(), "sign", "()[B", &[])?;
 
             let byte_array = result.l()?.into_inner();
@@ -69,7 +69,7 @@ pub mod jni {
         /// # Returns
         ///
         /// Returns a Result indicating success or failure.
-        pub extern "java" fn initSign(
+        pub(crate) extern "java" fn initSign(
             &self,
             env: &JNIEnv,
             #[input_type("Ljava/security/PrivateKey;")] privateKey: JObject,
@@ -89,7 +89,7 @@ pub mod jni {
         /// # Returns
         ///
         /// Returns a Result indicating success or failure.
-        pub fn initVerify(&self, env: &JNIEnv, certificate: Certificate) -> JniResult<()> {
+        pub(crate) fn initVerify(&self, env: &JNIEnv, certificate: Certificate) -> JniResult<()> {
             let certificate_obj = certificate.raw.as_obj();
 
             env.call_method(
@@ -112,7 +112,11 @@ pub mod jni {
         /// # Returns
         ///
         /// Returns a Result indicating whether the signature is valid or not.
-        pub extern "java" fn verify(&self, _env: &JNIEnv, signature: Box<[u8]>) -> JniResult<bool> {
+        pub(crate) extern "java" fn verify(
+            &self,
+            _env: &JNIEnv,
+            signature: Box<[u8]>,
+        ) -> JniResult<bool> {
         }
 
         /// Updates the Signature instance with additional data to be signed or verified.
@@ -125,9 +129,10 @@ pub mod jni {
         /// # Returns
         ///
         /// Returns a Result indicating success or failure.
-        pub extern "java" fn update(&self, _env: &JNIEnv, data: Box<[u8]>) -> JniResult<()> {}
+        pub(crate) extern "java" fn update(&self, _env: &JNIEnv, data: Box<[u8]>) -> JniResult<()> {
+        }
 
         /// toString Java method of the Signature class.
-        pub extern "java" fn toString(&self, _env: &JNIEnv) -> JniResult<String> {}
+        pub(crate) extern "java" fn toString(&self, _env: &JNIEnv) -> JniResult<String> {}
     }
 }

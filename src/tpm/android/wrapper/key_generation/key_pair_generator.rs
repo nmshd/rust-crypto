@@ -2,7 +2,7 @@ use robusta_jni::bridge;
 
 #[bridge]
 /// This module contains the JNI bindings for the `KeyPairGenerator` class in the Android TPM wrapper.
-pub mod jni {
+pub(crate) mod jni {
     use crate::tpm::android::wrapper::key_generation::key_pair::jni::KeyPair;
     use robusta_jni::{
         convert::{IntoJavaValue, Signature, TryFromJavaValue, TryIntoJavaValue},
@@ -16,9 +16,9 @@ pub mod jni {
     /// Represents a Java `KeyPairGenerator` object.
     #[derive(Signature, TryIntoJavaValue, IntoJavaValue, TryFromJavaValue)]
     #[package(java.security)]
-    pub struct KeyPairGenerator<'env: 'borrow, 'borrow> {
+    pub(crate) struct KeyPairGenerator<'env: 'borrow, 'borrow> {
         #[instance]
-        pub raw: AutoLocal<'env, 'borrow>,
+        pub(crate) raw: AutoLocal<'env, 'borrow>,
     }
 
     impl<'env: 'borrow, 'borrow> KeyPairGenerator<'env, 'borrow> {
@@ -33,7 +33,7 @@ pub mod jni {
         /// # Returns
         ///
         /// Returns a `JniResult` containing the `KeyPairGenerator` instance.
-        pub extern "java" fn getInstance(
+        pub(crate) extern "java" fn getInstance(
             env: &'borrow JNIEnv<'env>,
             algorithm: String,
             provider: String,
@@ -49,7 +49,7 @@ pub mod jni {
         /// # Returns
         ///
         /// Returns a `JniResult` containing the string representation.
-        pub extern "java" fn toString(&self, _env: &JNIEnv) -> JniResult<String> {}
+        pub(crate) extern "java" fn toString(&self, _env: &JNIEnv) -> JniResult<String> {}
 
         /// Returns the algorithm name associated with the `KeyPairGenerator` object.
         ///
@@ -60,7 +60,7 @@ pub mod jni {
         /// # Returns
         ///
         /// Returns a `JniResult` containing the algorithm name.
-        pub extern "java" fn getAlgorithm(&self, _env: &JNIEnv) -> JniResult<String> {}
+        pub(crate) extern "java" fn getAlgorithm(&self, _env: &JNIEnv) -> JniResult<String> {}
 
         /// Initializes the `KeyPairGenerator` object with the specified algorithm parameters.
         ///
@@ -79,7 +79,7 @@ pub mod jni {
         /// # Returns
         ///
         /// Returns a `JniResult` indicating success or failure.
-        pub extern "java" fn initialize(
+        pub(crate) extern "java" fn initialize(
             &self,
             env: &JNIEnv,
             #[input_type("Ljava/security/spec/AlgorithmParameterSpec;")] params: JObject,
@@ -99,6 +99,10 @@ pub mod jni {
         /// # Returns
         ///
         /// Returns a `JniResult` containing the generated `KeyPair`.
-        pub extern "java" fn generateKeyPair(&self, _env: &'borrow JNIEnv) -> JniResult<KeyPair> {}
+        pub(crate) extern "java" fn generateKeyPair(
+            &self,
+            _env: &'borrow JNIEnv,
+        ) -> JniResult<KeyPair> {
+        }
     }
 }

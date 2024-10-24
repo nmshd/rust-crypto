@@ -1,8 +1,8 @@
-use async_std::sync::Mutex;
+use flutter_rust_bridge::frb;
 use std::cmp::{Eq, Ord, PartialEq, PartialOrd};
 use std::collections::HashSet;
 use std::sync::Arc;
-use flutter_rust_bridge::frb;
+use std::sync::Mutex;
 
 #[cfg(feature = "android")]
 use robusta_jni::jni::JavaVM;

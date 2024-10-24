@@ -2,7 +2,7 @@ use core::panic;
 use std::collections::HashSet;
 use std::sync::Arc;
 
-use async_std::sync::Mutex;
+use std::sync::Mutex;
 use crypto_layer::common::config::KeyPairSpec;
 use crypto_layer::common::crypto::algorithms::hashes::Sha2Bits;
 use crypto_layer::common::factory::create_provider;
@@ -30,7 +30,7 @@ pub async fn get_provider() -> Provider {
 
     let impl_config = ProviderImplConfig::Android { vm: Arc::new(Mutex::new(get_java_vm())) };
 
-    create_provider(config, vec![impl_config]).await.unwrap()
+    create_provider(config, vec![impl_config]).unwrap()
 }
 
 pub async fn create_key_pair(provider: &mut Provider) -> Result<KeyPairHandle, crypto_layer::common::error::SecurityModuleError> {
@@ -40,15 +40,15 @@ pub async fn create_key_pair(provider: &mut Provider) -> Result<KeyPairHandle, c
         signing_hash: CryptoHash::Sha2(Sha2Bits::Sha256),
     };
 
-    provider.create_key_pair(key_pair_spec).await
+    provider.create_key_pair(key_pair_spec)
 }
 
 pub async fn sign(key_pair_handle: &KeyPairHandle, data: Vec<u8>) -> Result<Vec<u8>, crypto_layer::common::error::SecurityModuleError> {
-    key_pair_handle.sign_data(data).await
+    key_pair_handle.sign_data(&data)
 }
 
 pub async fn verify(key_pair_handle: &KeyPairHandle, data: Vec<u8>, signature: Vec<u8>) -> Result<bool, crypto_layer::common::error::SecurityModuleError> {
-    key_pair_handle.verify_signature(data, signature).await
+    key_pair_handle.verify_signature(&data, &signature)
 }
 
 /// This function gets the current Java VM running for the Android app.

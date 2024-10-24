@@ -22,33 +22,28 @@ use crate::{
         core::error::{ToTpmError, TpmError},
     },
 };
-use async_std::sync::Mutex;
-use async_trait::async_trait;
 use flutter_rust_bridge::frb;
 use robusta_jni::jni::{objects::JObject, JavaVM};
+use std::sync::Mutex;
 use tracing::{debug, info, instrument};
 
-#[cfg_attr(feature = "flutter", frb(non_opaque))]
 pub(crate) struct AndroidKeyHandle {
     pub(crate) key_id: String,
     pub(crate) spec: KeySpec,
     pub(crate) java_vm: Arc<Mutex<JavaVM>>,
 }
 
-#[cfg_attr(feature = "flutter", frb(non_opaque))]
 pub(crate) struct AndroidKeyPairHandle {
     pub(crate) key_id: String,
     pub(crate) spec: KeyPairSpec,
     pub(crate) java_vm: Arc<Mutex<JavaVM>>,
 }
 
-#[async_trait]
-#[cfg_attr(feature = "flutter", frb(non_opaque))]
 impl KeyHandleImpl for AndroidKeyHandle {
-    async fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
+    fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         info!("encrypting");
 
-        let vm = self.java_vm.lock().await;
+        let vm = self.java_vm.lock().unwrap();
         let env = vm.get_env().unwrap();
         let thread = vm.attach_current_thread().unwrap();
 
@@ -76,8 +71,8 @@ impl KeyHandleImpl for AndroidKeyHandle {
         Ok(encrypted)
     }
 
-    async fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
-        let vm = self.java_vm.lock().await;
+    fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
+        let vm = self.java_vm.lock().unwrap();
         let thread = vm.attach_current_thread().unwrap();
         let env = vm.get_env().unwrap();
 
@@ -107,7 +102,7 @@ impl KeyHandleImpl for AndroidKeyHandle {
         Ok(decrypted)
     }
 
-    async fn extract_key(&self) -> Result<Vec<u8>, SecurityModuleError> {
+    fn extract_key(&self) -> Result<Vec<u8>, SecurityModuleError> {
         todo!()
     }
 
@@ -116,13 +111,11 @@ impl KeyHandleImpl for AndroidKeyHandle {
     }
 }
 
-#[async_trait]
-#[cfg_attr(feature = "flutter", frb(non_opaque))]
 impl KeyPairHandleImpl for AndroidKeyPairHandle {
-    async fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
+    fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         info!("signing");
 
-        let vm = self.java_vm.lock().await;
+        let vm = self.java_vm.lock().unwrap();
         let thread = vm.attach_current_thread().unwrap();
         let env = vm.get_env().unwrap();
 
@@ -149,14 +142,10 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
         Ok(output)
     }
 
-    async fn verify_signature(
-        &self,
-        data: &[u8],
-        signature: &[u8],
-    ) -> Result<bool, SecurityModuleError> {
+    fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, SecurityModuleError> {
         info!("verifiying");
 
-        let vm = self.java_vm.lock().await;
+        let vm = self.java_vm.lock().unwrap();
         let thread = vm.attach_current_thread().unwrap();
         let env = vm.get_env().unwrap();
 
@@ -183,10 +172,10 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
         Ok(output)
     }
 
-    async fn encrypt_data(&self, encryped_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
+    fn encrypt_data(&self, encryped_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         info!("encrypting");
 
-        let vm = self.java_vm.lock().await;
+        let vm = self.java_vm.lock().unwrap();
         let thread = vm.attach_current_thread().unwrap();
         let env = vm.get_env().unwrap();
 
@@ -212,10 +201,10 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
         Ok(encrypted)
     }
 
-    async fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
+    fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         info!("decrypting");
 
-        let vm = self.java_vm.lock().await;
+        let vm = self.java_vm.lock().unwrap();
         let thread = vm.attach_current_thread().unwrap();
         let env = vm.get_env().unwrap();
 
@@ -240,10 +229,10 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
         Ok(decrypted)
     }
 
-    async fn get_public_key(&self) -> Result<Vec<u8>, SecurityModuleError> {
+    fn get_public_key(&self) -> Result<Vec<u8>, SecurityModuleError> {
         info!("getting public key");
 
-        let vm = self.java_vm.lock().await;
+        let vm = self.java_vm.lock().unwrap();
         let thread = vm.attach_current_thread().unwrap();
         let env = vm.get_env().unwrap();
 
@@ -259,7 +248,7 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
         todo!("turn public key into bytes");
     }
 
-    async fn extract_key(&self) -> Result<Vec<u8>, SecurityModuleError> {
+    fn extract_key(&self) -> Result<Vec<u8>, SecurityModuleError> {
         todo!()
     }
 

@@ -8,7 +8,7 @@ pub mod ffi;
 pub mod hsm;
 #[cfg(feature = "nks")]
 pub mod nks;
-pub mod stub;
+pub(crate) mod stub;
 #[cfg(test)]
 mod tests;
 #[cfg(feature = "tpm")]

@@ -24,37 +24,39 @@ impl<T> ToTpmError<T> for robusta_jni::jni::errors::Result<T> {
             Err(e) => {
                 // check if a java exception was thrown
                 let vm =
-                    wrapper::get_java_vm().map_err(|e| TpmError::InternalError(Box::new(e)))?;
+                    wrapper::get_java_vm().map_err(|e| TpmError::InternalError(e.description()))?;
                 let env = vm
                     .get_env()
-                    .map_err(|e| TpmError::InternalError(Box::new(e)))?;
+                    .map_err(|e| TpmError::InternalError(e.to_string()))?;
                 if env
                     .exception_check()
-                    .map_err(|e| TpmError::InternalError(Box::new(e)))?
+                    .map_err(|e| TpmError::InternalError(e.to_string()))?
                 {
                     // get the exception message and put it into the error
                     env.exception_describe()
-                        .map_err(|e| TpmError::InternalError(Box::new(e)))?;
+                        .map_err(|e| TpmError::InternalError(e.to_string()))?;
                     let ex = env
                         .exception_occurred()
-                        .map_err(|e| TpmError::InternalError(Box::new(e)))?;
+                        .map_err(|e| TpmError::InternalError(e.to_string()))?;
                     env.exception_clear()
-                        .map_err(|e| TpmError::InternalError(Box::new(e)))?;
+                        .map_err(|e| TpmError::InternalError(e.to_string()))?;
                     let message = env
                         .call_method(ex, "getMessage", "()Ljava/lang/String;", &[])
                         .and_then(|v| v.l())
-                        .map_err(|e| TpmError::InternalError(Box::new(e)))?;
+                        .map_err(|e| TpmError::InternalError(e.to_string()))?;
 
                     let message = env
                         .get_string(Into::into(message))
-                        .map_err(|e| TpmError::InternalError(Box::new(e)))?
+                        .map_err(|e| TpmError::InternalError(e.to_string()))?
                         .to_str()
-                        .map_err(|e| TpmError::InternalError(Box::new(e)))?
+                        .map_err(|e| TpmError::InternalError(e.to_string()))?
                         .to_string();
-                    Err(TpmError::InternalError(Box::new(JavaException(message))))
+                    Err(TpmError::InternalError(format!(
+                        "Java Exception: {message}"
+                    )))
                 } else {
                     // there was no exception, return the jni error
-                    Err(TpmError::InternalError(Box::new(e)))
+                    Err(TpmError::InternalError(e.to_string()))
                 }
             }
         }
