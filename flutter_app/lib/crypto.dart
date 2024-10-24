@@ -1,8 +1,9 @@
 import 'dart:typed_data';
 import 'package:cal_flutter_plugin/cal_flutter_plugin.dart' as cal;
+import 'package:cal_flutter_plugin/src/rust/third_party/crypto_layer/common.dart' as rcal;
 
 class CryptoProvider {
-  Future<cal.Provider> _provider = cal.getProvider();
+  Future<rcal.Provider> _provider = cal.getProvider();
 
   Future<KeyPairHandle> generateKeyPair() async {
     var kph = await cal.createKeyPair(provider: await _provider);
@@ -11,7 +12,7 @@ class CryptoProvider {
 }
 
 class KeyPairHandle {
-  cal.KeyPairHandle _kph;
+  rcal.KeyPairHandle _kph;
 
   KeyPairHandle(this._kph);
 

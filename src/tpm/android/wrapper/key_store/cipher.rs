@@ -2,7 +2,7 @@ use robusta_jni::bridge;
 
 #[bridge]
 /// This module contains the JNI bindings for the Cipher class in the javax.crypto package.
-pub mod jni {
+pub(crate) mod jni {
     use crate::tpm::android::wrapper::key_generation::key::jni::Key;
     use robusta_jni::{
         convert::{IntoJavaValue, Signature, TryFromJavaValue, TryIntoJavaValue},
@@ -17,9 +17,9 @@ pub mod jni {
     /// Represents a Cipher object in Java.
     #[derive(Signature, TryIntoJavaValue, IntoJavaValue, TryFromJavaValue)]
     #[package(javax.crypto)]
-    pub struct Cipher<'env: 'borrow, 'borrow> {
+    pub(crate) struct Cipher<'env: 'borrow, 'borrow> {
         #[instance]
-        pub raw: AutoLocal<'env, 'borrow>,
+        pub(crate) raw: AutoLocal<'env, 'borrow>,
     }
 
     impl<'env: 'borrow, 'borrow> Cipher<'env, 'borrow> {
@@ -34,7 +34,7 @@ pub mod jni {
         /// # Returns
         ///
         /// Returns a Cipher object that implements the specified transformation.
-        pub extern "java" fn getInstance(
+        pub(crate) extern "java" fn getInstance(
             env: &'borrow JNIEnv<'env>,
             transformation: String,
         ) -> JniResult<Self> {
@@ -51,7 +51,7 @@ pub mod jni {
         /// # Returns
         ///
         /// Returns a JniResult indicating success or failure.
-        pub extern "java" fn init(
+        pub(crate) extern "java" fn init(
             &self,
             env: &'borrow JNIEnv<'env>,
             opmode: i32,
@@ -59,7 +59,7 @@ pub mod jni {
         ) -> JniResult<()> {
         }
 
-        pub fn init2(
+        pub(crate) fn init2(
             &self,
             env: &'borrow JNIEnv<'env>,
             opmode: i32,
@@ -79,7 +79,7 @@ pub mod jni {
             Ok(())
         }
 
-        pub fn getIV(&self, env: &JNIEnv) -> JniResult<Vec<u8>> {
+        pub(crate) fn getIV(&self, env: &JNIEnv) -> JniResult<Vec<u8>> {
             let output = env.call_method(self.raw.as_obj(), "getIV", "()[B", &[])?;
 
             let output_array = output.l()?.into_inner() as jbyteArray;
@@ -98,7 +98,7 @@ pub mod jni {
         /// # Returns
         ///
         /// Returns a JniResult containing the output data.
-        pub fn doFinal(&self, env: &JNIEnv, input: Vec<u8>) -> JniResult<Vec<u8>> {
+        pub(crate) fn doFinal(&self, env: &JNIEnv, input: Vec<u8>) -> JniResult<Vec<u8>> {
             let input_array = env.byte_array_from_slice(&input)?;
 
             let output = env.call_method(

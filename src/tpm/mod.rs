@@ -10,11 +10,11 @@ use crate::common::crypto::{
 use std::any::Any;
 
 #[cfg(feature = "android")]
-pub mod android;
+pub(crate) mod android;
 pub mod core;
 #[cfg(feature = "linux")]
-pub mod linux;
+pub(crate) mod linux;
 #[cfg(feature = "macos")]
-pub mod macos;
+pub(crate) mod macos;
 #[cfg(feature = "win")]
-pub mod win;
+pub(crate) mod win;

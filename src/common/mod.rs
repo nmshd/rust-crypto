@@ -5,14 +5,15 @@ use async_std::task::block_on;
 use config::{KeyPairSpec, KeySpec};
 use error::SecurityModuleError;
 use flutter_rust_bridge::{frb, RustAutoOpaqueNom};
-use traits::key_handle::{DHKeyExchangeImpl, KeyHandleImpl, KeyPairHandleImpl};
-use traits::module_provider::ProviderImpl;
+use paste::paste;
+use traits::key_handle::{DHKeyExchangeImplEnum, KeyHandleImplEnum, KeyPairHandleImplEnum};
+use traits::module_provider::ProviderImplEnum;
 
 pub mod config;
 pub mod crypto;
 pub mod error;
 pub mod factory;
-pub(super) mod traits;
+pub(crate) mod traits;
 
 macro_rules! delegate {
     ($(pub async fn $method:ident(&self $(,$arg:ident: $type:ty)* $(,)?) $(-> $ret:ty)?;)+) => {
@@ -31,6 +32,33 @@ macro_rules! delegate {
     };
 }
 
+macro_rules! delegate_enum {
+    ($enum_type:ty, $(pub fn $method:ident(&self $(,$arg:ident: $type:ty)* $(,)?) $(-> $ret:ty)?;)+) => {
+        $(
+            pub fn $method(&self $(,$arg: $type)*) $(-> $ret)? {
+                paste! {
+                match self.implementation {
+                    [<$enum_type ImplEnum>]::[<Android $enum_type>](ref v) => v.$method($($arg),*),
+                    [<$enum_type ImplEnum>]::[<Stub $enum_type>](ref v) => v.$method($($arg),*),
+                }
+                }
+            }
+        )+
+    };
+    ($enum_type:ty, $(pub fn $method:ident(&mut self $(,$arg:ident: $type:ty)* $(,)?) $(-> $ret:ty)?;)+) => {
+        $(
+            pub fn $method(&mut self $(,$arg: $type)*) $(-> $ret)? {
+                paste! {
+                match self.implementation {
+                    [<$enum_type ImplEnum>]::[<Android $enum_type>](ref mut v) => v.$method($($arg),*),
+                    [<$enum_type ImplEnum>]::[<Stub $enum_type>](ref mut v) => v.$method($($arg),*),
+                }
+                }
+            }
+        )+
+    };
+}
+
 /// Abstraction of cryptographic providers.
 ///
 /// [Provider] abstracts hardware, software and network based keystores.
@@ -38,36 +66,42 @@ macro_rules! delegate {
 /// This is done for compatibility with other programming languages (mainly dart).
 #[cfg_attr(feature = "flutter", frb(opaque))]
 pub struct Provider {
-    pub implementation: RustAutoOpaqueNom<Box<dyn ProviderImpl>>,
+    pub(crate) implementation: ProviderImplEnum,
 }
 
 impl Provider {
-    pub async fn create_key(&mut self, spec: KeySpec) -> Result<KeyHandle, SecurityModuleError> {
-        self.implementation.write().await.create_key(spec).await
+    delegate_enum! {
+        Provider,
+        pub fn create_key(&mut self, spec: KeySpec) -> Result<KeyHandle, SecurityModuleError>;
     }
 
-    pub async fn load_key(&mut self, id: String) -> Result<KeyHandle, SecurityModuleError> {
-        self.implementation.write().await.load_key(id).await
+    delegate_enum! {
+        Provider,
+        pub fn load_key(&mut self, id: String) -> Result<KeyHandle, SecurityModuleError>;
     }
 
-    delegate! {
-        pub async fn import_key(
+    delegate_enum! {
+        Provider,
+        pub fn import_key(
             &mut self,
             spec: KeySpec,
             data: &[u8],
         ) -> Result<KeyHandle, SecurityModuleError>;
     }
 
-    delegate! {
-        pub async fn create_key_pair(&mut self, spec: KeyPairSpec) -> Result<KeyPairHandle, SecurityModuleError>;
+    delegate_enum! {
+        Provider,
+        pub fn create_key_pair(&mut self, spec: KeyPairSpec) -> Result<KeyPairHandle, SecurityModuleError>;
     }
 
-    delegate! {
-        pub async fn load_key_pair(&mut self, id: String) -> Result<KeyPairHandle, SecurityModuleError>;
+    delegate_enum! {
+        Provider,
+        pub fn load_key_pair(&mut self, id: String) -> Result<KeyPairHandle, SecurityModuleError>;
     }
 
-    delegate! {
-        pub async fn import_key_pair(
+    delegate_enum! {
+        Provider,
+        pub fn import_key_pair(
             &mut self,
             spec: KeyPairSpec,
             public_key: &[u8],
@@ -75,87 +109,102 @@ impl Provider {
         ) -> Result<KeyPairHandle, SecurityModuleError>;
     }
 
-    delegate! {
-        pub async fn import_public_key(
+    delegate_enum! {
+        Provider,
+        pub fn import_public_key(
             &mut self,
             spec: KeyPairSpec,
             public_key: &[u8],
         ) -> Result<KeyPairHandle, SecurityModuleError>;
     }
 
-    delegate! {
-        pub async fn start_ephemeral_dh_exchange(
+    delegate_enum! {
+        Provider,
+        pub fn start_ephemeral_dh_exchange(
             &mut self,
             spec: KeyPairSpec,
         ) -> Result<DHExchange, SecurityModuleError>;
     }
 
-    pub fn provider_name(&self) -> String {
-        block_on(self.implementation.write()).provider_name()
+    delegate_enum! {
+        Provider,
+        pub fn provider_name(&self) -> String;
     }
 }
 
-#[cfg_attr(feature = "flutter", frb(non_opaque))]
+#[cfg_attr(feature = "flutter", frb(opaque))]
 pub struct KeyPairHandle {
-    pub implementation: Box<dyn KeyPairHandleImpl>,
+    pub(crate) implementation: KeyPairHandleImplEnum,
 }
 
 /// Abstraction of asymmetric key pair handles.
 impl KeyPairHandle {
-    pub async fn encrypt_data(&self, data: Vec<u8>) -> Result<Vec<u8>, SecurityModuleError> {
-        self.implementation.encrypt_data(&data).await
+    delegate_enum! {
+        KeyPairHandle,
+        pub fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError>;
     }
-    pub async fn decrypt_data(&self, data: Vec<u8>) -> Result<Vec<u8>, SecurityModuleError> {
-        self.implementation.decrypt_data(&data).await
+
+    delegate_enum! {
+        KeyPairHandle,
+        pub fn decrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError>;
     }
-    pub async fn sign_data(&self, data: Vec<u8>) -> Result<Vec<u8>, SecurityModuleError> {
-        self.implementation.sign_data(&data).await
+
+    delegate_enum! {
+        KeyPairHandle,
+        pub fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError>;
     }
-    pub async fn verify_signature(
-        &self,
-        data: Vec<u8>,
-        signature: Vec<u8>,
-    ) -> Result<bool, SecurityModuleError> {
-        self.implementation
-            .verify_signature(&data, &signature)
-            .await
+
+    delegate_enum! {
+        KeyPairHandle,
+        pub fn verify_signature(
+            &self,
+            data: &[u8],
+            signature: &[u8],
+        ) -> Result<bool, SecurityModuleError>;
     }
-    pub async fn get_public_key(&self) -> Result<Vec<u8>, SecurityModuleError> {
-        self.implementation.get_public_key().await
+
+    delegate_enum! {
+        KeyPairHandle,
+        pub fn get_public_key(&self) -> Result<Vec<u8>, SecurityModuleError>;
     }
 
     /// Returns the id of the key pair, which can be used with [Provider::load_key_pair].
-    pub fn id(&self) -> Result<String, SecurityModuleError> {
-        self.implementation.id()
+    delegate_enum! {
+        KeyPairHandle,
+        pub fn id(&self) -> Result<String, SecurityModuleError>;
     }
 }
 
-#[cfg_attr(feature = "flutter", frb(non_opaque))]
+#[cfg_attr(feature = "flutter", frb(opaque))]
 pub struct KeyHandle {
-    pub(crate) implementation: Box<dyn KeyHandleImpl>,
+    pub(crate) implementation: KeyHandleImplEnum,
 }
 
 impl KeyHandle {
-    delegate! {
-        pub async fn extract_key(&self) -> Result<Vec<u8>, SecurityModuleError>;
+    delegate_enum! {
+        KeyHandle,
+        pub fn extract_key(&self) -> Result<Vec<u8>, SecurityModuleError>;
     }
-    delegate! {
-        pub async fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError>;
+    delegate_enum! {
+        KeyHandle,
+        pub fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError>;
     }
-    delegate! {
-        pub async fn decrypt_data(
+    delegate_enum! {
+        KeyHandle,
+        pub fn decrypt_data(
             &self,
             encrypted_data: &[u8],
         ) -> Result<Vec<u8>, SecurityModuleError>;
     }
 
     /// Returns the id of the key, which can be used with [Provider::load_key].
-    pub fn id(&self) -> Result<String, SecurityModuleError> {
-        self.implementation.id()
+    delegate_enum! {
+        KeyHandle,
+        pub fn id(&self) -> Result<String, SecurityModuleError>;
     }
 }
 
-#[cfg_attr(feature = "flutter", frb(non_opaque))]
+#[cfg_attr(feature = "flutter", frb(opaque))]
 pub struct DHExchange {
-    pub(crate) implementation: Box<dyn DHKeyExchangeImpl>,
+    pub(crate) implementation: DHKeyExchangeImplEnum,
 }

@@ -2,7 +2,7 @@ use robusta_jni::bridge;
 
 #[bridge]
 /// This module contains the JNI bindings for the KeyStore functionality in Android.
-pub mod jni {
+pub(crate) mod jni {
     use crate::tpm::android::wrapper::key_generation::key::jni::{Key, PublicKey};
     use robusta_jni::{
         convert::{IntoJavaValue, Signature, TryFromJavaValue, TryIntoJavaValue},
@@ -16,9 +16,9 @@ pub mod jni {
     /// Represents a KeyStore object in Java.
     #[derive(Signature, TryIntoJavaValue, IntoJavaValue, TryFromJavaValue)]
     #[package(java.security)]
-    pub struct KeyStore<'env: 'borrow, 'borrow> {
+    pub(crate) struct KeyStore<'env: 'borrow, 'borrow> {
         #[instance]
-        pub raw: AutoLocal<'env, 'borrow>,
+        pub(crate) raw: AutoLocal<'env, 'borrow>,
     }
 
     impl<'env: 'borrow, 'borrow> KeyStore<'env, 'borrow> {
@@ -32,7 +32,7 @@ pub mod jni {
         /// # Returns
         ///
         /// Returns a keystore object of the specified type.
-        pub extern "java" fn getInstance(
+        pub(crate) extern "java" fn getInstance(
             env: &'borrow JNIEnv<'env>,
             type1: String,
         ) -> JniResult<Self> {
@@ -53,7 +53,7 @@ pub mod jni {
         /// # Returns
         ///
         /// Returns a `JniResult` containing the Certificate instance.
-        pub extern "java" fn getCertificate(
+        pub(crate) extern "java" fn getCertificate(
             &self,
             env: &'borrow JNIEnv<'env>,
             alias: String,
@@ -71,7 +71,7 @@ pub mod jni {
         /// # Returns
         ///
         /// Returns a `JniResult` containing the Key instance.
-        pub extern "java" fn getKey(
+        pub(crate) extern "java" fn getKey(
             &self,
             env: &'borrow JNIEnv<'env>,
             alias: String,
@@ -89,7 +89,7 @@ pub mod jni {
         /// # Returns
         ///
         /// Returns a `JniResult` indicating the success or failure of the operation.
-        pub fn load(&self, env: &JNIEnv, param: Option<JObject>) -> JniResult<()> {
+        pub(crate) fn load(&self, env: &JNIEnv, param: Option<JObject>) -> JniResult<()> {
             let param_obj = param.unwrap_or(JObject::null());
             env.call_method(
                 self.raw.as_obj(),
@@ -100,7 +100,7 @@ pub mod jni {
             Ok(())
         }
 
-        pub fn set_entry(
+        pub(crate) fn set_entry(
             &self,
             env: &JNIEnv,
             alias: String,
@@ -121,9 +121,9 @@ pub mod jni {
     /// Represents a Certificate object in Java.
     #[derive(Signature, TryIntoJavaValue, IntoJavaValue, TryFromJavaValue)]
     #[package(java.security.cert)]
-    pub struct Certificate<'env: 'borrow, 'borrow> {
+    pub(crate) struct Certificate<'env: 'borrow, 'borrow> {
         #[instance]
-        pub raw: AutoLocal<'env, 'borrow>,
+        pub(crate) raw: AutoLocal<'env, 'borrow>,
     }
 
     impl<'env: 'borrow, 'borrow> Certificate<'env, 'borrow> {
@@ -136,13 +136,13 @@ pub mod jni {
         /// # Returns
         ///
         /// Returns a `JniResult` containing the PublicKey instance.
-        pub extern "java" fn getPublicKey(
+        pub(crate) extern "java" fn getPublicKey(
             &self,
             env: &'borrow JNIEnv<'env>,
         ) -> JniResult<PublicKey<'env, 'borrow>> {
         }
 
         /// toString Java method of the Certificate class.
-        pub extern "java" fn toString(&self, _env: &JNIEnv) -> JniResult<String> {}
+        pub(crate) extern "java" fn toString(&self, _env: &JNIEnv) -> JniResult<String> {}
     }
 }

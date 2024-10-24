@@ -8,7 +8,7 @@ crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
 flutter_rust_bridge_codegen = "2.5.0"
-flutter_rust_bridge = "=2.3.0"
+flutter_rust_bridge = "=2.5.1"
 crypto-layer = { path = "../../", features = ["tpm", "android"] }
 robusta_jni = "0.2"
 libloading = "*"

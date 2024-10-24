@@ -8,7 +8,7 @@ use robusta_jni::jni::JNIEnv;
 /// Builder for creating `KeyGenParameterSpec` objects.
 /// This class is an inner class of `KeyGenParameterSpec`. For that reason, it could not
 /// be implemented using the help of `robusta_jni`. `robusta_jni` does not support inner classes.
-pub struct Builder<'env: 'borrow, 'borrow> {
+pub(crate) struct Builder<'env: 'borrow, 'borrow> {
     raw: AutoLocal<'env, 'borrow>,
 }
 
@@ -24,7 +24,7 @@ impl<'env: 'borrow, 'borrow> Builder<'env, 'borrow> {
     /// # Returns
     ///
     /// A `JniResult` containing the new `Builder` instance.
-    pub fn new(
+    pub(crate) fn new(
         env: &'borrow JNIEnv<'env>,
         keystore_alias: String,
         purposes: i32,
@@ -49,7 +49,7 @@ impl<'env: 'borrow, 'borrow> Builder<'env, 'borrow> {
     /// # Returns
     ///
     /// A `JniResult` containing the updated `Builder` instance.
-    pub fn set_digests(
+    pub(crate) fn set_digests(
         mut self,
         env: &'borrow JNIEnv<'env>,
         digests: Vec<String>,
@@ -83,7 +83,7 @@ impl<'env: 'borrow, 'borrow> Builder<'env, 'borrow> {
     /// # Returns
     ///
     /// A `JniResult` containing the updated `Builder` instance.
-    pub fn set_encryption_paddings(
+    pub(crate) fn set_encryption_paddings(
         mut self,
         env: &'borrow JNIEnv<'env>,
         paddings: Vec<String>,
@@ -117,7 +117,7 @@ impl<'env: 'borrow, 'borrow> Builder<'env, 'borrow> {
     /// # Returns
     ///
     /// A `JniResult` containing the updated `Builder` instance.
-    pub fn set_signature_paddings(
+    pub(crate) fn set_signature_paddings(
         mut self,
         env: &'borrow JNIEnv<'env>,
         paddings: Vec<String>,
@@ -151,7 +151,7 @@ impl<'env: 'borrow, 'borrow> Builder<'env, 'borrow> {
     /// # Returns
     ///
     /// A `JniResult` containing the updated `Builder` instance.
-    pub fn set_block_modes(
+    pub(crate) fn set_block_modes(
         mut self,
         env: &'borrow JNIEnv<'env>,
         block_modes: Vec<String>,
@@ -185,7 +185,11 @@ impl<'env: 'borrow, 'borrow> Builder<'env, 'borrow> {
     /// # Returns
     ///
     /// A `JniResult` containing the updated `Builder` instance.
-    pub fn set_key_size(mut self, env: &'borrow JNIEnv<'env>, key_size: i32) -> JniResult<Self> {
+    pub(crate) fn set_key_size(
+        mut self,
+        env: &'borrow JNIEnv<'env>,
+        key_size: i32,
+    ) -> JniResult<Self> {
         let result = env.call_method(
             self.raw.as_obj(),
             "setKeySize",
@@ -208,7 +212,7 @@ impl<'env: 'borrow, 'borrow> Builder<'env, 'borrow> {
     ///
     /// A `JniResult` containing the updated `Builder` instance.
     #[allow(dead_code)]
-    pub fn set_algorithm_parameter_spec(
+    pub(crate) fn set_algorithm_parameter_spec(
         mut self,
         env: &'borrow JNIEnv<'env>,
         spec: JObject,
@@ -234,7 +238,7 @@ impl<'env: 'borrow, 'borrow> Builder<'env, 'borrow> {
     /// # Returns
     ///
     /// A `JniResult` containing the updated `Builder` instance.
-    pub fn set_is_strongbox_backed(
+    pub(crate) fn set_is_strongbox_backed(
         mut self,
         env: &'borrow JNIEnv<'env>,
         is_strongbox_backed: bool,
@@ -259,7 +263,7 @@ impl<'env: 'borrow, 'borrow> Builder<'env, 'borrow> {
     /// # Returns
     ///
     /// A `JniResult` containing the built `KeyGenParameterSpec` object.
-    pub fn build(
+    pub(crate) fn build(
         self,
         env: &'borrow JNIEnv<'env>,
     ) -> JniResult<KeyGenParameterSpec<'env, 'borrow>> {

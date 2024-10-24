@@ -9,25 +9,21 @@ use flutter_rust_bridge::frb;
 use crate::common::{
     config::{KeyPairSpec, KeySpec, ProviderConfig, ProviderImplConfig, SecurityLevel},
     error::SecurityModuleError,
-    traits::{
-        key_handle::KeyPairHandleImpl,
-        module_provider::{ProviderFactory, ProviderImpl},
-    },
+    traits::module_provider::ProviderImplEnum,
     DHExchange, KeyHandle, KeyPairHandle,
 };
 
 const PROVIDER_NAME: &str = "STUB_PROVIDER";
 
 #[cfg_attr(feature = "flutter", frb(opaque))]
-pub struct StubProviderFactory {}
+pub(crate) struct StubProviderFactory {}
 
-#[async_trait]
-impl ProviderFactory for StubProviderFactory {
-    fn get_name(&self) -> String {
+impl StubProviderFactory {
+    pub(crate) fn get_name(&self) -> String {
         return PROVIDER_NAME.to_owned();
     }
 
-    async fn get_capabilities(&self, impl_config: ProviderImplConfig) -> ProviderConfig {
+    pub(crate) fn get_capabilities(&self, impl_config: ProviderImplConfig) -> ProviderConfig {
         return ProviderConfig {
             min_security_level: SecurityLevel::Software,
             max_security_level: SecurityLevel::Software,
@@ -37,38 +33,40 @@ impl ProviderFactory for StubProviderFactory {
         };
     }
 
-    async fn create_provider(&self, impl_config: ProviderImplConfig) -> Box<dyn ProviderImpl> {
-        return Box::new(StubProvider {});
+    pub(crate) fn create_provider(&self, impl_config: ProviderImplConfig) -> ProviderImplEnum {
+        return (StubProvider {}).into();
     }
 }
 
-#[cfg_attr(feature = "flutter", frb(opaque))]
-pub struct StubProvider {}
+#[frb(opaque)]
+pub(crate) struct StubProvider {}
 
-#[async_trait]
-impl ProviderImpl for StubProvider {
-    async fn create_key(&mut self, spec: KeySpec) -> Result<KeyHandle, SecurityModuleError> {
+impl StubProvider {
+    pub(crate) fn create_key(&mut self, spec: KeySpec) -> Result<KeyHandle, SecurityModuleError> {
         todo!()
     }
 
-    async fn load_key(&mut self, id: String) -> Result<KeyHandle, SecurityModuleError> {
+    pub(crate) fn load_key(&mut self, id: String) -> Result<KeyHandle, SecurityModuleError> {
         todo!()
     }
 
-    async fn create_key_pair(
+    pub(crate) fn create_key_pair(
         &mut self,
         spec: KeyPairSpec,
     ) -> Result<KeyPairHandle, SecurityModuleError> {
         Ok(KeyPairHandle {
-            implementation: Box::new(StubKeyPairHandle {}),
+            implementation: (StubKeyPairHandle {}).into(),
         })
     }
 
-    async fn load_key_pair(&mut self, id: String) -> Result<KeyPairHandle, SecurityModuleError> {
+    pub(crate) fn load_key_pair(
+        &mut self,
+        id: String,
+    ) -> Result<KeyPairHandle, SecurityModuleError> {
         todo!()
     }
 
-    async fn import_key(
+    pub(crate) fn import_key(
         &mut self,
         spec: KeySpec,
         data: &[u8],
@@ -76,7 +74,7 @@ impl ProviderImpl for StubProvider {
         todo!()
     }
 
-    async fn import_key_pair(
+    pub(crate) fn import_key_pair(
         &mut self,
         spec: KeyPairSpec,
         public_key: &[u8],
@@ -85,7 +83,7 @@ impl ProviderImpl for StubProvider {
         todo!()
     }
 
-    async fn import_public_key(
+    pub(crate) fn import_public_key(
         &mut self,
         spec: KeyPairSpec,
         public_key: &[u8],
@@ -93,28 +91,27 @@ impl ProviderImpl for StubProvider {
         todo!()
     }
 
-    async fn start_ephemeral_dh_exchange(
+    pub(crate) fn start_ephemeral_dh_exchange(
         &mut self,
         spec: KeyPairSpec,
     ) -> Result<DHExchange, SecurityModuleError> {
         todo!()
     }
 
-    fn provider_name(&self) -> String {
+    pub(crate) fn provider_name(&self) -> String {
         PROVIDER_NAME.to_owned()
     }
 }
 
 #[cfg_attr(feature = "flutter", frb(opaque))]
-struct StubKeyPairHandle {}
+pub(crate) struct StubKeyPairHandle {}
 
-#[async_trait]
-impl KeyPairHandleImpl for StubKeyPairHandle {
-    async fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
+impl StubKeyPairHandle {
+    pub(crate) fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         Ok(data.to_vec())
     }
 
-    async fn verify_signature(
+    pub(crate) fn verify_signature(
         &self,
         data: &[u8],
         signature: &[u8],
@@ -122,27 +119,53 @@ impl KeyPairHandleImpl for StubKeyPairHandle {
         return Ok(data == signature);
     }
 
-    async fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
+    pub(crate) fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
         todo!()
     }
 
-    async fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
+    pub(crate) fn decrypt_data(
+        &self,
+        encrypted_data: &[u8],
+    ) -> Result<Vec<u8>, SecurityModuleError> {
         todo!()
     }
 
-    async fn get_public_key(&self) -> Result<Vec<u8>, SecurityModuleError> {
+    pub(crate) fn get_public_key(&self) -> Result<Vec<u8>, SecurityModuleError> {
         todo!()
     }
 
-    async fn extract_key(&self) -> Result<Vec<u8>, SecurityModuleError> {
+    pub(crate) fn extract_key(&self) -> Result<Vec<u8>, SecurityModuleError> {
         todo!()
     }
 
-    fn start_dh_exchange(&self) -> Result<DHExchange, SecurityModuleError> {
+    pub(crate) fn start_dh_exchange(&self) -> Result<DHExchange, SecurityModuleError> {
         todo!()
     }
 
-    fn id(&self) -> Result<String, SecurityModuleError> {
+    pub(crate) fn id(&self) -> Result<String, SecurityModuleError> {
+        Ok("RANDOM_KEY_ID".to_owned())
+    }
+}
+
+pub(crate) struct StubKeyHandle {}
+
+impl StubKeyHandle {
+    pub(crate) fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
+        todo!()
+    }
+
+    pub(crate) fn decrypt_data(
+        &self,
+        encrypted_data: &[u8],
+    ) -> Result<Vec<u8>, SecurityModuleError> {
+        todo!()
+    }
+
+    pub(crate) fn extract_key(&self) -> Result<Vec<u8>, SecurityModuleError> {
+        todo!()
+    }
+
+    pub(crate) fn id(&self) -> Result<String, SecurityModuleError> {
         Ok("RANDOM_KEY_ID".to_owned())
     }
 }

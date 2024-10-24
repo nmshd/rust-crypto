@@ -5,18 +5,18 @@ use once_cell::sync::Lazy;
 
 use super::{
     config::{self, ProviderConfig, ProviderImplConfig},
-    traits::module_provider::ProviderFactory,
+    traits::module_provider::ProviderFactoryEnum,
     Provider,
 };
 use crate::stub::StubProviderFactory;
 #[cfg(feature = "android")]
 use crate::tpm::android::provider::AndroidProviderFactory;
 
-static ALL_PROVIDERS: Lazy<Vec<Box<dyn ProviderFactory>>> = Lazy::new(|| {
+static ALL_PROVIDERS: Lazy<Vec<ProviderFactoryEnum>> = Lazy::new(|| {
     vec![
         #[cfg(feature = "android")]
-        Box::new(AndroidProviderFactory {}),
-        Box::new(StubProviderFactory {}),
+        Into::into(AndroidProviderFactory {}),
+        Into::into(StubProviderFactory {}),
     ]
 });
 
@@ -68,26 +68,31 @@ fn provider_supports_capabilities(
 ///     let provider = block_on(create_provider(provider_config, specific_provider_config)).unwrap();
 /// }
 /// ```
-// #[cfg_attr(feature = "flutter", frb)]
-pub async fn create_provider(
+pub fn create_provider(
     conf: ProviderConfig,
     impl_conf_vec: Vec<ProviderImplConfig>,
 ) -> Option<Provider> {
     for provider in ALL_PROVIDERS.iter() {
-        let name = provider.get_name();
+        let name = match provider {
+            ProviderFactoryEnum::StubProviderFactory(f) => f.get_name(),
+            ProviderFactoryEnum::AndroidProviderFactory(f) => f.get_name(),
+        };
+
         let config = match impl_conf_vec.iter().find(|e| e.name() == name) {
             Some(config) => config.clone(),
             None => continue,
         };
-        let provider_caps = provider.get_capabilities(config.clone()).await;
+        let provider_caps = match provider {
+            ProviderFactoryEnum::StubProviderFactory(f) => f.get_capabilities(config.clone()),
+            ProviderFactoryEnum::AndroidProviderFactory(f) => f.get_capabilities(config.clone()),
+        };
+
         if provider_supports_capabilities(&provider_caps, &conf) {
-            #[cfg(feature = "flutter")]
             return Some(Provider {
-                implementation: RustAutoOpaqueNom::new(provider.create_provider(config).await),
-            });
-            #[cfg(not(feature = "flutter"))]
-            return Some(Provider {
-                implementation: provider.create_provider(config).await,
+                implementation: match provider {
+                    ProviderFactoryEnum::StubProviderFactory(f) => f.create_provider(config),
+                    ProviderFactoryEnum::AndroidProviderFactory(f) => f.create_provider(config),
+                },
             });
         }
     }
@@ -99,19 +104,19 @@ pub async fn create_provider(
 /// * `name` - Name of the provider. See `get_name()`.
 /// * `impl_config` - Specif configuration for said provider.
 // #[cfg_attr(feature = "flutter", frb(non_opaque))]
-pub async fn create_provider_from_name(
-    name: String,
-    impl_conf: ProviderImplConfig,
-) -> Option<Provider> {
+pub fn create_provider_from_name(name: String, impl_conf: ProviderImplConfig) -> Option<Provider> {
     for provider in ALL_PROVIDERS.iter() {
-        if provider.get_name() == name {
-            #[cfg(feature = "flutter")]
+        let p_name = match provider {
+            ProviderFactoryEnum::StubProviderFactory(f) => f.get_name(),
+            ProviderFactoryEnum::AndroidProviderFactory(f) => f.get_name(),
+        };
+
+        if p_name == name {
             return Some(Provider {
-                implementation: RustAutoOpaqueNom::new(provider.create_provider(impl_conf).await),
-            });
-            #[cfg(not(feature = "flutter"))]
-            return Some(Provider {
-                implementation: provider.create_provider(impl_conf).await,
+                implementation: match provider {
+                    ProviderFactoryEnum::StubProviderFactory(f) => f.create_provider(impl_conf),
+                    ProviderFactoryEnum::AndroidProviderFactory(f) => f.create_provider(impl_conf),
+                },
             });
         }
     }
