@@ -1,4 +1,3 @@
-use flutter_rust_bridge::frb;
 pub mod encryption;
 pub mod hashes;
 use std::cmp::{Eq, PartialEq};
@@ -24,7 +23,6 @@ use std::hash::Hash;
 /// This enum can be converted to and from `u32` values using the `From` trait implementations.
 #[repr(C)]
 #[derive(Clone, Debug, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "flutter", frb(non_opaque))]
 pub enum KeyBits {
     Bits128,
     Bits192,

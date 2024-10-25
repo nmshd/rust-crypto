@@ -1,5 +1,4 @@
 use super::KeyBits;
-use flutter_rust_bridge::frb;
 use serde::{Deserialize, Serialize};
 use std::cmp::{Eq, PartialEq};
 use std::hash::Hash;
@@ -43,7 +42,6 @@ use std::hash::Hash;
 
 #[repr(C)]
 #[derive(Clone, Debug, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "flutter", frb(non_opaque))]
 pub enum AsymmetricKeySpec {
     /// RSA encryption with selectable key sizes.
     ///
@@ -67,7 +65,6 @@ pub enum AsymmetricKeySpec {
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "flutter", frb(non_opaque))]
 pub enum EccSigningScheme {
     /// ECDSA: Elliptic Curve Digital Signature Algorithm.
     EcDsa,
@@ -99,7 +96,6 @@ pub enum EccSigningScheme {
 /// Uses `#[repr(C)]` for C language compatibility.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
-#[cfg_attr(feature = "flutter", frb(non_opaque))]
 pub enum EccCurve {
     /// NIST P-256 curve.
     P256,
@@ -162,7 +158,6 @@ pub enum EccCurve {
 /// facilitating ABI compatibility and interfacing with C code.
 #[repr(C)]
 #[derive(Clone, Debug, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "flutter", frb(non_opaque))]
 pub enum Cipher {
     /// AES (Advanced Encryption Standard) block cipher with selectable key sizes and modes.
     Aes(SymmetricMode, KeyBits),
@@ -216,7 +211,6 @@ impl Default for Cipher {
 /// `#[repr(C)]` attribute is used for C compatibility.
 #[repr(C)]
 #[derive(Clone, Debug, Default, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "flutter", frb(non_opaque))]
 pub enum SymmetricMode {
     /// AES in Galois/Counter Mode (GCM) with selectable key sizes.
     /// GCM is preferred for its performance and security, providing both encryption and authentication.
@@ -270,7 +264,6 @@ pub enum SymmetricMode {
 /// Uses `#[repr(C)]` for C language compatibility.
 #[repr(C)]
 #[derive(Clone, Debug, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "flutter", frb(non_opaque))]
 pub enum TripleDesNumKeys {
     /// Two-key Triple DES, using two different keys for encryption.
     Tdes2,
@@ -300,7 +293,6 @@ pub enum TripleDesNumKeys {
 /// Marked with `#[repr(C)]` to ensure compatibility with C-based environments.
 #[repr(C)]
 #[derive(Clone, Debug, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "flutter", frb(non_opaque))]
 pub enum Rc2KeyBits {
     /// RC2 with a 40-bit key.
     Rc2_40,
@@ -312,7 +304,6 @@ pub enum Rc2KeyBits {
 
 /// Specifies ChaCha20 Variant.
 #[derive(Clone, Debug, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "flutter", frb(non_opaque))]
 pub enum ChCha20Mode {
     ChaCha20Poly1305,
     XChaCha20Poly1305,

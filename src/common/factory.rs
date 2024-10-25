@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use flutter_rust_bridge::{frb, RustAutoOpaqueNom};
 use once_cell::sync::Lazy;
 
 use super::{
@@ -20,7 +19,6 @@ static ALL_PROVIDERS: Lazy<Vec<ProviderFactoryEnum>> = Lazy::new(|| {
     ]
 });
 
-#[cfg_attr(feature = "flutter", frb(non_opaque))]
 fn provider_supports_capabilities(
     provider_capabilities: &ProviderConfig,
     needed_capabilities: &ProviderConfig,
@@ -94,7 +92,6 @@ pub fn create_provider(
 ///
 /// * `name` - Name of the provider. See `get_name()`.
 /// * `impl_config` - Specif configuration for said provider.
-// #[cfg_attr(feature = "flutter", frb(non_opaque))]
 pub fn create_provider_from_name(name: String, impl_conf: ProviderImplConfig) -> Option<Provider> {
     for provider in ALL_PROVIDERS.iter() {
         let p_name = provider.get_name();

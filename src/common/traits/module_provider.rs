@@ -1,7 +1,4 @@
-use async_trait::async_trait;
-use derive_more::derive::From;
 use enum_dispatch::enum_dispatch;
-use flutter_rust_bridge::frb;
 
 use crate::{
     common::{
@@ -10,8 +7,10 @@ use crate::{
         DHExchange, KeyHandle, KeyPairHandle,
     },
     stub::{StubProvider, StubProviderFactory},
-    tpm::android::provider::{AndroidProvider, AndroidProviderFactory},
 };
+
+#[cfg(feature = "android")]
+use crate::tpm::android::provider::{AndroidProvider, AndroidProviderFactory};
 
 #[enum_dispatch(ProviderFactoryEnum)]
 pub(crate) trait ProviderFactory: Send + Sync {
@@ -27,6 +26,7 @@ pub(crate) trait ProviderFactory: Send + Sync {
 #[enum_dispatch]
 pub(crate) enum ProviderFactoryEnum {
     StubProviderFactory,
+    #[cfg(feature = "android")]
     AndroidProviderFactory,
 }
 
@@ -125,5 +125,6 @@ pub(crate) trait ProviderImpl {
 #[enum_dispatch]
 pub(crate) enum ProviderImplEnum {
     StubProvider,
+    #[cfg(feature = "android")]
     AndroidProvider,
 }

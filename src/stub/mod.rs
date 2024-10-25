@@ -3,9 +3,6 @@
 
 use std::{collections::HashSet, hash::Hash};
 
-use async_trait::async_trait;
-use flutter_rust_bridge::frb;
-
 use crate::common::{
     config::{KeyPairSpec, KeySpec, ProviderConfig, ProviderImplConfig, SecurityLevel},
     error::SecurityModuleError,
@@ -18,7 +15,6 @@ use crate::common::{
 
 const PROVIDER_NAME: &str = "STUB_PROVIDER";
 
-#[cfg_attr(feature = "flutter", frb(opaque))]
 pub(crate) struct StubProviderFactory {}
 
 impl ProviderFactory for StubProviderFactory {

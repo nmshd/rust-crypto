@@ -1,11 +1,8 @@
 #![allow(unused)]
 #![allow(dead_code)]
 
-use async_std::task::block_on;
 use config::{KeyPairSpec, KeySpec};
 use error::SecurityModuleError;
-use flutter_rust_bridge::{frb, RustAutoOpaqueNom};
-use paste::paste;
 use traits::key_handle::{
     DHKeyExchangeImplEnum, KeyHandleImpl, KeyHandleImplEnum, KeyPairHandleImpl,
     KeyPairHandleImplEnum,
@@ -57,7 +54,6 @@ macro_rules! delegate_enum {
 /// [Provider] abstracts hardware, software and network based keystores.
 /// [Provider] itself is a wrapper around the structs which implement [ProviderImpl].
 /// This is done for compatibility with other programming languages (mainly dart).
-#[cfg_attr(feature = "flutter", frb(opaque))]
 pub struct Provider {
     pub(crate) implementation: ProviderImplEnum,
 }
@@ -125,7 +121,6 @@ impl Provider {
     }
 }
 
-#[cfg_attr(feature = "flutter", frb(opaque))]
 pub struct KeyPairHandle {
     pub(crate) implementation: KeyPairHandleImplEnum,
 }
@@ -168,7 +163,6 @@ impl KeyPairHandle {
     }
 }
 
-#[cfg_attr(feature = "flutter", frb(opaque))]
 pub struct KeyHandle {
     pub(crate) implementation: KeyHandleImplEnum,
 }
@@ -197,7 +191,6 @@ impl KeyHandle {
     }
 }
 
-#[cfg_attr(feature = "flutter", frb(opaque))]
 pub struct DHExchange {
     pub(crate) implementation: DHKeyExchangeImplEnum,
 }

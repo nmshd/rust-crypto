@@ -22,7 +22,7 @@ use crate::{
         core::error::{ToTpmError, TpmError},
     },
 };
-use flutter_rust_bridge::frb;
+
 use robusta_jni::jni::{objects::JObject, JavaVM};
 use std::sync::Mutex;
 use tracing::{debug, info, instrument};

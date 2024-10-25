@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 use tracing_subscriber::{layer::SubscriberExt, Registry};
 
 pub(crate) fn setup_logging() {

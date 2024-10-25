@@ -1,12 +1,10 @@
+#[cfg(feature = "android")]
+use crate::tpm::android::key_handle::{AndroidKeyHandle, AndroidKeyPairHandle};
 use crate::{
     common::{error::SecurityModuleError, DHExchange},
     stub::{StubKeyHandle, StubKeyPairHandle},
-    tpm::android::key_handle::{AndroidKeyHandle, AndroidKeyPairHandle},
 };
-use async_trait::async_trait;
-use derive_more::derive::From;
 use enum_dispatch::enum_dispatch;
-use flutter_rust_bridge::frb;
 
 /// Defines a common interface for cryptographic key operations.
 ///
@@ -44,6 +42,7 @@ pub(crate) trait KeyHandleImpl: Send + Sync {
 #[enum_dispatch]
 pub(crate) enum KeyHandleImplEnum {
     StubKeyHandle,
+    #[cfg(feature = "android")]
     AndroidKeyHandle,
 }
 
@@ -97,6 +96,7 @@ pub(crate) trait KeyPairHandleImpl: Send + Sync {
 #[enum_dispatch]
 pub(crate) enum KeyPairHandleImplEnum {
     StubKeyPairHandle,
+    #[cfg(feature = "android")]
     AndroidKeyPairHandle,
 }
 
@@ -115,6 +115,7 @@ pub(crate) trait DHKeyExchangeImpl: Send + Sync {
 }
 
 pub(crate) enum DHKeyExchangeImplEnum {
+    #[cfg(feature = "android")]
     Android,
     Stub,
 }
