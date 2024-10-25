@@ -1,5 +1,6 @@
 use crate::common::{error::SecurityModuleError, DHExchange};
 use async_trait::async_trait;
+#[cfg(feature = "flutter")]
 use flutter_rust_bridge::frb;
 
 /// Defines a common interface for cryptographic key operations.

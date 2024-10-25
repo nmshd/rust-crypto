@@ -1,7 +1,7 @@
-use std::collections::HashMap;
-
+#[cfg(feature = "flutter")]
 use flutter_rust_bridge::{frb, RustAutoOpaqueNom};
 use once_cell::sync::Lazy;
+use std::collections::HashMap;
 
 use super::{
     config::{self, ProviderConfig, ProviderImplConfig},

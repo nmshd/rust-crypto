@@ -1,4 +1,5 @@
 use super::KeyBits;
+#[cfg(feature = "flutter")]
 use flutter_rust_bridge::frb;
 use serde::{Deserialize, Serialize};
 use std::cmp::{Eq, PartialEq};
