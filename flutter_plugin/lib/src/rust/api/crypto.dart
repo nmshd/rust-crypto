@@ -4,11 +4,13 @@
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
 import '../frb_generated.dart';
+import '../lib.dart';
 import '../third_party/crypto_layer/common.dart';
+import '../third_party/crypto_layer/common/config.dart';
 import '../third_party/crypto_layer/common/error.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `get_java_vm`
+// These functions are ignored because they are not marked as `pub`: `get_java_vm`, `set_up_logging`
 
 Future<Provider> getProvider() =>
     RustLib.instance.api.crateApiCryptoGetProvider();
@@ -27,3 +29,6 @@ Future<bool> verify(
         required List<int> signature}) =>
     RustLib.instance.api.crateApiCryptoVerify(
         keyPairHandle: keyPairHandle, data: data, signature: signature);
+
+Future<ProviderImplConfig> getAndroidConfig() =>
+    RustLib.instance.api.crateApiCryptoGetAndroidConfig();

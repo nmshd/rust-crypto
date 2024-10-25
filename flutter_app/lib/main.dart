@@ -60,25 +60,27 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  late CryptoProvider _cryptoProvider;
-  late Future<KeyPairHandle> _keyPairHandle;
+  late Future<cal.Provider> _cryptoProvider;
+  late Future<cal.KeyPairHandle> _keyPairHandle;
   String? _signature;
   bool? _isVerified;
-  TextEditingController _dataToVerifyController = TextEditingController();
-  TextEditingController _dataToSignController = TextEditingController();
-  TextEditingController _signatureToVerifyController = TextEditingController();
+  final TextEditingController _dataToVerifyController = TextEditingController();
+  final TextEditingController _dataToSignController = TextEditingController();
+  final TextEditingController _signatureToVerifyController =
+      TextEditingController();
 
   @override
   void initState() {
     super.initState();
 
-    _cryptoProvider = CryptoProvider();
-    _keyPairHandle = _cryptoProvider.generateKeyPair();
+    _cryptoProvider = getDefaultProvider();
+    _keyPairHandle =
+        _cryptoProvider.then((provider) => getDefaultKeyPair(provider));
   }
 
   Future<void> signData() async {
-    Uint8List signature = await (await _keyPairHandle)
-        .sign(Uint8List.fromList(_dataToSignController.text.codeUnits));
+    Uint8List signature = await (await _keyPairHandle).signData(
+        data: Uint8List.fromList(_dataToSignController.text.codeUnits));
 
     setState(() {
       _signature = base64Encode(signature);
@@ -93,9 +95,10 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> verifyData() async {
-    bool? isVerified = await (await _keyPairHandle).verify(
-        Uint8List.fromList(_dataToVerifyController.text.codeUnits),
-        Uint8List.fromList(base64Decode(_signatureToVerifyController.text)));
+    bool? isVerified = await (await _keyPairHandle).verifySignature(
+        data: Uint8List.fromList(_dataToVerifyController.text.codeUnits),
+        signature: Uint8List.fromList(
+            base64Decode(_signatureToVerifyController.text)));
     setState(() {
       _isVerified = isVerified;
     });

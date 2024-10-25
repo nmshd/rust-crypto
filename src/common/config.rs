@@ -26,12 +26,14 @@ pub enum SecurityLevel {
     Unsafe = 1,
 }
 
+/// flutter_rust_bridge:non_opaque
 #[derive(Clone, Copy, Debug)]
 pub struct KeySpec {
     pub cipher: Cipher,
     pub signing_hash: CryptoHash,
 }
 
+/// flutter_rust_bridge:non_opaque
 #[derive(Clone, Copy, Debug)]
 pub struct KeyPairSpec {
     pub asym_spec: AsymmetricKeySpec,
@@ -39,6 +41,7 @@ pub struct KeyPairSpec {
     pub signing_hash: CryptoHash,
 }
 
+/// flutter_rust_bridge:non_opaque
 #[derive(Clone, Debug)]
 pub struct ProviderConfig {
     pub max_security_level: SecurityLevel,
@@ -48,13 +51,14 @@ pub struct ProviderConfig {
     pub supported_asym_spec: HashSet<AsymmetricKeySpec>,
 }
 
+/// flutter_rust_bridge:non_opaque
 #[derive(Clone)]
 pub enum ProviderImplConfig {
     #[cfg(feature = "android")]
     Android {
         vm: Arc<Mutex<JavaVM>>,
     },
-    Stub {},
+    Stub,
 }
 
 impl ProviderImplConfig {

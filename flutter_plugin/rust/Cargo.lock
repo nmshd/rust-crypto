@@ -364,6 +364,9 @@ dependencies = [
  "flutter_rust_bridge_codegen",
  "libloading",
  "robusta_jni",
+ "tracing",
+ "tracing-android",
+ "tracing-subscriber",
 ]
 
 [[package]]
@@ -617,7 +620,6 @@ dependencies = [
  "serde",
  "serde_json",
  "tracing",
- "tracing-android",
  "tracing-appender",
  "tracing-attributes",
  "tracing-subscriber",

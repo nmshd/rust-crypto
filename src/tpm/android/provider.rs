@@ -26,8 +26,6 @@ use std::sync::Mutex;
 use std::{collections::HashSet, fmt::Debug, sync::Arc};
 use tracing::{debug, info, instrument};
 
-use super::android_logger::setup_logging;
-
 pub(crate) struct AndroidProviderFactory {}
 
 impl ProviderFactory for AndroidProviderFactory {
@@ -50,7 +48,6 @@ impl ProviderFactory for AndroidProviderFactory {
     }
 
     fn create_provider(&self, impl_config: ProviderImplConfig) -> ProviderImplEnum {
-        setup_logging();
         Into::into(AndroidProvider {
             java_vm: match impl_config {
                 ProviderImplConfig::Android { vm } => vm,

@@ -39,7 +39,7 @@ use std::hash::Hash;
 ///
 /// This enum uses `#[repr(C)]` to ensure that it has the same memory layout as a C enum,
 /// facilitating interfacing with C code or when ABI compatibility is required.
-
+/// flutter_rust_bridge:non_opaque
 #[repr(C)]
 #[derive(Clone, Debug, Copy, PartialEq, Eq, Hash)]
 pub enum AsymmetricKeySpec {
@@ -63,6 +63,7 @@ pub enum AsymmetricKeySpec {
     },
 }
 
+/// flutter_rust_bridge:non_opaque
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum EccSigningScheme {
@@ -94,8 +95,9 @@ pub enum EccSigningScheme {
 /// # Note
 ///
 /// Uses `#[repr(C)]` for C language compatibility.
+/// flutter_rust_bridge:non_opaque
 #[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum EccCurve {
     /// NIST P-256 curve.
     P256,
@@ -114,7 +116,6 @@ pub enum EccCurve {
     /// Brainpool P638 curve.
     BrainpoolP638,
     /// Curve25519, popular for its security and performance.
-    #[default]
     Curve25519,
     /// Curve448, known for high security and efficiency.
     Curve448,
@@ -156,6 +157,7 @@ pub enum EccCurve {
 ///
 /// Marked with `#[repr(C)]` to ensure it has the same memory layout as a C enum,
 /// facilitating ABI compatibility and interfacing with C code.
+/// flutter_rust_bridge:non_opaque
 #[repr(C)]
 #[derive(Clone, Debug, Copy, PartialEq, Eq, Hash)]
 pub enum Cipher {
@@ -209,6 +211,7 @@ impl Default for Cipher {
 /// # Note
 ///
 /// `#[repr(C)]` attribute is used for C compatibility.
+/// flutter_rust_bridge:non_opaque
 #[repr(C)]
 #[derive(Clone, Debug, Default, Copy, PartialEq, Eq, Hash)]
 pub enum SymmetricMode {
@@ -262,6 +265,7 @@ pub enum SymmetricMode {
 /// # Note
 ///
 /// Uses `#[repr(C)]` for C language compatibility.
+/// flutter_rust_bridge:non_opaque
 #[repr(C)]
 #[derive(Clone, Debug, Copy, PartialEq, Eq, Hash)]
 pub enum TripleDesNumKeys {
@@ -291,6 +295,7 @@ pub enum TripleDesNumKeys {
 /// # Note
 ///
 /// Marked with `#[repr(C)]` to ensure compatibility with C-based environments.
+/// flutter_rust_bridge:non_opaque
 #[repr(C)]
 #[derive(Clone, Debug, Copy, PartialEq, Eq, Hash)]
 pub enum Rc2KeyBits {
@@ -303,6 +308,7 @@ pub enum Rc2KeyBits {
 }
 
 /// Specifies ChaCha20 Variant.
+/// flutter_rust_bridge:non_opaque
 #[derive(Clone, Debug, Copy, PartialEq, Eq, Hash)]
 pub enum ChCha20Mode {
     ChaCha20Poly1305,

@@ -7,6 +7,7 @@
 /// Algorithms like SHA-1, MD2, MD4, and MD5 are considered insecure for most cryptographic
 /// purposes due to practical collision attacks and should be avoided for new applications.
 /// Prefer using more secure algorithms like SHA-2 or SHA-3 for cryptographic purposes.
+/// flutter_rust_bridge:non_opaque
 #[repr(C)]
 #[derive(Clone, Debug, Copy, PartialEq, Eq, Hash)]
 pub enum CryptoHash {
@@ -70,6 +71,7 @@ impl Default for CryptoHash {
 /// # Note
 ///
 /// `#[repr(C)]` attribute is used for C compatibility, facilitating interoperability with C-based systems.
+/// flutter_rust_bridge:non_opaque
 #[repr(C)]
 #[derive(Clone, Debug, Copy, PartialEq, Eq, Hash)]
 pub enum Sha2Bits {
@@ -144,6 +146,7 @@ impl From<Sha2Bits> for u32 {
 /// # Note
 ///
 /// Uses `#[repr(C)]` for C language compatibility, important for interoperability with C-based systems.
+/// flutter_rust_bridge:non_opaque
 #[repr(C)]
 #[derive(Clone, Debug, Copy, PartialEq, Eq, Hash)]
 pub enum Sha3Bits {

@@ -5,6 +5,9 @@
 
 import '../../frb_generated.dart';
 import 'common/config.dart';
+import 'common/crypto/algorithms.dart';
+import 'common/crypto/algorithms/encryption.dart';
+import 'common/crypto/algorithms/hashes.dart';
 import 'common/error.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 

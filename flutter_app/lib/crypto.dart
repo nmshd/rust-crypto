@@ -1,26 +1,17 @@
-import 'dart:typed_data';
-import 'package:cal_flutter_plugin/cal_flutter_plugin.dart' as cal;
-import 'package:cal_flutter_plugin/src/rust/third_party/crypto_layer/common.dart' as rcal;
+import 'package:cal_flutter_plugin/cal_flutter_plugin.dart';
 
-class CryptoProvider {
-  Future<rcal.Provider> _provider = cal.getProvider();
-
-  Future<KeyPairHandle> generateKeyPair() async {
-    var kph = await cal.createKeyPair(provider: await _provider);
-    return KeyPairHandle(kph);
-  }
+Future<Provider> getDefaultProvider() async {
+  var implConf = await getAndroidConfig();
+  var provider =
+      await createProviderFromName(name: "AndroidProvider", implConf: implConf);
+  return provider!;
 }
 
-class KeyPairHandle {
-  rcal.KeyPairHandle _kph;
+Future<KeyPairHandle> getDefaultKeyPair(Provider provider) async {
+  const asymSpec = AsymmetricKeySpec.rsa(KeyBits.bits2048);
+  const signingHash = CryptoHash_Sha2(Sha2Bits.sha256);
+  const spec = KeyPairSpec(asymSpec: asymSpec, signingHash: signingHash);
 
-  KeyPairHandle(this._kph);
-
-  Future<Uint8List> sign(Uint8List data) {
-    return cal.sign(keyPairHandle: _kph, data: data);
-  }
-
-  Future<bool> verify(Uint8List data, Uint8List signature) {
-    return cal.verify(keyPairHandle: _kph, data: data, signature: signature);
-  }
+  var handle = provider.createKeyPair(spec: spec);
+  return handle;
 }
