@@ -1,3 +1,4 @@
+#[cfg(feature = "flutter")]
 use flutter_rust_bridge::frb;
 pub mod encryption;
 pub mod hashes;

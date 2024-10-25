@@ -4,6 +4,7 @@
 use std::{collections::HashSet, hash::Hash};
 
 use async_trait::async_trait;
+#[cfg(feature = "flutter")]
 use flutter_rust_bridge::frb;
 
 use crate::common::{

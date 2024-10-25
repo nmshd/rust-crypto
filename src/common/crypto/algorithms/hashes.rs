@@ -1,3 +1,4 @@
+#[cfg(feature = "flutter")]
 use flutter_rust_bridge::frb;
 
 /// Represents the available hashing algorithms.

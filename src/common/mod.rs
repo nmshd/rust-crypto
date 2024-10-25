@@ -4,6 +4,7 @@
 use async_std::task::block_on;
 use config::{KeyPairSpec, KeySpec};
 use error::SecurityModuleError;
+#[cfg(feature = "flutter")]
 use flutter_rust_bridge::{frb, RustAutoOpaqueNom};
 use traits::key_handle::{DHKeyExchangeImpl, KeyHandleImpl, KeyPairHandleImpl};
 use traits::module_provider::ProviderImpl;
@@ -26,7 +27,12 @@ macro_rules! delegate {
     ($(pub async fn $method:ident(&mut self $(,$arg:ident: $type:ty)* $(,)?) $(-> $ret:ty)?;)+) => {
         $(
             pub async fn $method(&mut self $(,$arg: $type)*) $(-> $ret)? {
-                self.implementation.write().await.$method($($arg),*).await
+                #[cfg(feature = "flutter")]
+                {
+                    self.implementation.write().await.$method($($arg),*).await
+                }
+                #[cfg(not(feature = "flutter"))]
+                self.implementation.$method($($arg),*).await
             }
         )+
     };
@@ -39,16 +45,29 @@ macro_rules! delegate {
 /// This is done for compatibility with other programming languages (mainly dart).
 #[cfg_attr(feature = "flutter", frb(opaque))]
 pub struct Provider {
+    #[cfg(feature = "flutter")]
     pub implementation: RustAutoOpaqueNom<Box<dyn ProviderImpl>>,
+    #[cfg(not(feature = "flutter"))]
+    pub implementation: Box<dyn ProviderImpl>,
 }
 
 impl Provider {
     pub async fn create_key(&mut self, spec: KeySpec) -> Result<KeyHandle, SecurityModuleError> {
-        self.implementation.write().await.create_key(spec).await
+        #[cfg(feature = "flutter")]
+        {
+            self.implementation.write().await.create_key(spec).await
+        }
+        #[cfg(not(feature = "flutter"))]
+        self.implementation.create_key(spec).await
     }
 
     pub async fn load_key(&mut self, id: String) -> Result<KeyHandle, SecurityModuleError> {
-        self.implementation.write().await.load_key(id).await
+        #[cfg(feature = "flutter")]
+        {
+            self.implementation.write().await.load_key(id).await
+        }
+        #[cfg(not(feature = "flutter"))]
+        self.implementation.load_key(id).await
     }
 
     delegate! {
@@ -92,7 +111,12 @@ impl Provider {
     }
 
     pub fn provider_name(&self) -> String {
-        block_on(self.implementation.write()).provider_name()
+        #[cfg(feature = "flutter")]
+        {
+            block_on(self.implementation.write()).provider_name()
+        }
+        #[cfg(not(feature = "flutter"))]
+        self.implementation.provider_name()
     }
 }
 
