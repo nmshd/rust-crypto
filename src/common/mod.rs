@@ -12,6 +12,7 @@ use traits::module_provider::{ProviderImpl, ProviderImplEnum};
 pub mod config;
 pub mod crypto;
 pub mod error;
+pub mod error_v2;
 pub mod factory;
 pub(crate) mod traits;
 
@@ -26,7 +27,12 @@ macro_rules! delegate {
     ($(pub async fn $method:ident(&mut self $(,$arg:ident: $type:ty)* $(,)?) $(-> $ret:ty)?;)+) => {
         $(
             pub async fn $method(&mut self $(,$arg: $type)*) $(-> $ret)? {
-                self.implementation.write().await.$method($($arg),*).await
+                #[cfg(feature = "flutter")]
+                {
+                    self.implementation.write().await.$method($($arg),*).await
+                }
+                #[cfg(not(feature = "flutter"))]
+                self.implementation.$method($($arg),*).await
             }
         )+
     };
