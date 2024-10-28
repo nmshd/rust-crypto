@@ -21,21 +21,21 @@ pub(crate) struct StubProviderFactory {}
 
 impl ProviderFactory for StubProviderFactory {
     fn get_name(&self) -> String {
-        return PROVIDER_NAME.to_owned();
+        PROVIDER_NAME.to_owned()
     }
 
     fn get_capabilities(&self, impl_config: ProviderImplConfig) -> ProviderConfig {
-        return ProviderConfig {
+        ProviderConfig {
             min_security_level: SecurityLevel::Software,
             max_security_level: SecurityLevel::Software,
             supported_asym_spec: HashSet::new(),
             supported_ciphers: HashSet::new(),
             supported_hashes: HashSet::new(),
-        };
+        }
     }
 
     fn create_provider(&self, impl_config: ProviderImplConfig) -> ProviderImplEnum {
-        return (StubProvider {}).into();
+        (StubProvider {}).into()
     }
 }
 
@@ -43,7 +43,7 @@ pub(crate) struct StubProvider {}
 
 impl ProviderImpl for StubProvider {
     fn create_key(&mut self, spec: KeySpec) -> Result<KeyHandle, CalError> {
-        return Err(CalError::not_implemented());
+        Err(CalError::not_implemented())
     }
 
     fn load_key(&mut self, id: String) -> Result<KeyHandle, CalError> {
@@ -98,7 +98,7 @@ impl KeyPairHandleImpl for StubKeyPairHandle {
     }
 
     fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, CalError> {
-        return Ok(data == signature);
+        Ok(data == signature)
     }
 
     fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {

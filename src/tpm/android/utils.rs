@@ -1,5 +1,3 @@
-use nanoid::format;
-
 use crate::common::{
     config::KeyPairSpec,
     crypto::algorithms::{
@@ -93,7 +91,6 @@ pub fn load_iv(data: &[u8], iv_size: usize) -> (Vec<u8>, Vec<u8>) {
 }
 
 pub fn get_mode_name(mode: SymmetricMode) -> Result<String, CalError> {
-    #[allow(unreachable_patterns)]
     match mode {
         SymmetricMode::Ecb => Ok("ECB".to_string()),
         SymmetricMode::Cbc => Ok("CBC".to_string()),
@@ -102,7 +99,6 @@ pub fn get_mode_name(mode: SymmetricMode) -> Result<String, CalError> {
         SymmetricMode::Gcm => Ok("GCM".to_string()),
         SymmetricMode::Ctr => Ok("CTR".to_string()),
         SymmetricMode::Ccm => Ok("CCM".to_string()),
-        _ => Err(CalError::unsupported_algorithm(format!("{:?}", mode))),
     }
 }
 
@@ -156,7 +152,7 @@ impl From<Cipher> for Result<String, CalError> {
 
 pub(crate) fn get_cipher_name(cipher: Cipher) -> Result<String, CalError> {
     match cipher {
-        Cipher::Aes(mode, _) => Ok("AES".to_string()),
+        Cipher::Aes(_, _) => Ok("AES".to_string()),
         Cipher::TripleDes(_) => Ok("DESede".to_string()),
         Cipher::Des => Ok("DES".to_string()),
         _ => Err(CalError::unsupported_algorithm(format!("{:?}", cipher))),

@@ -1,6 +1,3 @@
-#![allow(unused)]
-#![allow(dead_code)]
-
 use config::{KeyPairSpec, KeySpec};
 use error::CalError;
 use traits::key_handle::{
@@ -14,28 +11,6 @@ pub mod crypto;
 pub mod error;
 pub mod factory;
 pub(crate) mod traits;
-
-macro_rules! delegate {
-    ($(pub async fn $method:ident(&self $(,$arg:ident: $type:ty)* $(,)?) $(-> $ret:ty)?;)+) => {
-        $(
-            pub async fn $method(&self $(,$arg: $type)*) $(-> $ret)? {
-                self.implementation.$method($($arg),*).await
-            }
-        )+
-    };
-    ($(pub async fn $method:ident(&mut self $(,$arg:ident: $type:ty)* $(,)?) $(-> $ret:ty)?;)+) => {
-        $(
-            pub async fn $method(&mut self $(,$arg: $type)*) $(-> $ret)? {
-                #[cfg(feature = "flutter")]
-                {
-                    self.implementation.write().await.$method($($arg),*).await
-                }
-                #[cfg(not(feature = "flutter"))]
-                self.implementation.$method($($arg),*).await
-            }
-        )+
-    };
-}
 
 macro_rules! delegate_enum {
     ($enum_type:ty, $(pub fn $method:ident(&self $(,$arg:ident: $type:ty)* $(,)?) $(-> $ret:ty)?;)+) => {
@@ -159,7 +134,6 @@ impl KeyPairHandle {
         pub fn get_public_key(&self) -> Result<Vec<u8>, CalError>;
     }
 
-    /// Returns the id of the key pair, which can be used with [Provider::load_key_pair].
     delegate_enum! {
         KeyPairHandle,
         pub fn id(&self) -> Result<String, CalError>;
@@ -187,13 +161,13 @@ impl KeyHandle {
         ) -> Result<Vec<u8>, CalError>;
     }
 
-    /// Returns the id of the key, which can be used with [Provider::load_key].
     delegate_enum! {
         KeyHandle,
         pub fn id(&self) -> Result<String, CalError>;
     }
 }
 
+#[allow(dead_code)]
 pub struct DHExchange {
     pub(crate) implementation: DHKeyExchangeImplEnum,
 }

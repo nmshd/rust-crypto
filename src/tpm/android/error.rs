@@ -23,7 +23,7 @@ impl<T> ToCalError<T> for robusta_jni::jni::errors::Result<T> {
     fn err_internal(self) -> Result<T, CalError> {
         err_internal(self)
             .context("JNI Error, try to get Exception message")
-            .map_err(|e| CalError::other(e))
+            .map_err(CalError::other)
     }
 }
 

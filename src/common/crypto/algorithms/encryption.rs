@@ -17,9 +17,8 @@ use std::hash::Hash;
 /// ```
 /// use crypto_layer::common::crypto::algorithms::{KeyBits, encryption::AsymmetricKeySpec};
 ///
-/// fn main() {
-///    let encryption_method = AsymmetricKeySpec::Rsa(KeyBits::Bits2048);
-/// }
+/// let encryption_method = AsymmetricKeySpec::Rsa(KeyBits::Bits2048);
+///
 /// ```
 ///
 /// Basic usage for ECC:
@@ -27,12 +26,10 @@ use std::hash::Hash;
 /// ```
 /// use crypto_layer::common::crypto::algorithms::encryption::{AsymmetricKeySpec, EccSigningScheme, EccCurve};
 ///
-/// fn main() {
-///    let encryption_method = AsymmetricKeySpec::Ecc{
-///         scheme: EccSigningScheme::EcDsa,
-///         curve: EccCurve::P256,
-///     };
-/// }
+/// let encryption_method = AsymmetricKeySpec::Ecc{
+///     scheme: EccSigningScheme::EcDsa,
+///     curve: EccCurve::P256,
+/// };
 /// ```
 ///
 /// # Note
@@ -87,9 +84,7 @@ pub enum EccSigningScheme {
 /// ```
 /// use crypto_layer::common::crypto::algorithms::encryption::EccCurve;
 ///
-/// fn main() {
-///     let curve_type = EccCurve::P256;
-/// }
+/// let curve_type = EccCurve::P256;
 /// ```
 ///
 /// # Note
@@ -138,9 +133,7 @@ pub enum EccCurve {
 /// ```
 /// use crypto_layer::common::crypto::algorithms::{KeyBits,encryption::{Cipher, SymmetricMode}};
 ///
-/// fn main() {
-///     let cipher = Cipher::Aes(SymmetricMode::Cbc, KeyBits::Bits256);
-/// }
+/// let cipher = Cipher::Aes(SymmetricMode::Cbc, KeyBits::Bits256);
 /// ```
 ///
 /// Using `Cipher` with ChaCha20:
@@ -148,9 +141,7 @@ pub enum EccCurve {
 /// ```
 /// use crypto_layer::common::crypto::algorithms::encryption::Cipher;
 ///
-/// fn main() {
-///     let cipher = Cipher::Chacha20;
-/// }
+/// let cipher = Cipher::Chacha20;
 /// ```
 ///
 /// # Note
@@ -203,9 +194,7 @@ impl Default for Cipher {
 /// ```rust
 /// use crypto_layer::common::crypto::algorithms::encryption::SymmetricMode;
 ///
-/// fn main() {
-///     let mode = SymmetricMode::Gcm;
-/// }
+/// let mode = SymmetricMode::Gcm;
 /// ```
 ///
 /// # Note
@@ -257,9 +246,7 @@ pub enum SymmetricMode {
 /// ```rust
 /// use crypto_layer::common::crypto::algorithms::encryption::TripleDesNumKeys;
 ///
-/// fn main() {
-///     let des_config = TripleDesNumKeys::Tdes3;
-/// }
+/// let des_config = TripleDesNumKeys::Tdes3;
 /// ```
 ///
 /// # Note
@@ -287,9 +274,7 @@ pub enum TripleDesNumKeys {
 /// ```rust
 /// use crypto_layer::common::crypto::algorithms::encryption:: Rc2KeyBits;
 ///
-/// fn main() {
-///     let key_size = Rc2KeyBits::Rc2_128;
-/// }
+/// let key_size = Rc2KeyBits::Rc2_128;
 /// ```
 ///
 /// # Note

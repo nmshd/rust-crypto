@@ -8,7 +8,9 @@ use anyhow::anyhow;
 
 use crate::common::error::CalError;
 
+#[allow(dead_code)]
 pub(crate) mod key_generation;
+#[allow(dead_code)]
 pub(crate) mod key_store;
 
 /// This function gets the current Java VM running for the Android app.
@@ -57,7 +59,7 @@ pub(super) fn get_java_vm() -> Result<JavaVM, CalError> {
     }
 
     let jvm = unsafe {
-        JavaVM::from_raw(buffer[0]).map_err(|e| {
+        JavaVM::from_raw(buffer[0]).map_err(|_| {
             CalError::other(
                 anyhow!("JNI_GetCreatedJavaVMs returned nullptr in pos 0")
                     .context("Can't load JVM"),

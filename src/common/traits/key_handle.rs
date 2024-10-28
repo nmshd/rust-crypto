@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 #[cfg(feature = "android")]
 use crate::tpm::android::key_handle::{AndroidKeyHandle, AndroidKeyPairHandle};
 use crate::{

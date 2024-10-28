@@ -1,5 +1,5 @@
-use serde_json::error;
-use std::{backtrace, error::Error, fmt};
+use std::fmt;
+
 use thiserror;
 
 // Feel free to add more items to error.
@@ -48,6 +48,7 @@ pub enum CalErrorKind {
     Other,
 }
 
+#[allow(dead_code)]
 impl CalError {
     pub(crate) fn other(source: anyhow::Error) -> Self {
         Self {
@@ -66,7 +67,7 @@ impl CalError {
                 description,
                 internal,
             },
-            source: source,
+            source,
         }
     }
 

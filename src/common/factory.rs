@@ -1,8 +1,7 @@
 use once_cell::sync::Lazy;
-use std::collections::HashMap;
 
 use super::{
-    config::{self, ProviderConfig, ProviderImplConfig},
+    config::{ProviderConfig, ProviderImplConfig},
     traits::module_provider::{ProviderFactory, ProviderFactoryEnum},
     Provider,
 };
@@ -53,17 +52,15 @@ fn provider_supports_capabilities(
 ///     factory::*,
 /// };
 ///
-/// fn main() {
-///     let specific_provider_config = vec![ProviderImplConfig::Stub {}];
-///     let provider_config = ProviderConfig {
-///        min_security_level: SecurityLevel::Software,
-///        max_security_level: SecurityLevel::Hardware,
-///        supported_asym_spec: HashSet::new(),
-///        supported_ciphers: HashSet::new(),
-///        supported_hashes: HashSet::new(),
-///     };
-///     let provider = block_on(create_provider(provider_config, specific_provider_config)).unwrap();
-/// }
+/// let specific_provider_config = vec![ProviderImplConfig::Stub {}];
+/// let provider_config = ProviderConfig {
+///     min_security_level: SecurityLevel::Software,
+///     max_security_level: SecurityLevel::Hardware,
+///     supported_asym_spec: HashSet::new(),
+///     supported_ciphers: HashSet::new(),
+///     supported_hashes: HashSet::new(),
+/// };
+/// let provider = block_on(create_provider(provider_config, specific_provider_config)).unwrap();
 /// ```
 pub fn create_provider(
     conf: ProviderConfig,

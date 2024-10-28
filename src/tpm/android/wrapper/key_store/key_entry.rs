@@ -1,8 +1,6 @@
 use robusta_jni::jni::objects::{JObject, JValue};
 use robusta_jni::jni::{errors::Result, objects::AutoLocal, JNIEnv};
 
-use crate::tpm::android::wrapper::key_generation::secret_key_spec::jni;
-
 pub(crate) struct SecretKeyEntry<'env: 'borrow, 'borrow> {
     raw: AutoLocal<'env, 'borrow>,
 }

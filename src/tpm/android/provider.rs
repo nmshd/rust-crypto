@@ -7,7 +7,7 @@ use crate::{
         },
         error::{CalError, ToCalError},
         traits::module_provider::{ProviderFactory, ProviderImpl, ProviderImplEnum},
-        DHExchange, KeyHandle, KeyPairHandle, Provider,
+        DHExchange, KeyHandle, KeyPairHandle,
     },
     tpm::android::{
         key_handle::{AndroidKeyHandle, AndroidKeyPairHandle},
@@ -17,7 +17,6 @@ use crate::{
     },
 };
 
-use anyhow::anyhow;
 use nanoid::nanoid;
 use robusta_jni::jni::JavaVM;
 use std::sync::Mutex;
@@ -31,7 +30,7 @@ impl ProviderFactory for AndroidProviderFactory {
         "AndroidProvider".to_owned()
     }
 
-    fn get_capabilities(&self, impl_config: ProviderImplConfig) -> ProviderConfig {
+    fn get_capabilities(&self, _impl_config: ProviderImplConfig) -> ProviderConfig {
         ProviderConfig {
             min_security_level: SecurityLevel::Hardware,
             max_security_level: SecurityLevel::Hardware,
@@ -87,7 +86,6 @@ impl ProviderImpl for AndroidProvider {
         info!("generating key: {}", key_id);
 
         let vm = self.java_vm.lock().unwrap();
-        let thread = vm.attach_current_thread().expect("Thread attach failed");
         let env = vm.get_env().expect("Get env failed");
 
         info!("got env");
@@ -149,7 +147,7 @@ impl ProviderImpl for AndroidProvider {
 
         Ok(KeyHandle {
             implementation: Into::into(AndroidKeyHandle {
-                key_id: key_id.to_owned(),
+                key_id: key_id,
                 java_vm: self.java_vm.clone(),
                 spec,
             }),
@@ -161,8 +159,7 @@ impl ProviderImpl for AndroidProvider {
         info!("generating key pair! {}", key_id);
 
         let vm = self.java_vm.lock().unwrap();
-        let thread = vm.attach_current_thread().unwrap();
-        let env = vm.get_env().unwrap();
+        let env = vm.get_env().err_internal()?;
 
         // build up key specs
         let mut kps_builder =
@@ -181,7 +178,10 @@ impl ProviderImpl for AndroidProvider {
                     .set_key_size(&env, _key_bits.into())
                     .err_internal()?;
             }
-            AsymmetricKeySpec::Ecc { scheme, curve } => {
+            AsymmetricKeySpec::Ecc {
+                scheme: _,
+                curve: _,
+            } => {
                 kps_builder = kps_builder
                     .set_digests(&env, vec![spec.signing_hash.into()])
                     .err_internal()?;
@@ -206,7 +206,7 @@ impl ProviderImpl for AndroidProvider {
 
         Ok(KeyPairHandle {
             implementation: Into::into(AndroidKeyPairHandle {
-                key_id: key_id.to_owned(),
+                key_id: key_id,
                 java_vm: self.java_vm.clone(),
                 spec,
             }),
@@ -237,8 +237,7 @@ impl ProviderImpl for AndroidProvider {
     #[instrument]
     fn import_key(&mut self, spec: KeySpec, data: &[u8]) -> Result<KeyHandle, CalError> {
         let vm = self.java_vm.lock().unwrap();
-        let thread = vm.attach_current_thread().unwrap();
-        let env = vm.get_env().unwrap();
+        let env = vm.get_env().err_internal()?;
 
         let id = nanoid!(10);
 
@@ -255,7 +254,9 @@ impl ProviderImpl for AndroidProvider {
         )
         .err_internal()?;
 
-        key_store.set_entry(&env, id.clone(), key.raw.as_obj(), None);
+        key_store
+            .set_entry(&env, id.clone(), key.raw.as_obj(), None)
+            .err_internal()?;
 
         Ok(KeyHandle {
             implementation: Into::into(AndroidKeyHandle {

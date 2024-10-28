@@ -1,10 +1,9 @@
 use std::sync::Arc;
 
-use super::{provider::AndroidProvider, utils::get_iv_size};
+use super::utils::get_iv_size;
 use crate::{
     common::{
         config::{KeyPairSpec, KeySpec},
-        crypto::KeyUsage,
         error::{CalError, ToCalError},
         traits::key_handle::{KeyHandleImpl, KeyPairHandleImpl},
         DHExchange,
@@ -24,7 +23,7 @@ use crate::{
 
 use robusta_jni::jni::{objects::JObject, JavaVM};
 use std::sync::Mutex;
-use tracing::{debug, info, instrument};
+use tracing::{debug, info};
 
 pub(crate) struct AndroidKeyHandle {
     pub(crate) key_id: String,
@@ -229,7 +228,7 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
             .getCertificate(&env, self.key_id.to_owned())
             .err_internal()?;
 
-        let public_key = key.getPublicKey(&env).err_internal()?;
+        let _public_key = key.getPublicKey(&env).err_internal()?;
 
         todo!("turn public key into bytes");
     }
