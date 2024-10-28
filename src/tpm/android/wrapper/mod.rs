@@ -4,7 +4,9 @@ use robusta_jni::jni::{
     JavaVM,
 };
 
-use crate::tpm::core::error::TpmError;
+use anyhow::anyhow;
+
+use crate::common::error::CalError;
 
 pub(crate) mod key_generation;
 pub(crate) mod key_store;
@@ -13,7 +15,7 @@ pub(crate) mod key_store;
 /// Every Android app can have only 1 JVM running, so we can't just create a new one.
 /// Normally it would be possible to just call the "JNI_GetCreatedJavaVMs" C function, but we can't link against it for some reason
 /// so we have to load the symbol manually using the libloading crate.
-pub(super) fn get_java_vm() -> Result<JavaVM, TpmError> {
+pub(super) fn get_java_vm() -> Result<JavaVM, CalError> {
     // using jni_sys::JNI_GetCreatedJavaVMs crashes, bc the symbol is not loaded into the process for some reason
     // instead we use libloading to load the symbol ourselves
     pub type JniGetCreatedJavaVms = unsafe extern "system" fn(
@@ -29,7 +31,9 @@ pub(super) fn get_java_vm() -> Result<JavaVM, TpmError> {
 
     let get_created_java_vms: JniGetCreatedJavaVms = unsafe {
         *lib.get(JNI_GET_JAVA_VMS_NAME).map_err(|e| {
-            TpmError::InitializationError(format!("function JNI_GET_JAVA_VMS_NAME not loaded: {e}"))
+            CalError::other(
+                anyhow!("function JNI_GET_JAVA_VMS_NAME not loaded: {e}").context("Can't load JVM"),
+            )
         })?
     };
 
@@ -41,21 +45,26 @@ pub(super) fn get_java_vm() -> Result<JavaVM, TpmError> {
     let res = unsafe { get_created_java_vms(buffer_ptr, 1, found_vm_ptr) };
 
     if res != jni::sys::JNI_OK {
-        return Err(TpmError::InitializationError(
-            "Unable to get existing JVMs".to_owned(),
+        return Err(CalError::other(
+            anyhow!("JNI_GetCreatedJavaVMs failed with code {res}").context("Can't load JVM"),
         ));
     }
 
     if found_vms == 0 {
-        return Err(TpmError::InitializationError(
-            "No running JVMs found".to_owned(),
+        return Err(CalError::other(
+            anyhow!("JNI_GetCreatedJavaVMs returned no JVMs").context("Can't load JVM"),
         ));
     }
 
     let jvm = unsafe {
-        JavaVM::from_raw(buffer[0]).map_err(|e| TpmError::InitializationError(e.to_string()))?
+        JavaVM::from_raw(buffer[0]).map_err(|e| {
+            CalError::other(
+                anyhow!("JNI_GetCreatedJavaVMs returned nullptr in pos 0")
+                    .context("Can't load JVM"),
+            )
+        })?
     };
     jvm.attach_current_thread()
-        .map_err(|e| TpmError::InitializationError(e.to_string()))?;
+        .map_err(|e| CalError::other(anyhow!(e).context("Can't load JVM")))?;
     Ok(jvm)
 }

@@ -3,9 +3,11 @@
 
 use std::{collections::HashSet, hash::Hash};
 
+use serde_json::error;
+
 use crate::common::{
     config::{KeyPairSpec, KeySpec, ProviderConfig, ProviderImplConfig, SecurityLevel},
-    error::SecurityModuleError,
+    error::CalError,
     traits::{
         key_handle::{KeyHandleImpl, KeyPairHandleImpl},
         module_provider::{ProviderFactory, ProviderImpl, ProviderImplEnum},
@@ -40,25 +42,25 @@ impl ProviderFactory for StubProviderFactory {
 pub(crate) struct StubProvider {}
 
 impl ProviderImpl for StubProvider {
-    fn create_key(&mut self, spec: KeySpec) -> Result<KeyHandle, SecurityModuleError> {
+    fn create_key(&mut self, spec: KeySpec) -> Result<KeyHandle, CalError> {
+        return Err(CalError::not_implemented());
+    }
+
+    fn load_key(&mut self, id: String) -> Result<KeyHandle, CalError> {
         todo!()
     }
 
-    fn load_key(&mut self, id: String) -> Result<KeyHandle, SecurityModuleError> {
-        todo!()
-    }
-
-    fn create_key_pair(&mut self, spec: KeyPairSpec) -> Result<KeyPairHandle, SecurityModuleError> {
+    fn create_key_pair(&mut self, spec: KeyPairSpec) -> Result<KeyPairHandle, CalError> {
         Ok(KeyPairHandle {
             implementation: (StubKeyPairHandle {}).into(),
         })
     }
 
-    fn load_key_pair(&mut self, id: String) -> Result<KeyPairHandle, SecurityModuleError> {
+    fn load_key_pair(&mut self, id: String) -> Result<KeyPairHandle, CalError> {
         todo!()
     }
 
-    fn import_key(&mut self, spec: KeySpec, data: &[u8]) -> Result<KeyHandle, SecurityModuleError> {
+    fn import_key(&mut self, spec: KeySpec, data: &[u8]) -> Result<KeyHandle, CalError> {
         todo!()
     }
 
@@ -67,7 +69,7 @@ impl ProviderImpl for StubProvider {
         spec: KeyPairSpec,
         public_key: &[u8],
         private_key: &[u8],
-    ) -> Result<KeyPairHandle, SecurityModuleError> {
+    ) -> Result<KeyPairHandle, CalError> {
         todo!()
     }
 
@@ -75,14 +77,11 @@ impl ProviderImpl for StubProvider {
         &mut self,
         spec: KeyPairSpec,
         public_key: &[u8],
-    ) -> Result<KeyPairHandle, SecurityModuleError> {
+    ) -> Result<KeyPairHandle, CalError> {
         todo!()
     }
 
-    fn start_ephemeral_dh_exchange(
-        &mut self,
-        spec: KeyPairSpec,
-    ) -> Result<DHExchange, SecurityModuleError> {
+    fn start_ephemeral_dh_exchange(&mut self, spec: KeyPairSpec) -> Result<DHExchange, CalError> {
         todo!()
     }
 
@@ -94,35 +93,35 @@ impl ProviderImpl for StubProvider {
 pub(crate) struct StubKeyPairHandle {}
 
 impl KeyPairHandleImpl for StubKeyPairHandle {
-    fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
+    fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
         Ok(data.to_vec())
     }
 
-    fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, SecurityModuleError> {
+    fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, CalError> {
         return Ok(data == signature);
     }
 
-    fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
+    fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
         todo!()
     }
 
-    fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
+    fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, CalError> {
         todo!()
     }
 
-    fn get_public_key(&self) -> Result<Vec<u8>, SecurityModuleError> {
+    fn get_public_key(&self) -> Result<Vec<u8>, CalError> {
         todo!()
     }
 
-    fn extract_key(&self) -> Result<Vec<u8>, SecurityModuleError> {
+    fn extract_key(&self) -> Result<Vec<u8>, CalError> {
         todo!()
     }
 
-    fn start_dh_exchange(&self) -> Result<DHExchange, SecurityModuleError> {
+    fn start_dh_exchange(&self) -> Result<DHExchange, CalError> {
         todo!()
     }
 
-    fn id(&self) -> Result<String, SecurityModuleError> {
+    fn id(&self) -> Result<String, CalError> {
         Ok("RANDOM_KEY_ID".to_owned())
     }
 }
@@ -130,19 +129,19 @@ impl KeyPairHandleImpl for StubKeyPairHandle {
 pub(crate) struct StubKeyHandle {}
 
 impl KeyHandleImpl for StubKeyHandle {
-    fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
+    fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
         todo!()
     }
 
-    fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
+    fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, CalError> {
         todo!()
     }
 
-    fn extract_key(&self) -> Result<Vec<u8>, SecurityModuleError> {
+    fn extract_key(&self) -> Result<Vec<u8>, CalError> {
         todo!()
     }
 
-    fn id(&self) -> Result<String, SecurityModuleError> {
+    fn id(&self) -> Result<String, CalError> {
         Ok("RANDOM_KEY_ID".to_owned())
     }
 }

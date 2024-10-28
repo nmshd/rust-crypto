@@ -1,13 +1,12 @@
-use crate::{
-    common::{
-        config::KeyPairSpec,
-        crypto::algorithms::{
-            encryption::{AsymmetricKeySpec, Cipher, SymmetricMode},
-            hashes::{CryptoHash, Sha2Bits},
-        },
-        error::SecurityModuleError,
+use nanoid::format;
+
+use crate::common::{
+    config::KeyPairSpec,
+    crypto::algorithms::{
+        encryption::{AsymmetricKeySpec, Cipher, SymmetricMode},
+        hashes::{CryptoHash, Sha2Bits},
     },
-    tpm::core::error::TpmError,
+    error::CalError,
 };
 
 pub enum Padding {
@@ -47,7 +46,7 @@ impl From<CryptoHash> for String {
     }
 }
 
-pub fn get_hash_name(hash: CryptoHash) -> Result<String, SecurityModuleError> {
+pub fn get_hash_name(hash: CryptoHash) -> Result<String, CalError> {
     match hash {
         CryptoHash::Sha1 => Ok("SHA1".to_owned()),
         CryptoHash::Sha2(size) => match size {
@@ -56,12 +55,12 @@ pub fn get_hash_name(hash: CryptoHash) -> Result<String, SecurityModuleError> {
             Sha2Bits::Sha384 => Ok("SHA384".to_owned()),
             Sha2Bits::Sha512 => Ok("SHA512".to_owned()),
             Sha2Bits::Sha512_224 | Sha2Bits::Sha512_256 => {
-                Err(TpmError::UnsupportedOperation("not supported".to_owned()).into())
+                Err(CalError::unsupported_algorithm(format!("{:?}", hash)))
             }
         },
         CryptoHash::Md5 => Ok("MD5".to_owned()),
         CryptoHash::Sha3(_) | CryptoHash::Md2 | CryptoHash::Md4 | CryptoHash::Ripemd160 => {
-            Err(TpmError::UnsupportedOperation("not supported".to_owned()).into())
+            Err(CalError::unsupported_algorithm(format!("{:?}", hash)))
         }
     }
 }
@@ -93,7 +92,7 @@ pub fn load_iv(data: &[u8], iv_size: usize) -> (Vec<u8>, Vec<u8>) {
     (data, iv)
 }
 
-pub fn get_mode_name(mode: SymmetricMode) -> Result<String, SecurityModuleError> {
+pub fn get_mode_name(mode: SymmetricMode) -> Result<String, CalError> {
     #[allow(unreachable_patterns)]
     match mode {
         SymmetricMode::Ecb => Ok("ECB".to_string()),
@@ -103,10 +102,7 @@ pub fn get_mode_name(mode: SymmetricMode) -> Result<String, SecurityModuleError>
         SymmetricMode::Gcm => Ok("GCM".to_string()),
         SymmetricMode::Ctr => Ok("CTR".to_string()),
         SymmetricMode::Ccm => Ok("CCM".to_string()),
-        _ => Err(TpmError::UnsupportedOperation(
-            "Only GCM, ECB, CBC, and CTR as block modes are supported".to_owned(),
-        )
-        .into()),
+        _ => Err(CalError::unsupported_algorithm(format!("{:?}", mode))),
     }
 }
 
@@ -119,7 +115,7 @@ pub fn get_cipher_padding(cipher: Cipher) -> String {
     .to_owned()
 }
 
-pub fn get_sym_cipher_mode(cipher: Cipher) -> Result<String, SecurityModuleError> {
+pub fn get_sym_cipher_mode(cipher: Cipher) -> Result<String, CalError> {
     match cipher {
         Cipher::Aes(mode, _) => Ok(format!(
             "AES/{}/{}",
@@ -128,41 +124,42 @@ pub fn get_sym_cipher_mode(cipher: Cipher) -> Result<String, SecurityModuleError
         )),
         Cipher::TripleDes(_) => Ok("DESede/CBC/PKCS7Padding".to_owned()),
         Cipher::Des => Ok("DES/CBC/NoPadding".to_owned()),
-        Cipher::Rc2(_) => Err(TpmError::UnsupportedOperation("not supported".to_owned()).into()),
-        Cipher::Camellia(_, _) | Cipher::Rc4 | Cipher::Chacha20(_) => {
-            Err(TpmError::UnsupportedOperation("not supported".to_owned()).into())
+        Cipher::Rc2(_) | Cipher::Camellia(_, _) | Cipher::Rc4 | Cipher::Chacha20(_) => {
+            Err(CalError::unsupported_algorithm(format!("{:?}", cipher)))
         }
-        Cipher::Rc4 => todo!(),
-        Cipher::Chacha20(ch_cha20_mode) => todo!(),
     }
 }
 
-pub fn get_asym_cipher_mode(asym_spec: AsymmetricKeySpec) -> Result<String, SecurityModuleError> {
+pub fn get_asym_cipher_mode(asym_spec: AsymmetricKeySpec) -> Result<String, CalError> {
     match asym_spec {
         AsymmetricKeySpec::Rsa(_) => Ok("RSA/ECB/PKCS1Padding".to_owned()),
-        AsymmetricKeySpec::Ecc { scheme, curve } => {
-            Err(TpmError::UnsupportedOperation("not supported".to_owned()).into())
-        }
+        AsymmetricKeySpec::Ecc {
+            scheme: _,
+            curve: _,
+        } => Err(CalError::unsupported_algorithm(format!(
+            "ECC encryption/decryption not supported: {:?}",
+            asym_spec
+        ))),
     }
 }
 
-impl From<Cipher> for Result<String, SecurityModuleError> {
+impl From<Cipher> for Result<String, CalError> {
     fn from(cipher: Cipher) -> Self {
         match cipher {
             Cipher::Aes(mode, _) => Ok(format!("AES/{}", get_mode_name(mode)?)),
             Cipher::TripleDes(_) => Ok("DESede".to_string()),
             Cipher::Des => Ok("DES".to_string()),
-            _ => Err(TpmError::UnsupportedOperation("Unsupported cipher".to_owned()).into()),
+            _ => Err(CalError::unsupported_algorithm(format!("{:?}", cipher))),
         }
     }
 }
 
-pub(crate) fn get_cipher_name(cipher: Cipher) -> Result<String, SecurityModuleError> {
+pub(crate) fn get_cipher_name(cipher: Cipher) -> Result<String, CalError> {
     match cipher {
         Cipher::Aes(mode, _) => Ok("AES".to_string()),
         Cipher::TripleDes(_) => Ok("DESede".to_string()),
         Cipher::Des => Ok("DES".to_string()),
-        _ => Err(TpmError::UnsupportedOperation("Unsupported cipher".to_owned()).into()),
+        _ => Err(CalError::unsupported_algorithm(format!("{:?}", cipher))),
     }
 }
 
@@ -178,7 +175,7 @@ impl From<AsymmetricKeySpec> for String {
     }
 }
 
-pub fn get_signature_algorithm(spec: KeyPairSpec) -> Result<String, SecurityModuleError> {
+pub fn get_signature_algorithm(spec: KeyPairSpec) -> Result<String, CalError> {
     let part1 = match spec.asym_spec {
         AsymmetricKeySpec::Rsa(_) => "RSA",
         AsymmetricKeySpec::Ecc {

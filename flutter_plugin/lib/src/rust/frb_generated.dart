@@ -20,7 +20,6 @@ import 'third_party/crypto_layer/common/crypto/algorithms/hashes.dart';
 import 'third_party/crypto_layer/common/crypto/pkcs/standards.dart';
 import 'third_party/crypto_layer/common/error.dart';
 import 'third_party/crypto_layer/common/factory.dart';
-import 'third_party/crypto_layer/tpm/core/error.dart';
 
 /// Main entrypoint of the Rust API
 class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
@@ -79,7 +78,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.5.0';
 
   @override
-  int get rustContentHash => 711684846;
+  int get rustContentHash => 880697366;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -90,20 +89,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 }
 
 abstract class RustLibApi extends BaseApi {
-  Future<KeyPairHandle> crateApiCryptoCreateKeyPair(
-      {required Provider provider});
-
   Future<ProviderImplConfig> crateApiCryptoGetAndroidConfig();
-
-  Future<Provider> crateApiCryptoGetProvider();
-
-  Future<Uint8List> crateApiCryptoSign(
-      {required KeyPairHandle keyPairHandle, required List<int> data});
-
-  Future<bool> crateApiCryptoVerify(
-      {required KeyPairHandle keyPairHandle,
-      required List<int> data,
-      required List<int> signature});
 
   String crateApiSimpleGreet({required String name});
 
@@ -182,15 +168,18 @@ abstract class RustLibApi extends BaseApi {
   Future<void> cryptoLayerCommonCryptoPkcsStandardsOidTypeAsStr(
       {required OidType that});
 
+  Future<String> cryptoLayerCommonErrorCalErrorBacktrace(
+      {required CalError that});
+
+  Future<CalErrorKind> cryptoLayerCommonErrorCalErrorErrorKind(
+      {required CalError that});
+
   Future<Provider?> cryptoLayerCommonFactoryCreateProvider(
       {required ProviderConfig conf,
       required List<ProviderImplConfig> implConfVec});
 
   Future<Provider?> cryptoLayerCommonFactoryCreateProviderFromName(
       {required String name, required ProviderImplConfig implConf});
-
-  Future<String> cryptoLayerTpmCoreErrorTpmErrorDescription(
-      {required TpmError that});
 
   RustArcIncrementStrongCountFnType
       get rust_arc_increment_strong_count_ArcMutexJavaVm;
@@ -200,6 +189,14 @@ abstract class RustLibApi extends BaseApi {
 
   CrossPlatformFinalizerArg
       get rust_arc_decrement_strong_count_ArcMutexJavaVmPtr;
+
+  RustArcIncrementStrongCountFnType
+      get rust_arc_increment_strong_count_CalError;
+
+  RustArcDecrementStrongCountFnType
+      get rust_arc_decrement_strong_count_CalError;
+
+  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_CalErrorPtr;
 
   RustArcIncrementStrongCountFnType
       get rust_arc_increment_strong_count_DhExchange;
@@ -234,28 +231,11 @@ abstract class RustLibApi extends BaseApi {
 
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_ProviderPtr;
 
-  RustArcIncrementStrongCountFnType
-      get rust_arc_increment_strong_count_SecurityModuleError;
-
-  RustArcDecrementStrongCountFnType
-      get rust_arc_decrement_strong_count_SecurityModuleError;
-
-  CrossPlatformFinalizerArg
-      get rust_arc_decrement_strong_count_SecurityModuleErrorPtr;
-
   RustArcIncrementStrongCountFnType get rust_arc_increment_strong_count_T;
 
   RustArcDecrementStrongCountFnType get rust_arc_decrement_strong_count_T;
 
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_TPtr;
-
-  RustArcIncrementStrongCountFnType
-      get rust_arc_increment_strong_count_TpmError;
-
-  RustArcDecrementStrongCountFnType
-      get rust_arc_decrement_strong_count_TpmError;
-
-  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_TpmErrorPtr;
 }
 
 class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
@@ -267,41 +247,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   });
 
   @override
-  Future<KeyPairHandle> crateApiCryptoCreateKeyPair(
-      {required Provider provider}) {
-    return handler.executeNormal(NormalTask(
-      callFfi: (port_) {
-        final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
-            provider, serializer);
-        pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 1, port: port_);
-      },
-      codec: SseCodec(
-        decodeSuccessData:
-            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle,
-        decodeErrorData:
-            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSecurityModuleError,
-      ),
-      constMeta: kCrateApiCryptoCreateKeyPairConstMeta,
-      argValues: [provider],
-      apiImpl: this,
-    ));
-  }
-
-  TaskConstMeta get kCrateApiCryptoCreateKeyPairConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_key_pair",
-        argNames: ["provider"],
-      );
-
-  @override
   Future<ProviderImplConfig> crateApiCryptoGetAndroidConfig() {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 2, port: port_);
+            funcId: 1, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_provider_impl_config,
@@ -320,95 +271,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<Provider> crateApiCryptoGetProvider() {
-    return handler.executeNormal(NormalTask(
-      callFfi: (port_) {
-        final serializer = SseSerializer(generalizedFrbRustBinding);
-        pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 3, port: port_);
-      },
-      codec: SseCodec(
-        decodeSuccessData:
-            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider,
-        decodeErrorData: null,
-      ),
-      constMeta: kCrateApiCryptoGetProviderConstMeta,
-      argValues: [],
-      apiImpl: this,
-    ));
-  }
-
-  TaskConstMeta get kCrateApiCryptoGetProviderConstMeta => const TaskConstMeta(
-        debugName: "get_provider",
-        argNames: [],
-      );
-
-  @override
-  Future<Uint8List> crateApiCryptoSign(
-      {required KeyPairHandle keyPairHandle, required List<int> data}) {
-    return handler.executeNormal(NormalTask(
-      callFfi: (port_) {
-        final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle(
-            keyPairHandle, serializer);
-        sse_encode_list_prim_u_8_loose(data, serializer);
-        pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 4, port: port_);
-      },
-      codec: SseCodec(
-        decodeSuccessData: sse_decode_list_prim_u_8_strict,
-        decodeErrorData:
-            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSecurityModuleError,
-      ),
-      constMeta: kCrateApiCryptoSignConstMeta,
-      argValues: [keyPairHandle, data],
-      apiImpl: this,
-    ));
-  }
-
-  TaskConstMeta get kCrateApiCryptoSignConstMeta => const TaskConstMeta(
-        debugName: "sign",
-        argNames: ["keyPairHandle", "data"],
-      );
-
-  @override
-  Future<bool> crateApiCryptoVerify(
-      {required KeyPairHandle keyPairHandle,
-      required List<int> data,
-      required List<int> signature}) {
-    return handler.executeNormal(NormalTask(
-      callFfi: (port_) {
-        final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle(
-            keyPairHandle, serializer);
-        sse_encode_list_prim_u_8_loose(data, serializer);
-        sse_encode_list_prim_u_8_loose(signature, serializer);
-        pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 5, port: port_);
-      },
-      codec: SseCodec(
-        decodeSuccessData: sse_decode_bool,
-        decodeErrorData:
-            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSecurityModuleError,
-      ),
-      constMeta: kCrateApiCryptoVerifyConstMeta,
-      argValues: [keyPairHandle, data, signature],
-      apiImpl: this,
-    ));
-  }
-
-  TaskConstMeta get kCrateApiCryptoVerifyConstMeta => const TaskConstMeta(
-        debugName: "verify",
-        argNames: ["keyPairHandle", "data", "signature"],
-      );
-
-  @override
   String crateApiSimpleGreet({required String name}) {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(name, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 6)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 2)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_String,
@@ -431,7 +299,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 7, port: port_);
+            funcId: 3, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -458,12 +326,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             that, serializer);
         sse_encode_list_prim_u_8_loose(encryptedData, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 8, port: port_);
+            funcId: 4, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_list_prim_u_8_strict,
         decodeErrorData:
-            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSecurityModuleError,
+            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
       constMeta: kCryptoLayerCommonKeyHandleDecryptDataConstMeta,
       argValues: [that, encryptedData],
@@ -487,12 +355,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             that, serializer);
         sse_encode_list_prim_u_8_loose(data, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 9, port: port_);
+            funcId: 5, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_list_prim_u_8_strict,
         decodeErrorData:
-            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSecurityModuleError,
+            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
       constMeta: kCryptoLayerCommonKeyHandleEncryptDataConstMeta,
       argValues: [that, data],
@@ -515,12 +383,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandle(
             that, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 10, port: port_);
+            funcId: 6, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_list_prim_u_8_strict,
         decodeErrorData:
-            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSecurityModuleError,
+            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
       constMeta: kCryptoLayerCommonKeyHandleExtractKeyConstMeta,
       argValues: [that],
@@ -542,12 +410,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandle(
             that, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 11, port: port_);
+            funcId: 7, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_String,
         decodeErrorData:
-            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSecurityModuleError,
+            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
       constMeta: kCryptoLayerCommonKeyHandleIdConstMeta,
       argValues: [that],
@@ -571,12 +439,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             that, serializer);
         sse_encode_list_prim_u_8_loose(data, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 12, port: port_);
+            funcId: 8, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_list_prim_u_8_strict,
         decodeErrorData:
-            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSecurityModuleError,
+            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
       constMeta: kCryptoLayerCommonKeyPairHandleDecryptDataConstMeta,
       argValues: [that, data],
@@ -600,12 +468,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             that, serializer);
         sse_encode_list_prim_u_8_loose(data, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 13, port: port_);
+            funcId: 9, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_list_prim_u_8_strict,
         decodeErrorData:
-            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSecurityModuleError,
+            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
       constMeta: kCryptoLayerCommonKeyPairHandleEncryptDataConstMeta,
       argValues: [that, data],
@@ -628,12 +496,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle(
             that, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 14, port: port_);
+            funcId: 10, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_list_prim_u_8_strict,
         decodeErrorData:
-            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSecurityModuleError,
+            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
       constMeta: kCryptoLayerCommonKeyPairHandleGetPublicKeyConstMeta,
       argValues: [that],
@@ -656,12 +524,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle(
             that, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 15, port: port_);
+            funcId: 11, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_String,
         decodeErrorData:
-            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSecurityModuleError,
+            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
       constMeta: kCryptoLayerCommonKeyPairHandleIdConstMeta,
       argValues: [that],
@@ -685,12 +553,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             that, serializer);
         sse_encode_list_prim_u_8_loose(data, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 16, port: port_);
+            funcId: 12, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_list_prim_u_8_strict,
         decodeErrorData:
-            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSecurityModuleError,
+            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
       constMeta: kCryptoLayerCommonKeyPairHandleSignDataConstMeta,
       argValues: [that, data],
@@ -717,12 +585,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_list_prim_u_8_loose(data, serializer);
         sse_encode_list_prim_u_8_loose(signature, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 17, port: port_);
+            funcId: 13, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_bool,
         decodeErrorData:
-            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSecurityModuleError,
+            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
       constMeta: kCryptoLayerCommonKeyPairHandleVerifySignatureConstMeta,
       argValues: [that, data, signature],
@@ -746,13 +614,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             that, serializer);
         sse_encode_box_autoadd_key_spec(spec, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 18, port: port_);
+            funcId: 14, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData:
             sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandle,
         decodeErrorData:
-            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSecurityModuleError,
+            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
       constMeta: kCryptoLayerCommonProviderCreateKeyConstMeta,
       argValues: [that, spec],
@@ -776,13 +644,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             that, serializer);
         sse_encode_box_autoadd_key_pair_spec(spec, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 19, port: port_);
+            funcId: 15, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData:
             sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle,
         decodeErrorData:
-            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSecurityModuleError,
+            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
       constMeta: kCryptoLayerCommonProviderCreateKeyPairConstMeta,
       argValues: [that, spec],
@@ -809,13 +677,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_box_autoadd_key_spec(spec, serializer);
         sse_encode_list_prim_u_8_loose(data, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 20, port: port_);
+            funcId: 16, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData:
             sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandle,
         decodeErrorData:
-            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSecurityModuleError,
+            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
       constMeta: kCryptoLayerCommonProviderImportKeyConstMeta,
       argValues: [that, spec, data],
@@ -844,13 +712,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_list_prim_u_8_loose(publicKey, serializer);
         sse_encode_list_prim_u_8_loose(privateKey, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 21, port: port_);
+            funcId: 17, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData:
             sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle,
         decodeErrorData:
-            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSecurityModuleError,
+            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
       constMeta: kCryptoLayerCommonProviderImportKeyPairConstMeta,
       argValues: [that, spec, publicKey, privateKey],
@@ -877,13 +745,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_box_autoadd_key_pair_spec(spec, serializer);
         sse_encode_list_prim_u_8_loose(publicKey, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 22, port: port_);
+            funcId: 18, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData:
             sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle,
         decodeErrorData:
-            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSecurityModuleError,
+            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
       constMeta: kCryptoLayerCommonProviderImportPublicKeyConstMeta,
       argValues: [that, spec, publicKey],
@@ -907,13 +775,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             that, serializer);
         sse_encode_String(id, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 23, port: port_);
+            funcId: 19, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData:
             sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandle,
         decodeErrorData:
-            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSecurityModuleError,
+            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
       constMeta: kCryptoLayerCommonProviderLoadKeyConstMeta,
       argValues: [that, id],
@@ -937,13 +805,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             that, serializer);
         sse_encode_String(id, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 24, port: port_);
+            funcId: 20, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData:
             sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle,
         decodeErrorData:
-            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSecurityModuleError,
+            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
       constMeta: kCryptoLayerCommonProviderLoadKeyPairConstMeta,
       argValues: [that, id],
@@ -966,7 +834,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
             that, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 25, port: port_);
+            funcId: 21, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_String,
@@ -994,13 +862,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             that, serializer);
         sse_encode_box_autoadd_key_pair_spec(spec, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 26, port: port_);
+            funcId: 22, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData:
             sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHExchange,
         decodeErrorData:
-            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSecurityModuleError,
+            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
       constMeta: kCryptoLayerCommonProviderStartEphemeralDhExchangeConstMeta,
       argValues: [that, spec],
@@ -1021,7 +889,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 27, port: port_);
+            funcId: 23, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_cipher,
@@ -1048,7 +916,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 28, port: port_);
+            funcId: 24, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_symmetric_mode,
@@ -1075,7 +943,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 29, port: port_);
+            funcId: 25, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_crypto_hash,
@@ -1103,7 +971,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_oid_type(that, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 30, port: port_);
+            funcId: 26, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -1123,6 +991,60 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
 
   @override
+  Future<String> cryptoLayerCommonErrorCalErrorBacktrace(
+      {required CalError that}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError(
+            that, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 27, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: null,
+      ),
+      constMeta: kCryptoLayerCommonErrorCalErrorBacktraceConstMeta,
+      argValues: [that],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCryptoLayerCommonErrorCalErrorBacktraceConstMeta =>
+      const TaskConstMeta(
+        debugName: "CalError_backtrace",
+        argNames: ["that"],
+      );
+
+  @override
+  Future<CalErrorKind> cryptoLayerCommonErrorCalErrorErrorKind(
+      {required CalError that}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError(
+            that, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 28, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_cal_error_kind,
+        decodeErrorData: null,
+      ),
+      constMeta: kCryptoLayerCommonErrorCalErrorErrorKindConstMeta,
+      argValues: [that],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCryptoLayerCommonErrorCalErrorErrorKindConstMeta =>
+      const TaskConstMeta(
+        debugName: "CalError_error_kind",
+        argNames: ["that"],
+      );
+
+  @override
   Future<Provider?> cryptoLayerCommonFactoryCreateProvider(
       {required ProviderConfig conf,
       required List<ProviderImplConfig> implConfVec}) {
@@ -1132,7 +1054,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_box_autoadd_provider_config(conf, serializer);
         sse_encode_list_provider_impl_config(implConfVec, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 31, port: port_);
+            funcId: 30, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData:
@@ -1160,7 +1082,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_String(name, serializer);
         sse_encode_box_autoadd_provider_impl_config(implConf, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 32, port: port_);
+            funcId: 31, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData:
@@ -1179,33 +1101,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         argNames: ["name", "implConf"],
       );
 
-  @override
-  Future<String> cryptoLayerTpmCoreErrorTpmErrorDescription(
-      {required TpmError that}) {
-    return handler.executeNormal(NormalTask(
-      callFfi: (port_) {
-        final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTpmError(
-            that, serializer);
-        pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 33, port: port_);
-      },
-      codec: SseCodec(
-        decodeSuccessData: sse_decode_String,
-        decodeErrorData: null,
-      ),
-      constMeta: kCryptoLayerTpmCoreErrorTpmErrorDescriptionConstMeta,
-      argValues: [that],
-      apiImpl: this,
-    ));
-  }
-
-  TaskConstMeta get kCryptoLayerTpmCoreErrorTpmErrorDescriptionConstMeta =>
-      const TaskConstMeta(
-        debugName: "TpmError_description",
-        argNames: ["that"],
-      );
-
   RustArcIncrementStrongCountFnType
       get rust_arc_increment_strong_count_ArcMutexJavaVm => wire
           .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcMutexJavaVM;
@@ -1213,6 +1108,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   RustArcDecrementStrongCountFnType
       get rust_arc_decrement_strong_count_ArcMutexJavaVm => wire
           .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcMutexJavaVM;
+
+  RustArcIncrementStrongCountFnType
+      get rust_arc_increment_strong_count_CalError => wire
+          .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError;
+
+  RustArcDecrementStrongCountFnType
+      get rust_arc_decrement_strong_count_CalError => wire
+          .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError;
 
   RustArcIncrementStrongCountFnType
       get rust_arc_increment_strong_count_DhExchange => wire
@@ -1246,27 +1149,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       get rust_arc_decrement_strong_count_Provider => wire
           .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider;
 
-  RustArcIncrementStrongCountFnType
-      get rust_arc_increment_strong_count_SecurityModuleError => wire
-          .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSecurityModuleError;
-
-  RustArcDecrementStrongCountFnType
-      get rust_arc_decrement_strong_count_SecurityModuleError => wire
-          .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSecurityModuleError;
-
   RustArcIncrementStrongCountFnType get rust_arc_increment_strong_count_T => wire
       .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerT;
 
   RustArcDecrementStrongCountFnType get rust_arc_decrement_strong_count_T => wire
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerT;
-
-  RustArcIncrementStrongCountFnType
-      get rust_arc_increment_strong_count_TpmError => wire
-          .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTpmError;
-
-  RustArcDecrementStrongCountFnType
-      get rust_arc_decrement_strong_count_TpmError => wire
-          .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTpmError;
 
   @protected
   ArcMutexJavaVm
@@ -1274,6 +1161,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return ArcMutexJavaVmImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  CalError
+      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError(
+          dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return CalErrorImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -1309,26 +1204,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  SecurityModuleError
-      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSecurityModuleError(
-          dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return SecurityModuleErrorImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
   T dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerT(
       dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return TImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  TpmError
-      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTpmError(
-          dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return TpmErrorImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -1337,6 +1216,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return ProviderImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  CalError
+      dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError(
+          dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return CalErrorImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -1364,19 +1251,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  TpmError
-      dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTpmError(
-          dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return TpmErrorImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
   ArcMutexJavaVm
       dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcMutexJavaVM(
           dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return ArcMutexJavaVmImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  CalError
+      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError(
+          dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return CalErrorImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -1412,26 +1299,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  SecurityModuleError
-      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSecurityModuleError(
-          dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return SecurityModuleErrorImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
   T dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerT(
       dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return TImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  TpmError
-      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTpmError(
-          dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return TpmErrorImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -1459,7 +1330,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  ToTpmError dco_decode_TraitDef_ToTpmError(dynamic raw) {
+  ToCalError dco_decode_TraitDef_ToCalError(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     throw UnimplementedError();
   }
@@ -1525,6 +1396,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ProviderImplConfig dco_decode_box_autoadd_provider_impl_config(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_provider_impl_config(raw);
+  }
+
+  @protected
+  CalErrorKind dco_decode_cal_error_kind(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    switch (raw[0]) {
+      case 0:
+        return CalErrorKind_NotImplemented();
+      case 1:
+        return CalErrorKind_BadParameter(
+          description: dco_decode_String(raw[1]),
+          internal: dco_decode_bool(raw[2]),
+        );
+      case 2:
+        return CalErrorKind_MissingKey(
+          keyId: dco_decode_String(raw[1]),
+          keyType: dco_decode_key_type(raw[2]),
+        );
+      case 3:
+        return CalErrorKind_UnsupportedAlgorithm(
+          dco_decode_String(raw[1]),
+        );
+      case 4:
+        return CalErrorKind_Other();
+      default:
+        throw Exception("unreachable");
+    }
   }
 
   @protected
@@ -1642,6 +1540,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       cipher: dco_decode_cipher(arr[0]),
       signingHash: dco_decode_crypto_hash(arr[1]),
     );
+  }
+
+  @protected
+  KeyType dco_decode_key_type(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return KeyType.values[raw as int];
   }
 
   @protected
@@ -1798,6 +1702,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  CalError
+      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError(
+          SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return CalErrorImpl.frbInternalSseDecode(
+        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
+  }
+
+  @protected
   DhExchange
       sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHExchange(
           SseDeserializer deserializer) {
@@ -1834,28 +1747,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  SecurityModuleError
-      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSecurityModuleError(
-          SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return SecurityModuleErrorImpl.frbInternalSseDecode(
-        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
-  }
-
-  @protected
   T sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerT(
       SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return TImpl.frbInternalSseDecode(
-        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
-  }
-
-  @protected
-  TpmError
-      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTpmError(
-          SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return TpmErrorImpl.frbInternalSseDecode(
         sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
   }
 
@@ -1865,6 +1760,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return ProviderImpl.frbInternalSseDecode(
+        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
+  }
+
+  @protected
+  CalError
+      sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError(
+          SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return CalErrorImpl.frbInternalSseDecode(
         sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
   }
 
@@ -1896,20 +1800,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  TpmError
-      sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTpmError(
-          SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return TpmErrorImpl.frbInternalSseDecode(
-        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
-  }
-
-  @protected
   ArcMutexJavaVm
       sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcMutexJavaVM(
           SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return ArcMutexJavaVmImpl.frbInternalSseDecode(
+        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
+  }
+
+  @protected
+  CalError
+      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError(
+          SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return CalErrorImpl.frbInternalSseDecode(
         sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
   }
 
@@ -1950,28 +1854,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  SecurityModuleError
-      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSecurityModuleError(
-          SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return SecurityModuleErrorImpl.frbInternalSseDecode(
-        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
-  }
-
-  @protected
   T sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerT(
       SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return TImpl.frbInternalSseDecode(
-        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
-  }
-
-  @protected
-  TpmError
-      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTpmError(
-          SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return TpmErrorImpl.frbInternalSseDecode(
         sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
   }
 
@@ -2069,6 +1955,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_provider_impl_config(deserializer));
+  }
+
+  @protected
+  CalErrorKind sse_decode_cal_error_kind(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var tag_ = sse_decode_i_32(deserializer);
+    switch (tag_) {
+      case 0:
+        return CalErrorKind_NotImplemented();
+      case 1:
+        var var_description = sse_decode_String(deserializer);
+        var var_internal = sse_decode_bool(deserializer);
+        return CalErrorKind_BadParameter(
+            description: var_description, internal: var_internal);
+      case 2:
+        var var_keyId = sse_decode_String(deserializer);
+        var var_keyType = sse_decode_key_type(deserializer);
+        return CalErrorKind_MissingKey(keyId: var_keyId, keyType: var_keyType);
+      case 3:
+        var var_field0 = sse_decode_String(deserializer);
+        return CalErrorKind_UnsupportedAlgorithm(var_field0);
+      case 4:
+        return CalErrorKind_Other();
+      default:
+        throw UnimplementedError('');
+    }
   }
 
   @protected
@@ -2182,6 +2095,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_cipher = sse_decode_cipher(deserializer);
     var var_signingHash = sse_decode_crypto_hash(deserializer);
     return KeySpec(cipher: var_cipher, signingHash: var_signingHash);
+  }
+
+  @protected
+  KeyType sse_decode_key_type(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_i_32(deserializer);
+    return KeyType.values[inner];
   }
 
   @protected
@@ -2388,6 +2308,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
+      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError(
+          CalError self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+        (self as CalErrorImpl).frbInternalSseEncode(move: true), serializer);
+  }
+
+  @protected
+  void
       sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHExchange(
           DhExchange self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
@@ -2425,16 +2354,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSecurityModuleError(
-          SecurityModuleError self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-        (self as SecurityModuleErrorImpl).frbInternalSseEncode(move: true),
-        serializer);
-  }
-
-  @protected
-  void
       sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerT(
           T self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
@@ -2444,20 +2363,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTpmError(
-          TpmError self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-        (self as TpmErrorImpl).frbInternalSseEncode(move: true), serializer);
-  }
-
-  @protected
-  void
       sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
           Provider self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
         (self as ProviderImpl).frbInternalSseEncode(move: false), serializer);
+  }
+
+  @protected
+  void
+      sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError(
+          CalError self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+        (self as CalErrorImpl).frbInternalSseEncode(move: false), serializer);
   }
 
   @protected
@@ -2490,21 +2409,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-      sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTpmError(
-          TpmError self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-        (self as TpmErrorImpl).frbInternalSseEncode(move: false), serializer);
-  }
-
-  @protected
-  void
       sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcMutexJavaVM(
           ArcMutexJavaVm self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
         (self as ArcMutexJavaVmImpl).frbInternalSseEncode(move: null),
         serializer);
+  }
+
+  @protected
+  void
+      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError(
+          CalError self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+        (self as CalErrorImpl).frbInternalSseEncode(move: null), serializer);
   }
 
   @protected
@@ -2546,30 +2465,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSecurityModuleError(
-          SecurityModuleError self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-        (self as SecurityModuleErrorImpl).frbInternalSseEncode(move: null),
-        serializer);
-  }
-
-  @protected
-  void
       sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerT(
           T self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
         (self as TImpl).frbInternalSseEncode(move: null), serializer);
-  }
-
-  @protected
-  void
-      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTpmError(
-          TpmError self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-        (self as TpmErrorImpl).frbInternalSseEncode(move: null), serializer);
   }
 
   @protected
@@ -2661,6 +2561,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       ProviderImplConfig self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_provider_impl_config(self, serializer);
+  }
+
+  @protected
+  void sse_encode_cal_error_kind(CalErrorKind self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    switch (self) {
+      case CalErrorKind_NotImplemented():
+        sse_encode_i_32(0, serializer);
+      case CalErrorKind_BadParameter(
+          description: final description,
+          internal: final internal
+        ):
+        sse_encode_i_32(1, serializer);
+        sse_encode_String(description, serializer);
+        sse_encode_bool(internal, serializer);
+      case CalErrorKind_MissingKey(keyId: final keyId, keyType: final keyType):
+        sse_encode_i_32(2, serializer);
+        sse_encode_String(keyId, serializer);
+        sse_encode_key_type(keyType, serializer);
+      case CalErrorKind_UnsupportedAlgorithm(field0: final field0):
+        sse_encode_i_32(3, serializer);
+        sse_encode_String(field0, serializer);
+      case CalErrorKind_Other():
+        sse_encode_i_32(4, serializer);
+      default:
+        throw UnimplementedError('');
+    }
   }
 
   @protected
@@ -2762,6 +2689,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_cipher(self.cipher, serializer);
     sse_encode_crypto_hash(self.signingHash, serializer);
+  }
+
+  @protected
+  void sse_encode_key_type(KeyType self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
   }
 
   @protected
@@ -2953,6 +2886,36 @@ class ArcMutexJavaVmImpl extends RustOpaque implements ArcMutexJavaVm {
 }
 
 @sealed
+class CalErrorImpl extends RustOpaque implements CalError {
+  // Not to be used by end users
+  CalErrorImpl.frbInternalDcoDecode(List<dynamic> wire)
+      : super.frbInternalDcoDecode(wire, _kStaticData);
+
+  // Not to be used by end users
+  CalErrorImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
+      : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
+
+  static final _kStaticData = RustArcStaticData(
+    rustArcIncrementStrongCount:
+        RustLib.instance.api.rust_arc_increment_strong_count_CalError,
+    rustArcDecrementStrongCount:
+        RustLib.instance.api.rust_arc_decrement_strong_count_CalError,
+    rustArcDecrementStrongCountPtr:
+        RustLib.instance.api.rust_arc_decrement_strong_count_CalErrorPtr,
+  );
+
+  Future<String> backtrace() =>
+      RustLib.instance.api.cryptoLayerCommonErrorCalErrorBacktrace(
+        that: this,
+      );
+
+  Future<CalErrorKind> errorKind() =>
+      RustLib.instance.api.cryptoLayerCommonErrorCalErrorErrorKind(
+        that: this,
+      );
+}
+
+@sealed
 class DhExchangeImpl extends RustOpaque implements DhExchange {
   // Not to be used by end users
   DhExchangeImpl.frbInternalDcoDecode(List<dynamic> wire)
@@ -3121,28 +3084,6 @@ class ProviderImpl extends RustOpaque implements Provider {
 }
 
 @sealed
-class SecurityModuleErrorImpl extends RustOpaque
-    implements SecurityModuleError {
-  // Not to be used by end users
-  SecurityModuleErrorImpl.frbInternalDcoDecode(List<dynamic> wire)
-      : super.frbInternalDcoDecode(wire, _kStaticData);
-
-  // Not to be used by end users
-  SecurityModuleErrorImpl.frbInternalSseDecode(
-      BigInt ptr, int externalSizeOnNative)
-      : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
-
-  static final _kStaticData = RustArcStaticData(
-    rustArcIncrementStrongCount: RustLib
-        .instance.api.rust_arc_increment_strong_count_SecurityModuleError,
-    rustArcDecrementStrongCount: RustLib
-        .instance.api.rust_arc_decrement_strong_count_SecurityModuleError,
-    rustArcDecrementStrongCountPtr: RustLib
-        .instance.api.rust_arc_decrement_strong_count_SecurityModuleErrorPtr,
-  );
-}
-
-@sealed
 class TImpl extends RustOpaque implements T {
   // Not to be used by end users
   TImpl.frbInternalDcoDecode(List<dynamic> wire)
@@ -3160,33 +3101,4 @@ class TImpl extends RustOpaque implements T {
     rustArcDecrementStrongCountPtr:
         RustLib.instance.api.rust_arc_decrement_strong_count_TPtr,
   );
-}
-
-@sealed
-class TpmErrorImpl extends RustOpaque implements TpmError {
-  // Not to be used by end users
-  TpmErrorImpl.frbInternalDcoDecode(List<dynamic> wire)
-      : super.frbInternalDcoDecode(wire, _kStaticData);
-
-  // Not to be used by end users
-  TpmErrorImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
-      : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
-
-  static final _kStaticData = RustArcStaticData(
-    rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_TpmError,
-    rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_TpmError,
-    rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_TpmErrorPtr,
-  );
-
-  /// Provides a human-readable description of the TPM error.
-  ///
-  /// This implementation ensures that errors can be easily logged or displayed to the user,
-  /// with a clear indication of the error's nature and origin.
-  Future<String> description() =>
-      RustLib.instance.api.cryptoLayerTpmCoreErrorTpmErrorDescription(
-        that: this,
-      );
 }

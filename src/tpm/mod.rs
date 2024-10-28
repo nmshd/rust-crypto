@@ -9,7 +9,6 @@ use std::any::Any;
 
 #[cfg(feature = "android")]
 pub(crate) mod android;
-pub mod core;
 #[cfg(feature = "linux")]
 pub(crate) mod linux;
 #[cfg(feature = "macos")]

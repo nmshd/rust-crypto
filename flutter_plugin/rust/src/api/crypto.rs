@@ -1,19 +1,8 @@
 use core::panic;
-use std::collections::HashSet;
 use std::sync::Arc;
 
-use crypto_layer::common::config::KeyPairSpec;
-use crypto_layer::common::config::ProviderConfig;
 use crypto_layer::common::config::ProviderImplConfig;
-use crypto_layer::common::crypto::algorithms::encryption::{
-    AsymmetricKeySpec, Cipher, SymmetricMode,
-};
-use crypto_layer::common::crypto::algorithms::hashes::CryptoHash;
-use crypto_layer::common::crypto::algorithms::hashes::Sha2Bits;
-use crypto_layer::common::crypto::algorithms::KeyBits;
-use crypto_layer::common::factory::create_provider;
-use crypto_layer::common::KeyPairHandle;
-use crypto_layer::common::Provider;
+
 use robusta_jni::jni;
 use robusta_jni::jni::sys::jint;
 use robusta_jni::jni::sys::jsize;
@@ -21,49 +10,6 @@ use robusta_jni::jni::JavaVM;
 use std::sync::Mutex;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::Registry;
-
-pub async fn get_provider() -> Provider {
-    let config = ProviderConfig {
-        min_security_level: crypto_layer::common::config::SecurityLevel::Hardware,
-        max_security_level: crypto_layer::common::config::SecurityLevel::Hardware,
-        supported_ciphers: HashSet::new(),
-        supported_hashes: HashSet::new(),
-        supported_asym_spec: HashSet::new(),
-    };
-
-    let impl_config = ProviderImplConfig::Android {
-        vm: Arc::new(Mutex::new(get_java_vm())),
-    };
-
-    create_provider(config, vec![impl_config]).unwrap()
-}
-
-pub async fn create_key_pair(
-    provider: &mut Provider,
-) -> Result<KeyPairHandle, crypto_layer::common::error::SecurityModuleError> {
-    let key_pair_spec = KeyPairSpec {
-        asym_spec: AsymmetricKeySpec::Rsa(KeyBits::Bits2048),
-        cipher: Some(Cipher::Aes(SymmetricMode::Cbc, KeyBits::Bits128)),
-        signing_hash: CryptoHash::Sha2(Sha2Bits::Sha256),
-    };
-
-    provider.create_key_pair(key_pair_spec)
-}
-
-pub async fn sign(
-    key_pair_handle: &KeyPairHandle,
-    data: Vec<u8>,
-) -> Result<Vec<u8>, crypto_layer::common::error::SecurityModuleError> {
-    key_pair_handle.sign_data(&data)
-}
-
-pub async fn verify(
-    key_pair_handle: &KeyPairHandle,
-    data: Vec<u8>,
-    signature: Vec<u8>,
-) -> Result<bool, crypto_layer::common::error::SecurityModuleError> {
-    key_pair_handle.verify_signature(&data, &signature)
-}
 
 pub fn get_android_config() -> ProviderImplConfig {
     ProviderImplConfig::Android {

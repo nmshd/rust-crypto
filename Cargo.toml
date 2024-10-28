@@ -81,6 +81,7 @@ nanoid = "0.4.0"
 enum_dispatch = "0.3.13"
 libloading = {version = "0.8.5", optional = true}
 thiserror = "1.0.65"
+anyhow = { version = "1.0.91"}
 
 [dev-dependencies]
 color-eyre = "0.6.3"

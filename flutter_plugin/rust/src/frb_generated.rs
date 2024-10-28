@@ -30,7 +30,6 @@ use std::sync::Mutex;
 use crate::*;
 use crypto_layer::common::error::*;
 use crypto_layer::common::*;
-use crypto_layer::tpm::core::error::*;
 use flutter_rust_bridge::for_generated::byteorder::{NativeEndian, ReadBytesExt, WriteBytesExt};
 use flutter_rust_bridge::for_generated::{transform_result_dco, Lifetimeable, Lockable};
 use flutter_rust_bridge::{Handler, IntoIntoDart};
@@ -43,7 +42,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.5.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 711684846;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 880697366;
 
 // Section: executor
 
@@ -51,64 +50,6 @@ flutter_rust_bridge::frb_generated_default_handler!();
 
 // Section: wire_funcs
 
-fn wire__crate__api__crypto__create_key_pair_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "create_key_pair",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_provider = <RustOpaqueMoi<
-                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Provider>,
-            >>::sse_decode(&mut deserializer);
-            deserializer.end();
-            move |context| async move {
-                transform_result_sse::<_, SecurityModuleError>(
-                    (move || async move {
-                        let mut api_provider_guard = None;
-                        let decode_indices_ =
-                            flutter_rust_bridge::for_generated::lockable_compute_decode_order(
-                                vec![flutter_rust_bridge::for_generated::LockableOrderInfo::new(
-                                    &api_provider,
-                                    0,
-                                    true,
-                                )],
-                            );
-                        for i in decode_indices_ {
-                            match i {
-                                0 => {
-                                    api_provider_guard =
-                                        Some(api_provider.lockable_decode_async_ref_mut().await)
-                                }
-                                _ => unreachable!(),
-                            }
-                        }
-                        let mut api_provider_guard = api_provider_guard.unwrap();
-                        let output_ok =
-                            crate::api::crypto::create_key_pair(&mut *api_provider_guard).await?;
-                        Ok(output_ok)
-                    })()
-                    .await,
-                )
-            }
-        },
-    )
-}
 fn wire__crate__api__crypto__get_android_config_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -137,165 +78,6 @@ fn wire__crate__api__crypto__get_android_config_impl(
                     let output_ok = Result::<_, ()>::Ok(crate::api::crypto::get_android_config())?;
                     Ok(output_ok)
                 })())
-            }
-        },
-    )
-}
-fn wire__crate__api__crypto__get_provider_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "get_provider",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            deserializer.end();
-            move |context| async move {
-                transform_result_sse::<_, ()>(
-                    (move || async move {
-                        let output_ok =
-                            Result::<_, ()>::Ok(crate::api::crypto::get_provider().await)?;
-                        Ok(output_ok)
-                    })()
-                    .await,
-                )
-            }
-        },
-    )
-}
-fn wire__crate__api__crypto__sign_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "sign",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_key_pair_handle = <RustOpaqueMoi<
-                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<KeyPairHandle>,
-            >>::sse_decode(&mut deserializer);
-            let api_data = <Vec<u8>>::sse_decode(&mut deserializer);
-            deserializer.end();
-            move |context| async move {
-                transform_result_sse::<_, SecurityModuleError>(
-                    (move || async move {
-                        let mut api_key_pair_handle_guard = None;
-                        let decode_indices_ =
-                            flutter_rust_bridge::for_generated::lockable_compute_decode_order(
-                                vec![flutter_rust_bridge::for_generated::LockableOrderInfo::new(
-                                    &api_key_pair_handle,
-                                    0,
-                                    false,
-                                )],
-                            );
-                        for i in decode_indices_ {
-                            match i {
-                                0 => {
-                                    api_key_pair_handle_guard =
-                                        Some(api_key_pair_handle.lockable_decode_async_ref().await)
-                                }
-                                _ => unreachable!(),
-                            }
-                        }
-                        let api_key_pair_handle_guard = api_key_pair_handle_guard.unwrap();
-                        let output_ok =
-                            crate::api::crypto::sign(&*api_key_pair_handle_guard, api_data).await?;
-                        Ok(output_ok)
-                    })()
-                    .await,
-                )
-            }
-        },
-    )
-}
-fn wire__crate__api__crypto__verify_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "verify",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_key_pair_handle = <RustOpaqueMoi<
-                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<KeyPairHandle>,
-            >>::sse_decode(&mut deserializer);
-            let api_data = <Vec<u8>>::sse_decode(&mut deserializer);
-            let api_signature = <Vec<u8>>::sse_decode(&mut deserializer);
-            deserializer.end();
-            move |context| async move {
-                transform_result_sse::<_, SecurityModuleError>(
-                    (move || async move {
-                        let mut api_key_pair_handle_guard = None;
-                        let decode_indices_ =
-                            flutter_rust_bridge::for_generated::lockable_compute_decode_order(
-                                vec![flutter_rust_bridge::for_generated::LockableOrderInfo::new(
-                                    &api_key_pair_handle,
-                                    0,
-                                    false,
-                                )],
-                            );
-                        for i in decode_indices_ {
-                            match i {
-                                0 => {
-                                    api_key_pair_handle_guard =
-                                        Some(api_key_pair_handle.lockable_decode_async_ref().await)
-                                }
-                                _ => unreachable!(),
-                            }
-                        }
-                        let api_key_pair_handle_guard = api_key_pair_handle_guard.unwrap();
-                        let output_ok = crate::api::crypto::verify(
-                            &*api_key_pair_handle_guard,
-                            api_data,
-                            api_signature,
-                        )
-                        .await?;
-                        Ok(output_ok)
-                    })()
-                    .await,
-                )
             }
         },
     )
@@ -392,7 +174,7 @@ fn wire__crypto_layer__common__KeyHandle_decrypt_data_impl(
             let api_encrypted_data = <Vec<u8>>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, SecurityModuleError>((move || {
+                transform_result_sse::<_, CalError>((move || {
                     let mut api_that_guard = None;
                     let decode_indices_ =
                         flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -445,7 +227,7 @@ fn wire__crypto_layer__common__KeyHandle_encrypt_data_impl(
             let api_data = <Vec<u8>>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, SecurityModuleError>((move || {
+                transform_result_sse::<_, CalError>((move || {
                     let mut api_that_guard = None;
                     let decode_indices_ =
                         flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -495,7 +277,7 @@ fn wire__crypto_layer__common__KeyHandle_extract_key_impl(
             >>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, SecurityModuleError>((move || {
+                transform_result_sse::<_, CalError>((move || {
                     let mut api_that_guard = None;
                     let decode_indices_ =
                         flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -544,7 +326,7 @@ fn wire__crypto_layer__common__KeyHandle_id_impl(
             >>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, SecurityModuleError>((move || {
+                transform_result_sse::<_, CalError>((move || {
                     let mut api_that_guard = None;
                     let decode_indices_ =
                         flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -594,7 +376,7 @@ fn wire__crypto_layer__common__KeyPairHandle_decrypt_data_impl(
             let api_data = <Vec<u8>>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, SecurityModuleError>((move || {
+                transform_result_sse::<_, CalError>((move || {
                     let mut api_that_guard = None;
                     let decode_indices_ =
                         flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -647,7 +429,7 @@ fn wire__crypto_layer__common__KeyPairHandle_encrypt_data_impl(
             let api_data = <Vec<u8>>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, SecurityModuleError>((move || {
+                transform_result_sse::<_, CalError>((move || {
                     let mut api_that_guard = None;
                     let decode_indices_ =
                         flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -699,7 +481,7 @@ fn wire__crypto_layer__common__KeyPairHandle_get_public_key_impl(
             >>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, SecurityModuleError>((move || {
+                transform_result_sse::<_, CalError>((move || {
                     let mut api_that_guard = None;
                     let decode_indices_ =
                         flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -749,7 +531,7 @@ fn wire__crypto_layer__common__KeyPairHandle_id_impl(
             >>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, SecurityModuleError>((move || {
+                transform_result_sse::<_, CalError>((move || {
                     let mut api_that_guard = None;
                     let decode_indices_ =
                         flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -799,7 +581,7 @@ fn wire__crypto_layer__common__KeyPairHandle_sign_data_impl(
             let api_data = <Vec<u8>>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, SecurityModuleError>((move || {
+                transform_result_sse::<_, CalError>((move || {
                     let mut api_that_guard = None;
                     let decode_indices_ =
                         flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -853,7 +635,7 @@ fn wire__crypto_layer__common__KeyPairHandle_verify_signature_impl(
             let api_signature = <Vec<u8>>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, SecurityModuleError>((move || {
+                transform_result_sse::<_, CalError>((move || {
                     let mut api_that_guard = None;
                     let decode_indices_ =
                         flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -907,7 +689,7 @@ fn wire__crypto_layer__common__Provider_create_key_impl(
             let api_spec = <crypto_layer::common::config::KeySpec>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, SecurityModuleError>((move || {
+                transform_result_sse::<_, CalError>((move || {
                     let mut api_that_guard = None;
                     let decode_indices_ =
                         flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -959,7 +741,7 @@ fn wire__crypto_layer__common__Provider_create_key_pair_impl(
                 <crypto_layer::common::config::KeyPairSpec>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, SecurityModuleError>((move || {
+                transform_result_sse::<_, CalError>((move || {
                     let mut api_that_guard = None;
                     let decode_indices_ =
                         flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1013,7 +795,7 @@ fn wire__crypto_layer__common__Provider_import_key_impl(
             let api_data = <Vec<u8>>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, SecurityModuleError>((move || {
+                transform_result_sse::<_, CalError>((move || {
                     let mut api_that_guard = None;
                     let decode_indices_ =
                         flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1070,7 +852,7 @@ fn wire__crypto_layer__common__Provider_import_key_pair_impl(
             let api_private_key = <Vec<u8>>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, SecurityModuleError>((move || {
+                transform_result_sse::<_, CalError>((move || {
                     let mut api_that_guard = None;
                     let decode_indices_ =
                         flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1127,7 +909,7 @@ fn wire__crypto_layer__common__Provider_import_public_key_impl(
             let api_public_key = <Vec<u8>>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, SecurityModuleError>((move || {
+                transform_result_sse::<_, CalError>((move || {
                     let mut api_that_guard = None;
                     let decode_indices_ =
                         flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1181,7 +963,7 @@ fn wire__crypto_layer__common__Provider_load_key_impl(
             let api_id = <String>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, SecurityModuleError>((move || {
+                transform_result_sse::<_, CalError>((move || {
                     let mut api_that_guard = None;
                     let decode_indices_ =
                         flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1232,7 +1014,7 @@ fn wire__crypto_layer__common__Provider_load_key_pair_impl(
             let api_id = <String>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, SecurityModuleError>((move || {
+                transform_result_sse::<_, CalError>((move || {
                     let mut api_that_guard = None;
                     let decode_indices_ =
                         flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1337,7 +1119,7 @@ fn wire__crypto_layer__common__Provider_start_ephemeral_dh_exchange_impl(
                 <crypto_layer::common::config::KeyPairSpec>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, SecurityModuleError>((move || {
+                transform_result_sse::<_, CalError>((move || {
                     let mut api_that_guard = None;
                     let decode_indices_ =
                         flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1482,6 +1264,108 @@ fn wire__crypto_layer__common__crypto__pkcs__standards__oid_type_as_str_impl(
         },
     )
 }
+fn wire__crypto_layer__common__error__CalError_backtrace_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "CalError_backtrace",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <RustOpaqueMoi<
+                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CalError>,
+            >>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let mut api_that_guard = None;
+                    let decode_indices_ =
+                        flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
+                            flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                                &api_that, 0, false,
+                            ),
+                        ]);
+                    for i in decode_indices_ {
+                        match i {
+                            0 => api_that_guard = Some(api_that.lockable_decode_sync_ref()),
+                            _ => unreachable!(),
+                        }
+                    }
+                    let api_that_guard = api_that_guard.unwrap();
+                    let output_ok = Result::<_, ()>::Ok(
+                        crypto_layer::common::error::CalError::backtrace(&*api_that_guard),
+                    )?;
+                    Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crypto_layer__common__error__CalError_error_kind_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "CalError_error_kind",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <RustOpaqueMoi<
+                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CalError>,
+            >>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let mut api_that_guard = None;
+                    let decode_indices_ =
+                        flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
+                            flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                                &api_that, 0, false,
+                            ),
+                        ]);
+                    for i in decode_indices_ {
+                        match i {
+                            0 => api_that_guard = Some(api_that.lockable_decode_sync_ref()),
+                            _ => unreachable!(),
+                        }
+                    }
+                    let api_that_guard = api_that_guard.unwrap();
+                    let output_ok = Result::<_, ()>::Ok(
+                        crypto_layer::common::error::CalError::error_kind(&*api_that_guard),
+                    )?;
+                    Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
 fn wire__crypto_layer__common__factory__create_provider_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -1562,57 +1446,6 @@ fn wire__crypto_layer__common__factory__create_provider_from_name_impl(
         },
     )
 }
-fn wire__crypto_layer__tpm__core__error__TpmError_description_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "TpmError_description",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_that = <RustOpaqueMoi<
-                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<TpmError>,
-            >>::sse_decode(&mut deserializer);
-            deserializer.end();
-            move |context| {
-                transform_result_sse::<_, ()>((move || {
-                    let mut api_that_guard = None;
-                    let decode_indices_ =
-                        flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
-                            flutter_rust_bridge::for_generated::LockableOrderInfo::new(
-                                &api_that, 0, false,
-                            ),
-                        ]);
-                    for i in decode_indices_ {
-                        match i {
-                            0 => api_that_guard = Some(api_that.lockable_decode_sync_ref()),
-                            _ => unreachable!(),
-                        }
-                    }
-                    let api_that_guard = api_that_guard.unwrap();
-                    let output_ok = Result::<_, ()>::Ok(
-                        crypto_layer::tpm::core::error::TpmError::description(&*api_that_guard),
-                    )?;
-                    Ok(output_ok)
-                })())
-            }
-        },
-    )
-}
 
 // Section: static_checks
 
@@ -1629,6 +1462,24 @@ const _: fn() = || {
             let _: crypto_layer::common::crypto::algorithms::encryption::EccSigningScheme = scheme;
             let _: crypto_layer::common::crypto::algorithms::encryption::EccCurve = curve;
         }
+    }
+    match None::<crypto_layer::common::error::CalErrorKind>.unwrap() {
+        crypto_layer::common::error::CalErrorKind::NotImplemented => {}
+        crypto_layer::common::error::CalErrorKind::BadParameter {
+            description,
+            internal,
+        } => {
+            let _: String = description;
+            let _: bool = internal;
+        }
+        crypto_layer::common::error::CalErrorKind::MissingKey { key_id, key_type } => {
+            let _: String = key_id;
+            let _: crypto_layer::common::error::KeyType = key_type;
+        }
+        crypto_layer::common::error::CalErrorKind::UnsupportedAlgorithm(field0) => {
+            let _: String = field0;
+        }
+        crypto_layer::common::error::CalErrorKind::Other => {}
     }
     match None::<crypto_layer::common::crypto::algorithms::encryption::Cipher>.unwrap() {
         crypto_layer::common::crypto::algorithms::encryption::Cipher::Aes(field0, field1) => {
@@ -1706,6 +1557,9 @@ flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
     flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc<Mutex<JavaVM>>>
 );
 flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
+    flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CalError>
+);
+flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
     flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DHExchange>
 );
 flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
@@ -1717,12 +1571,6 @@ flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
 flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
     flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Provider>
 );
-flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
-    flutter_rust_bridge::for_generated::RustAutoOpaqueInner<SecurityModuleError>
-);
-flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
-    flutter_rust_bridge::for_generated::RustAutoOpaqueInner<TpmError>
-);
 
 // Section: dart2rust
 
@@ -1731,6 +1579,16 @@ impl SseDecode for Arc<Mutex<JavaVM>> {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <RustOpaqueMoi<
             flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc<Mutex<JavaVM>>>,
+        >>::sse_decode(deserializer);
+        return flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(inner);
+    }
+}
+
+impl SseDecode for CalError {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <RustOpaqueMoi<
+            flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CalError>,
         >>::sse_decode(deserializer);
         return flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(inner);
     }
@@ -1776,28 +1634,18 @@ impl SseDecode for Provider {
     }
 }
 
-impl SseDecode for SecurityModuleError {
+impl SseDecode
+    for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc<Mutex<JavaVM>>>>
+{
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <RustOpaqueMoi<
-            flutter_rust_bridge::for_generated::RustAutoOpaqueInner<SecurityModuleError>,
-        >>::sse_decode(deserializer);
-        return flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(inner);
-    }
-}
-
-impl SseDecode for TpmError {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <RustOpaqueMoi<
-            flutter_rust_bridge::for_generated::RustAutoOpaqueInner<TpmError>,
-        >>::sse_decode(deserializer);
-        return flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(inner);
+        let mut inner = <usize>::sse_decode(deserializer);
+        return decode_rust_opaque_moi(inner);
     }
 }
 
 impl SseDecode
-    for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc<Mutex<JavaVM>>>>
+    for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CalError>>
 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -1838,26 +1686,6 @@ impl SseDecode
 
 impl SseDecode
     for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Provider>>
-{
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <usize>::sse_decode(deserializer);
-        return decode_rust_opaque_moi(inner);
-    }
-}
-
-impl SseDecode
-    for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<SecurityModuleError>>
-{
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <usize>::sse_decode(deserializer);
-        return decode_rust_opaque_moi(inner);
-    }
-}
-
-impl SseDecode
-    for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<TpmError>>
 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -1943,6 +1771,45 @@ impl SseDecode for bool {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         deserializer.cursor.read_u8().unwrap() != 0
+    }
+}
+
+impl SseDecode for crypto_layer::common::error::CalErrorKind {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut tag_ = <i32>::sse_decode(deserializer);
+        match tag_ {
+            0 => {
+                return crypto_layer::common::error::CalErrorKind::NotImplemented;
+            }
+            1 => {
+                let mut var_description = <String>::sse_decode(deserializer);
+                let mut var_internal = <bool>::sse_decode(deserializer);
+                return crypto_layer::common::error::CalErrorKind::BadParameter {
+                    description: var_description,
+                    internal: var_internal,
+                };
+            }
+            2 => {
+                let mut var_keyId = <String>::sse_decode(deserializer);
+                let mut var_keyType =
+                    <crypto_layer::common::error::KeyType>::sse_decode(deserializer);
+                return crypto_layer::common::error::CalErrorKind::MissingKey {
+                    key_id: var_keyId,
+                    key_type: var_keyType,
+                };
+            }
+            3 => {
+                let mut var_field0 = <String>::sse_decode(deserializer);
+                return crypto_layer::common::error::CalErrorKind::UnsupportedAlgorithm(var_field0);
+            }
+            4 => {
+                return crypto_layer::common::error::CalErrorKind::Other;
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
     }
 }
 
@@ -2162,6 +2029,19 @@ impl SseDecode for crypto_layer::common::config::KeySpec {
         return crypto_layer::common::config::KeySpec {
             cipher: var_cipher,
             signing_hash: var_signingHash,
+        };
+    }
+}
+
+impl SseDecode for crypto_layer::common::error::KeyType {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <i32>::sse_decode(deserializer);
+        return match inner {
+            0 => crypto_layer::common::error::KeyType::Public,
+            1 => crypto_layer::common::error::KeyType::Private,
+            2 => crypto_layer::common::error::KeyType::PublicAndPrivate,
+            _ => unreachable!("Invalid variant for KeyType: {}", inner),
         };
     }
 }
@@ -2479,112 +2359,108 @@ fn pde_ffi_dispatcher_primary_impl(
 ) {
     // Codec=Pde (Serialization + dispatch), see doc to use other codecs
     match func_id {
-        1 => wire__crate__api__crypto__create_key_pair_impl(port, ptr, rust_vec_len, data_len),
-        2 => wire__crate__api__crypto__get_android_config_impl(port, ptr, rust_vec_len, data_len),
-        3 => wire__crate__api__crypto__get_provider_impl(port, ptr, rust_vec_len, data_len),
-        4 => wire__crate__api__crypto__sign_impl(port, ptr, rust_vec_len, data_len),
-        5 => wire__crate__api__crypto__verify_impl(port, ptr, rust_vec_len, data_len),
-        7 => wire__crate__api__simple__init_app_impl(port, ptr, rust_vec_len, data_len),
-        8 => wire__crypto_layer__common__KeyHandle_decrypt_data_impl(
+        1 => wire__crate__api__crypto__get_android_config_impl(port, ptr, rust_vec_len, data_len),
+        3 => wire__crate__api__simple__init_app_impl(port, ptr, rust_vec_len, data_len),
+        4 => wire__crypto_layer__common__KeyHandle_decrypt_data_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        9 => wire__crypto_layer__common__KeyHandle_encrypt_data_impl(
+        5 => wire__crypto_layer__common__KeyHandle_encrypt_data_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        10 => wire__crypto_layer__common__KeyHandle_extract_key_impl(
+        6 => wire__crypto_layer__common__KeyHandle_extract_key_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        11 => wire__crypto_layer__common__KeyHandle_id_impl(port, ptr, rust_vec_len, data_len),
-        12 => wire__crypto_layer__common__KeyPairHandle_decrypt_data_impl(
+        7 => wire__crypto_layer__common__KeyHandle_id_impl(port, ptr, rust_vec_len, data_len),
+        8 => wire__crypto_layer__common__KeyPairHandle_decrypt_data_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        13 => wire__crypto_layer__common__KeyPairHandle_encrypt_data_impl(
+        9 => wire__crypto_layer__common__KeyPairHandle_encrypt_data_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        14 => wire__crypto_layer__common__KeyPairHandle_get_public_key_impl(
+        10 => wire__crypto_layer__common__KeyPairHandle_get_public_key_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        15 => wire__crypto_layer__common__KeyPairHandle_id_impl(port, ptr, rust_vec_len, data_len),
-        16 => wire__crypto_layer__common__KeyPairHandle_sign_data_impl(
+        11 => wire__crypto_layer__common__KeyPairHandle_id_impl(port, ptr, rust_vec_len, data_len),
+        12 => wire__crypto_layer__common__KeyPairHandle_sign_data_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        17 => wire__crypto_layer__common__KeyPairHandle_verify_signature_impl(
+        13 => wire__crypto_layer__common__KeyPairHandle_verify_signature_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        18 => {
+        14 => {
             wire__crypto_layer__common__Provider_create_key_impl(port, ptr, rust_vec_len, data_len)
         }
-        19 => wire__crypto_layer__common__Provider_create_key_pair_impl(
+        15 => wire__crypto_layer__common__Provider_create_key_pair_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        20 => {
+        16 => {
             wire__crypto_layer__common__Provider_import_key_impl(port, ptr, rust_vec_len, data_len)
         }
-        21 => wire__crypto_layer__common__Provider_import_key_pair_impl(
+        17 => wire__crypto_layer__common__Provider_import_key_pair_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        22 => wire__crypto_layer__common__Provider_import_public_key_impl(
+        18 => wire__crypto_layer__common__Provider_import_public_key_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        23 => wire__crypto_layer__common__Provider_load_key_impl(port, ptr, rust_vec_len, data_len),
-        24 => wire__crypto_layer__common__Provider_load_key_pair_impl(
+        19 => wire__crypto_layer__common__Provider_load_key_impl(port, ptr, rust_vec_len, data_len),
+        20 => wire__crypto_layer__common__Provider_load_key_pair_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        25 => wire__crypto_layer__common__Provider_provider_name_impl(
+        21 => wire__crypto_layer__common__Provider_provider_name_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        26 => wire__crypto_layer__common__Provider_start_ephemeral_dh_exchange_impl(
+        22 => wire__crypto_layer__common__Provider_start_ephemeral_dh_exchange_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        27 => wire__crypto_layer__common__crypto__algorithms__encryption__cipher_default_impl(
+        23 => wire__crypto_layer__common__crypto__algorithms__encryption__cipher_default_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        28 => {
+        24 => {
             wire__crypto_layer__common__crypto__algorithms__encryption__symmetric_mode_default_impl(
                 port,
                 ptr,
@@ -2592,31 +2468,37 @@ fn pde_ffi_dispatcher_primary_impl(
                 data_len,
             )
         }
-        29 => wire__crypto_layer__common__crypto__algorithms__hashes__crypto_hash_default_impl(
+        25 => wire__crypto_layer__common__crypto__algorithms__hashes__crypto_hash_default_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        30 => wire__crypto_layer__common__crypto__pkcs__standards__oid_type_as_str_impl(
+        26 => wire__crypto_layer__common__crypto__pkcs__standards__oid_type_as_str_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        31 => wire__crypto_layer__common__factory__create_provider_impl(
+        27 => wire__crypto_layer__common__error__CalError_backtrace_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        32 => wire__crypto_layer__common__factory__create_provider_from_name_impl(
+        28 => wire__crypto_layer__common__error__CalError_error_kind_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        33 => wire__crypto_layer__tpm__core__error__TpmError_description_impl(
+        30 => wire__crypto_layer__common__factory__create_provider_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        31 => wire__crypto_layer__common__factory__create_provider_from_name_impl(
             port,
             ptr,
             rust_vec_len,
@@ -2634,7 +2516,7 @@ fn pde_ffi_dispatcher_sync_impl(
 ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
     // Codec=Pde (Serialization + dispatch), see doc to use other codecs
     match func_id {
-        6 => wire__crate__api__simple__greet_impl(ptr, rust_vec_len, data_len),
+        2 => wire__crate__api__simple__greet_impl(ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -2655,6 +2537,21 @@ impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
 
 impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<Arc<Mutex<JavaVM>>>> for Arc<Mutex<JavaVM>> {
     fn into_into_dart(self) -> FrbWrapper<Arc<Mutex<JavaVM>>> {
+        self.into()
+    }
+}
+
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<CalError> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self.0)
+            .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<CalError> {}
+
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<CalError>> for CalError {
+    fn into_into_dart(self) -> FrbWrapper<CalError> {
         self.into()
     }
 }
@@ -2720,39 +2617,6 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<Provider>> for Provider {
 }
 
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<SecurityModuleError> {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self.0)
-            .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for FrbWrapper<SecurityModuleError>
-{
-}
-
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<SecurityModuleError>> for SecurityModuleError {
-    fn into_into_dart(self) -> FrbWrapper<SecurityModuleError> {
-        self.into()
-    }
-}
-
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<TpmError> {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self.0)
-            .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<TpmError> {}
-
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<TpmError>> for TpmError {
-    fn into_into_dart(self) -> FrbWrapper<TpmError> {
-        self.into()
-    }
-}
-
-// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart
     for FrbWrapper<crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec>
 {
@@ -2788,6 +2652,49 @@ impl
     fn into_into_dart(
         self,
     ) -> FrbWrapper<crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crypto_layer::common::error::CalErrorKind> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self.0 {
+            crypto_layer::common::error::CalErrorKind::NotImplemented => {
+                [0.into_dart()].into_dart()
+            }
+            crypto_layer::common::error::CalErrorKind::BadParameter {
+                description,
+                internal,
+            } => [
+                1.into_dart(),
+                description.into_into_dart().into_dart(),
+                internal.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
+            crypto_layer::common::error::CalErrorKind::MissingKey { key_id, key_type } => [
+                2.into_dart(),
+                key_id.into_into_dart().into_dart(),
+                key_type.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
+            crypto_layer::common::error::CalErrorKind::UnsupportedAlgorithm(field0) => {
+                [3.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
+            crypto_layer::common::error::CalErrorKind::Other => [4.into_dart()].into_dart(),
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<crypto_layer::common::error::CalErrorKind>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crypto_layer::common::error::CalErrorKind>>
+    for crypto_layer::common::error::CalErrorKind
+{
+    fn into_into_dart(self) -> FrbWrapper<crypto_layer::common::error::CalErrorKind> {
         self.into()
     }
 }
@@ -3080,6 +2987,28 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crypto_layer::common::config::
     for crypto_layer::common::config::KeySpec
 {
     fn into_into_dart(self) -> FrbWrapper<crypto_layer::common::config::KeySpec> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crypto_layer::common::error::KeyType> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self.0 {
+            crypto_layer::common::error::KeyType::Public => 0.into_dart(),
+            crypto_layer::common::error::KeyType::Private => 1.into_dart(),
+            crypto_layer::common::error::KeyType::PublicAndPrivate => 2.into_dart(),
+            _ => unreachable!(),
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<crypto_layer::common::error::KeyType>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crypto_layer::common::error::KeyType>>
+    for crypto_layer::common::error::KeyType
+{
+    fn into_into_dart(self) -> FrbWrapper<crypto_layer::common::error::KeyType> {
         self.into()
     }
 }
@@ -3459,6 +3388,13 @@ impl SseEncode for Arc<Mutex<JavaVM>> {
     }
 }
 
+impl SseEncode for CalError {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CalError>>>::sse_encode(flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self), serializer);
+    }
+}
+
 impl SseEncode for DHExchange {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -3487,22 +3423,19 @@ impl SseEncode for Provider {
     }
 }
 
-impl SseEncode for SecurityModuleError {
+impl SseEncode
+    for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc<Mutex<JavaVM>>>>
+{
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner< SecurityModuleError>>>::sse_encode(flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self), serializer);
-    }
-}
-
-impl SseEncode for TpmError {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<TpmError>>>::sse_encode(flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self), serializer);
+        let (ptr, size) = self.sse_encode_raw();
+        <usize>::sse_encode(ptr, serializer);
+        <i32>::sse_encode(size, serializer);
     }
 }
 
 impl SseEncode
-    for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc<Mutex<JavaVM>>>>
+    for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CalError>>
 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -3547,28 +3480,6 @@ impl SseEncode
 
 impl SseEncode
     for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Provider>>
-{
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        let (ptr, size) = self.sse_encode_raw();
-        <usize>::sse_encode(ptr, serializer);
-        <i32>::sse_encode(size, serializer);
-    }
-}
-
-impl SseEncode
-    for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<SecurityModuleError>>
-{
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        let (ptr, size) = self.sse_encode_raw();
-        <usize>::sse_encode(ptr, serializer);
-        <i32>::sse_encode(size, serializer);
-    }
-}
-
-impl SseEncode
-    for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<TpmError>>
 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -3654,6 +3565,40 @@ impl SseEncode for bool {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         serializer.cursor.write_u8(self as _).unwrap();
+    }
+}
+
+impl SseEncode for crypto_layer::common::error::CalErrorKind {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        match self {
+            crypto_layer::common::error::CalErrorKind::NotImplemented => {
+                <i32>::sse_encode(0, serializer);
+            }
+            crypto_layer::common::error::CalErrorKind::BadParameter {
+                description,
+                internal,
+            } => {
+                <i32>::sse_encode(1, serializer);
+                <String>::sse_encode(description, serializer);
+                <bool>::sse_encode(internal, serializer);
+            }
+            crypto_layer::common::error::CalErrorKind::MissingKey { key_id, key_type } => {
+                <i32>::sse_encode(2, serializer);
+                <String>::sse_encode(key_id, serializer);
+                <crypto_layer::common::error::KeyType>::sse_encode(key_type, serializer);
+            }
+            crypto_layer::common::error::CalErrorKind::UnsupportedAlgorithm(field0) => {
+                <i32>::sse_encode(3, serializer);
+                <String>::sse_encode(field0, serializer);
+            }
+            crypto_layer::common::error::CalErrorKind::Other => {
+                <i32>::sse_encode(4, serializer);
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
     }
 }
 
@@ -3852,6 +3797,23 @@ impl SseEncode for crypto_layer::common::config::KeySpec {
         );
         <crypto_layer::common::crypto::algorithms::hashes::CryptoHash>::sse_encode(
             self.signing_hash,
+            serializer,
+        );
+    }
+}
+
+impl SseEncode for crypto_layer::common::error::KeyType {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(
+            match self {
+                crypto_layer::common::error::KeyType::Public => 0,
+                crypto_layer::common::error::KeyType::Private => 1,
+                crypto_layer::common::error::KeyType::PublicAndPrivate => 2,
+                _ => {
+                    unimplemented!("");
+                }
+            },
             serializer,
         );
     }
@@ -4170,7 +4132,6 @@ mod io {
     use crate::*;
     use crypto_layer::common::error::*;
     use crypto_layer::common::*;
-    use crypto_layer::tpm::core::error::*;
     use flutter_rust_bridge::for_generated::byteorder::{
         NativeEndian, ReadBytesExt, WriteBytesExt,
     };
@@ -4193,6 +4154,20 @@ mod io {
         ptr: *const std::ffi::c_void,
     ) {
         MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc < Mutex < JavaVM > >>>::decrement_strong_count(ptr as _);
+    }
+
+    #[no_mangle]
+    pub extern "C" fn frbgen_cal_flutter_plugin_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError(
+        ptr: *const std::ffi::c_void,
+    ) {
+        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CalError>>::increment_strong_count(ptr as _);
+    }
+
+    #[no_mangle]
+    pub extern "C" fn frbgen_cal_flutter_plugin_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError(
+        ptr: *const std::ffi::c_void,
+    ) {
+        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CalError>>::decrement_strong_count(ptr as _);
     }
 
     #[no_mangle]
@@ -4250,34 +4225,6 @@ mod io {
     ) {
         MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Provider>>::decrement_strong_count(ptr as _);
     }
-
-    #[no_mangle]
-    pub extern "C" fn frbgen_cal_flutter_plugin_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSecurityModuleError(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner< SecurityModuleError>>::increment_strong_count(ptr as _);
-    }
-
-    #[no_mangle]
-    pub extern "C" fn frbgen_cal_flutter_plugin_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSecurityModuleError(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner< SecurityModuleError>>::decrement_strong_count(ptr as _);
-    }
-
-    #[no_mangle]
-    pub extern "C" fn frbgen_cal_flutter_plugin_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTpmError(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<TpmError>>::increment_strong_count(ptr as _);
-    }
-
-    #[no_mangle]
-    pub extern "C" fn frbgen_cal_flutter_plugin_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTpmError(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<TpmError>>::decrement_strong_count(ptr as _);
-    }
 }
 #[cfg(not(target_family = "wasm"))]
 pub use io::*;
@@ -4294,7 +4241,6 @@ mod web {
     use crate::*;
     use crypto_layer::common::error::*;
     use crypto_layer::common::*;
-    use crypto_layer::tpm::core::error::*;
     use flutter_rust_bridge::for_generated::byteorder::{
         NativeEndian, ReadBytesExt, WriteBytesExt,
     };
@@ -4319,6 +4265,20 @@ mod web {
         ptr: *const std::ffi::c_void,
     ) {
         MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc < Mutex < JavaVM > >>>::decrement_strong_count(ptr as _);
+    }
+
+    #[wasm_bindgen]
+    pub fn rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError(
+        ptr: *const std::ffi::c_void,
+    ) {
+        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CalError>>::increment_strong_count(ptr as _);
+    }
+
+    #[wasm_bindgen]
+    pub fn rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError(
+        ptr: *const std::ffi::c_void,
+    ) {
+        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CalError>>::decrement_strong_count(ptr as _);
     }
 
     #[wasm_bindgen]
@@ -4378,20 +4338,6 @@ mod web {
     }
 
     #[wasm_bindgen]
-    pub fn rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSecurityModuleError(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner< SecurityModuleError>>::increment_strong_count(ptr as _);
-    }
-
-    #[wasm_bindgen]
-    pub fn rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSecurityModuleError(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner< SecurityModuleError>>::decrement_strong_count(ptr as _);
-    }
-
-    #[wasm_bindgen]
     pub fn rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerT(
         ptr: *const std::ffi::c_void,
     ) {
@@ -4403,20 +4349,6 @@ mod web {
         ptr: *const std::ffi::c_void,
     ) {
         MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<T>>::decrement_strong_count(ptr as _);
-    }
-
-    #[wasm_bindgen]
-    pub fn rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTpmError(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<TpmError>>::increment_strong_count(ptr as _);
-    }
-
-    #[wasm_bindgen]
-    pub fn rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTpmError(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<TpmError>>::decrement_strong_count(ptr as _);
     }
 }
 use robusta_jni::jni::JavaVM;

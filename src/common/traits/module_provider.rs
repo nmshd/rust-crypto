@@ -3,7 +3,7 @@ use enum_dispatch::enum_dispatch;
 use crate::{
     common::{
         config::{KeyPairSpec, KeySpec, ProviderConfig, ProviderImplConfig},
-        error::SecurityModuleError,
+        error::CalError,
         DHExchange, KeyHandle, KeyPairHandle,
     },
     stub::{StubProvider, StubProviderFactory},
@@ -47,8 +47,8 @@ pub(crate) trait ProviderImpl {
     /// # Returns
     ///
     /// A `Result` that, on success, contains a `KeyHandle`, allowing further operations with this key.
-    /// On failure, it returns a `SecurityModuleError`.
-    fn create_key(&mut self, spec: KeySpec) -> Result<KeyHandle, SecurityModuleError>;
+    /// On failure, it returns a `CalError`.
+    fn create_key(&mut self, spec: KeySpec) -> Result<KeyHandle, CalError>;
 
     /// Loads an existing symmetric key identified by `key_id`.
     ///
@@ -60,8 +60,8 @@ pub(crate) trait ProviderImpl {
     /// # Returns
     ///
     /// A `Result` that, on success, contains a `KeyHandle`, allowing further operations with this key.
-    /// On failure, it returns a `SecurityModuleError`.
-    fn load_key(&mut self, key_id: String) -> Result<KeyHandle, SecurityModuleError>;
+    /// On failure, it returns a `CalError`.
+    fn load_key(&mut self, key_id: String) -> Result<KeyHandle, CalError>;
 
     /// Creates a new asymmetric key pair identified by `key_id`.
     ///
@@ -73,8 +73,8 @@ pub(crate) trait ProviderImpl {
     /// # Returns
     ///
     /// A `Result` that, on success, contains a `KeyPairHandle`, allowing further operations with this key pair.
-    /// On failure, it returns a `SecurityModuleError`.
-    fn create_key_pair(&mut self, spec: KeyPairSpec) -> Result<KeyPairHandle, SecurityModuleError>;
+    /// On failure, it returns a `CalError`.
+    fn create_key_pair(&mut self, spec: KeyPairSpec) -> Result<KeyPairHandle, CalError>;
 
     /// Loads an existing asymmetric keypair identified by `key_id`.
     ///
@@ -86,23 +86,23 @@ pub(crate) trait ProviderImpl {
     /// # Returns
     ///
     /// A `Result` that, on success, contains a `KeyPairHandle`, allowing further operations with this key pair.
-    /// On failure, it returns a `SecurityModuleError`.
-    fn load_key_pair(&mut self, key_id: String) -> Result<KeyPairHandle, SecurityModuleError>;
+    /// On failure, it returns a `CalError`.
+    fn load_key_pair(&mut self, key_id: String) -> Result<KeyPairHandle, CalError>;
 
-    fn import_key(&mut self, spec: KeySpec, data: &[u8]) -> Result<KeyHandle, SecurityModuleError>;
+    fn import_key(&mut self, spec: KeySpec, data: &[u8]) -> Result<KeyHandle, CalError>;
 
     fn import_key_pair(
         &mut self,
         spec: KeyPairSpec,
         public_key: &[u8],
         private_key: &[u8],
-    ) -> Result<KeyPairHandle, SecurityModuleError>;
+    ) -> Result<KeyPairHandle, CalError>;
 
     fn import_public_key(
         &mut self,
         spec: KeyPairSpec,
         public_key: &[u8],
-    ) -> Result<KeyPairHandle, SecurityModuleError>;
+    ) -> Result<KeyPairHandle, CalError>;
 
     /// Generates a key pair suited for a Diffie-Hellman Key Exchange
     ///
@@ -113,11 +113,8 @@ pub(crate) trait ProviderImpl {
     /// # Returns
     ///
     /// A `Result` that, on success, contains a `DHExchange`, allowing further operations with this key pair.
-    /// On failure, it returns a `SecurityModuleError`.
-    fn start_ephemeral_dh_exchange(
-        &mut self,
-        spec: KeyPairSpec,
-    ) -> Result<DHExchange, SecurityModuleError>;
+    /// On failure, it returns a `CalError`.
+    fn start_ephemeral_dh_exchange(&mut self, spec: KeyPairSpec) -> Result<DHExchange, CalError>;
 
     fn provider_name(&self) -> String;
 }

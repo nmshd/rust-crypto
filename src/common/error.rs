@@ -1,150 +1,126 @@
-#[cfg(feature = "tpm")]
-use crate::tpm::core::error::TpmError;
+use serde_json::error;
+use std::{backtrace, error::Error, fmt};
+use thiserror;
 
-#[cfg(feature = "hsm")]
-use crate::hsm::core::error::HsmError;
-use std::fmt;
+// Feel free to add more items to error.
 
-/// Represents errors that can occur within a security module.
+/// Error wrapping native errors.
 ///
-/// This enum encapsulates various types of errors, including those originating
-/// from a Hardware Security Module (HSM), a Trusted Platform Module (TPM), or during
-/// the initialization process. It also includes errors related to cryptographic operations
-/// such as signing, decryption, encryption, and signature verification.
-#[derive(Debug)]
+/// The native libraries used large lists of errors that might occur.
+/// This struct exists to dumm down said errors.
+/// The provider implementation should map errors from native libraries to this enum.
+/// Most if not all errors should have a source for backtraces.
+/// If other fields are usefull for understanding the error, they should also exist.
+///
+
+#[derive(thiserror::Error, Debug)]
+#[error("{error_kind}")]
 #[repr(C)]
-pub enum SecurityModuleError {
-    #[cfg(feature = "hsm")]
-    /// Error originating from a Hardware Security Module (HSM).
-    Hsm(HsmError),
-    #[cfg(feature = "tpm")]
-    /// Error originating from a Trusted Platform Module (TPM).
-    Tpm(TpmError),
-    #[cfg(feature = "nks")]
-    /// Error originating from a Network Key Storage (NKS).
-    NksError,
-    /// Error that occurred during the signing operation.
-    ///
-    /// This variant contains a descriptive error message.
-    SigningError(String),
-    /// Error that occurred during the decryption operation.
-    ///
-    /// This variant contains a descriptive error message.
-    DecryptionError(String),
-    /// Error that occurred during the encryption operation.
-    ///
-    /// This variant contains a descriptive error message.
-    EncryptionError(String),
-    /// Error that occurred during the signature verification operation.
-    ///
-    /// This variant contains a descriptive error message.
-    SignatureVerificationError(String),
-    /// Error that occurs during the initialization process.
-    ///
-    /// This variant contains a descriptive error message.
-    InitializationError(String),
-    KeyError,
-    UnsupportedAlgorithm,
-    VerificationFailed,
-    InvalidSignature,
-    InvalidPublicKey,
-    SigningFailed,
+pub struct CalError {
+    error_kind: CalErrorKind,
+    source: Option<anyhow::Error>,
 }
 
-impl fmt::Display for SecurityModuleError {
-    /// Provides a human-readable description of the security module error.
-    ///
-    /// Formats the error message based on the error type, ensuring that it is
-    /// descriptive and easy to understand.
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            #[cfg(feature = "hsm")]
-            SecurityModuleError::Hsm(ref err) => {
-                write!(f, "HSM error: {}", err)
-            }
-            #[cfg(feature = "tpm")]
-            SecurityModuleError::Tpm(ref err) => {
-                write!(f, "TPM error: {}", err)
-            }
-            SecurityModuleError::SigningError(ref error_msg) => {
-                write!(f, "Signing error: {}", error_msg)
-            }
-            SecurityModuleError::DecryptionError(ref error_msg) => {
-                write!(f, "Decryption error: {}", error_msg)
-            }
-            SecurityModuleError::EncryptionError(ref error_msg) => {
-                write!(f, "Encryption error: {}", error_msg)
-            }
-            SecurityModuleError::SignatureVerificationError(ref error_msg) => {
-                write!(f, "Signature verification error: {}", error_msg)
-            }
-            SecurityModuleError::InitializationError(ref error_msg) => {
-                write!(f, "Initialization error: {}", error_msg)
-            }
-            SecurityModuleError::KeyError => write!(f, "Key error"),
-            SecurityModuleError::UnsupportedAlgorithm => write!(f, "Unsupported algorithm"),
-            SecurityModuleError::VerificationFailed => write!(f, "Verification failed"),
-            SecurityModuleError::InvalidSignature => write!(f, "Invalid signature"),
-            SecurityModuleError::InvalidPublicKey => write!(f, "Invalid public key"),
-            SecurityModuleError::SigningFailed => write!(f, "Invalid public key"),
-            #[cfg(feature = "nks")]
-            SecurityModuleError::NksError => write!(f, "Key error"),
+/// flutter_rust_bridge:non_opaque
+#[derive(thiserror::Error, Debug, Clone)]
+#[repr(C)]
+pub enum CalErrorKind {
+    /// This error is returned on calling functions that are not implemented.
+    #[error("The function called is not implemented.")]
+    NotImplemented,
+
+    /// One or more of the parameters supplied are invalid for said function.
+    #[error("Bad Parameter Error: {description}")]
+    BadParameter {
+        description: String,
+        /// `true` if caused within this library. `false` if caused by another library.
+        internal: bool,
+    },
+
+    #[error("Missing Key Error: {key_type} key with id {key_id}")]
+    MissingKey { key_id: String, key_type: KeyType },
+
+    #[error("Unsupported Algorithm: {0}")]
+    UnsupportedAlgorithm(String),
+
+    /// Errors that do not fall into the above classes.
+    #[error("Other Error")]
+    Other,
+}
+
+impl CalError {
+    pub(crate) fn other(source: anyhow::Error) -> Self {
+        Self {
+            error_kind: CalErrorKind::Other,
+            source: Some(source),
+        }
+    }
+
+    pub(crate) fn bad_parameter(
+        description: String,
+        internal: bool,
+        source: Option<anyhow::Error>,
+    ) -> Self {
+        Self {
+            error_kind: CalErrorKind::BadParameter {
+                description,
+                internal,
+            },
+            source: source,
+        }
+    }
+
+    pub(crate) fn not_implemented() -> Self {
+        Self {
+            error_kind: CalErrorKind::NotImplemented,
+            source: None,
+        }
+    }
+
+    pub(crate) fn missing_key(key_id: String, key_type: KeyType) -> Self {
+        Self {
+            error_kind: CalErrorKind::MissingKey { key_id, key_type },
+            source: None,
+        }
+    }
+
+    pub(crate) fn unsupported_algorithm(algorithm: String) -> Self {
+        Self {
+            error_kind: CalErrorKind::UnsupportedAlgorithm(algorithm),
+            source: None,
+        }
+    }
+
+    pub fn error_kind(&self) -> CalErrorKind {
+        self.error_kind.clone()
+    }
+
+    pub fn backtrace(&self) -> String {
+        match &self.source {
+            Some(source) => source.backtrace().to_string(),
+            None => self.error_kind.to_string(),
         }
     }
 }
 
-impl std::error::Error for SecurityModuleError {
-    /// Provides the source of the security module error, if available.
-    ///
-    /// This method helps in understanding and diagnosing the underlying cause of the error,
-    /// particularly useful when debugging or logging error information.
-    ///
-    /// For errors originating from an HSM or TPM, the source error is returned.
-    /// For other error variants, `None` is returned, as they do not have an underlying source error.
-    #[tracing::instrument]
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match *self {
-            #[cfg(feature = "hsm")]
-            SecurityModuleError::Hsm(ref err) => Some(err),
-            #[cfg(feature = "tpm")]
-            SecurityModuleError::Tpm(ref err) => Some(err),
-            SecurityModuleError::SigningError(_) => None,
-            SecurityModuleError::DecryptionError(_) => None,
-            SecurityModuleError::EncryptionError(_) => None,
-            SecurityModuleError::SignatureVerificationError(_) => None,
-            SecurityModuleError::InitializationError(_) => None,
-            SecurityModuleError::KeyError => None,
-            SecurityModuleError::UnsupportedAlgorithm => None,
-            SecurityModuleError::VerificationFailed => None,
-            SecurityModuleError::InvalidSignature => None,
-            SecurityModuleError::InvalidPublicKey => None,
-            #[cfg(feature = "nks")]
-            SecurityModuleError::NksError => None,
-            SecurityModuleError::SigningFailed => None,
+/// Key type for error pertaining to said key.
+#[derive(Debug, Clone, Copy)]
+pub enum KeyType {
+    Public,
+    Private,
+    PublicAndPrivate,
+}
+
+impl fmt::Display for KeyType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Private => write!(f, "private"),
+            Self::Public => write!(f, "public"),
+            Self::PublicAndPrivate => write!(f, "public and private"),
         }
     }
 }
 
-#[cfg(feature = "hsm")]
-impl From<HsmError> for SecurityModuleError {
-    /// Converts an `HsmError` into a `SecurityModuleError`.
-    ///
-    /// This conversion simplifies error handling by allowing direct use of `HsmError`
-    /// values in contexts where `SecurityModuleError` is expected.
-    #[tracing::instrument]
-    fn from(err: HsmError) -> SecurityModuleError {
-        SecurityModuleError::Hsm(err)
-    }
-}
-
-#[cfg(feature = "tpm")]
-impl From<TpmError> for SecurityModuleError {
-    /// Converts a `TpmError` into a `SecurityModuleError`.
-    ///
-    /// Similar to the conversion from `HsmError`, this allows for streamlined error
-    /// handling and propagation of `TpmError` values as `SecurityModuleError`.
-    #[tracing::instrument]
-    fn from(err: TpmError) -> SecurityModuleError {
-        SecurityModuleError::Tpm(err)
-    }
+pub(crate) trait ToCalError<T> {
+    fn err_internal(self) -> Result<T, CalError>;
 }

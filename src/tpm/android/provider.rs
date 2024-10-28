@@ -5,21 +5,19 @@ use crate::{
             encryption::{AsymmetricKeySpec, Cipher, SymmetricMode},
             KeyBits,
         },
-        error::SecurityModuleError,
+        error::{CalError, ToCalError},
         traits::module_provider::{ProviderFactory, ProviderImpl, ProviderImplEnum},
         DHExchange, KeyHandle, KeyPairHandle, Provider,
     },
-    tpm::{
-        android::{
-            key_handle::{AndroidKeyHandle, AndroidKeyPairHandle},
-            utils::{get_cipher_name, get_mode_name, Padding},
-            wrapper::{self},
-            ANDROID_KEYSTORE,
-        },
-        core::error::{ToTpmError, TpmError},
+    tpm::android::{
+        key_handle::{AndroidKeyHandle, AndroidKeyPairHandle},
+        utils::{get_cipher_name, get_mode_name, Padding},
+        wrapper::{self},
+        ANDROID_KEYSTORE,
     },
 };
 
+use anyhow::anyhow;
 use nanoid::nanoid;
 use robusta_jni::jni::JavaVM;
 use std::sync::Mutex;
@@ -83,7 +81,7 @@ impl Debug for AndroidProvider {
 /// specific to Android.
 impl ProviderImpl for AndroidProvider {
     #[instrument]
-    fn create_key(&mut self, spec: KeySpec) -> Result<KeyHandle, SecurityModuleError> {
+    fn create_key(&mut self, spec: KeySpec) -> Result<KeyHandle, CalError> {
         let key_id = nanoid!(10);
 
         info!("generating key: {}", key_id);
@@ -124,7 +122,10 @@ impl ProviderImpl for AndroidProvider {
                     .err_internal()?;
             }
             Cipher::Rc2(_) | Cipher::Camellia(_, _) | Cipher::Rc4 | Cipher::Chacha20(_) => {
-                return Err(TpmError::UnsupportedOperation("not supported".to_owned()))?;
+                return Err(CalError::unsupported_algorithm(format!(
+                    "{:?}",
+                    spec.cipher
+                )))?;
             }
         }
 
@@ -155,7 +156,7 @@ impl ProviderImpl for AndroidProvider {
         })
     }
 
-    fn create_key_pair(&mut self, spec: KeyPairSpec) -> Result<KeyPairHandle, SecurityModuleError> {
+    fn create_key_pair(&mut self, spec: KeyPairSpec) -> Result<KeyPairHandle, CalError> {
         let key_id = nanoid!(10);
         info!("generating key pair! {}", key_id);
 
@@ -220,21 +221,21 @@ impl ProviderImpl for AndroidProvider {
     ///
     /// # Returns
     ///
-    /// Returns `Ok(())` if the key loading is successful, otherwise returns an error of type `SecurityModuleError`.
+    /// Returns `Ok(())` if the key loading is successful, otherwise returns an error of type `CalError`.
     #[instrument]
-    fn load_key(&mut self, key_id: String) -> Result<KeyHandle, SecurityModuleError> {
+    fn load_key(&mut self, key_id: String) -> Result<KeyHandle, CalError> {
         // TODO: Somehow load the Keyspec from Storage
         todo!("load keyspec from storage")
     }
 
     #[instrument]
-    fn load_key_pair(&mut self, key_id: String) -> Result<KeyPairHandle, SecurityModuleError> {
+    fn load_key_pair(&mut self, key_id: String) -> Result<KeyPairHandle, CalError> {
         // TODO: Somehow load the Keyspec from Storage
         todo!("load keyspec from storage")
     }
 
     #[instrument]
-    fn import_key(&mut self, spec: KeySpec, data: &[u8]) -> Result<KeyHandle, SecurityModuleError> {
+    fn import_key(&mut self, spec: KeySpec, data: &[u8]) -> Result<KeyHandle, CalError> {
         let vm = self.java_vm.lock().unwrap();
         let thread = vm.attach_current_thread().unwrap();
         let env = vm.get_env().unwrap();
@@ -271,7 +272,7 @@ impl ProviderImpl for AndroidProvider {
         spec: KeyPairSpec,
         public_key: &[u8],
         private_key: &[u8],
-    ) -> Result<KeyPairHandle, SecurityModuleError> {
+    ) -> Result<KeyPairHandle, CalError> {
         // TODO: import key pair
         todo!("import key pair")
     }
@@ -281,16 +282,13 @@ impl ProviderImpl for AndroidProvider {
         &mut self,
         spec: KeyPairSpec,
         public_key: &[u8],
-    ) -> Result<KeyPairHandle, SecurityModuleError> {
+    ) -> Result<KeyPairHandle, CalError> {
         // TODO: import public key
         todo!("import public key")
     }
 
     #[instrument]
-    fn start_ephemeral_dh_exchange(
-        &mut self,
-        spec: KeyPairSpec,
-    ) -> Result<DHExchange, SecurityModuleError> {
+    fn start_ephemeral_dh_exchange(&mut self, spec: KeyPairSpec) -> Result<DHExchange, CalError> {
         // TODO: start ephemeral dh exchange
         todo!("start ephemeral dh exchange")
     }
