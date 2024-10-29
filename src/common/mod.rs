@@ -1,4 +1,4 @@
-use config::{KeyPairSpec, KeySpec};
+use config::{KeyPairSpec, KeySpec, ProviderConfig};
 use error::CalError;
 use traits::key_handle::{
     DHKeyExchangeImplEnum, KeyHandleImpl, KeyHandleImplEnum, KeyPairHandleImpl,
@@ -13,14 +13,14 @@ pub mod factory;
 pub(crate) mod traits;
 
 macro_rules! delegate_enum {
-    ($enum_type:ty, $(pub fn $method:ident(&self $(,$arg:ident: $type:ty)* $(,)?) $(-> $ret:ty)?;)+) => {
+    ($(pub fn $method:ident(&self $(,$arg:ident: $type:ty)* $(,)?) $(-> $ret:ty)?;)+) => {
         $(
             pub fn $method(&self $(,$arg: $type)*) $(-> $ret)? {
                 self.implementation.$method($($arg),*)
             }
         )+
     };
-    ($enum_type:ty, $(pub fn $method:ident(&mut self $(,$arg:ident: $type:ty)* $(,)?) $(-> $ret:ty)?;)+) => {
+    ($(pub fn $method:ident(&mut self $(,$arg:ident: $type:ty)* $(,)?) $(-> $ret:ty)?;)+) => {
         $(
             pub fn $method(&mut self $(,$arg: $type)*) $(-> $ret)? {
                 self.implementation.$method($($arg),*)
@@ -38,17 +38,14 @@ pub struct Provider {
 
 impl Provider {
     delegate_enum! {
-        Provider,
         pub fn create_key(&mut self, spec: KeySpec) -> Result<KeyHandle, CalError>;
     }
 
     delegate_enum! {
-        Provider,
         pub fn load_key(&mut self, id: String) -> Result<KeyHandle, CalError>;
     }
 
     delegate_enum! {
-        Provider,
         pub fn import_key(
             &mut self,
             spec: KeySpec,
@@ -57,17 +54,14 @@ impl Provider {
     }
 
     delegate_enum! {
-        Provider,
         pub fn create_key_pair(&mut self, spec: KeyPairSpec) -> Result<KeyPairHandle, CalError>;
     }
 
     delegate_enum! {
-        Provider,
         pub fn load_key_pair(&mut self, id: String) -> Result<KeyPairHandle, CalError>;
     }
 
     delegate_enum! {
-        Provider,
         pub fn import_key_pair(
             &mut self,
             spec: KeyPairSpec,
@@ -77,7 +71,6 @@ impl Provider {
     }
 
     delegate_enum! {
-        Provider,
         pub fn import_public_key(
             &mut self,
             spec: KeyPairSpec,
@@ -86,7 +79,6 @@ impl Provider {
     }
 
     delegate_enum! {
-        Provider,
         pub fn start_ephemeral_dh_exchange(
             &mut self,
             spec: KeyPairSpec,
@@ -94,8 +86,11 @@ impl Provider {
     }
 
     delegate_enum! {
-        Provider,
         pub fn provider_name(&self) -> String;
+    }
+
+    delegate_enum! {
+        pub fn get_capabilities(&self) -> ProviderConfig;
     }
 }
 
@@ -106,22 +101,18 @@ pub struct KeyPairHandle {
 /// Abstraction of asymmetric key pair handles.
 impl KeyPairHandle {
     delegate_enum! {
-        KeyPairHandle,
         pub fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError>;
     }
 
     delegate_enum! {
-        KeyPairHandle,
         pub fn decrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError>;
     }
 
     delegate_enum! {
-        KeyPairHandle,
         pub fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError>;
     }
 
     delegate_enum! {
-        KeyPairHandle,
         pub fn verify_signature(
             &self,
             data: &[u8],
@@ -130,12 +121,10 @@ impl KeyPairHandle {
     }
 
     delegate_enum! {
-        KeyPairHandle,
         pub fn get_public_key(&self) -> Result<Vec<u8>, CalError>;
     }
 
     delegate_enum! {
-        KeyPairHandle,
         pub fn id(&self) -> Result<String, CalError>;
     }
 }
@@ -146,15 +135,12 @@ pub struct KeyHandle {
 
 impl KeyHandle {
     delegate_enum! {
-        KeyHandle,
         pub fn extract_key(&self) -> Result<Vec<u8>, CalError>;
     }
     delegate_enum! {
-        KeyHandle,
         pub fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError>;
     }
     delegate_enum! {
-        KeyHandle,
         pub fn decrypt_data(
             &self,
             encrypted_data: &[u8],
@@ -162,7 +148,6 @@ impl KeyHandle {
     }
 
     delegate_enum! {
-        KeyHandle,
         pub fn id(&self) -> Result<String, CalError>;
     }
 }

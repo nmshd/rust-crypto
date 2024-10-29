@@ -61,7 +61,9 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   late Future<cal.Provider> _cryptoProvider;
-  late Future<cal.KeyPairHandle> _keyPairHandle;
+  cal.KeyPairHandle? _keyPairHandle;
+  List<cal.AsymmetricKeySpec> _algos = [];
+  cal.AsymmetricKeySpec? _algoChoice;
   String? _signature;
   bool? _isVerified;
   final TextEditingController _dataToVerifyController = TextEditingController();
@@ -74,12 +76,23 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
 
     _cryptoProvider = getDefaultProvider();
-    _keyPairHandle =
-        _cryptoProvider.then((provider) => getDefaultKeyPair(provider));
+    _cryptoProvider
+        .then((provider) => provider.getCapabilities())
+        .then((caps) => caps.supportedAsymSpec)
+        .then((e) => {_algos = e.toList()});
+  }
+
+  Future<void> generateKey() async {
+    if (_algoChoice != null) {
+      var spec = cal.KeyPairSpec(
+          asymSpec: _algoChoice!,
+          signingHash: const cal.CryptoHash.sha2(cal.Sha2Bits.sha256));
+      _keyPairHandle = await (await _cryptoProvider).createKeyPair(spec: spec);
+    }
   }
 
   Future<void> signData() async {
-    Uint8List signature = await (await _keyPairHandle).signData(
+    Uint8List signature = await _keyPairHandle!.signData(
         data: Uint8List.fromList(_dataToSignController.text.codeUnits));
 
     setState(() {
@@ -95,7 +108,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> verifyData() async {
-    bool? isVerified = await (await _keyPairHandle).verifySignature(
+    bool? isVerified = await _keyPairHandle!.verifySignature(
         data: Uint8List.fromList(_dataToVerifyController.text.codeUnits),
         signature: Uint8List.fromList(
             base64Decode(_signatureToVerifyController.text)));
@@ -141,6 +154,42 @@ class _MyHomePageState extends State<MyHomePage> {
           // wireframe for each widget.
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            Container(
+              margin:
+                  const EdgeInsets.only(left: 20.0, right: 20.0, bottom: 20.0),
+              child: InputDecorator(
+                decoration: InputDecoration(
+                  labelText: 'Key',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    DropdownMenu(
+                      onSelected: (value) {
+                        setState(() {
+                          _algoChoice = value;
+                        });
+                      },
+                      dropdownMenuEntries: _algos
+                          .map<DropdownMenuEntry<cal.AsymmetricKeySpec>>(
+                              (algo) {
+                        return DropdownMenuEntry<cal.AsymmetricKeySpec>(
+                          value: algo,
+                          label: algo.toString(),
+                          enabled: true,
+                        );
+                      }).toList(),
+                    ),
+                    ElevatedButton(
+                      onPressed: generateKey,
+                      child: const Text('Generate'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
             Container(
               margin:
                   const EdgeInsets.only(left: 20.0, right: 20.0, bottom: 20.0),

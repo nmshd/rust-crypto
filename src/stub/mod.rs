@@ -88,6 +88,10 @@ impl ProviderImpl for StubProvider {
     fn provider_name(&self) -> String {
         PROVIDER_NAME.to_owned()
     }
+
+    fn get_capabilities(&self) -> ProviderConfig {
+        StubProviderFactory {}.get_capabilities(ProviderImplConfig::Stub)
+    }
 }
 
 pub(crate) struct StubKeyPairHandle {}

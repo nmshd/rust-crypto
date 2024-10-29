@@ -117,6 +117,8 @@ pub(crate) trait ProviderImpl {
     fn start_ephemeral_dh_exchange(&mut self, spec: KeyPairSpec) -> Result<DHExchange, CalError>;
 
     fn provider_name(&self) -> String;
+
+    fn get_capabilities(&self) -> ProviderConfig;
 }
 
 #[enum_dispatch]

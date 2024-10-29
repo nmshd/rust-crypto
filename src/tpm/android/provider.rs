@@ -297,4 +297,10 @@ impl ProviderImpl for AndroidProvider {
     fn provider_name(&self) -> String {
         "AndroidProvider".to_owned()
     }
+
+    fn get_capabilities(&self) -> ProviderConfig {
+        AndroidProviderFactory {}.get_capabilities(ProviderImplConfig::Android {
+            vm: self.java_vm.clone(),
+        })
+    }
 }
