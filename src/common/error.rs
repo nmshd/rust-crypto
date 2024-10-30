@@ -41,6 +41,14 @@ pub enum CalErrorKind {
     #[error("Missing Key Error: {key_type} key with id {key_id}")]
     MissingKey { key_id: String, key_type: KeyType },
 
+    /// The value requested could not be found.
+    #[error("Missing Value Error: {description}")]
+    MissingValue {
+        description: String,
+        /// `true` if caused within this library. `false` if caused by another library.
+        internal: bool,
+    },
+
     #[error("Unsupported Algorithm: {0}")]
     UnsupportedAlgorithm(String),
 
@@ -83,6 +91,20 @@ impl CalError {
         Self {
             error_kind: CalErrorKind::MissingKey { key_id, key_type },
             source: anyhow!("Missing Key Error"),
+        }
+    }
+
+    pub(crate) fn missing_value(
+        description: String,
+        internal: bool,
+        source: Option<anyhow::Error>,
+    ) -> Self {
+        Self {
+            error_kind: CalErrorKind::MissingValue {
+                description: description,
+                internal,
+            },
+            source: source.unwrap_or_else(|| anyhow!("Missing Value Error")),
         }
     }
 

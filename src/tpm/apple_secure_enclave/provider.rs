@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use async_trait::async_trait;
+use anyhow::anyhow;
 use base64::prelude::*;
 use security_framework::{
     access_control::{self, ProtectionMode, SecAccessControl},
@@ -15,8 +15,8 @@ use crate::common::{
         hashes::{CryptoHash, Sha2Bits},
         KeyBits,
     },
-    error::SecurityModuleError,
-    traits::module_provider::{ProviderFactory, ProviderImpl},
+    error::CalError,
+    traits::module_provider::{ProviderFactory, ProviderImpl, ProviderImplEnum},
     DHExchange, KeyHandle, KeyPairHandle,
 };
 
@@ -24,13 +24,12 @@ use crate::tpm::apple_secure_enclave::key_handle::AppleSecureEnclaveKeyPair;
 
 pub(crate) struct AppleSecureEnclaveFactory {}
 
-#[async_trait]
 impl ProviderFactory for AppleSecureEnclaveFactory {
     fn get_name(&self) -> String {
         "APPLE_SECURE_ENCLAVE".to_owned()
     }
 
-    async fn get_capabilities(&self, impl_config: ProviderImplConfig) -> ProviderConfig {
+    fn get_capabilities(&self, impl_config: ProviderImplConfig) -> ProviderConfig {
         match impl_config {
             ProviderImplConfig::AppleSecureEnclave {} => {}
             _ => panic!("Invalid ProviderImplConfig supplied."),
@@ -48,34 +47,30 @@ impl ProviderFactory for AppleSecureEnclaveFactory {
         }
     }
 
-    async fn create_provider(&self, impl_config: ProviderImplConfig) -> Box<dyn ProviderImpl> {
-        Box::new(AppleSecureEnclaveProvider {})
+    fn create_provider(&self, _impl_config: ProviderImplConfig) -> ProviderImplEnum {
+        AppleSecureEnclaveProvider {}.into()
     }
 }
 
 #[derive(Debug)]
 pub(crate) struct AppleSecureEnclaveProvider {}
 
-#[async_trait]
 impl ProviderImpl for AppleSecureEnclaveProvider {
-    async fn create_key(&mut self, spec: KeySpec) -> Result<KeyHandle, SecurityModuleError> {
-        Err(SecurityModuleError::UnsupportedAlgorithm)
+    fn create_key(&mut self, spec: KeySpec) -> Result<KeyHandle, CalError> {
+        Err(CalError::not_implemented())
     }
 
-    async fn load_key(&mut self, key_id: String) -> Result<KeyHandle, SecurityModuleError> {
-        Err(SecurityModuleError::UnsupportedAlgorithm)
+    fn load_key(&mut self, key_id: String) -> Result<KeyHandle, CalError> {
+        Err(CalError::not_implemented())
     }
 
-    async fn create_key_pair(
-        &mut self,
-        spec: KeyPairSpec,
-    ) -> Result<KeyPairHandle, SecurityModuleError> {
+    fn create_key_pair(&mut self, spec: KeyPairSpec) -> Result<KeyPairHandle, CalError> {
         let access_controll = match SecAccessControl::create_with_protection(
             Some(ProtectionMode::AccessibleAfterFirstUnlockThisDeviceOnly),
             0,
         ) {
             Ok(access_control) => access_control,
-            Err(e) => return Err(SecurityModuleError::InitializationError(e.to_string())),
+            Err(e) => return Err(todo!()),
         };
 
         let key_options = GenerateKeyOptions {
@@ -89,23 +84,27 @@ impl ProviderImpl for AppleSecureEnclaveProvider {
 
         let sec_key: SecKey = match SecKey::new(&key_options) {
             Ok(sec_key) => sec_key,
-            Err(e) => return Err(SecurityModuleError::InitializationError(e.to_string())),
+            Err(e) => return Err(todo!()),
         };
 
         Ok(KeyPairHandle {
-            implementation: Box::new(AppleSecureEnclaveKeyPair {
+            implementation: AppleSecureEnclaveKeyPair {
                 key_handle: sec_key,
-            }),
+            }
+            .into(),
         })
     }
 
-    async fn load_key_pair(
-        &mut self,
-        key_id: String,
-    ) -> Result<KeyPairHandle, SecurityModuleError> {
+    fn load_key_pair(&mut self, key_id: String) -> Result<KeyPairHandle, CalError> {
         let label = match BASE64_STANDARD.decode(&key_id) {
             Ok(label) => label,
-            Err(e) => return Err(SecurityModuleError::InitializationError(e.to_string())), //TODO Change this error.
+            Err(e) => {
+                return Err(CalError::bad_parameter(
+                    "Failed decoding base64 string.".to_owned(),
+                    false,
+                    Some(anyhow!(e)),
+                ))
+            }
         };
 
         let search_results: Vec<SearchResult> = match ItemSearchOptions::new()
@@ -116,16 +115,23 @@ impl ProviderImpl for AppleSecureEnclaveProvider {
             .search()
         {
             Ok(search_results) => search_results,
-            Err(e) => return Err(SecurityModuleError::InitializationError(e.to_string())),
+            Err(e) => {
+                return Err(CalError::missing_value(
+                    "FSecItemCopyMatching failed.".to_owned(),
+                    false,
+                    Some(anyhow!(e)),
+                ))
+            }
         };
 
         let first_search_result: SearchResult = match search_results.into_iter().next() {
             Some(result) => result,
             None => {
-                return Err(SecurityModuleError::InitializationError(format!(
-                    "Failed to find security key with label: {}",
-                    &key_id
-                )))
+                return Err(CalError::missing_value(
+                    format!("Failed to find security key with label: {}", &key_id),
+                    false,
+                    None,
+                ))
             }
         };
 
@@ -133,58 +139,60 @@ impl ProviderImpl for AppleSecureEnclaveProvider {
             SearchResult::Ref(reference) => match reference {
                 Reference::Key(sec_key) => sec_key,
                 _ => {
-                    return Err(SecurityModuleError::InitializationError(
-                        "Failed to find security key in reference.".to_owned(),
+                    return Err(CalError::missing_value(
+                        "Expected a Reference to a Key.".to_owned(),
+                        true,
+                        None,
                     ))
                 }
             },
             _ => {
-                return Err(SecurityModuleError::InitializationError(
-                    "Failed to find reference in search.".to_owned(),
+                return Err(CalError::missing_value(
+                    "Expected a Reference.".to_owned(),
+                    true,
+                    None,
                 ))
             }
         };
 
         Ok(KeyPairHandle {
-            implementation: Box::new(AppleSecureEnclaveKeyPair {
+            implementation: AppleSecureEnclaveKeyPair {
                 key_handle: sec_key,
-            }),
+            }
+            .into(),
         })
     }
 
-    async fn import_key(
-        &mut self,
-        spec: KeySpec,
-        data: &[u8],
-    ) -> Result<KeyHandle, SecurityModuleError> {
-        Err(SecurityModuleError::UnsupportedAlgorithm)
+    fn import_key(&mut self, _spec: KeySpec, _data: &[u8]) -> Result<KeyHandle, CalError> {
+        Err(CalError::not_implemented())
     }
 
-    async fn import_key_pair(
+    fn import_key_pair(
         &mut self,
-        spec: KeyPairSpec,
-        public_key: &[u8],
-        private_key: &[u8],
-    ) -> Result<KeyPairHandle, SecurityModuleError> {
-        Err(SecurityModuleError::UnsupportedAlgorithm)
+        _spec: KeyPairSpec,
+        _public_key: &[u8],
+        _private_key: &[u8],
+    ) -> Result<KeyPairHandle, CalError> {
+        Err(CalError::not_implemented())
     }
 
-    async fn import_public_key(
+    fn import_public_key(
         &mut self,
-        spec: KeyPairSpec,
-        public_key: &[u8],
-    ) -> Result<KeyPairHandle, SecurityModuleError> {
-        Err(SecurityModuleError::UnsupportedAlgorithm)
+        _spec: KeyPairSpec,
+        _public_key: &[u8],
+    ) -> Result<KeyPairHandle, CalError> {
+        Err(CalError::not_implemented())
     }
 
-    async fn start_ephemeral_dh_exchange(
-        &mut self,
-        spec: KeyPairSpec,
-    ) -> Result<DHExchange, SecurityModuleError> {
-        Err(SecurityModuleError::UnsupportedAlgorithm)
+    fn start_ephemeral_dh_exchange(&mut self, _spec: KeyPairSpec) -> Result<DHExchange, CalError> {
+        Err(CalError::not_implemented())
     }
 
     fn provider_name(&self) -> String {
         "APPLE_SECURE_ENCLAVE".to_owned()
+    }
+
+    fn get_capabilities(&self) -> ProviderConfig {
+        todo!()
     }
 }

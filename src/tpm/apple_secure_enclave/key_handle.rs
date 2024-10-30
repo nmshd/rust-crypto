@@ -1,13 +1,9 @@
-use std::collections::HashSet;
-
-use async_trait::async_trait;
 use base64::prelude::*;
 use security_framework::key::Algorithm;
 use security_framework::key::SecKey;
 
 use crate::common::{
-    config::{KeyPairSpec, KeySpec},
-    error::SecurityModuleError,
+    error::{CalError, KeyType},
     traits::key_handle::KeyPairHandleImpl,
     DHExchange,
 };
@@ -16,67 +12,67 @@ pub(crate) struct AppleSecureEnclaveKeyPair {
     pub(super) key_handle: SecKey,
 }
 
-#[async_trait]
 impl KeyPairHandleImpl for AppleSecureEnclaveKeyPair {
-    async fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
+    fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
         match self
             .key_handle
             .create_signature(Algorithm::ECDSASignatureDigestX962SHA256, data)
         {
             Ok(data) => Ok(data),
-            Err(e) => Err(SecurityModuleError::SigningError(
-                e.description().to_string(),
-            )),
+            Err(e) => Err(todo!()),
         }
     }
 
-    async fn verify_signature(
-        &self,
-        data: &[u8],
-        signature: &[u8],
-    ) -> Result<bool, SecurityModuleError> {
+    fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, CalError> {
         match self.key_handle.verify_signature(
             Algorithm::ECDSASignatureDigestX962SHA256,
             data,
             signature,
         ) {
             Ok(result) => Ok(result),
-            Err(e) => Err(SecurityModuleError::SignatureVerificationError(
-                e.description().to_string(),
-            )),
+            Err(e) => Err(todo!()),
         }
     }
 
-    async fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
-        Err(SecurityModuleError::UnsupportedAlgorithm)
+    fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
+        Err(CalError::not_implemented())
     }
 
-    async fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
-        Err(SecurityModuleError::UnsupportedAlgorithm)
+    fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, CalError> {
+        Err(CalError::not_implemented())
     }
 
-    async fn get_public_key(&self) -> Result<Vec<u8>, SecurityModuleError> {
-        let public_key: SecKey = self
-            .key_handle
-            .public_key()
-            .ok_or(SecurityModuleError::UnsupportedAlgorithm)?;
-        let external_representation = public_key
-            .external_representation()
-            .ok_or(SecurityModuleError::UnsupportedAlgorithm)?;
+    fn get_public_key(&self) -> Result<Vec<u8>, CalError> {
+        let public_key: SecKey = self.key_handle.public_key().ok_or(CalError::missing_key(
+            "SecKeyCopyPublicKey returned NULL".to_owned(),
+            KeyType::Public,
+        ))?;
+        let external_representation =
+            public_key
+                .external_representation()
+                .ok_or(CalError::missing_value(
+                    "SecKeyCopyExternalRepresentation returned NULL".to_owned(),
+                    false,
+                    None,
+                ))?;
         Ok(Vec::from(external_representation.bytes()))
     }
 
-    async fn extract_key(&self) -> Result<Vec<u8>, SecurityModuleError> {
-        Err(SecurityModuleError::UnsupportedAlgorithm)
+    fn extract_key(&self) -> Result<Vec<u8>, CalError> {
+        Err(CalError::not_implemented())
     }
 
-    fn start_dh_exchange(&self) -> Result<DHExchange, SecurityModuleError> {
-        Err(SecurityModuleError::UnsupportedAlgorithm)
+    fn start_dh_exchange(&self) -> Result<DHExchange, CalError> {
+        Err(CalError::not_implemented())
     }
 
-    fn id(&self) -> Result<String, SecurityModuleError> {
+    fn id(&self) -> Result<String, CalError> {
         match self.key_handle.application_label() {
-            None => Err(SecurityModuleError::KeyError),
+            None => Err(CalError::missing_value(
+                "kSecAttrApplicationLabel missing for this key".to_owned(),
+                false,
+                None,
+            )),
             Some(bytes) => Ok(BASE64_STANDARD.encode(bytes)),
         }
     }
