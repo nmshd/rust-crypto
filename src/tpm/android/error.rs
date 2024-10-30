@@ -1,4 +1,5 @@
 use anyhow::{anyhow, Context};
+use tracing::{info, warn};
 
 use crate::common::error::{CalError, ToCalError};
 
@@ -31,6 +32,7 @@ fn err_internal<T>(res: robusta_jni::jni::errors::Result<T>) -> Result<T, anyhow
     match res {
         Ok(v) => Ok(v),
         Err(e) => {
+            info!("err_internal: {:?}", e);
             // check if a java exception was thrown
             let vm = wrapper::get_java_vm()?;
             let env = vm.get_env().map_err(anyhow::Error::new)?;
@@ -50,9 +52,11 @@ fn err_internal<T>(res: robusta_jni::jni::errors::Result<T>) -> Result<T, anyhow
                     .to_str()
                     .map_err(anyhow::Error::new)?
                     .to_string();
+                warn!("Java exception found: {}", message);
                 Err(anyhow!(JavaException(message)))
             } else {
                 // there was no exception, return the jni error
+                warn!("No java exception found");
                 Err(anyhow!(e).context("Not a java exception"))
             }
         }

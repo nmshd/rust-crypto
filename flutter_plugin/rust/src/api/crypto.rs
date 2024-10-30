@@ -19,7 +19,7 @@ pub fn get_android_config() -> ProviderImplConfig {
 
 pub(super) fn set_up_logging() {
     let subscriber = Registry::default().with(tracing_android::layer("RUST").unwrap());
-    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+    let _ = tracing::subscriber::set_global_default(subscriber);
 }
 
 /// This function gets the current Java VM running for the Android app.

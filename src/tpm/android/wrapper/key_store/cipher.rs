@@ -83,7 +83,7 @@ pub(crate) mod jni {
             let output = env.call_method(self.raw.as_obj(), "getIV", "()[B", &[])?;
 
             let output_array = output.l()?.into_inner() as jbyteArray;
-            let output_vec = env.convert_byte_array(output_array).unwrap();
+            let output_vec = env.convert_byte_array(output_array)?;
 
             Ok(output_vec)
         }
@@ -109,7 +109,7 @@ pub(crate) mod jni {
             )?;
 
             let output_array = output.l()?.into_inner() as jbyteArray;
-            let output_vec = env.convert_byte_array(output_array).unwrap();
+            let output_vec = env.convert_byte_array(output_array)?;
 
             Ok(output_vec)
         }
