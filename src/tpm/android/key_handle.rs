@@ -1,31 +1,29 @@
 use std::sync::Arc;
 
-use super::{provider::AndroidProvider, utils::get_iv_size};
+use super::utils::get_iv_size;
 use crate::{
     common::{
         config::{KeyPairSpec, KeySpec},
-        crypto::KeyUsage,
-        error::SecurityModuleError,
+        error::{CalError, ToCalError},
         traits::key_handle::{KeyHandleImpl, KeyPairHandleImpl},
         DHExchange,
     },
-    tpm::{
-        android::{
-            utils::{get_asym_cipher_mode, get_signature_algorithm, load_iv, store_iv},
-            wrapper::{
-                self,
-                key_generation::iv_parameter_spec::jni::IvParameterSpec,
-                key_store::{signature::jni::Signature, store::jni::KeyStore},
-            },
-            ANDROID_KEYSTORE,
+    tpm::android::{
+        utils::{
+            get_asym_cipher_mode, get_signature_algorithm, get_sym_cipher_mode, load_iv, store_iv,
         },
-        core::error::{ToTpmError, TpmError},
+        wrapper::{
+            self,
+            key_generation::iv_parameter_spec::jni::IvParameterSpec,
+            key_store::{signature::jni::Signature, store::jni::KeyStore},
+        },
+        ANDROID_KEYSTORE,
     },
 };
-use async_std::sync::Mutex;
-use async_trait::async_trait;
+
 use robusta_jni::jni::{objects::JObject, JavaVM};
-use tracing::{debug, info, instrument};
+use std::sync::Mutex;
+use tracing::{debug, info};
 
 pub(crate) struct AndroidKeyHandle {
     pub(crate) key_id: String,
@@ -39,27 +37,23 @@ pub(crate) struct AndroidKeyPairHandle {
     pub(crate) java_vm: Arc<Mutex<JavaVM>>,
 }
 
-#[async_trait]
 impl KeyHandleImpl for AndroidKeyHandle {
-    async fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
+    fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
         info!("encrypting");
 
-        let vm = self.java_vm.lock().await;
-        let env = vm.get_env().unwrap();
-        let thread = vm.attach_current_thread().unwrap();
+        let vm = self.java_vm.lock().expect("Can't lock mutex");
+        let attach_guard = vm.attach_current_thread().err_internal()?;
+        let env = vm.get_env().err_internal()?;
 
         let key_store = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_owned()).err_internal()?;
         key_store.load(&env, None).err_internal()?;
 
-        let config_mode: Result<String, SecurityModuleError> = self.spec.cipher.into();
+        let config_mode = get_sym_cipher_mode(self.spec.cipher)?;
 
-        let cipher = wrapper::key_store::cipher::jni::Cipher::getInstance(
-            &env,
-            config_mode.as_ref().unwrap().to_string(),
-        )
-        .err_internal()?;
+        let cipher = wrapper::key_store::cipher::jni::Cipher::getInstance(&env, config_mode)
+            .err_internal()?;
 
-        // symetric encryption needs an IV
+        // symmetric encryption needs an IV
 
         let key = key_store
             .getKey(&env, self.key_id.to_owned(), JObject::null())
@@ -72,21 +66,18 @@ impl KeyHandleImpl for AndroidKeyHandle {
         Ok(encrypted)
     }
 
-    async fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
-        let vm = self.java_vm.lock().await;
-        let thread = vm.attach_current_thread().unwrap();
-        let env = vm.get_env().unwrap();
+    fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, CalError> {
+        let vm = self.java_vm.lock().expect("Can't lock mutex");
+        let attach_guard = vm.attach_current_thread().err_internal()?;
+        let env = vm.get_env().err_internal()?;
 
-        let cipher_mode: Result<String, SecurityModuleError> = self.spec.cipher.into();
+        let cipher_mode = get_sym_cipher_mode(self.spec.cipher)?;
 
         let key_store = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_owned()).err_internal()?;
         key_store.load(&env, None).err_internal()?;
 
-        let cipher = wrapper::key_store::cipher::jni::Cipher::getInstance(
-            &env,
-            cipher_mode.as_ref().unwrap().to_string(),
-        )
-        .err_internal()?;
+        let cipher = wrapper::key_store::cipher::jni::Cipher::getInstance(&env, cipher_mode)
+            .err_internal()?;
 
         let key = key_store
             .getKey(&env, self.key_id.to_owned(), JObject::null())
@@ -103,19 +94,22 @@ impl KeyHandleImpl for AndroidKeyHandle {
         Ok(decrypted)
     }
 
-    async fn extract_key(&self) -> Result<Vec<u8>, SecurityModuleError> {
+    fn extract_key(&self) -> Result<Vec<u8>, CalError> {
         todo!()
+    }
+
+    fn id(&self) -> Result<String, CalError> {
+        Ok(self.key_id.clone())
     }
 }
 
-#[async_trait]
 impl KeyPairHandleImpl for AndroidKeyPairHandle {
-    async fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
+    fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
         info!("signing");
 
-        let vm = self.java_vm.lock().await;
-        let thread = vm.attach_current_thread().unwrap();
-        let env = vm.get_env().unwrap();
+        let vm = self.java_vm.lock().expect("Can't lock mutex");
+        let attach_guard = vm.attach_current_thread().err_internal()?;
+        let env = vm.get_env().err_internal()?;
 
         let key_store = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_string()).err_internal()?;
         key_store.load(&env, None).err_internal()?;
@@ -140,16 +134,12 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
         Ok(output)
     }
 
-    async fn verify_signature(
-        &self,
-        data: &[u8],
-        signature: &[u8],
-    ) -> Result<bool, SecurityModuleError> {
+    fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, CalError> {
         info!("verifiying");
 
-        let vm = self.java_vm.lock().await;
-        let thread = vm.attach_current_thread().unwrap();
-        let env = vm.get_env().unwrap();
+        let vm = self.java_vm.lock().expect("Can't lock mutex");
+        let attach_guard = vm.attach_current_thread().err_internal()?;
+        let env = vm.get_env().err_internal()?;
 
         let key_store = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_string()).err_internal()?;
         key_store.load(&env, None).err_internal()?;
@@ -174,12 +164,12 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
         Ok(output)
     }
 
-    async fn encrypt_data(&self, encryped_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
+    fn encrypt_data(&self, encryped_data: &[u8]) -> Result<Vec<u8>, CalError> {
         info!("encrypting");
 
-        let vm = self.java_vm.lock().await;
-        let thread = vm.attach_current_thread().unwrap();
-        let env = vm.get_env().unwrap();
+        let vm = self.java_vm.lock().expect("Can't lock mutex");
+        let attach_guard = vm.attach_current_thread().err_internal()?;
+        let env = vm.get_env().err_internal()?;
 
         let key_store = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_owned()).err_internal()?;
         key_store.load(&env, None).err_internal()?;
@@ -203,12 +193,12 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
         Ok(encrypted)
     }
 
-    async fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
+    fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, CalError> {
         info!("decrypting");
 
-        let vm = self.java_vm.lock().await;
-        let thread = vm.attach_current_thread().unwrap();
-        let env = vm.get_env().unwrap();
+        let vm = self.java_vm.lock().expect("Can't lock mutex");
+        let attach_guard = vm.attach_current_thread().err_internal()?;
+        let env = vm.get_env().err_internal()?;
 
         let key_store = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_owned()).err_internal()?;
         key_store.load(&env, None).err_internal()?;
@@ -231,12 +221,12 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
         Ok(decrypted)
     }
 
-    async fn get_public_key(&self) -> Result<Vec<u8>, SecurityModuleError> {
+    fn get_public_key(&self) -> Result<Vec<u8>, CalError> {
         info!("getting public key");
 
-        let vm = self.java_vm.lock().await;
-        let thread = vm.attach_current_thread().unwrap();
-        let env = vm.get_env().unwrap();
+        let vm = self.java_vm.lock().expect("Can't lock mutex");
+        let attach_guard = vm.attach_current_thread().err_internal()?;
+        let env = vm.get_env().err_internal()?;
 
         let key_store = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_owned()).err_internal()?;
         key_store.load(&env, None).err_internal()?;
@@ -245,16 +235,20 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
             .getCertificate(&env, self.key_id.to_owned())
             .err_internal()?;
 
-        let public_key = key.getPublicKey(&env).err_internal()?;
+        let _public_key = key.getPublicKey(&env).err_internal()?;
 
         todo!("turn public key into bytes");
     }
 
-    async fn extract_key(&self) -> Result<Vec<u8>, SecurityModuleError> {
+    fn extract_key(&self) -> Result<Vec<u8>, CalError> {
         todo!()
     }
 
-    fn start_dh_exchange(&self) -> Result<DHExchange, SecurityModuleError> {
+    fn start_dh_exchange(&self) -> Result<DHExchange, CalError> {
         todo!()
+    }
+
+    fn id(&self) -> Result<String, CalError> {
+        Ok(self.key_id.clone())
     }
 }

@@ -1,7 +1,7 @@
 use robusta_jni::bridge;
 
 #[bridge]
-pub mod jni {
+pub(crate) mod jni {
     use crate::tpm::android::wrapper::key_generation::key::jni::SecretKey;
     use robusta_jni::{
         convert::{IntoJavaValue, Signature, TryFromJavaValue, TryIntoJavaValue},
@@ -14,26 +14,30 @@ pub mod jni {
 
     #[derive(Signature, TryIntoJavaValue, IntoJavaValue, TryFromJavaValue)]
     #[package(javax.crypto)]
-    pub struct KeyGenerator<'env: 'borrow, 'borrow> {
+    pub(crate) struct KeyGenerator<'env: 'borrow, 'borrow> {
         #[instance]
-        pub raw: AutoLocal<'env, 'borrow>,
+        pub(crate) raw: AutoLocal<'env, 'borrow>,
     }
 
     impl<'env: 'borrow, 'borrow> KeyGenerator<'env, 'borrow> {
-        pub extern "java" fn getInstance(
+        pub(crate) extern "java" fn getInstance(
             env: &'borrow JNIEnv<'env>,
             algorithm: String,
             provider: String,
         ) -> JniResult<Self> {
         }
 
-        pub extern "java" fn init(
+        pub(crate) extern "java" fn init(
             &self,
             env: &JNIEnv,
             #[input_type("Ljava/security/spec/AlgorithmParameterSpec;")] params: JObject,
         ) -> JniResult<()> {
         }
 
-        pub extern "java" fn generateKey(&self, _env: &'borrow JNIEnv) -> JniResult<SecretKey> {}
+        pub(crate) extern "java" fn generateKey(
+            &self,
+            _env: &'borrow JNIEnv,
+        ) -> JniResult<SecretKey> {
+        }
     }
 }

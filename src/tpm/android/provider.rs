@@ -1,6 +1,3 @@
-use std::{collections::HashSet, fmt::Debug, sync::Arc};
-
-use crate::tpm::android::android_logger::setup_logging;
 use crate::{
     common::{
         config::{KeyPairSpec, KeySpec, ProviderConfig, ProviderImplConfig, SecurityLevel},
@@ -8,34 +5,32 @@ use crate::{
             encryption::{AsymmetricKeySpec, Cipher, SymmetricMode},
             KeyBits,
         },
-        error::SecurityModuleError,
-        traits::module_provider::{ProviderFactory, ProviderImpl},
+        error::{CalError, ToCalError},
+        traits::module_provider::{ProviderFactory, ProviderImpl, ProviderImplEnum},
         DHExchange, KeyHandle, KeyPairHandle,
     },
-    tpm::{
-        android::{
-            key_handle::{AndroidKeyHandle, AndroidKeyPairHandle},
-            utils::{get_cipher_name, get_mode_name, Padding},
-            wrapper::{self},
-            ANDROID_KEYSTORE,
-        },
-        core::error::{ToTpmError, TpmError},
+    tpm::android::{
+        key_handle::{AndroidKeyHandle, AndroidKeyPairHandle},
+        utils::{get_cipher_name, get_mode_name, Padding},
+        wrapper::{self},
+        ANDROID_KEYSTORE,
     },
 };
-use async_std::sync::Mutex;
-use async_trait::async_trait;
+
+use nanoid::nanoid;
 use robusta_jni::jni::JavaVM;
+use std::sync::Mutex;
+use std::{collections::HashSet, fmt::Debug, sync::Arc};
 use tracing::{debug, info, instrument};
 
-pub(crate) struct AndroidProviderFactory;
+pub(crate) struct AndroidProviderFactory {}
 
-#[async_trait]
 impl ProviderFactory for AndroidProviderFactory {
     fn get_name(&self) -> String {
         "AndroidProvider".to_owned()
     }
 
-    async fn get_capabilities(&self, impl_config: ProviderImplConfig) -> ProviderConfig {
+    fn get_capabilities(&self, _impl_config: ProviderImplConfig) -> ProviderConfig {
         ProviderConfig {
             min_security_level: SecurityLevel::Hardware,
             max_security_level: SecurityLevel::Hardware,
@@ -49,9 +44,8 @@ impl ProviderFactory for AndroidProviderFactory {
         }
     }
 
-    async fn create_provider(&self, impl_config: ProviderImplConfig) -> Box<dyn ProviderImpl> {
-        setup_logging();
-        Box::new(AndroidProvider {
+    fn create_provider(&self, impl_config: ProviderImplConfig) -> ProviderImplEnum {
+        Into::into(AndroidProvider {
             java_vm: match impl_config {
                 ProviderImplConfig::Android { vm } => vm,
                 _ => panic!("Invalid ProviderImplConfig"),
@@ -84,16 +78,15 @@ impl Debug for AndroidProvider {
 ///
 /// This struct provides methods for key generation, key loading, and module initialization
 /// specific to Android.
-#[async_trait]
 impl ProviderImpl for AndroidProvider {
     #[instrument]
-    async fn create_key(&mut self, spec: KeySpec) -> Result<KeyHandle, SecurityModuleError> {
-        let key_id = "key_id".to_owned();
+    fn create_key(&mut self, spec: KeySpec) -> Result<KeyHandle, CalError> {
+        let key_id = nanoid!(10);
 
         info!("generating key: {}", key_id);
 
-        let vm = self.java_vm.lock().await;
-        let thread = vm.attach_current_thread().expect("Thread attach failed");
+        let vm = self.java_vm.lock().expect("Can't lock mutex");
+        let attach_guard = vm.attach_current_thread().err_internal()?;
         let env = vm.get_env().expect("Get env failed");
 
         info!("got env");
@@ -128,7 +121,10 @@ impl ProviderImpl for AndroidProvider {
                     .err_internal()?;
             }
             Cipher::Rc2(_) | Cipher::Camellia(_, _) | Cipher::Rc4 | Cipher::Chacha20(_) => {
-                return Err(TpmError::UnsupportedOperation("not supported".to_owned()))?;
+                return Err(CalError::unsupported_algorithm(format!(
+                    "{:?}",
+                    spec.cipher
+                )))?;
             }
         }
 
@@ -151,24 +147,21 @@ impl ProviderImpl for AndroidProvider {
         debug!("key generated");
 
         Ok(KeyHandle {
-            implementation: Box::new(AndroidKeyHandle {
-                key_id: key_id.to_owned(),
+            implementation: Into::into(AndroidKeyHandle {
+                key_id: key_id,
                 java_vm: self.java_vm.clone(),
                 spec,
             }),
         })
     }
 
-    async fn create_key_pair(
-        &mut self,
-        spec: KeyPairSpec,
-    ) -> Result<KeyPairHandle, SecurityModuleError> {
-        let key_id = "key_id".to_owned();
+    fn create_key_pair(&mut self, spec: KeyPairSpec) -> Result<KeyPairHandle, CalError> {
+        let key_id = nanoid!(10);
         info!("generating key pair! {}", key_id);
 
-        let vm = self.java_vm.lock().await;
-        let thread = vm.attach_current_thread().unwrap();
-        let env = vm.get_env().unwrap();
+        let vm = self.java_vm.lock().expect("Can't lock mutex");
+        let attach_guard = vm.attach_current_thread().err_internal()?;
+        let env = vm.get_env().err_internal()?;
 
         // build up key specs
         let mut kps_builder =
@@ -187,7 +180,10 @@ impl ProviderImpl for AndroidProvider {
                     .set_key_size(&env, _key_bits.into())
                     .err_internal()?;
             }
-            AsymmetricKeySpec::Ecc { scheme, curve } => {
+            AsymmetricKeySpec::Ecc {
+                scheme: _,
+                curve: _,
+            } => {
                 kps_builder = kps_builder
                     .set_digests(&env, vec![spec.signing_hash.into()])
                     .err_internal()?;
@@ -211,8 +207,8 @@ impl ProviderImpl for AndroidProvider {
         kpg.generateKeyPair(&env).err_internal()?;
 
         Ok(KeyPairHandle {
-            implementation: Box::new(AndroidKeyPairHandle {
-                key_id: key_id.to_owned(),
+            implementation: Into::into(AndroidKeyPairHandle {
+                key_id: key_id,
                 java_vm: self.java_vm.clone(),
                 spec,
             }),
@@ -227,63 +223,87 @@ impl ProviderImpl for AndroidProvider {
     ///
     /// # Returns
     ///
-    /// Returns `Ok(())` if the key loading is successful, otherwise returns an error of type `SecurityModuleError`.
+    /// Returns `Ok(())` if the key loading is successful, otherwise returns an error of type `CalError`.
     #[instrument]
-    async fn load_key(&mut self, key_id: String) -> Result<KeyHandle, SecurityModuleError> {
+    fn load_key(&mut self, key_id: String) -> Result<KeyHandle, CalError> {
         // TODO: Somehow load the Keyspec from Storage
         todo!("load keyspec from storage")
     }
 
     #[instrument]
-    async fn load_key_pair(
-        &mut self,
-        key_id: String,
-    ) -> Result<KeyPairHandle, SecurityModuleError> {
+    fn load_key_pair(&mut self, key_id: String) -> Result<KeyPairHandle, CalError> {
         // TODO: Somehow load the Keyspec from Storage
         todo!("load keyspec from storage")
     }
 
     #[instrument]
-    async fn import_key(
-        &mut self,
-        spec: KeySpec,
-        data: &[u8],
-    ) -> Result<KeyHandle, SecurityModuleError> {
-        // TODO: import key
-        todo!("import key")
+    fn import_key(&mut self, spec: KeySpec, data: &[u8]) -> Result<KeyHandle, CalError> {
+        let vm = self.java_vm.lock().expect("Can't lock mutex");
+        let attach_guard = vm.attach_current_thread().err_internal()?;
+        let env = vm.get_env().err_internal()?;
+
+        let id = nanoid!(10);
+
+        let key = wrapper::key_generation::secret_key_spec::jni::SecretKeySpec::new(
+            &env,
+            data.to_vec(),
+            get_cipher_name(spec.cipher)?,
+        )
+        .err_internal()?;
+
+        let key_store = wrapper::key_store::store::jni::KeyStore::getInstance(
+            &env,
+            ANDROID_KEYSTORE.to_owned(),
+        )
+        .err_internal()?;
+
+        key_store
+            .set_entry(&env, id.clone(), key.raw.as_obj(), None)
+            .err_internal()?;
+
+        Ok(KeyHandle {
+            implementation: Into::into(AndroidKeyHandle {
+                key_id: id,
+                java_vm: self.java_vm.clone(),
+                spec,
+            }),
+        })
     }
 
     #[instrument]
-    async fn import_key_pair(
+    fn import_key_pair(
         &mut self,
         spec: KeyPairSpec,
         public_key: &[u8],
         private_key: &[u8],
-    ) -> Result<KeyPairHandle, SecurityModuleError> {
+    ) -> Result<KeyPairHandle, CalError> {
         // TODO: import key pair
         todo!("import key pair")
     }
 
     #[instrument]
-    async fn import_public_key(
+    fn import_public_key(
         &mut self,
         spec: KeyPairSpec,
         public_key: &[u8],
-    ) -> Result<KeyPairHandle, SecurityModuleError> {
+    ) -> Result<KeyPairHandle, CalError> {
         // TODO: import public key
         todo!("import public key")
     }
 
     #[instrument]
-    async fn start_ephemeral_dh_exchange(
-        &mut self,
-        spec: KeyPairSpec,
-    ) -> Result<DHExchange, SecurityModuleError> {
+    fn start_ephemeral_dh_exchange(&mut self, spec: KeyPairSpec) -> Result<DHExchange, CalError> {
         // TODO: start ephemeral dh exchange
         todo!("start ephemeral dh exchange")
     }
 
     fn provider_name(&self) -> String {
         "AndroidProvider".to_owned()
+    }
+
+    fn get_capabilities(&self) -> ProviderConfig {
+        AndroidProviderFactory {}.get_capabilities(ProviderImplConfig::Android {
+            vm: self.java_vm.clone(),
+        })
     }
 }

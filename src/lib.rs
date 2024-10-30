@@ -1,6 +1,3 @@
-#![allow(unused)]
-#![allow(dead_code)]
-
 pub mod common;
 #[cfg(feature = "ffi")]
 pub mod ffi;
@@ -8,8 +5,8 @@ pub mod ffi;
 pub mod hsm;
 #[cfg(feature = "nks")]
 pub mod nks;
-pub mod stub;
+pub(crate) mod stub;
 #[cfg(test)]
 mod tests;
 #[cfg(feature = "tpm")]
-pub mod tpm;
+pub(crate) mod tpm;

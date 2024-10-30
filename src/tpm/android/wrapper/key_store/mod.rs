@@ -1,3 +1,4 @@
-pub mod cipher;
-pub mod signature;
-pub mod store;
+pub(crate) mod cipher;
+pub(crate) mod key_entry;
+pub(crate) mod signature;
+pub(crate) mod store;

@@ -7,8 +7,12 @@ edition = "2021"
 crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
-flutter_rust_bridge = "=2.4.0"
-crypto-layer = { path = "../../", features = ["tpm", "android"]}
+flutter_rust_bridge_codegen = "2.5.0"
+flutter_rust_bridge = "=2.5.1"
+crypto-layer = { path = "../../", features = ["tpm", "android"] }
 robusta_jni = "0.2"
-libloading = "*"
-async-std = "1.12.0"
+libloading = "0.8.5"
+tracing = { version = "0.1.40", features = ["attributes"] }
+tracing-android = { version = "0.2.0" }
+tracing-subscriber = "0.3.18"
+anyhow = "1.0.91"

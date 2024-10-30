@@ -1,29 +1,59 @@
-#![allow(unused)]
-#![allow(dead_code)]
-
-use config::{KeyPairSpec, KeySpec};
-use error::SecurityModuleError;
-use traits::key_handle::{DHKeyExchangeImpl, KeyHandleImpl, KeyPairHandleImpl};
-use traits::module_provider::ProviderImpl;
+use config::{KeyPairSpec, KeySpec, ProviderConfig};
+use error::CalError;
+use tracing::error;
+use traits::key_handle::{
+    DHKeyExchangeImplEnum, KeyHandleImpl, KeyHandleImplEnum, KeyPairHandleImpl,
+    KeyPairHandleImplEnum,
+};
+use traits::module_provider::{ProviderImpl, ProviderImplEnum};
 
 pub mod config;
 pub mod crypto;
 pub mod error;
 pub mod factory;
-pub(super) mod traits;
+pub(crate) mod traits;
 
-macro_rules! delegate {
-    ($(pub async fn $method:ident(&self $(,$arg:ident: $type:ty)* $(,)?) $(-> $ret:ty)?;)+) => {
+macro_rules! delegate_enum {
+    ($(pub fn $method:ident(&self $(,$arg:ident: $type:ty)* $(,)?) $(-> $ret:ty)?;)+) => {
         $(
-            pub async fn $method(&self $(,$arg: $type)*) $(-> $ret)? {
-                self.implementation.$method($($arg),*).await
+            pub fn $method(&self $(,$arg: $type)*) $(-> $ret)? {
+                match self.implementation.$method($($arg),*) {
+                    Ok(v) => Ok(v),
+                    Err(e) => {
+                        error!("Error in {}: {:?}", stringify!($method), e);
+                        Err(e)
+                    }
+                }
             }
         )+
     };
-    ($(pub async fn $method:ident(&mut self $(,$arg:ident: $type:ty)* $(,)?) $(-> $ret:ty)?;)+) => {
+    ($(pub fn $method:ident(&mut self $(,$arg:ident: $type:ty)* $(,)?) $(-> $ret:ty)?;)+) => {
         $(
-            pub async fn $method(&mut self $(,$arg: $type)*) $(-> $ret)? {
-                self.implementation.$method($($arg),*).await
+            pub fn $method(&mut self $(,$arg: $type)*) $(-> $ret)? {
+                match self.implementation.$method($($arg),*) {
+                    Ok(v) => Ok(v),
+                    Err(e) => {
+                        error!("Error in {}: {}", stringify!($method), e);
+                        Err(e)
+                    }
+                }
+            }
+        )+
+    };
+}
+
+macro_rules! delegate_enum_bare {
+    ($(pub fn $method:ident(&self $(,$arg:ident: $type:ty)* $(,)?) $(-> $ret:ty)?;)+) => {
+        $(
+            pub fn $method(&self $(,$arg: $type)*) $(-> $ret)? {
+                self.implementation.$method($($arg),*)
+            }
+        )+
+    };
+    ($(pub fn $method:ident(&mut self $(,$arg:ident: $type:ty)* $(,)?) $(-> $ret:ty)?;)+) => {
+        $(
+            pub fn $method(&mut self $(,$arg: $type)*) $(-> $ret)? {
+                self.implementation.$method($($arg),*)
             }
         )+
     };
@@ -32,92 +62,100 @@ macro_rules! delegate {
 /// Abstraction of cryptographic providers.
 ///
 /// [Provider] abstracts hardware, software and network based keystores.
-/// [Provider] itself is a wrapper around the structs which implement [ProviderImpl].
-/// This is done for compatibility with other programming languages (mainly dart).
 pub struct Provider {
-    pub(crate) implementation: Box<dyn ProviderImpl>,
+    pub(crate) implementation: ProviderImplEnum,
 }
 
 impl Provider {
-    pub async fn create_key(&mut self, spec: KeySpec) -> Result<KeyHandle, SecurityModuleError> {
-        self.implementation.create_key(spec).await
+    delegate_enum! {
+        pub fn create_key(&mut self, spec: KeySpec) -> Result<KeyHandle, CalError>;
     }
 
-    pub async fn load_key(&mut self, id: String) -> Result<KeyHandle, SecurityModuleError> {
-        self.implementation.load_key(id).await
+    delegate_enum! {
+        pub fn load_key(&mut self, id: String) -> Result<KeyHandle, CalError>;
     }
 
-    delegate! {
-        pub async fn import_key(
+    delegate_enum! {
+        pub fn import_key(
             &mut self,
             spec: KeySpec,
             data: &[u8],
-        ) -> Result<KeyHandle, SecurityModuleError>;
+        ) -> Result<KeyHandle, CalError>;
     }
 
-    delegate! {
-        pub async fn create_key_pair(&mut self, spec: KeyPairSpec) -> Result<KeyPairHandle, SecurityModuleError>;
+    delegate_enum! {
+        pub fn create_key_pair(&mut self, spec: KeyPairSpec) -> Result<KeyPairHandle, CalError>;
     }
 
-    delegate! {
-        pub async fn load_key_pair(&mut self, id: String) -> Result<KeyPairHandle, SecurityModuleError>;
+    delegate_enum! {
+        pub fn load_key_pair(&mut self, id: String) -> Result<KeyPairHandle, CalError>;
     }
 
-    delegate! {
-        pub async fn import_key_pair(
+    delegate_enum! {
+        pub fn import_key_pair(
             &mut self,
             spec: KeyPairSpec,
             public_key: &[u8],
             private_key: &[u8],
-        ) -> Result<KeyPairHandle, SecurityModuleError>;
+        ) -> Result<KeyPairHandle, CalError>;
     }
 
-    delegate! {
-        pub async fn import_public_key(
+    delegate_enum! {
+        pub fn import_public_key(
             &mut self,
             spec: KeyPairSpec,
             public_key: &[u8],
-        ) -> Result<KeyPairHandle, SecurityModuleError>;
+        ) -> Result<KeyPairHandle, CalError>;
     }
 
-    delegate! {
-        pub async fn start_ephemeral_dh_exchange(
+    delegate_enum! {
+        pub fn start_ephemeral_dh_exchange(
             &mut self,
             spec: KeyPairSpec,
-        ) -> Result<DHExchange, SecurityModuleError>;
+        ) -> Result<DHExchange, CalError>;
     }
 
-    pub fn provider_name(&self) -> String {
-        self.implementation.provider_name()
+    delegate_enum_bare! {
+        pub fn provider_name(&self) -> String;
+    }
+
+    delegate_enum_bare! {
+        pub fn get_capabilities(&self) -> ProviderConfig;
     }
 }
 
 pub struct KeyPairHandle {
-    pub(crate) implementation: Box<dyn KeyPairHandleImpl>,
+    pub(crate) implementation: KeyPairHandleImplEnum,
 }
 
 /// Abstraction of asymmetric key pair handles.
 impl KeyPairHandle {
-    pub async fn encrypt_data(&self, data: Vec<u8>) -> Result<Vec<u8>, SecurityModuleError> {
-        self.implementation.encrypt_data(&data).await
+    delegate_enum! {
+        pub fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError>;
     }
-    pub async fn decrypt_data(&self, data: Vec<u8>) -> Result<Vec<u8>, SecurityModuleError> {
-        self.implementation.decrypt_data(&data).await
+
+    delegate_enum! {
+        pub fn decrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError>;
     }
-    pub async fn sign_data(&self, data: Vec<u8>) -> Result<Vec<u8>, SecurityModuleError> {
-        self.implementation.sign_data(&data).await
+
+    delegate_enum! {
+        pub fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError>;
     }
-    pub async fn verify_signature(
-        &self,
-        data: Vec<u8>,
-        signature: Vec<u8>,
-    ) -> Result<bool, SecurityModuleError> {
-        self.implementation
-            .verify_signature(&data, &signature)
-            .await
+
+    delegate_enum! {
+        pub fn verify_signature(
+            &self,
+            data: &[u8],
+            signature: &[u8],
+        ) -> Result<bool, CalError>;
     }
-    pub async fn get_public_key(&self) -> Result<Vec<u8>, SecurityModuleError> {
-        self.implementation.get_public_key().await
+
+    delegate_enum! {
+        pub fn get_public_key(&self) -> Result<Vec<u8>, CalError>;
+    }
+
+    delegate_enum! {
+        pub fn id(&self) -> Result<String, CalError>;
     }
 
     /// Returns the id of the key pair, which can be used with [Provider::load_key_pair].
@@ -127,21 +165,25 @@ impl KeyPairHandle {
 }
 
 pub struct KeyHandle {
-    pub(crate) implementation: Box<dyn KeyHandleImpl>,
+    pub(crate) implementation: KeyHandleImplEnum,
 }
 
 impl KeyHandle {
-    delegate! {
-        pub async fn extract_key(&self) -> Result<Vec<u8>, SecurityModuleError>;
+    delegate_enum! {
+        pub fn extract_key(&self) -> Result<Vec<u8>, CalError>;
     }
-    delegate! {
-        pub async fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, SecurityModuleError>;
+    delegate_enum! {
+        pub fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError>;
     }
-    delegate! {
-        pub async fn decrypt_data(
+    delegate_enum! {
+        pub fn decrypt_data(
             &self,
             encrypted_data: &[u8],
-        ) -> Result<Vec<u8>, SecurityModuleError>;
+        ) -> Result<Vec<u8>, CalError>;
+    }
+
+    delegate_enum! {
+        pub fn id(&self) -> Result<String, CalError>;
     }
 
     /// Returns the id of the key, which can be used with [Provider::load_key].
@@ -150,6 +192,7 @@ impl KeyHandle {
     }
 }
 
+#[allow(dead_code)]
 pub struct DHExchange {
-    pub(crate) implementation: Box<dyn DHKeyExchangeImpl>,
+    pub(crate) implementation: DHKeyExchangeImplEnum,
 }
