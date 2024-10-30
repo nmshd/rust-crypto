@@ -19,7 +19,7 @@ impl KeyPairHandleImpl for AppleSecureEnclaveKeyPair {
             .create_signature(Algorithm::ECDSASignatureDigestX962SHA256, data)
         {
             Ok(data) => Ok(data),
-            Err(e) => Err(todo!()),
+            Err(e) => Err(e.into()),
         }
     }
 
@@ -30,15 +30,15 @@ impl KeyPairHandleImpl for AppleSecureEnclaveKeyPair {
             signature,
         ) {
             Ok(result) => Ok(result),
-            Err(e) => Err(todo!()),
+            Err(e) => Err(e.into()),
         }
     }
 
-    fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
+    fn encrypt_data(&self, _data: &[u8]) -> Result<Vec<u8>, CalError> {
         Err(CalError::not_implemented())
     }
 
-    fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, CalError> {
+    fn decrypt_data(&self, _encrypted_data: &[u8]) -> Result<Vec<u8>, CalError> {
         Err(CalError::not_implemented())
     }
 

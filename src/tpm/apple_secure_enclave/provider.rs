@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use anyhow::anyhow;
 use base64::prelude::*;
 use security_framework::{
-    access_control::{self, ProtectionMode, SecAccessControl},
+    access_control::{ProtectionMode, SecAccessControl},
     item::{ItemClass, ItemSearchOptions, KeyClass, Location, Reference, SearchResult},
     key::{GenerateKeyOptions, KeyType, SecKey},
 };
@@ -13,14 +13,13 @@ use crate::common::{
     crypto::algorithms::{
         encryption::{AsymmetricKeySpec, EccCurve, EccSigningScheme},
         hashes::{CryptoHash, Sha2Bits},
-        KeyBits,
     },
     error::CalError,
     traits::module_provider::{ProviderFactory, ProviderImpl, ProviderImplEnum},
     DHExchange, KeyHandle, KeyPairHandle,
 };
 
-use crate::tpm::apple_secure_enclave::key_handle::AppleSecureEnclaveKeyPair;
+use crate::tpm::apple_secure_enclave::{key_handle::AppleSecureEnclaveKeyPair, *};
 
 pub(crate) struct AppleSecureEnclaveFactory {}
 
@@ -56,21 +55,31 @@ impl ProviderFactory for AppleSecureEnclaveFactory {
 pub(crate) struct AppleSecureEnclaveProvider {}
 
 impl ProviderImpl for AppleSecureEnclaveProvider {
-    fn create_key(&mut self, spec: KeySpec) -> Result<KeyHandle, CalError> {
+    fn create_key(&mut self, _spec: KeySpec) -> Result<KeyHandle, CalError> {
         Err(CalError::not_implemented())
     }
 
-    fn load_key(&mut self, key_id: String) -> Result<KeyHandle, CalError> {
+    fn load_key(&mut self, _key_id: String) -> Result<KeyHandle, CalError> {
         Err(CalError::not_implemented())
     }
 
     fn create_key_pair(&mut self, spec: KeyPairSpec) -> Result<KeyPairHandle, CalError> {
+        debug_assert_eq!(
+            spec.asym_spec,
+            AsymmetricKeySpec::Ecc {
+                scheme: EccSigningScheme::EcDsa,
+                curve: EccCurve::P256
+            }
+        );
+        debug_assert_eq!(spec.cipher, None);
+        debug_assert_eq!(spec.signing_hash, CryptoHash::Sha2(Sha2Bits::Sha256));
+
         let access_controll = match SecAccessControl::create_with_protection(
             Some(ProtectionMode::AccessibleAfterFirstUnlockThisDeviceOnly),
             0,
         ) {
             Ok(access_control) => access_control,
-            Err(e) => return Err(todo!()),
+            Err(e) => return Err(CalError::from(e)),
         };
 
         let key_options = GenerateKeyOptions {
@@ -84,7 +93,7 @@ impl ProviderImpl for AppleSecureEnclaveProvider {
 
         let sec_key: SecKey = match SecKey::new(&key_options) {
             Ok(sec_key) => sec_key,
-            Err(e) => return Err(todo!()),
+            Err(e) => return Err(CalError::from(e)),
         };
 
         Ok(KeyPairHandle {
