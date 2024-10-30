@@ -45,8 +45,6 @@ fn provider_supports_capabilities(
 /// ```
 /// use std::collections::HashSet;
 ///
-/// use async_std::task::block_on;
-///
 /// use crypto_layer::common::{
 ///     config::*,
 ///     factory::*,
@@ -60,7 +58,7 @@ fn provider_supports_capabilities(
 ///     supported_ciphers: HashSet::new(),
 ///     supported_hashes: HashSet::new(),
 /// };
-/// let provider = block_on(create_provider(provider_config, specific_provider_config)).unwrap();
+/// let provider = create_provider(provider_config, specific_provider_config).unwrap();
 /// ```
 pub fn create_provider(
     conf: ProviderConfig,
