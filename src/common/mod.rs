@@ -1,5 +1,6 @@
 use config::{KeyPairSpec, KeySpec, ProviderConfig};
 use error::CalError;
+use tracing::error;
 use traits::key_handle::{
     DHKeyExchangeImplEnum, KeyHandleImpl, KeyHandleImplEnum, KeyPairHandleImpl,
     KeyPairHandleImplEnum,
@@ -13,6 +14,35 @@ pub mod factory;
 pub(crate) mod traits;
 
 macro_rules! delegate_enum {
+    ($(pub fn $method:ident(&self $(,$arg:ident: $type:ty)* $(,)?) $(-> $ret:ty)?;)+) => {
+        $(
+            pub fn $method(&self $(,$arg: $type)*) $(-> $ret)? {
+                match self.implementation.$method($($arg),*) {
+                    Ok(v) => Ok(v),
+                    Err(e) => {
+                        error!("Error in {}: {:?}", stringify!($method), e);
+                        Err(e)
+                    }
+                }
+            }
+        )+
+    };
+    ($(pub fn $method:ident(&mut self $(,$arg:ident: $type:ty)* $(,)?) $(-> $ret:ty)?;)+) => {
+        $(
+            pub fn $method(&mut self $(,$arg: $type)*) $(-> $ret)? {
+                match self.implementation.$method($($arg),*) {
+                    Ok(v) => Ok(v),
+                    Err(e) => {
+                        error!("Error in {}: {}", stringify!($method), e);
+                        Err(e)
+                    }
+                }
+            }
+        )+
+    };
+}
+
+macro_rules! delegate_enum_bare {
     ($(pub fn $method:ident(&self $(,$arg:ident: $type:ty)* $(,)?) $(-> $ret:ty)?;)+) => {
         $(
             pub fn $method(&self $(,$arg: $type)*) $(-> $ret)? {
@@ -85,11 +115,11 @@ impl Provider {
         ) -> Result<DHExchange, CalError>;
     }
 
-    delegate_enum! {
+    delegate_enum_bare! {
         pub fn provider_name(&self) -> String;
     }
 
-    delegate_enum! {
+    delegate_enum_bare! {
         pub fn get_capabilities(&self) -> ProviderConfig;
     }
 }

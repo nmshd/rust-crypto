@@ -41,7 +41,8 @@ impl KeyHandleImpl for AndroidKeyHandle {
     fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
         info!("encrypting");
 
-        let vm = self.java_vm.lock().unwrap();
+        let vm = self.java_vm.lock().expect("Can't lock mutex");
+        let attach_guard = vm.attach_current_thread().err_internal()?;
         let env = vm.get_env().err_internal()?;
 
         let key_store = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_owned()).err_internal()?;
@@ -66,7 +67,8 @@ impl KeyHandleImpl for AndroidKeyHandle {
     }
 
     fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, CalError> {
-        let vm = self.java_vm.lock().unwrap();
+        let vm = self.java_vm.lock().expect("Can't lock mutex");
+        let attach_guard = vm.attach_current_thread().err_internal()?;
         let env = vm.get_env().err_internal()?;
 
         let cipher_mode = get_sym_cipher_mode(self.spec.cipher)?;
@@ -105,8 +107,9 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
     fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
         info!("signing");
 
-        let vm = self.java_vm.lock().unwrap();
-        let env = vm.get_env().unwrap();
+        let vm = self.java_vm.lock().expect("Can't lock mutex");
+        let attach_guard = vm.attach_current_thread().err_internal()?;
+        let env = vm.get_env().err_internal()?;
 
         let key_store = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_string()).err_internal()?;
         key_store.load(&env, None).err_internal()?;
@@ -134,7 +137,8 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
     fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, CalError> {
         info!("verifiying");
 
-        let vm = self.java_vm.lock().unwrap();
+        let vm = self.java_vm.lock().expect("Can't lock mutex");
+        let attach_guard = vm.attach_current_thread().err_internal()?;
         let env = vm.get_env().err_internal()?;
 
         let key_store = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_string()).err_internal()?;
@@ -163,7 +167,8 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
     fn encrypt_data(&self, encryped_data: &[u8]) -> Result<Vec<u8>, CalError> {
         info!("encrypting");
 
-        let vm = self.java_vm.lock().unwrap();
+        let vm = self.java_vm.lock().expect("Can't lock mutex");
+        let attach_guard = vm.attach_current_thread().err_internal()?;
         let env = vm.get_env().err_internal()?;
 
         let key_store = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_owned()).err_internal()?;
@@ -191,7 +196,8 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
     fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, CalError> {
         info!("decrypting");
 
-        let vm = self.java_vm.lock().unwrap();
+        let vm = self.java_vm.lock().expect("Can't lock mutex");
+        let attach_guard = vm.attach_current_thread().err_internal()?;
         let env = vm.get_env().err_internal()?;
 
         let key_store = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_owned()).err_internal()?;
@@ -218,7 +224,8 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
     fn get_public_key(&self) -> Result<Vec<u8>, CalError> {
         info!("getting public key");
 
-        let vm = self.java_vm.lock().unwrap();
+        let vm = self.java_vm.lock().expect("Can't lock mutex");
+        let attach_guard = vm.attach_current_thread().err_internal()?;
         let env = vm.get_env().err_internal()?;
 
         let key_store = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_owned()).err_internal()?;

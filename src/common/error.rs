@@ -1,5 +1,6 @@
 use std::fmt;
 
+use anyhow::anyhow;
 use thiserror;
 
 // Feel free to add more items to error.
@@ -14,11 +15,11 @@ use thiserror;
 ///
 
 #[derive(thiserror::Error, Debug)]
-#[error("{error_kind}")]
+#[error("{error_kind}: {source}")]
 #[repr(C)]
 pub struct CalError {
     error_kind: CalErrorKind,
-    source: Option<anyhow::Error>,
+    source: anyhow::Error,
 }
 
 /// flutter_rust_bridge:non_opaque
@@ -53,7 +54,7 @@ impl CalError {
     pub(crate) fn other(source: anyhow::Error) -> Self {
         Self {
             error_kind: CalErrorKind::Other,
-            source: Some(source),
+            source: source,
         }
     }
 
@@ -67,28 +68,28 @@ impl CalError {
                 description,
                 internal,
             },
-            source,
+            source: source.unwrap_or_else(|| anyhow!("Bad Parameter Error")),
         }
     }
 
     pub(crate) fn not_implemented() -> Self {
         Self {
             error_kind: CalErrorKind::NotImplemented,
-            source: None,
+            source: anyhow!("Not Implemented Error"),
         }
     }
 
     pub(crate) fn missing_key(key_id: String, key_type: KeyType) -> Self {
         Self {
             error_kind: CalErrorKind::MissingKey { key_id, key_type },
-            source: None,
+            source: anyhow!("Missing Key Error"),
         }
     }
 
     pub(crate) fn unsupported_algorithm(algorithm: String) -> Self {
         Self {
             error_kind: CalErrorKind::UnsupportedAlgorithm(algorithm),
-            source: None,
+            source: anyhow!("Unsupported Algorithm Error"),
         }
     }
 
@@ -97,10 +98,7 @@ impl CalError {
     }
 
     pub fn backtrace(&self) -> String {
-        match &self.source {
-            Some(source) => source.backtrace().to_string(),
-            None => self.error_kind.to_string(),
-        }
+        self.source.backtrace().to_string()
     }
 }
 

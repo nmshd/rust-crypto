@@ -85,7 +85,8 @@ impl ProviderImpl for AndroidProvider {
 
         info!("generating key: {}", key_id);
 
-        let vm = self.java_vm.lock().unwrap();
+        let vm = self.java_vm.lock().expect("Can't lock mutex");
+        let attach_guard = vm.attach_current_thread().err_internal()?;
         let env = vm.get_env().expect("Get env failed");
 
         info!("got env");
@@ -158,7 +159,8 @@ impl ProviderImpl for AndroidProvider {
         let key_id = nanoid!(10);
         info!("generating key pair! {}", key_id);
 
-        let vm = self.java_vm.lock().unwrap();
+        let vm = self.java_vm.lock().expect("Can't lock mutex");
+        let attach_guard = vm.attach_current_thread().err_internal()?;
         let env = vm.get_env().err_internal()?;
 
         // build up key specs
@@ -236,7 +238,8 @@ impl ProviderImpl for AndroidProvider {
 
     #[instrument]
     fn import_key(&mut self, spec: KeySpec, data: &[u8]) -> Result<KeyHandle, CalError> {
-        let vm = self.java_vm.lock().unwrap();
+        let vm = self.java_vm.lock().expect("Can't lock mutex");
+        let attach_guard = vm.attach_current_thread().err_internal()?;
         let env = vm.get_env().err_internal()?;
 
         let id = nanoid!(10);
