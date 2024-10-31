@@ -41,6 +41,9 @@ pub(crate) trait KeyHandleImpl: Send + Sync {
 
     /// Returns the id of the key, which can be used with `load_key`.
     fn id(&self) -> Result<String, CalError>;
+
+    /// Delete this key.
+    fn delete(self) -> Result<(), CalError>;
 }
 
 #[enum_dispatch]
@@ -95,6 +98,9 @@ pub(crate) trait KeyPairHandleImpl: Send + Sync {
 
     /// Returns the id of the key pair, which can be used with `load_key_pair`.
     fn id(&self) -> Result<String, CalError>;
+
+    /// Delete this key pair.
+    fn delete(self) -> Result<(), CalError>;
 }
 
 #[enum_dispatch]
