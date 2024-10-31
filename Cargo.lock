@@ -298,7 +298,10 @@ dependencies = [
  "arrayref",
  "base64 0.22.1",
  "color-eyre",
+<<<<<<< HEAD
  "core-foundation 0.10.0",
+=======
+>>>>>>> main
  "ed25519-dalek",
  "enum_dispatch",
  "getrandom",
