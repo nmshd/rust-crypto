@@ -1,7 +1,9 @@
 use std::cmp::{Eq, Ord, PartialEq, PartialOrd};
 use std::collections::HashSet;
 
+#[cfg(feature = "android")]
 use std::sync::Arc;
+#[cfg(feature = "android")]
 use std::sync::Mutex;
 
 #[cfg(feature = "android")]
