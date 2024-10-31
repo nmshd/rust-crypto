@@ -128,6 +128,10 @@ impl KeyPairHandleImpl for StubKeyPairHandle {
     fn id(&self) -> Result<String, CalError> {
         Ok("RANDOM_KEY_ID".to_owned())
     }
+
+    fn delete(self) -> Result<(), CalError> {
+        todo!()
+    }
 }
 
 pub(crate) struct StubKeyHandle {}
@@ -147,5 +151,9 @@ impl KeyHandleImpl for StubKeyHandle {
 
     fn id(&self) -> Result<String, CalError> {
         Ok("RANDOM_KEY_ID".to_owned())
+    }
+
+    fn delete(self) -> Result<(), CalError> {
+        todo!()
     }
 }

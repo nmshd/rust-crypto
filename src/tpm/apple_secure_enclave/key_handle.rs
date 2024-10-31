@@ -76,4 +76,11 @@ impl KeyPairHandleImpl for AppleSecureEnclaveKeyPair {
             Some(bytes) => Ok(BASE64_STANDARD.encode(bytes)),
         }
     }
+
+    fn delete(self) -> Result<(), CalError> {
+        match self.key_handle.delete() {
+            Ok(()) => Ok(()),
+            Err(e) => Err(e.into()),
+        }
+    }
 }
