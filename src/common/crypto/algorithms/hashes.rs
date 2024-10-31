@@ -63,7 +63,9 @@ impl Default for CryptoHash {
 /// ```rust
 /// use crypto_layer::common::crypto::algorithms::hashes::Sha2Bits;
 ///
-/// let digest_size = Sha2Bits::Sha512;
+/// fn main() {
+///     let digest_size = Sha2Bits::Sha512;
+/// }
 /// ```
 ///
 /// # Note
@@ -136,7 +138,9 @@ impl From<Sha2Bits> for u32 {
 /// ```rust
 /// use crypto_layer::common::crypto::algorithms::hashes::Sha3Bits;
 ///
-/// let digest_size = Sha3Bits::Sha3_384;
+/// fn main() {
+///     let digest_size = Sha3Bits::Sha3_384;
+/// }
 /// ```
 ///
 /// # Note

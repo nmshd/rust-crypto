@@ -8,12 +8,16 @@ use super::{
 use crate::stub::StubProviderFactory;
 #[cfg(feature = "android")]
 use crate::tpm::android::provider::AndroidProviderFactory;
+#[cfg(feature = "apple-secure-enclave")]
+use crate::tpm::apple_secure_enclave::provider::AppleSecureEnclaveFactory;
 
 static ALL_PROVIDERS: Lazy<Vec<ProviderFactoryEnum>> = Lazy::new(|| {
     vec![
         #[cfg(feature = "android")]
         Into::into(AndroidProviderFactory {}),
         Into::into(StubProviderFactory {}),
+        #[cfg(feature = "apple-secure-enclave")]
+        Into::into(AppleSecureEnclaveFactory {}),
     ]
 });
 

@@ -12,6 +12,11 @@ use crate::{
 #[cfg(feature = "android")]
 use crate::tpm::android::provider::{AndroidProvider, AndroidProviderFactory};
 
+#[cfg(feature = "apple-secure-enclave")]
+use crate::tpm::apple_secure_enclave::provider::{
+    AppleSecureEnclaveFactory, AppleSecureEnclaveProvider,
+};
+
 #[enum_dispatch(ProviderFactoryEnum)]
 pub(crate) trait ProviderFactory: Send + Sync {
     fn get_name(&self) -> String;
@@ -28,6 +33,8 @@ pub(crate) enum ProviderFactoryEnum {
     StubProviderFactory,
     #[cfg(feature = "android")]
     AndroidProviderFactory,
+    #[cfg(feature = "apple-secure-enclave")]
+    AppleSecureEnclaveFactory,
 }
 
 /// Defines the interface for a security module provider.
@@ -126,4 +133,6 @@ pub(crate) enum ProviderImplEnum {
     StubProvider,
     #[cfg(feature = "android")]
     AndroidProvider,
+    #[cfg(feature = "apple-secure-enclave")]
+    AppleSecureEnclaveProvider,
 }
