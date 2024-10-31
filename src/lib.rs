@@ -5,11 +5,8 @@ pub mod ffi;
 pub mod hsm;
 #[cfg(feature = "nks")]
 pub mod nks;
+pub(crate) mod stub;
 #[cfg(test)]
 mod tests;
 #[cfg(feature = "tpm")]
-pub mod tpm;
-
-pub use common::{error::SecurityModuleError, factory::SecModules};
-#[cfg(feature = "ffi")]
-pub use ffi::factory::{secmodules_free_instance, secmodules_get_instance};
+pub(crate) mod tpm;

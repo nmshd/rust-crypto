@@ -3,9 +3,9 @@ use crate::common::{
     crypto::{
         algorithms::{
             encryption::{
-                AsymmetricEncryption, BlockCiphers, EccCurves, EccSchemeAlgorithm, SymmetricMode,
+                AsymmetricEncryption, Cipher, EccCurve, EccSchemeAlgorithm, SymmetricMode,
             },
-            hashes::{Hash, Sha2Bits},
+            hashes::{CryptoHash, Sha2Bits},
             KeyBits,
         },
         KeyUsage,
@@ -22,8 +22,8 @@ use test_case::test_case;
 
 // Static constants for common parameters
 static RSA_KEY_BITS: KeyBits = KeyBits::Bits4096;
-static ECDSA_CURVE: EccCurves = EccCurves::Curve25519;
-static ECDH_CURVE: EccCurves = EccCurves::Curve25519;
+static ECDSA_CURVE: EccCurve = EccCurve::Curve25519;
+static ECDH_CURVE: EccCurve = EccCurve::Curve25519;
 static AES_MODE: SymmetricMode = SymmetricMode::Gcm;
 static AES_KEY_BITS: KeyBits = KeyBits::Bits512;
 static SHA2_BITS: Sha2Bits = Sha2Bits::Sha256;

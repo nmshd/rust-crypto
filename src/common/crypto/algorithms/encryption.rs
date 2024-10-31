@@ -1,5 +1,7 @@
 use super::KeyBits;
 use serde::{Deserialize, Serialize};
+use std::cmp::{Eq, PartialEq};
+use std::hash::Hash;
 
 /// Represents the available encryption algorithms.
 ///
@@ -13,27 +15,31 @@ use serde::{Deserialize, Serialize};
 /// Basic usage for RSA (assuming `RsaBits` is defined):
 ///
 /// ```
-/// use tpm_poc::common::crypto::algorithms::{KeyBits, encryption::AsymmetricEncryption};
+/// use crypto_layer::common::crypto::algorithms::{KeyBits, encryption::AsymmetricKeySpec};
 ///
-/// let encryption_method = AsymmetricEncryption::Rsa(KeyBits::Bits2048);
+/// let encryption_method = AsymmetricKeySpec::Rsa(KeyBits::Bits2048);
+///
 /// ```
 ///
 /// Basic usage for ECC:
 ///
 /// ```
-/// use tpm_poc::common::crypto::algorithms::encryption::{AsymmetricEncryption, EccSchemeAlgorithm, EccCurves};
+/// use crypto_layer::common::crypto::algorithms::encryption::{AsymmetricKeySpec, EccSigningScheme, EccCurve};
 ///
-/// let encryption_method = AsymmetricEncryption::Ecc(EccSchemeAlgorithm::EcDsa(EccCurves::Secp256k1));
+/// let encryption_method = AsymmetricKeySpec::Ecc{
+///     scheme: EccSigningScheme::EcDsa,
+///     curve: EccCurve::P256,
+/// };
 /// ```
 ///
 /// # Note
 ///
 /// This enum uses `#[repr(C)]` to ensure that it has the same memory layout as a C enum,
 /// facilitating interfacing with C code or when ABI compatibility is required.
-
+/// flutter_rust_bridge:non_opaque
 #[repr(C)]
-#[derive(Clone, Debug, Copy)]
-pub enum AsymmetricEncryption {
+#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash)]
+pub enum AsymmetricKeySpec {
     /// RSA encryption with selectable key sizes.
     ///
     /// Allows specifying the key size for RSA encryption through the `KeyBits` enum,
@@ -48,108 +54,22 @@ pub enum AsymmetricEncryption {
     /// potentially including various algorithms and curves such as P-256, P-384, and others.
     /// ECC is known for providing the same level of security as RSA but with smaller key sizes,
     /// leading to faster computations and lower power consumption.
-    Ecc(EccSchemeAlgorithm),
+    Ecc {
+        scheme: EccSigningScheme,
+        curve: EccCurve,
+    },
 }
 
-impl Default for AsymmetricEncryption {
-    fn default() -> Self {
-        Self::Ecc(Default::default())
-    }
-}
-
-impl AsymmetricEncryption {
-    /// Retrieves the RSA key size if the asymmetric encryption method is RSA.
-    ///
-    /// # Returns
-    ///
-    /// An `Option<KeyBits>` representing the key size of the RSA encryption. Returns `None`
-    /// if the encryption method is not RSA.
-    pub fn rsa_key_bits(&self) -> Option<KeyBits> {
-        match self {
-            AsymmetricEncryption::Rsa(key_bits) => Some(*key_bits),
-            _ => None,
-        }
-    }
-
-    /// Retrieves the ECC scheme algorithm if the asymmetric encryption method is ECC.
-    ///
-    /// This method extracts the specific ECC scheme algorithm used, such as ECDSA, ECDH, etc.
-    ///
-    /// # Returns
-    ///
-    /// An `Option<EccSchemeAlgorithm>` representing the ECC scheme. Returns `None`
-    /// if the encryption method is not ECC.
-    pub fn ecc_scheme(&self) -> Option<EccSchemeAlgorithm> {
-        match self {
-            AsymmetricEncryption::Ecc(ecc_scheme) => Some(*ecc_scheme),
-            _ => None,
-        }
-    }
-
-    /// Retrieves the elliptic curve used if the asymmetric encryption method is ECC.
-    ///
-    /// For ECC schemes that specify a curve, this method returns the curve being used. It supports
-    /// multiple ECC schemes and their associated curves.
-    ///
-    /// # Returns
-    ///
-    /// An `Option<EccCurves>` representing the elliptic curve used. Returns `None`
-    /// if the encryption method is not ECC or if the ECC scheme does not specify a curve.
-    pub fn ecc_curve(&self) -> Option<EccCurves> {
-        match self {
-            AsymmetricEncryption::Ecc(ecc_scheme) => match ecc_scheme {
-                EccSchemeAlgorithm::EcDsa(curve) => Some(*curve),
-                EccSchemeAlgorithm::EcDh(curve) => Some(*curve),
-                EccSchemeAlgorithm::EcDaa(curve) => Some(*curve),
-                EccSchemeAlgorithm::Sm2(curve) => Some(*curve),
-                EccSchemeAlgorithm::EcSchnorr(curve) => Some(*curve),
-                EccSchemeAlgorithm::EcMqv(curve) => Some(*curve),
-                EccSchemeAlgorithm::Null => None,
-            },
-            _ => None,
-        }
-    }
-}
-
-/// Enum representing the ECC scheme interface type.
-///
-/// Defines various algorithms that can be used in conjunction with Elliptic Curve Cryptography (ECC),
-/// including signature schemes, key exchange protocols, and more. This allows for flexible cryptographic
-/// configurations tailored to different security requirements and performance constraints.
-///
-/// # Examples
-///
-/// Selecting an ECC scheme:
-///
-/// ```
-/// use tpm_poc::common::crypto::algorithms::encryption::EccSchemeAlgorithm;
-/// use tpm_poc::common::crypto::algorithms::encryption::EccCurves;
-///
-/// let scheme = EccSchemeAlgorithm::EcDsa(EccCurves::Secp256k1);
-/// ```
+/// flutter_rust_bridge:non_opaque
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum EccSchemeAlgorithm {
+pub enum EccSigningScheme {
     /// ECDSA: Elliptic Curve Digital Signature Algorithm.
-    EcDsa(EccCurves),
-    /// ECDH: Elliptic Curve Diffie-Hellman for key agreement.
-    EcDh(EccCurves),
+    EcDsa,
     /// ECDAA: Elliptic Curve Direct Anonymous Attestation.
-    EcDaa(EccCurves),
-    /// SM2: A Chinese cryptographic standard for digital signatures and key exchange.
-    Sm2(EccCurves),
+    EcDaa,
     /// EC-Schnorr: A Schnorr signature scheme variant using elliptic curves.
-    EcSchnorr(EccCurves),
-    /// ECMQV: Elliptic Curve Menezes-Qu-Vanstone, a key agreement scheme.
-    EcMqv(EccCurves),
-    /// Null: A placeholder or default value indicating no ECC scheme.
-    Null,
-}
-
-impl Default for EccSchemeAlgorithm {
-    fn default() -> Self {
-        Self::EcDsa(EccCurves::Curve25519)
-    }
+    EcSchnorr,
 }
 
 /// Specifies the curve types for Elliptic Curve Digital Signature Algorithm (ECDSA).
@@ -162,17 +82,18 @@ impl Default for EccSchemeAlgorithm {
 /// Selecting an ECDSA curve:
 ///
 /// ```
-/// use tpm_poc::common::crypto::algorithms::encryption::EccCurves;
+/// use crypto_layer::common::crypto::algorithms::encryption::EccCurve;
 ///
-/// let curve_type = EccCurves::Secp256k1;
+/// let curve_type = EccCurve::P256;
 /// ```
 ///
 /// # Note
 ///
 /// Uses `#[repr(C)]` for C language compatibility.
+/// flutter_rust_bridge:non_opaque
 #[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
-pub enum EccCurves {
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum EccCurve {
     /// NIST P-256 curve.
     P256,
     /// NIST P-384 curve.
@@ -190,7 +111,6 @@ pub enum EccCurves {
     /// Brainpool P638 curve.
     BrainpoolP638,
     /// Curve25519, popular for its security and performance.
-    #[default]
     Curve25519,
     /// Curve448, known for high security and efficiency.
     Curve448,
@@ -198,37 +118,40 @@ pub enum EccCurves {
     Frp256v1,
 }
 
-/// Represents the available block cipher algorithms.
+/// Represents the available cipher algorithms.
 ///
-/// This enum provides a C-compatible representation of various block cipher algorithms supported,
-/// including AES, Triple DES, DES, RC2, and Camellia. Each algorithm can be configured with specific modes of operation and key sizes.
-/// It is designed for flexibility, allowing for easy extension to include additional block cipher algorithms.
+/// This enum provides a C-compatible representation of various algorithms supported,
+/// including AES, ChaCha20 variants, Triple DES, DES, RC2, and Camellia. Some algorithms can be configured with specific modes of operation and key sizes.
+/// It is designed for flexibility, allowing for easy extension to include additional cipher algorithms.
+/// Stream ciphers encrypt plaintext one bit or byte at a time, offering different security and performance characteristics compared to block ciphers.
+/// XChaCha20 is the recommended stream cipher for new applications due to its strong security profile.
 ///
 /// # Examples
 ///
-/// Using `BlockCiphers` with AES in CBC mode and a 256-bit key:
+/// Using `Cipher` with AES in CBC mode and a 256-bit key:
 ///
-/// ```rust
-/// use tpm_poc::common::crypto::algorithms::{KeyBits,encryption::{BlockCiphers, SymmetricMode}};
+/// ```
+/// use crypto_layer::common::crypto::algorithms::{KeyBits,encryption::{Cipher, SymmetricMode}};
 ///
-/// let cipher = BlockCiphers::Aes(SymmetricMode::Cbc, KeyBits::Bits256);
+/// let cipher = Cipher::Aes(SymmetricMode::Cbc, KeyBits::Bits256);
 /// ```
 ///
-/// Using `BlockCiphers` with Triple DES in EDE3 mode:
+/// Using `Cipher` with ChaCha20:
 ///
-/// ```rust
-/// use tpm_poc::common::crypto::algorithms::encryption::{BlockCiphers, TripleDesNumKeys};
+/// ```
+/// use crypto_layer::common::crypto::algorithms::encryption::Cipher;
 ///
-/// let cipher = BlockCiphers::TripleDes(TripleDesNumKeys::Tdes3);
+/// let cipher = Cipher::Chacha20;
 /// ```
 ///
 /// # Note
 ///
 /// Marked with `#[repr(C)]` to ensure it has the same memory layout as a C enum,
 /// facilitating ABI compatibility and interfacing with C code.
+/// flutter_rust_bridge:non_opaque
 #[repr(C)]
-#[derive(Clone, Debug, Copy)]
-pub enum BlockCiphers {
+#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash)]
+pub enum Cipher {
     /// AES (Advanced Encryption Standard) block cipher with selectable key sizes and modes.
     Aes(SymmetricMode, KeyBits),
     /// Triple DES block cipher, either in two-key or three-key configurations.
@@ -239,11 +162,23 @@ pub enum BlockCiphers {
     Rc2(Rc2KeyBits),
     /// Camellia block cipher with selectable key sizes.
     Camellia(SymmetricMode, KeyBits),
+    /// RC4 stream cipher.
+    ///
+    /// Once widely used, RC4 is now considered insecure due to vulnerabilities that have
+    /// been discovered over time. It is included here for legacy support and should not
+    /// be used for new applications requiring secure encryption.
+    Rc4,
+    /// ChaCha20 stream cipher.
+    ///
+    /// Provides strong security and high performance, making it suitable for a wide
+    /// range of modern applications. ChaCha20 is recommended for use when a secure and
+    /// efficient stream cipher is required.
+    Chacha20(ChCha20Mode),
 }
 
-impl Default for BlockCiphers {
+impl Default for Cipher {
     fn default() -> Self {
-        Self::Aes(SymmetricMode::Gcm, KeyBits::Bits4096)
+        Self::Aes(SymmetricMode::Gcm, KeyBits::Bits256)
     }
 }
 
@@ -257,7 +192,7 @@ impl Default for BlockCiphers {
 /// Selecting AES in GCM mode:
 ///
 /// ```rust
-/// use tpm_poc::common::crypto::algorithms::encryption::SymmetricMode;
+/// use crypto_layer::common::crypto::algorithms::encryption::SymmetricMode;
 ///
 /// let mode = SymmetricMode::Gcm;
 /// ```
@@ -265,8 +200,9 @@ impl Default for BlockCiphers {
 /// # Note
 ///
 /// `#[repr(C)]` attribute is used for C compatibility.
+/// flutter_rust_bridge:non_opaque
 #[repr(C)]
-#[derive(Clone, Debug, Default, Copy)]
+#[derive(Clone, Debug, Default, Copy, PartialEq, Eq, Hash)]
 pub enum SymmetricMode {
     /// AES in Galois/Counter Mode (GCM) with selectable key sizes.
     /// GCM is preferred for its performance and security, providing both encryption and authentication.
@@ -308,7 +244,7 @@ pub enum SymmetricMode {
 /// Selecting a Triple DES configuration with three keys:
 ///
 /// ```rust
-/// use tpm_poc::common::crypto::algorithms::encryption::TripleDesNumKeys;
+/// use crypto_layer::common::crypto::algorithms::encryption::TripleDesNumKeys;
 ///
 /// let des_config = TripleDesNumKeys::Tdes3;
 /// ```
@@ -316,8 +252,9 @@ pub enum SymmetricMode {
 /// # Note
 ///
 /// Uses `#[repr(C)]` for C language compatibility.
+/// flutter_rust_bridge:non_opaque
 #[repr(C)]
-#[derive(Clone, Debug, Copy)]
+#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash)]
 pub enum TripleDesNumKeys {
     /// Two-key Triple DES, using two different keys for encryption.
     Tdes2,
@@ -335,7 +272,7 @@ pub enum TripleDesNumKeys {
 /// Selecting an RC2 key size of 128 bits:
 ///
 /// ```rust
-/// use tpm_poc::common::crypto::algorithms::encryption:: Rc2KeyBits;
+/// use crypto_layer::common::crypto::algorithms::encryption:: Rc2KeyBits;
 ///
 /// let key_size = Rc2KeyBits::Rc2_128;
 /// ```
@@ -343,8 +280,9 @@ pub enum TripleDesNumKeys {
 /// # Note
 ///
 /// Marked with `#[repr(C)]` to ensure compatibility with C-based environments.
+/// flutter_rust_bridge:non_opaque
 #[repr(C)]
-#[derive(Clone, Debug, Copy)]
+#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash)]
 pub enum Rc2KeyBits {
     /// RC2 with a 40-bit key.
     Rc2_40,
@@ -354,38 +292,10 @@ pub enum Rc2KeyBits {
     Rc2_128,
 }
 
-/// Represents the available stream cipher algorithms.
-///
-/// This enum provides a C-compatible representation of stream cipher algorithms such as RC4 and ChaCha20.
-/// Stream ciphers encrypt plaintext one bit or byte at a time, offering different security and performance characteristics compared to block ciphers.
-/// ChaCha20 is recommended for new applications due to its strong security profile.
-///
-/// # Examples
-///
-/// Using ChaCha20 stream cipher:
-///
-/// ```rust
-/// use tpm_poc::common::crypto::algorithms::encryption::StreamCiphers;
-///
-/// let cipher = StreamCiphers::Chacha20;
-/// ```
-///
-/// # Note
-///
-/// `#[repr(C)]` attribute is used for C compatibility, important for interoperability with C-based systems.
-#[repr(C)]
-#[derive(Clone)]
-pub enum StreamCiphers {
-    /// RC4 stream cipher.
-    ///
-    /// Once widely used, RC4 is now considered insecure due to vulnerabilities that have
-    /// been discovered over time. It is included here for legacy support and should not
-    /// be used for new applications requiring secure encryption.
-    Rc4,
-    /// ChaCha20 stream cipher.
-    ///
-    /// Provides strong security and high performance, making it suitable for a wide
-    /// range of modern applications. ChaCha20 is recommended for use when a secure and
-    /// efficient stream cipher is required.
-    Chacha20,
+/// Specifies ChaCha20 Variant.
+/// flutter_rust_bridge:non_opaque
+#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash)]
+pub enum ChCha20Mode {
+    ChaCha20Poly1305,
+    XChaCha20Poly1305,
 }

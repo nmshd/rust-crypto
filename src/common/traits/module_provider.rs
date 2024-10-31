@@ -1,70 +1,129 @@
-use super::{key_handle::KeyHandle, module_provider_config::ProviderConfig};
-use crate::common::error::SecurityModuleError;
-use async_trait::async_trait;
-use std::fmt::Debug;
+use enum_dispatch::enum_dispatch;
+
+use crate::{
+    common::{
+        config::{KeyPairSpec, KeySpec, ProviderConfig, ProviderImplConfig},
+        error::CalError,
+        DHExchange, KeyHandle, KeyPairHandle,
+    },
+    stub::{StubProvider, StubProviderFactory},
+};
+
+#[cfg(feature = "android")]
+use crate::tpm::android::provider::{AndroidProvider, AndroidProviderFactory};
+
+#[enum_dispatch(ProviderFactoryEnum)]
+pub(crate) trait ProviderFactory: Send + Sync {
+    fn get_name(&self) -> String;
+
+    /// Returns security level and supported algorithms of a provider.
+    ///
+    /// [ProviderConfig] returned stores in HashSets all Hashes, Ciphers and AsymmetricKeySpecs a provider supports.
+    fn get_capabilities(&self, impl_config: ProviderImplConfig) -> ProviderConfig;
+    fn create_provider(&self, impl_config: ProviderImplConfig) -> ProviderImplEnum;
+}
+
+#[enum_dispatch]
+pub(crate) enum ProviderFactoryEnum {
+    StubProviderFactory,
+    #[cfg(feature = "android")]
+    AndroidProviderFactory,
+}
 
 /// Defines the interface for a security module provider.
 ///
-/// This trait encapsulates operations related to cryptographic processing, such as
-/// data encryption/decryption and signing/verification, as well as key management through
-/// a `ProviderHandle`. It ensures a unified approach to interacting with different types
+/// This trait encapsulates operations related to cryptographic key creation and storage. It ensures a unified approach to interacting with different types
 /// of security modules.
-///
-/// Implementors of this trait must also implement the `KeyHandle` trait to provide
-/// cryptographic key operations.
-#[async_trait]
-pub trait Provider: Send + Sync + KeyHandle + Debug {
-    /// Creates a new cryptographic key identified by `key_id`.
+
+#[enum_dispatch(ProviderImplEnum)]
+pub(crate) trait ProviderImpl {
+    /// Creates a new symmetric key identified by `key_id`.
     ///
     /// # Arguments
     ///
     /// * `key_id` - A string slice that uniquely identifies the key to be created.
-    /// * `key_algorithm` - The asymmetric encryption algorithm to be used for the key.
-    /// * `sym_algorithm` - An optional symmetric encryption algorithm to be used with the key.
-    /// * `hash` - An optional hash algorithm to be used with the key.
-    /// * `key_usages` - A vector of `AppKeyUsage` values specifying the intended usages for the key.
+    /// * `spec` - The key specification.
     ///
     /// # Returns
     ///
-    /// A `Result` that, on success, contains `Ok(())`, indicating that the key was created successfully.
-    /// On failure, it returns a `SecurityModuleError`.
-    // #[tracing::instrument]
-    async fn create_key(
-        &mut self,
-        key_id: &str,
-        config: Box<dyn ProviderConfig>,
-    ) -> Result<(), SecurityModuleError>;
+    /// A `Result` that, on success, contains a `KeyHandle`, allowing further operations with this key.
+    /// On failure, it returns a `CalError`.
+    fn create_key(&mut self, spec: KeySpec) -> Result<KeyHandle, CalError>;
 
-    /// Loads an existing cryptographic key identified by `key_id`.
+    /// Loads an existing symmetric key identified by `key_id`.
     ///
     /// # Arguments
     ///
     /// * `key_id` - A string slice that uniquely identifies the key to be loaded.
-    /// * `key_algorithm` - The asymmetric encryption algorithm used for the key.
-    /// * `sym_algorithm` - An optional symmetric encryption algorithm used with the key.
-    /// * `hash` - An optional hash algorithm used with the key.
-    /// * `key_usages` - A vector of `AppKeyUsage` values specifying the intended usages for the key.
+    /// * `spec` - The key specification.
     ///
     /// # Returns
     ///
-    /// A `Result` that, on success, contains `Ok(())`, indicating that the key was loaded successfully.
-    /// On failure, it returns a `SecurityModuleError`.
-    // #[tracing::instrument]
-    async fn load_key(
-        &mut self,
-        key_id: &str,
-        config: Box<dyn ProviderConfig>,
-    ) -> Result<(), SecurityModuleError>;
+    /// A `Result` that, on success, contains a `KeyHandle`, allowing further operations with this key.
+    /// On failure, it returns a `CalError`.
+    fn load_key(&mut self, key_id: String) -> Result<KeyHandle, CalError>;
 
-    /// Initializes the security module and returns a handle for further operations.
+    /// Creates a new asymmetric key pair identified by `key_id`.
     ///
-    /// This method should be called before performing any other operations with the security module.
-    /// It initializes the module and prepares it for use.
+    /// # Arguments
+    ///
+    /// * `key_id` - A string slice that uniquely identifies the keypair to be created.
+    /// * `spec` - The key specification.
     ///
     /// # Returns
     ///
-    /// A `Result` that, on success, contains `Ok(())`, indicating that the module was initialized successfully.
-    /// On failure, it returns a `SecurityModuleError`.
-    // #[tracing::instrument]
-    async fn initialize_module(&mut self) -> Result<(), SecurityModuleError>;
+    /// A `Result` that, on success, contains a `KeyPairHandle`, allowing further operations with this key pair.
+    /// On failure, it returns a `CalError`.
+    fn create_key_pair(&mut self, spec: KeyPairSpec) -> Result<KeyPairHandle, CalError>;
+
+    /// Loads an existing asymmetric keypair identified by `key_id`.
+    ///
+    /// # Arguments
+    ///
+    /// * `key_id` - A string slice that uniquely identifies the keypair to be loaded.
+    /// * `spec` - The key specification.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` that, on success, contains a `KeyPairHandle`, allowing further operations with this key pair.
+    /// On failure, it returns a `CalError`.
+    fn load_key_pair(&mut self, key_id: String) -> Result<KeyPairHandle, CalError>;
+
+    fn import_key(&mut self, spec: KeySpec, data: &[u8]) -> Result<KeyHandle, CalError>;
+
+    fn import_key_pair(
+        &mut self,
+        spec: KeyPairSpec,
+        public_key: &[u8],
+        private_key: &[u8],
+    ) -> Result<KeyPairHandle, CalError>;
+
+    fn import_public_key(
+        &mut self,
+        spec: KeyPairSpec,
+        public_key: &[u8],
+    ) -> Result<KeyPairHandle, CalError>;
+
+    /// Generates a key pair suited for a Diffie-Hellman Key Exchange
+    ///
+    /// # Arguments
+    ///
+    /// * `spec` - A specification for the exchange process and resulting symmetric key
+    ///
+    /// # Returns
+    ///
+    /// A `Result` that, on success, contains a `DHExchange`, allowing further operations with this key pair.
+    /// On failure, it returns a `CalError`.
+    fn start_ephemeral_dh_exchange(&mut self, spec: KeyPairSpec) -> Result<DHExchange, CalError>;
+
+    fn provider_name(&self) -> String;
+
+    fn get_capabilities(&self) -> ProviderConfig;
+}
+
+#[enum_dispatch]
+pub(crate) enum ProviderImplEnum {
+    StubProvider,
+    #[cfg(feature = "android")]
+    AndroidProvider,
 }

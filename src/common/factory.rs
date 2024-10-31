@@ -1,155 +1,100 @@
-use super::traits::{log_config::LogConfig, module_provider::Provider};
-#[cfg(feature = "hsm")]
-use crate::hsm::core::instance::{HsmInstance, HsmType};
-#[cfg(feature = "tpm")]
-use crate::tpm::core::instance::{TpmInstance, TpmType};
-use async_std::sync::Mutex;
 use once_cell::sync::Lazy;
-use std::{collections::HashMap, sync::Arc};
 
-type ProviderArc = Arc<Mutex<dyn Provider>>;
-type SecurityModuleMap = HashMap<SecurityModule, ProviderArc>;
-type SecurityModuleInstances = Lazy<Mutex<SecurityModuleMap>>;
+use super::{
+    config::{ProviderConfig, ProviderImplConfig},
+    traits::module_provider::{ProviderFactory, ProviderFactoryEnum},
+    Provider,
+};
+use crate::stub::StubProviderFactory;
+#[cfg(feature = "android")]
+use crate::tpm::android::provider::AndroidProviderFactory;
 
-/// Represents the available types of security modules in the system.
-///
-/// This enum categorizes security modules into HSM (Hardware Security Module) and
-/// TPM (Trusted Platform Module), allowing for a unified interface when working with different types of security modules.
-//#[repr(C)]
-#[derive(Eq, Hash, PartialEq, Clone, Debug)]
-pub enum SecurityModule {
-    #[cfg(feature = "hsm")]
-    Hsm(HsmType),
-    #[cfg(feature = "tpm")]
-    Tpm(TpmType),
-    #[cfg(feature = "nks")]
-    Nks,
-    #[cfg(feature = "android")]
-    Android,
+static ALL_PROVIDERS: Lazy<Vec<ProviderFactoryEnum>> = Lazy::new(|| {
+    vec![
+        #[cfg(feature = "android")]
+        Into::into(AndroidProviderFactory {}),
+        Into::into(StubProviderFactory {}),
+    ]
+});
+
+fn provider_supports_capabilities(
+    provider_capabilities: &ProviderConfig,
+    needed_capabilities: &ProviderConfig,
+) -> bool {
+    provider_capabilities.max_security_level <= needed_capabilities.max_security_level
+        && provider_capabilities.min_security_level >= needed_capabilities.min_security_level
+        && needed_capabilities
+            .supported_asym_spec
+            .is_subset(&provider_capabilities.supported_asym_spec)
+        && needed_capabilities
+            .supported_ciphers
+            .is_subset(&provider_capabilities.supported_ciphers)
+        && needed_capabilities
+            .supported_hashes
+            .is_subset(&provider_capabilities.supported_hashes)
 }
 
-/// Provides conversion from a string slice to a `SecurityModule` variant.
+/// Returns a provider which supports the given requierements.
 ///
-/// This implementation allows for easy instantiation of `SecurityModule` variants
-/// from string identifiers, facilitating user or configuration-based module selection.
-impl From<&str> for SecurityModule {
-    fn from(item: &str) -> Self {
-        match item {
-            #[cfg(feature = "tpm")]
-            "TPM" => SecurityModule::Tpm(TpmType::default()),
-            #[cfg(feature = "hsm")]
-            "HSM" => SecurityModule::Hsm(HsmType::default()),
-            #[cfg(feature = "android")]
-            "Android" => SecurityModule::Android,
-            _ => panic!("Unsupported Security Module type"),
+/// This function returns the first provider, which supports the given requirements and has a [ProviderImplConfig].
+///
+/// * `conf` - A provider config that the provider must at least contain.
+/// * `impl_conf_vec` - A `Vec` of [ProviderImplConfig]. Only providers, which have [ProviderImplConfig] are returned.
+///
+/// # Example
+/// ```
+/// use std::collections::HashSet;
+///
+/// use crypto_layer::common::{
+///     config::*,
+///     factory::*,
+/// };
+///
+/// let specific_provider_config = vec![ProviderImplConfig::Stub {}];
+/// let provider_config = ProviderConfig {
+///     min_security_level: SecurityLevel::Software,
+///     max_security_level: SecurityLevel::Hardware,
+///     supported_asym_spec: HashSet::new(),
+///     supported_ciphers: HashSet::new(),
+///     supported_hashes: HashSet::new(),
+/// };
+/// let provider = create_provider(provider_config, specific_provider_config).unwrap();
+/// ```
+pub fn create_provider(
+    conf: ProviderConfig,
+    impl_conf_vec: Vec<ProviderImplConfig>,
+) -> Option<Provider> {
+    for provider in ALL_PROVIDERS.iter() {
+        let name = provider.get_name();
+
+        let config = match impl_conf_vec.iter().find(|e| e.name() == name) {
+            Some(config) => config.clone(),
+            None => continue,
+        };
+        let provider_caps = provider.get_capabilities(config.clone());
+
+        if provider_supports_capabilities(&provider_caps, &conf) {
+            return Some(Provider {
+                implementation: provider.create_provider(config),
+            });
         }
     }
+    None
 }
 
-/// A thread-safe, lazily-initialized global registry of security module instances.
+/// Returns the provider with the given name.
 ///
-/// This static variable holds a `Mutex`-protected `HashMap` that maps `SecurityModule`
-/// variants to their corresponding provider instances. It ensures that module instances
-/// are unique and accessible across the application.
-static INSTANCES: SecurityModuleInstances = Lazy::new(|| Mutex::new(HashMap::new()));
-static LOGGING_INITIALIZED: Mutex<bool> = Mutex::new(false);
+/// * `name` - Name of the provider. See `get_name()`.
+/// * `impl_config` - Specif configuration for said provider.
+pub fn create_provider_from_name(name: String, impl_conf: ProviderImplConfig) -> Option<Provider> {
+    for provider in ALL_PROVIDERS.iter() {
+        let p_name = provider.get_name();
 
-/// A container struct for security module-related functionality.
-///
-/// This struct serves as a namespace for functions related to security module instances,
-/// such as retrieving and creating them.
-#[repr(C)]
-pub struct SecModules {}
-
-/// Provides methods related to managing and accessing security module instances.
-impl SecModules {
-    /// Retrieves or creates an instance of a security module based on the provided key and type.
-    ///
-    /// If an instance for the given module and key does not exist, it is created and stored.
-    /// Otherwise, the existing instance is returned.
-    ///
-    /// # Arguments
-    ///
-    /// * `key_id` - A `String` identifier for the security module instance.
-    /// * `module` - The `SecurityModule` variant representing the type of module to retrieve or create.
-    ///
-    /// # Returns
-    ///
-    /// An `Option` containing an `Arc<Mutex<dyn Provider>>` to the requested module instance,
-    /// or `None` if the module type is not supported or an error occurs during instance creation.
-    pub async fn get_instance(
-        key_id: String,
-        module: SecurityModule,
-        log: Option<Box<dyn LogConfig>>,
-    ) -> Option<Arc<Mutex<dyn Provider>>> {
-        // Initialize logging once
-        {
-            let should_initialize = !*LOGGING_INITIALIZED.lock().await;
-            if should_initialize {
-                if let Some(log_inst) = log {
-                    log_inst.setup_logging().await;
-                }
-                *LOGGING_INITIALIZED.lock().await = true;
-            }
-        }
-
-        // Check if requested instance is in cache
-        if let Some(instance) = INSTANCES.lock().await.get(&module).cloned() {
-            return Some(instance);
-        }
-
-        // If not in cache, create a new instance
-        let instance = SecModule::create_instance(key_id, &module).await?;
-
-        // Insert the new instance into the cache
-        INSTANCES.lock().await.insert(module, instance.clone());
-
-        Some(instance)
-    }
-}
-
-/// Represents a specific instance of a security module.
-///
-/// This struct is used internally to manage individual instances of security modules,
-/// encapsulating the module's type and the provider instance that handles its functionality.
-#[repr(C)]
-struct SecModule {
-    name: String,
-    instance: Arc<Mutex<dyn Provider>>,
-}
-
-/// Encapsulates functionality for creating security module instances.
-impl SecModule {
-    /// Creates and returns an instance of a security module provider based on the module type.
-    ///
-    /// This function is responsible for instantiating providers for HSM and TPM modules.
-    /// It delegates the instantiation to the specific module's implementation.
-    ///
-    /// # Arguments
-    ///
-    /// * `key_id` - A `String` identifier for the security module instance.
-    /// * `module` - A reference to the `SecurityModule` for which to create the instance.
-    ///
-    /// # Returns
-    ///
-    /// An `Arc<Mutex<dyn Provider>>` representing the created module instance,
-    /// or `None` if the module type is not supported or an error occurs during instance creation.
-    async fn create_instance(
-        key_id: String,
-        module: &SecurityModule,
-    ) -> Option<Arc<Mutex<dyn Provider>>> {
-        match module {
-            #[cfg(feature = "hsm")]
-            SecurityModule::Hsm(hsm_type) => Some(HsmInstance::create_instance(key_id, hsm_type)),
-            #[cfg(feature = "tpm")]
-            SecurityModule::Tpm(tpm_type) => {
-                Some(TpmInstance::create_instance(key_id, tpm_type).await)
-            }
-            #[cfg(feature = "nks")]
-            SecurityModule::Nks => Some(Arc::new(Mutex::new(
-                crate::nks::hcvault::NksProvider::new(key_id),
-            ))),
-            _ => unimplemented!(),
+        if p_name == name {
+            return Some(Provider {
+                implementation: provider.create_provider(impl_conf),
+            });
         }
     }
+    None
 }

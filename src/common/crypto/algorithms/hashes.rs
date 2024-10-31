@@ -7,9 +7,10 @@
 /// Algorithms like SHA-1, MD2, MD4, and MD5 are considered insecure for most cryptographic
 /// purposes due to practical collision attacks and should be avoided for new applications.
 /// Prefer using more secure algorithms like SHA-2 or SHA-3 for cryptographic purposes.
+/// flutter_rust_bridge:non_opaque
 #[repr(C)]
-#[derive(Clone, Debug, Copy)]
-pub enum Hash {
+#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash)]
+pub enum CryptoHash {
     /// SHA-1 hashing algorithm.
     ///
     /// Considered insecure for most cryptographic purposes now due to vulnerabilities
@@ -41,7 +42,7 @@ pub enum Hash {
     Ripemd160,
 }
 
-impl Default for Hash {
+impl Default for CryptoHash {
     fn default() -> Self {
         Self::Sha2(Sha2Bits::Sha512)
     }
@@ -60,7 +61,7 @@ impl Default for Hash {
 /// Selecting a SHA-2 digest size:
 ///
 /// ```rust
-/// use tpm_poc::common::crypto::algorithms::hashes::Sha2Bits;
+/// use crypto_layer::common::crypto::algorithms::hashes::Sha2Bits;
 ///
 /// let digest_size = Sha2Bits::Sha512;
 /// ```
@@ -68,8 +69,9 @@ impl Default for Hash {
 /// # Note
 ///
 /// `#[repr(C)]` attribute is used for C compatibility, facilitating interoperability with C-based systems.
+/// flutter_rust_bridge:non_opaque
 #[repr(C)]
-#[derive(Clone, Debug, Copy)]
+#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash)]
 pub enum Sha2Bits {
     /// 224-bit digest size.
     Sha224,
@@ -132,7 +134,7 @@ impl From<Sha2Bits> for u32 {
 /// Selecting a SHA-3 digest size:
 ///
 /// ```rust
-/// use tpm_poc::common::crypto::algorithms::hashes::Sha3Bits;
+/// use crypto_layer::common::crypto::algorithms::hashes::Sha3Bits;
 ///
 /// let digest_size = Sha3Bits::Sha3_384;
 /// ```
@@ -140,8 +142,9 @@ impl From<Sha2Bits> for u32 {
 /// # Note
 ///
 /// Uses `#[repr(C)]` for C language compatibility, important for interoperability with C-based systems.
+/// flutter_rust_bridge:non_opaque
 #[repr(C)]
-#[derive(Clone, Debug, Copy)]
+#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash)]
 pub enum Sha3Bits {
     /// 224-bit digest size for SHA-3.
     Sha3_224,

@@ -1,5 +1,7 @@
 pub mod encryption;
 pub mod hashes;
+use std::cmp::{Eq, PartialEq};
+use std::hash::Hash;
 
 /// Represents the bit length of a cryptographic key.
 ///
@@ -20,7 +22,7 @@ pub mod hashes;
 ///
 /// This enum can be converted to and from `u32` values using the `From` trait implementations.
 #[repr(C)]
-#[derive(Clone, Debug, Copy)]
+#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash)]
 pub enum KeyBits {
     Bits128,
     Bits192,

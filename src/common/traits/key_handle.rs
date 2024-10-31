@@ -1,30 +1,11 @@
-use crate::common::error::SecurityModuleError;
-use std::fmt::Debug;
-use async_trait::async_trait;
-#[cfg(feature = "linux")]
-use tss_esapi::handles::KeyHandle as TssKeyHandle;
-#[cfg(feature = "win")]
-use windows::Win32::Security::Cryptography::NCRYPT_KEY_HANDLE;
-
-/// An enum representing a generic key handle that can be used on different platforms.
-///
-/// This enum provides a platform-agnostic way to handle cryptographic keys. It has two variants:
-///
-/// - `Linux`: Used on Linux platforms, wrapping the `TssKeyHandle` type from the `tss_esapi` crate.
-/// - `Windows`: Used on Windows platforms, wrapping the `NCRYPT_KEY_HANDLE` type from the `windows` crate.
-///
-/// By using this enum, you can write code that works with cryptographic keys on both Linux and Windows platforms
-/// without having to worry about the underlying platform-specific types.
-#[repr(C)]
-#[cfg(any(feature = "linux", feature = "win"))]
-pub enum GenericKeyHandle {
-    #[cfg(feature = "linux")]
-    Linux(TssKeyHandle),
-    #[cfg(feature = "win")]
-    Windows(NCRYPT_KEY_HANDLE),
-    #[cfg(feature = "yubi")]
-    YubiKey(Box<dyn KeyHandle>),
-}
+#![allow(dead_code)]
+#[cfg(feature = "android")]
+use crate::tpm::android::key_handle::{AndroidKeyHandle, AndroidKeyPairHandle};
+use crate::{
+    common::{error::CalError, DHExchange},
+    stub::{StubKeyHandle, StubKeyPairHandle},
+};
+use enum_dispatch::enum_dispatch;
 
 /// Defines a common interface for cryptographic key operations.
 ///
@@ -33,21 +14,16 @@ pub enum GenericKeyHandle {
 /// modules that manage cryptographic keys, ensuring a consistent interface for key
 /// operations across different types of security modules. Implementors of this trait
 /// must ensure thread safety.
-#[async_trait]
-pub trait KeyHandle: Send + Sync + Debug {
-    /// Signs the given data using the cryptographic key.
+#[enum_dispatch(KeyHandleImplEnum)]
+pub(crate) trait KeyHandleImpl: Send + Sync {
+    /// Encrypts the given data using the cryptographic key.
     ///
     /// # Arguments
-    /// * `data` - A byte slice representing the data to be signed.
+    /// * `data` - A byte slice representing the data to be encrypted.
     ///
     /// # Returns
-    /// A `Result` containing the signature as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
-    #[tracing::instrument]
-    async fn sign_data(&self, _data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
-        Err(SecurityModuleError::InitializationError(
-            "Method not implemented".to_owned(),
-        ))
-    }
+    /// A `Result` containing the encrypted data as a `Vec<u8>` on success, or a `CalError` on failure.
+    fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError>;
 
     /// Decrypts the given encrypted data using the cryptographic key.
     ///
@@ -55,27 +31,32 @@ pub trait KeyHandle: Send + Sync + Debug {
     /// * `encrypted_data` - A byte slice representing the data to be decrypted.
     ///
     /// # Returns
-    /// A `Result` containing the decrypted data as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
-    #[tracing::instrument]
-    async fn decrypt_data(&self, _encrypted_data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
-        Err(SecurityModuleError::InitializationError(
-            "Method not implemented".to_owned(),
-        ))
-    }
+    /// A `Result` containing the decrypted data as a `Vec<u8>` on success, or a `CalError` on failure.
+    fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, CalError>;
 
-    /// Encrypts the given data using the cryptographic key.
+    fn extract_key(&self) -> Result<Vec<u8>, CalError>;
+
+    /// Returns the id of the key, which can be used with `load_key`.
+    fn id(&self) -> Result<String, CalError>;
+}
+
+#[enum_dispatch]
+pub(crate) enum KeyHandleImplEnum {
+    StubKeyHandle,
+    #[cfg(feature = "android")]
+    AndroidKeyHandle,
+}
+
+#[enum_dispatch(KeyPairHandleImplEnum)]
+pub(crate) trait KeyPairHandleImpl: Send + Sync {
+    /// Signs the given data using the cryptographic key.
     ///
     /// # Arguments
-    /// * `data` - A byte slice representing the data to be encrypted.
+    /// * `data` - A byte slice representing the data to be signed.
     ///
     /// # Returns
-    /// A `Result` containing the encrypted data as a `Vec<u8>` on success, or a `SecurityModuleError` on failure.
-    #[tracing::instrument]
-    async fn encrypt_data(&self, _data: &[u8]) -> Result<Vec<u8>, SecurityModuleError> {
-        Err(SecurityModuleError::InitializationError(
-            "Method not implemented".to_owned(),
-        ))
-    }
+    /// A `Result` containing the signature as a `Vec<u8>` on success, or a `CalError` on failure.
+    fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError>;
 
     /// Verifies the signature of the given data using the cryptographic key.
     ///
@@ -85,35 +66,54 @@ pub trait KeyHandle: Send + Sync + Debug {
     ///
     /// # Returns
     /// A `Result` containing a boolean indicating whether the signature is valid (`true`) or not (`false`),
-    /// or a `SecurityModuleError` on failure.
-    #[tracing::instrument]
-    async fn verify_signature(
-        &self,
-        _data: &[u8],
-        _signature: &[u8],
-    ) -> Result<bool, SecurityModuleError> {
-        Err(SecurityModuleError::InitializationError(
-            "Method not implemented".to_owned(),
-        ))
-    }
+    /// or a `CalError` on failure.
+    fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, CalError>;
 
-    /// TODO: Docs
+    /// Encrypts the given data using the cryptographic key.
+    ///
+    /// # Arguments
+    /// * `data` - A byte slice representing the data to be encrypted.
+    ///
     /// # Returns
-    /// A `Result` containing the new key on success or a `SecurityModuleError` on failure.
-    #[tracing::instrument]
-    async fn derive_key(&self) -> Result<Vec<u8>, SecurityModuleError> {
-        Err(SecurityModuleError::InitializationError(
-            "Method not implemented".to_owned(),
-        ))
-    }
+    /// A `Result` containing the encrypted data as a `Vec<u8>` on success, or a `CalError` on failure.
+    fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError>;
 
-    /// TODO: Docs
+    /// Decrypts the given encrypted data using the cryptographic key.
+    ///
+    /// # Arguments
+    /// * `encrypted_data` - A byte slice representing the data to be decrypted.
+    ///
     /// # Returns
-    /// A `Result` containing the new keypair on success or a `SecurityModuleError` on failure.
-    #[tracing::instrument]
-    async fn generate_exchange_keypair(&self) -> Result<(Vec<u8>, Vec<u8>), SecurityModuleError> {
-        Err(SecurityModuleError::InitializationError(
-            "Method not implemented".to_owned(),
-        ))
-    }
+    /// A `Result` containing the decrypted data as a `Vec<u8>` on success, or a `CalError` on failure.
+    fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, CalError>;
+    fn get_public_key(&self) -> Result<Vec<u8>, CalError>;
+    fn extract_key(&self) -> Result<Vec<u8>, CalError>;
+    fn start_dh_exchange(&self) -> Result<DHExchange, CalError>;
+
+    /// Returns the id of the key pair, which can be used with `load_key_pair`.
+    fn id(&self) -> Result<String, CalError>;
+}
+
+#[enum_dispatch]
+pub(crate) enum KeyPairHandleImplEnum {
+    StubKeyPairHandle,
+    #[cfg(feature = "android")]
+    AndroidKeyPairHandle,
+}
+
+pub(crate) trait DHKeyExchangeImpl: Send + Sync {
+    /// Get the public key of the internal key pair to use for the other party
+    fn get_public_key(&self) -> Result<Vec<u8>, CalError>;
+
+    /// add an external public point and compute the shared secret. The raw secret is returned to use in another round of the key exchange
+    fn add_external(&mut self, external_key: &[u8]) -> Result<Vec<u8>, CalError>;
+
+    /// add the final external Keypair, derive a symmetric key from the shared secret and store the key
+    fn add_external_final(self, external_key: &[u8]) -> Result<KeyHandleImplEnum, CalError>;
+}
+
+pub(crate) enum DHKeyExchangeImplEnum {
+    #[cfg(feature = "android")]
+    Android,
+    Stub,
 }

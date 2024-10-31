@@ -10,7 +10,7 @@
 /// Using `PkiStandards` with PKCS#1:
 ///
 /// ```rust
-/// use tpm_poc::common::crypto::pkcs::standards::{PkiStandards, PkcsType};
+/// use crypto_layer::common::crypto::pkcs::standards::{PkiStandards, PkcsType};
 ///
 /// let pki_standard = PkiStandards::Pkcs(PkcsType::Pkcs1);
 /// ```
@@ -18,7 +18,7 @@
 /// Using `PkiStandards` with X.509 Certificates:
 ///
 /// ```rust
-/// use tpm_poc::common::crypto::pkcs::standards::{PkiStandards, X509Type};
+/// use crypto_layer::common::crypto::pkcs::standards::{PkiStandards, X509Type};
 ///
 /// let pki_standard = PkiStandards::X509(X509Type::Certificate);
 /// ```
@@ -50,7 +50,7 @@ pub enum PkiStandards {
 /// Selecting a PKCS type for RSA cryptography:
 ///
 /// ```rust
-/// use tpm_poc::common::crypto::pkcs::standards::PkcsType;
+/// use crypto_layer::common::crypto::pkcs::standards::PkcsType;
 ///
 /// let pkcs_type = PkcsType::Pkcs1;
 /// ```
@@ -90,7 +90,7 @@ pub enum PkcsType {
 /// Selecting an X.509 type for certificates:
 ///
 /// ```rust
-/// use tpm_poc::common::crypto::pkcs::standards::X509Type;
+/// use crypto_layer::common::crypto::pkcs::standards::X509Type;
 ///
 /// let x509_type = X509Type::Certificate;
 /// ```
@@ -121,7 +121,7 @@ pub enum X509Type {
 /// Using `ObjectIdentifiers` for RSA encryption:
 ///
 /// ```rust
-/// use tpm_poc::common::crypto::pkcs::standards::{ObjectIdentifiers, OidType};
+/// use crypto_layer::common::crypto::pkcs::standards::{ObjectIdentifiers, OidType};
 ///
 /// let oid = ObjectIdentifiers::Oid(OidType::RsaEncryption);
 /// ```
@@ -170,7 +170,7 @@ pub enum ObjectIdentifiers {
 /// Selecting an OID for AES 256 CBC encryption:
 ///
 /// ```rust
-/// use tpm_poc::common::crypto::pkcs::standards::OidType;
+/// use crypto_layer::common::crypto::pkcs::standards::OidType;
 ///
 /// let oid_type = OidType::Aes256Cbc;
 /// ```
