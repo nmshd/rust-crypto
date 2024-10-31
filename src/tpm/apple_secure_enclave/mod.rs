@@ -29,11 +29,18 @@ impl From<CFError> for CFErrorThreadSafe {
     }
 }
 
+// TODO: Fix this abhorent mess.
+
 impl CalError {
     fn from_cferr(error: CFError, context: String) -> Self {
-        let code = error.code();
+        let code = error.code() as u32;
         let wrapped_error = anyhow!(CFErrorThreadSafe::from(error));
         match code {
+            0xFFFF7B1E => CalError::failed_init(
+                "A required entitlement isn't present.".to_owned(),
+                false,
+                Some(wrapped_error),
+            ),
             0xFFFFFFCE
             | 0xFFFFFC73
             | 0xFFFFD99A
