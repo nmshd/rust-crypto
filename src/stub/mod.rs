@@ -94,6 +94,7 @@ impl ProviderImpl for StubProvider {
     }
 }
 
+#[derive(Debug, Clone)]
 pub(crate) struct StubKeyPairHandle {}
 
 impl KeyPairHandleImpl for StubKeyPairHandle {
@@ -134,6 +135,7 @@ impl KeyPairHandleImpl for StubKeyPairHandle {
     }
 }
 
+#[derive(Debug, Clone)]
 pub(crate) struct StubKeyHandle {}
 
 impl KeyHandleImpl for StubKeyHandle {

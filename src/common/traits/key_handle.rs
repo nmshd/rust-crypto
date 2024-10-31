@@ -47,6 +47,7 @@ pub(crate) trait KeyHandleImpl: Send + Sync {
 }
 
 #[enum_dispatch]
+#[derive(Debug, Clone)]
 pub(crate) enum KeyHandleImplEnum {
     StubKeyHandle,
     #[cfg(feature = "android")]
@@ -104,6 +105,7 @@ pub(crate) trait KeyPairHandleImpl: Send + Sync {
 }
 
 #[enum_dispatch]
+#[derive(Debug, Clone)]
 pub(crate) enum KeyPairHandleImplEnum {
     StubKeyPairHandle,
     #[cfg(feature = "android")]
@@ -123,6 +125,7 @@ pub(crate) trait DHKeyExchangeImpl: Send + Sync {
     fn add_external_final(self, external_key: &[u8]) -> Result<KeyHandleImplEnum, CalError>;
 }
 
+#[derive(Debug, Clone)]
 pub(crate) enum DHKeyExchangeImplEnum {
     #[cfg(feature = "android")]
     Android,

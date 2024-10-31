@@ -8,6 +8,7 @@ use crate::common::{
     DHExchange,
 };
 
+#[derive(Debug, Clone)]
 pub(crate) struct AppleSecureEnclaveKeyPair {
     pub(super) key_handle: SecKey,
 }

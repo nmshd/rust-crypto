@@ -137,6 +137,7 @@ impl Provider {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct KeyPairHandle {
     pub(crate) implementation: KeyPairHandleImplEnum,
 }
@@ -176,6 +177,7 @@ impl KeyPairHandle {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct KeyHandle {
     pub(crate) implementation: KeyHandleImplEnum,
 }
@@ -204,6 +206,7 @@ impl KeyHandle {
 }
 
 #[allow(dead_code)]
+#[derive(Debug, Clone)]
 pub struct DHExchange {
     pub(crate) implementation: DHKeyExchangeImplEnum,
 }

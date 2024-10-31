@@ -25,12 +25,14 @@ use robusta_jni::jni::{objects::JObject, JavaVM};
 use std::sync::Mutex;
 use tracing::{debug, info};
 
+#[derive(Debug, Clone)]
 pub(crate) struct AndroidKeyHandle {
     pub(crate) key_id: String,
     pub(crate) spec: KeySpec,
     pub(crate) java_vm: Arc<Mutex<JavaVM>>,
 }
 
+#[derive(Debug, Clone)]
 pub(crate) struct AndroidKeyPairHandle {
     pub(crate) key_id: String,
     pub(crate) spec: KeyPairSpec,

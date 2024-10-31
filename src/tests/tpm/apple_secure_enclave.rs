@@ -7,6 +7,7 @@ use crate::common::{
     error::CalError,
     factory::create_provider_from_name,
 };
+use crate::tests::CleanupKeyPair;
 
 #[test]
 fn test_create_apple_secure_provider_from_name() {
@@ -36,6 +37,8 @@ fn test_create_key_with_provider() -> Result<(), CalError> {
 
     let _key = provider.create_key_pair(key_spec)?;
 
+    let _key_cleanup = CleanupKeyPair::new(_key.clone());
+
     Ok(())
 }
 
@@ -57,6 +60,7 @@ fn test_create_key_pair_sign_and_verify_data() -> Result<(), CalError> {
     };
 
     let key = provider.create_key_pair(key_spec)?;
+    let _key_cleanup = CleanupKeyPair::new(key.clone());
 
     let test_data = Vec::from(b"Hello World!");
 
@@ -70,6 +74,7 @@ fn test_create_key_pair_sign_and_verify_data() -> Result<(), CalError> {
 #[test]
 fn test_load_key_pair() -> Result<(), CalError> {
     let id;
+    let _key_cleanup;
     {
         let mut provider = create_provider_from_name(
             "APPLE_SECURE_ENCLAVE".to_owned(),
@@ -87,6 +92,7 @@ fn test_load_key_pair() -> Result<(), CalError> {
         };
 
         let key = provider.create_key_pair(key_spec)?;
+        _key_cleanup = CleanupKeyPair::new(key.clone());
 
         id = key.id()?;
     }
