@@ -21,6 +21,7 @@ use crate::{
     },
 };
 
+
 use robusta_jni::jni::{objects::JObject, JavaVM};
 use std::sync::Mutex;
 use tracing::{debug, info};
@@ -110,6 +111,7 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
         let vm = self.java_vm.lock().expect("Can't lock mutex");
         let attach_guard = vm.attach_current_thread().err_internal()?;
         let env = vm.get_env().err_internal()?;
+
 
         let key_store = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_string()).err_internal()?;
         key_store.load(&env, None).err_internal()?;
