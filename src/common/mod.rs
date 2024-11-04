@@ -62,6 +62,7 @@ macro_rules! delegate_enum_bare {
 /// Abstraction of cryptographic providers.
 ///
 /// [Provider] abstracts hardware, software and network based keystores.
+/// /// flutter_rust_bridge:opaque
 pub struct Provider {
     pub(crate) implementation: ProviderImplEnum,
 }
@@ -124,6 +125,7 @@ impl Provider {
     }
 }
 
+/// flutter_rust_bridge:opaque
 pub struct KeyPairHandle {
     pub(crate) implementation: KeyPairHandleImplEnum,
 }
@@ -159,6 +161,7 @@ impl KeyPairHandle {
     }
 }
 
+/// flutter_rust_bridge:opaque
 pub struct KeyHandle {
     pub(crate) implementation: KeyHandleImplEnum,
 }

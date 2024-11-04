@@ -42,6 +42,22 @@ sealed class CalErrorKind with _$CalErrorKind {
     required String keyId,
     required KeyType keyType,
   }) = CalErrorKind_MissingKey;
+
+  /// The value requested could not be found.
+  const factory CalErrorKind.missingValue({
+    required String description,
+
+    /// `true` if caused within this library. `false` if caused by another library.
+    required bool internal,
+  }) = CalErrorKind_MissingValue;
+
+  /// A cryptographic operation failed.
+  const factory CalErrorKind.failedOperation({
+    required String description,
+
+    /// `true` if caused within this library. `false` if caused by another library.
+    required bool internal,
+  }) = CalErrorKind_FailedOperation;
   const factory CalErrorKind.unsupportedAlgorithm(
     String field0,
   ) = CalErrorKind_UnsupportedAlgorithm;

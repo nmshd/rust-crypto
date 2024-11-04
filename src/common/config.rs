@@ -1,7 +1,8 @@
 use std::cmp::{Eq, Ord, PartialEq, PartialOrd};
 use std::collections::HashSet;
 
-#[cfg(feature = "android")]
+use std::future::Future;
+use std::pin::Pin;
 use std::sync::Arc;
 #[cfg(feature = "android")]
 use std::sync::Mutex;
@@ -54,26 +55,64 @@ pub struct ProviderConfig {
     pub supported_asym_spec: HashSet<AsymmetricKeySpec>,
 }
 
-/// flutter_rust_bridge:non_opaque
+/// flutter_rust_bridge:opaque
 #[derive(Clone)]
-pub enum ProviderImplConfig {
+pub struct ProviderImplConfig {
     #[cfg(feature = "android")]
-    Android {
-        vm: Arc<Mutex<JavaVM>>,
-    },
-    #[cfg(feature = "apple-secure-enclave")]
-    AppleSecureEnclave {},
-    Stub,
+    pub(crate) java_vm: Option<Arc<Mutex<JavaVM>>>,
+    pub(crate) get_fn:
+        Arc<dyn Fn(String) -> Pin<Box<dyn Future<Output = Option<Vec<u8>>> + Send>> + Send + Sync>,
+    pub(crate) store_fn:
+        Arc<dyn Fn(String, Vec<u8>) -> Pin<Box<dyn Future<Output = bool> + Send>> + Send + Sync>,
+    pub(crate) all_keys_fn:
+        Arc<dyn Fn() -> Pin<Box<dyn Future<Output = Vec<String>> + Send>> + Send + Sync>,
 }
 
 impl ProviderImplConfig {
-    pub(super) fn name(&self) -> String {
-        match self {
+    #[cfg(feature = "android")]
+    pub fn new(
+        java_vm: Arc<Mutex<JavaVM>>,
+        get_fn: impl Fn(String) -> Pin<Box<dyn Future<Output = Option<Vec<u8>>> + Send>>
+            + 'static
+            + Send
+            + Sync,
+        store_fn: impl Fn(String, Vec<u8>) -> Pin<Box<dyn Future<Output = bool> + Send>>
+            + 'static
+            + Send
+            + Sync,
+        all_keys_fn: impl Fn() -> Pin<Box<dyn Future<Output = Vec<String>> + Send>>
+            + 'static
+            + Send
+            + Sync,
+    ) -> Self {
+        Self {
+            java_vm: Some(java_vm),
+            get_fn: Arc::new(get_fn),
+            store_fn: Arc::new(store_fn),
+            all_keys_fn: Arc::new(all_keys_fn),
+        }
+    }
+
+    pub fn new_stub(
+        get_fn: impl Fn(String) -> Pin<Box<dyn Future<Output = Option<Vec<u8>>> + Send>>
+            + 'static
+            + Send
+            + Sync,
+        store_fn: impl Fn(String, Vec<u8>) -> Pin<Box<dyn Future<Output = bool> + Send>>
+            + 'static
+            + Send
+            + Sync,
+        all_keys_fn: impl Fn() -> Pin<Box<dyn Future<Output = Vec<String>> + Send>>
+            + 'static
+            + Send
+            + Sync,
+    ) -> Self {
+        Self {
             #[cfg(feature = "android")]
-            ProviderImplConfig::Android { vm: _ } => "ANDROID_PROVIDER".to_owned(),
-            ProviderImplConfig::Stub {} => "STUB_PROVIDER".to_owned(),
-            #[cfg(feature = "apple-secure-enclave")]
-            ProviderImplConfig::AppleSecureEnclave {} => "APPLE_SECURE_ENCLAVE".to_owned(),
+            java_vm: None,
+            get_fn: Arc::new(get_fn),
+            store_fn: Arc::new(store_fn),
+            all_keys_fn: Arc::new(all_keys_fn),
         }
     }
 }

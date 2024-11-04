@@ -4,11 +4,14 @@
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
 import '../frb_generated.dart';
-import '../lib.dart';
 import '../third_party/crypto_layer/common/config.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // These functions are ignored because they are not marked as `pub`: `get_java_vm`, `set_up_logging`
 
-Future<ProviderImplConfig> getAndroidConfig() =>
-    RustLib.instance.api.crateApiCryptoGetAndroidConfig();
+Future<ProviderImplConfig> getAndroidConfig(
+        {required FutureOr<Uint8List?> Function(String) getFn,
+        required FutureOr<bool> Function(String, Uint8List) storeFn,
+        required FutureOr<List<String>> Function() allKeysFn}) =>
+    RustLib.instance.api.crateApiCryptoGetAndroidConfig(
+        getFn: getFn, storeFn: storeFn, allKeysFn: allKeysFn);
