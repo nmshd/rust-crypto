@@ -64,22 +64,13 @@ fn provider_supports_capabilities(
 /// };
 /// let provider = create_provider(provider_config, specific_provider_config).unwrap();
 /// ```
-pub fn create_provider(
-    conf: ProviderConfig,
-    impl_conf_vec: Vec<ProviderImplConfig>,
-) -> Option<Provider> {
+pub fn create_provider(conf: ProviderConfig, impl_conf: ProviderImplConfig) -> Option<Provider> {
     for provider in ALL_PROVIDERS.iter() {
-        let name = provider.get_name();
-
-        let config = match impl_conf_vec.iter().find(|e| e.name() == name) {
-            Some(config) => config.clone(),
-            None => continue,
-        };
-        let provider_caps = provider.get_capabilities(config.clone());
+        let provider_caps = provider.get_capabilities(impl_conf.clone());
 
         if provider_supports_capabilities(&provider_caps, &conf) {
             return Some(Provider {
-                implementation: provider.create_provider(config),
+                implementation: provider.create_provider(impl_conf),
             });
         }
     }

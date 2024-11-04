@@ -35,11 +35,13 @@ impl ProviderFactory for StubProviderFactory {
     }
 
     fn create_provider(&self, impl_config: ProviderImplConfig) -> ProviderImplEnum {
-        (StubProvider {}).into()
+        (StubProvider { impl_config }).into()
     }
 }
 
-pub(crate) struct StubProvider {}
+pub(crate) struct StubProvider {
+    impl_config: ProviderImplConfig,
+}
 
 impl ProviderImpl for StubProvider {
     fn create_key(&mut self, spec: KeySpec) -> Result<KeyHandle, CalError> {
@@ -90,7 +92,7 @@ impl ProviderImpl for StubProvider {
     }
 
     fn get_capabilities(&self) -> ProviderConfig {
-        StubProviderFactory {}.get_capabilities(ProviderImplConfig::Stub)
+        StubProviderFactory {}.get_capabilities(self.impl_config.clone())
     }
 }
 

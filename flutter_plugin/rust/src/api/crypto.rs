@@ -3,6 +3,7 @@ use std::sync::Arc;
 
 use crypto_layer::common::config::ProviderImplConfig;
 
+use flutter_rust_bridge::DartFnFuture;
 use robusta_jni::jni;
 use robusta_jni::jni::sys::jint;
 use robusta_jni::jni::sys::jsize;
@@ -11,10 +12,12 @@ use std::sync::Mutex;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::Registry;
 
-pub fn get_android_config() -> ProviderImplConfig {
-    ProviderImplConfig::Android {
-        vm: Arc::new(Mutex::new(get_java_vm())),
-    }
+pub async fn get_android_config(
+    get_fn: impl Fn(String) -> DartFnFuture<Option<Vec<u8>>> + 'static + Send + Sync,
+    store_fn: impl Fn(String, Vec<u8>) -> DartFnFuture<bool> + 'static + Send + Sync,
+    all_keys_fn: impl Fn() -> DartFnFuture<Vec<String>> + 'static + Send + Sync,
+) -> ProviderImplConfig {
+    ProviderImplConfig::new(Arc::new(Mutex::new(get_java_vm())), get_fn, store_fn, all_keys_fn)
 }
 
 pub(super) fn set_up_logging() {
