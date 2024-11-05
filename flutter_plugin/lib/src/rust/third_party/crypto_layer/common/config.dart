@@ -4,15 +4,16 @@
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
 import '../../../frb_generated.dart';
-import '../../../lib.dart';
 import 'crypto/algorithms.dart';
 import 'crypto/algorithms/encryption.dart';
 import 'crypto/algorithms/hashes.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
-import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
-part 'config.freezed.dart';
 
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_receiver_is_total_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `cmp`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `partial_cmp`
+// These functions have error during generation (see debug logs or enable `stop_on_error: true` for more details): `new_stub`, `new`
+
+// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ProviderImplConfig>>
+abstract class ProviderImplConfig implements RustOpaqueInterface {}
 
 /// flutter_rust_bridge:non_opaque
 class KeyPairSpec {
@@ -96,16 +97,6 @@ class ProviderConfig {
           supportedCiphers == other.supportedCiphers &&
           supportedHashes == other.supportedHashes &&
           supportedAsymSpec == other.supportedAsymSpec;
-}
-
-@freezed
-sealed class ProviderImplConfig with _$ProviderImplConfig {
-  const ProviderImplConfig._();
-
-  const factory ProviderImplConfig.android({
-    required ArcMutexJavaVm vm,
-  }) = ProviderImplConfig_Android;
-  const factory ProviderImplConfig.stub() = ProviderImplConfig_Stub;
 }
 
 /// Enum describing the security level of a provider.

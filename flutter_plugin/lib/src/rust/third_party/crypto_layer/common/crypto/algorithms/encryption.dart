@@ -174,7 +174,9 @@ enum EccSigningScheme {
 /// ```rust
 /// use crypto_layer::common::crypto::algorithms::encryption:: Rc2KeyBits;
 ///
-/// let key_size = Rc2KeyBits::Rc2_128;
+/// fn main() {
+///     let key_size = Rc2KeyBits::Rc2_128;
+/// }
 /// ```
 ///
 /// # Note
@@ -205,7 +207,9 @@ enum Rc2KeyBits {
 /// ```rust
 /// use crypto_layer::common::crypto::algorithms::encryption::SymmetricMode;
 ///
-/// let mode = SymmetricMode::Gcm;
+/// fn main() {
+///     let mode = SymmetricMode::Gcm;
+/// }
 /// ```
 ///
 /// # Note
@@ -258,7 +262,9 @@ enum SymmetricMode {
 /// ```rust
 /// use crypto_layer::common::crypto::algorithms::encryption::TripleDesNumKeys;
 ///
-/// let des_config = TripleDesNumKeys::Tdes3;
+/// fn main() {
+///     let des_config = TripleDesNumKeys::Tdes3;
+/// }
 /// ```
 ///
 /// # Note

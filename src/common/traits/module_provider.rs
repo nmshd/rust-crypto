@@ -43,7 +43,7 @@ pub(crate) enum ProviderFactoryEnum {
 /// of security modules.
 
 #[enum_dispatch(ProviderImplEnum)]
-pub(crate) trait ProviderImpl {
+pub(crate) trait ProviderImpl: Send + Sync {
     /// Creates a new symmetric key identified by `key_id`.
     ///
     /// # Arguments

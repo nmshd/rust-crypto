@@ -4,7 +4,6 @@
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
 import '../../../frb_generated.dart';
-import '../../../lib.dart';
 import '../common.dart';
 import 'config.dart';
 import 'crypto/algorithms.dart';
@@ -23,8 +22,6 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 /// ```
 /// use std::collections::HashSet;
 ///
-/// use async_std::task::block_on;
-///
 /// use crypto_layer::common::{
 ///     config::*,
 ///     factory::*,
@@ -38,13 +35,12 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 ///     supported_ciphers: HashSet::new(),
 ///     supported_hashes: HashSet::new(),
 /// };
-/// let provider = block_on(create_provider(provider_config, specific_provider_config)).unwrap();
+/// let provider = create_provider(provider_config, specific_provider_config).unwrap();
 /// ```
 Future<Provider?> createProvider(
-        {required ProviderConfig conf,
-        required List<ProviderImplConfig> implConfVec}) =>
-    RustLib.instance.api.cryptoLayerCommonFactoryCreateProvider(
-        conf: conf, implConfVec: implConfVec);
+        {required ProviderConfig conf, required ProviderImplConfig implConf}) =>
+    RustLib.instance.api
+        .cryptoLayerCommonFactoryCreateProvider(conf: conf, implConf: implConf);
 
 /// Returns the provider with the given name.
 ///

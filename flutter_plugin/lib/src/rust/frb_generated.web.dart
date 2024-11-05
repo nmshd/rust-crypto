@@ -11,7 +11,6 @@ import 'api/simple.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'frb_generated.dart';
-import 'lib.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_web.dart';
 import 'third_party/crypto_layer/common.dart';
 import 'third_party/crypto_layer/common/config.dart';
@@ -30,10 +29,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     required super.portManager,
   });
 
-  CrossPlatformFinalizerArg
-      get rust_arc_decrement_strong_count_ArcMutexJavaVmPtr => wire
-          .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcMutexJavaVM;
-
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_CalErrorPtr => wire
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError;
 
@@ -50,13 +45,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_ProviderPtr => wire
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider;
 
+  CrossPlatformFinalizerArg
+      get rust_arc_decrement_strong_count_ProviderImplConfigPtr => wire
+          .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplConfig;
+
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_TPtr => wire
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerT;
 
   @protected
-  ArcMutexJavaVm
-      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcMutexJavaVM(
-          dynamic raw);
+  AnyhowException dco_decode_AnyhowException(dynamic raw);
 
   @protected
   CalError
@@ -81,6 +78,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   Provider
       dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
+          dynamic raw);
+
+  @protected
+  ProviderImplConfig
+      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplConfig(
           dynamic raw);
 
   @protected
@@ -113,9 +115,21 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
           dynamic raw);
 
   @protected
-  ArcMutexJavaVm
-      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcMutexJavaVM(
+  FutureOr<Uint8List?> Function(String)
+      dco_decode_DartFn_Inputs_String_Output_opt_list_prim_u_8_strict_AnyhowException(
           dynamic raw);
+
+  @protected
+  FutureOr<bool> Function(String, Uint8List)
+      dco_decode_DartFn_Inputs_String_list_prim_u_8_strict_Output_bool_AnyhowException(
+          dynamic raw);
+
+  @protected
+  FutureOr<List<String>> Function()
+      dco_decode_DartFn_Inputs__Output_list_String_AnyhowException(dynamic raw);
+
+  @protected
+  Object dco_decode_DartOpaque(dynamic raw);
 
   @protected
   CalError
@@ -140,6 +154,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   Provider
       dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
+          dynamic raw);
+
+  @protected
+  ProviderImplConfig
+      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplConfig(
           dynamic raw);
 
   @protected
@@ -185,9 +204,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ProviderConfig dco_decode_box_autoadd_provider_config(dynamic raw);
 
   @protected
-  ProviderImplConfig dco_decode_box_autoadd_provider_impl_config(dynamic raw);
-
-  @protected
   CalErrorKind dco_decode_cal_error_kind(dynamic raw);
 
   @protected
@@ -209,6 +225,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int dco_decode_i_32(dynamic raw);
 
   @protected
+  PlatformInt64 dco_decode_isize(dynamic raw);
+
+  @protected
   KeyBits dco_decode_key_bits(dynamic raw);
 
   @protected
@@ -219,6 +238,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   KeyType dco_decode_key_type(dynamic raw);
+
+  @protected
+  List<String> dco_decode_list_String(dynamic raw);
 
   @protected
   List<AsymmetricKeySpec> dco_decode_list_asymmetric_key_spec(dynamic raw);
@@ -236,9 +258,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
 
   @protected
-  List<ProviderImplConfig> dco_decode_list_provider_impl_config(dynamic raw);
-
-  @protected
   OidType dco_decode_oid_type(dynamic raw);
 
   @protected
@@ -250,10 +269,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Cipher? dco_decode_opt_box_autoadd_cipher(dynamic raw);
 
   @protected
-  ProviderConfig dco_decode_provider_config(dynamic raw);
+  Uint8List? dco_decode_opt_list_prim_u_8_strict(dynamic raw);
 
   @protected
-  ProviderImplConfig dco_decode_provider_impl_config(dynamic raw);
+  ProviderConfig dco_decode_provider_config(dynamic raw);
 
   @protected
   Rc2KeyBits dco_decode_rc_2_key_bits(dynamic raw);
@@ -283,9 +302,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BigInt dco_decode_usize(dynamic raw);
 
   @protected
-  ArcMutexJavaVm
-      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcMutexJavaVM(
-          SseDeserializer deserializer);
+  AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer);
 
   @protected
   CalError
@@ -310,6 +327,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   Provider
       sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
+          SseDeserializer deserializer);
+
+  @protected
+  ProviderImplConfig
+      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplConfig(
           SseDeserializer deserializer);
 
   @protected
@@ -342,9 +364,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
           SseDeserializer deserializer);
 
   @protected
-  ArcMutexJavaVm
-      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcMutexJavaVM(
-          SseDeserializer deserializer);
+  Object sse_decode_DartOpaque(SseDeserializer deserializer);
 
   @protected
   CalError
@@ -369,6 +389,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   Provider
       sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
+          SseDeserializer deserializer);
+
+  @protected
+  ProviderImplConfig
+      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplConfig(
           SseDeserializer deserializer);
 
   @protected
@@ -415,10 +440,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       SseDeserializer deserializer);
 
   @protected
-  ProviderImplConfig sse_decode_box_autoadd_provider_impl_config(
-      SseDeserializer deserializer);
-
-  @protected
   CalErrorKind sse_decode_cal_error_kind(SseDeserializer deserializer);
 
   @protected
@@ -440,6 +461,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int sse_decode_i_32(SseDeserializer deserializer);
 
   @protected
+  PlatformInt64 sse_decode_isize(SseDeserializer deserializer);
+
+  @protected
   KeyBits sse_decode_key_bits(SseDeserializer deserializer);
 
   @protected
@@ -450,6 +474,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   KeyType sse_decode_key_type(SseDeserializer deserializer);
+
+  @protected
+  List<String> sse_decode_list_String(SseDeserializer deserializer);
 
   @protected
   List<AsymmetricKeySpec> sse_decode_list_asymmetric_key_spec(
@@ -468,10 +495,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
 
   @protected
-  List<ProviderImplConfig> sse_decode_list_provider_impl_config(
-      SseDeserializer deserializer);
-
-  @protected
   OidType sse_decode_oid_type(SseDeserializer deserializer);
 
   @protected
@@ -483,11 +506,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Cipher? sse_decode_opt_box_autoadd_cipher(SseDeserializer deserializer);
 
   @protected
-  ProviderConfig sse_decode_provider_config(SseDeserializer deserializer);
+  Uint8List? sse_decode_opt_list_prim_u_8_strict(SseDeserializer deserializer);
 
   @protected
-  ProviderImplConfig sse_decode_provider_impl_config(
-      SseDeserializer deserializer);
+  ProviderConfig sse_decode_provider_config(SseDeserializer deserializer);
 
   @protected
   Rc2KeyBits sse_decode_rc_2_key_bits(SseDeserializer deserializer);
@@ -517,9 +539,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BigInt sse_decode_usize(SseDeserializer deserializer);
 
   @protected
-  void
-      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcMutexJavaVM(
-          ArcMutexJavaVm self, SseSerializer serializer);
+  void sse_encode_AnyhowException(
+      AnyhowException self, SseSerializer serializer);
 
   @protected
   void
@@ -545,6 +566,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void
       sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
           Provider self, SseSerializer serializer);
+
+  @protected
+  void
+      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplConfig(
+          ProviderImplConfig self, SseSerializer serializer);
 
   @protected
   void
@@ -578,8 +604,21 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
-      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcMutexJavaVM(
-          ArcMutexJavaVm self, SseSerializer serializer);
+      sse_encode_DartFn_Inputs_String_Output_opt_list_prim_u_8_strict_AnyhowException(
+          FutureOr<Uint8List?> Function(String) self, SseSerializer serializer);
+
+  @protected
+  void
+      sse_encode_DartFn_Inputs_String_list_prim_u_8_strict_Output_bool_AnyhowException(
+          FutureOr<bool> Function(String, Uint8List) self,
+          SseSerializer serializer);
+
+  @protected
+  void sse_encode_DartFn_Inputs__Output_list_String_AnyhowException(
+      FutureOr<List<String>> Function() self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_DartOpaque(Object self, SseSerializer serializer);
 
   @protected
   void
@@ -605,6 +644,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void
       sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
           Provider self, SseSerializer serializer);
+
+  @protected
+  void
+      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplConfig(
+          ProviderImplConfig self, SseSerializer serializer);
 
   @protected
   void
@@ -652,10 +696,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       ProviderConfig self, SseSerializer serializer);
 
   @protected
-  void sse_encode_box_autoadd_provider_impl_config(
-      ProviderImplConfig self, SseSerializer serializer);
-
-  @protected
   void sse_encode_cal_error_kind(CalErrorKind self, SseSerializer serializer);
 
   @protected
@@ -678,6 +718,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_i_32(int self, SseSerializer serializer);
 
   @protected
+  void sse_encode_isize(PlatformInt64 self, SseSerializer serializer);
+
+  @protected
   void sse_encode_key_bits(KeyBits self, SseSerializer serializer);
 
   @protected
@@ -688,6 +731,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_key_type(KeyType self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_String(List<String> self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_asymmetric_key_spec(
@@ -708,10 +754,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       Uint8List self, SseSerializer serializer);
 
   @protected
-  void sse_encode_list_provider_impl_config(
-      List<ProviderImplConfig> self, SseSerializer serializer);
-
-  @protected
   void sse_encode_oid_type(OidType self, SseSerializer serializer);
 
   @protected
@@ -724,12 +766,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       Cipher? self, SseSerializer serializer);
 
   @protected
-  void sse_encode_provider_config(
-      ProviderConfig self, SseSerializer serializer);
+  void sse_encode_opt_list_prim_u_8_strict(
+      Uint8List? self, SseSerializer serializer);
 
   @protected
-  void sse_encode_provider_impl_config(
-      ProviderImplConfig self, SseSerializer serializer);
+  void sse_encode_provider_config(
+      ProviderConfig self, SseSerializer serializer);
 
   @protected
   void sse_encode_rc_2_key_bits(Rc2KeyBits self, SseSerializer serializer);
@@ -764,18 +806,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
 class RustLibWire implements BaseWire {
   RustLibWire.fromExternalLibrary(ExternalLibrary lib);
-
-  void rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcMutexJavaVM(
-          int ptr) =>
-      wasmModule
-          .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcMutexJavaVM(
-              ptr);
-
-  void rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcMutexJavaVM(
-          int ptr) =>
-      wasmModule
-          .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcMutexJavaVM(
-              ptr);
 
   void rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError(
           int ptr) =>
@@ -837,6 +867,18 @@ class RustLibWire implements BaseWire {
           .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
               ptr);
 
+  void rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplConfig(
+          int ptr) =>
+      wasmModule
+          .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplConfig(
+              ptr);
+
+  void rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplConfig(
+          int ptr) =>
+      wasmModule
+          .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplConfig(
+              ptr);
+
   void rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerT(
           int ptr) =>
       wasmModule
@@ -856,14 +898,6 @@ external RustLibWasmModule get wasmModule;
 @JS()
 @anonymous
 extension type RustLibWasmModule._(JSObject _) implements JSObject {
-  external void
-      rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcMutexJavaVM(
-          int ptr);
-
-  external void
-      rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcMutexJavaVM(
-          int ptr);
-
   external void
       rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError(
           int ptr);
@@ -902,6 +936,14 @@ extension type RustLibWasmModule._(JSObject _) implements JSObject {
 
   external void
       rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
+          int ptr);
+
+  external void
+      rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplConfig(
+          int ptr);
+
+  external void
+      rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplConfig(
           int ptr);
 
   external void

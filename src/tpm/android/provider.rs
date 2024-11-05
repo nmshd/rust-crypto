@@ -45,11 +45,9 @@ impl ProviderFactory for AndroidProviderFactory {
     }
 
     fn create_provider(&self, impl_config: ProviderImplConfig) -> ProviderImplEnum {
-        Into::into(AndroidProvider {
-            java_vm: match impl_config {
-                ProviderImplConfig::Android { vm } => vm,
-                _ => panic!("Invalid ProviderImplConfig"),
-            },
+        ProviderImplEnum::from(AndroidProvider {
+            java_vm: impl_config.java_vm.clone().unwrap(),
+            impl_config,
         })
     }
 }
@@ -63,6 +61,7 @@ impl ProviderFactory for AndroidProviderFactory {
 /// It provides a secure and hardware-backed solution for managing cryptographic keys and performing
 /// cryptographic operations on Android.
 pub(crate) struct AndroidProvider {
+    impl_config: ProviderImplConfig,
     java_vm: Arc<Mutex<JavaVM>>,
 }
 
@@ -85,8 +84,8 @@ impl ProviderImpl for AndroidProvider {
 
         info!("generating key: {}", key_id);
 
-        let vm = self.java_vm.lock().expect("Can't lock mutex");
-        let attach_guard = vm.attach_current_thread().err_internal()?;
+        let vm = self.java_vm.lock().unwrap();
+        let _attach_guard = vm.attach_current_thread().err_internal()?;
         let env = vm.get_env().expect("Get env failed");
 
         info!("got env");
@@ -144,6 +143,9 @@ impl ProviderImpl for AndroidProvider {
 
         kg.generateKey(&env).err_internal()?;
 
+        // TODO: Store the KeySpec in Storage
+        smol::block_on((self.impl_config.store_fn)(key_id.clone(), vec![]));
+
         debug!("key generated");
 
         Ok(KeyHandle {
@@ -159,8 +161,8 @@ impl ProviderImpl for AndroidProvider {
         let key_id = nanoid!(10);
         info!("generating key pair! {}", key_id);
 
-        let vm = self.java_vm.lock().expect("Can't lock mutex");
-        let attach_guard = vm.attach_current_thread().err_internal()?;
+        let vm = self.java_vm.lock().unwrap();
+        let _attach_guard = vm.attach_current_thread().err_internal()?;
         let env = vm.get_env().err_internal()?;
 
         // build up key specs
@@ -206,6 +208,9 @@ impl ProviderImpl for AndroidProvider {
 
         kpg.generateKeyPair(&env).err_internal()?;
 
+        // TODO: Store the KeySpec in Storage
+        smol::block_on((self.impl_config.store_fn)(key_id.clone(), vec![]));
+
         Ok(KeyPairHandle {
             implementation: Into::into(AndroidKeyPairHandle {
                 key_id: key_id,
@@ -238,8 +243,8 @@ impl ProviderImpl for AndroidProvider {
 
     #[instrument]
     fn import_key(&mut self, spec: KeySpec, data: &[u8]) -> Result<KeyHandle, CalError> {
-        let vm = self.java_vm.lock().expect("Can't lock mutex");
-        let attach_guard = vm.attach_current_thread().err_internal()?;
+        let vm = self.java_vm.lock().unwrap();
+        let _attach_guard = vm.attach_current_thread().err_internal()?;
         let env = vm.get_env().err_internal()?;
 
         let id = nanoid!(10);
@@ -302,8 +307,6 @@ impl ProviderImpl for AndroidProvider {
     }
 
     fn get_capabilities(&self) -> ProviderConfig {
-        AndroidProviderFactory {}.get_capabilities(ProviderImplConfig::Android {
-            vm: self.java_vm.clone(),
-        })
+        AndroidProviderFactory {}.get_capabilities(self.impl_config.clone())
     }
 }

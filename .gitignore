@@ -2,6 +2,7 @@
 /.VSCodeCounter
 /*code-workspace
 /.cargo
+.cargo.lock
 *.bak
 /.idea/codeStyles/codeStyleConfig.xml
 /.idea/modules.xml

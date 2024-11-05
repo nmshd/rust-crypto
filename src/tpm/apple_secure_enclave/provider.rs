@@ -28,12 +28,7 @@ impl ProviderFactory for AppleSecureEnclaveFactory {
         "APPLE_SECURE_ENCLAVE".to_owned()
     }
 
-    fn get_capabilities(&self, impl_config: ProviderImplConfig) -> ProviderConfig {
-        match impl_config {
-            ProviderImplConfig::AppleSecureEnclave {} => {}
-            _ => panic!("Invalid ProviderImplConfig supplied."),
-        }
-
+    fn get_capabilities(&self, _impl_config: ProviderImplConfig) -> ProviderConfig {
         ProviderConfig {
             max_security_level: SecurityLevel::Hardware,
             min_security_level: SecurityLevel::Hardware,
