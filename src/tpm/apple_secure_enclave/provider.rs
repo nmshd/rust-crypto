@@ -118,7 +118,7 @@ impl ProviderImpl for AppleSecureEnclaveProvider {
 
         let search_results: Vec<SearchResult> = match ItemSearchOptions::new()
             .class(ItemClass::key())
-            .key_class(KeyClass::symmetric())
+            .key_class(KeyClass::private())
             .load_refs(true)
             .application_label(&label)
             .search()
