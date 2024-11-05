@@ -9,6 +9,7 @@ use std::sync::Mutex;
 
 #[cfg(feature = "android")]
 use robusta_jni::jni::JavaVM;
+use serde::{Deserialize, Serialize};
 
 use super::crypto::algorithms::{
     encryption::{AsymmetricKeySpec, Cipher},
@@ -31,18 +32,24 @@ pub enum SecurityLevel {
 }
 
 /// flutter_rust_bridge:non_opaque
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct KeySpec {
     pub cipher: Cipher,
     pub signing_hash: CryptoHash,
 }
 
 /// flutter_rust_bridge:non_opaque
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct KeyPairSpec {
     pub asym_spec: AsymmetricKeySpec,
     pub cipher: Option<Cipher>,
     pub signing_hash: CryptoHash,
+}
+
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+pub(crate) enum SerializableSpec {
+    KeySpec(KeySpec),
+    KeyPairSpec(KeyPairSpec),
 }
 
 /// flutter_rust_bridge:non_opaque

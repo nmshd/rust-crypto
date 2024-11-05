@@ -3,6 +3,8 @@ pub mod hashes;
 use std::cmp::{Eq, PartialEq};
 use std::hash::Hash;
 
+use serde::{Deserialize, Serialize};
+
 /// Represents the bit length of a cryptographic key.
 ///
 /// This enum defines various key bit lengths commonly used in cryptography.
@@ -22,7 +24,7 @@ use std::hash::Hash;
 ///
 /// This enum can be converted to and from `u32` values using the `From` trait implementations.
 #[repr(C)]
-#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum KeyBits {
     Bits128,
     Bits192,
