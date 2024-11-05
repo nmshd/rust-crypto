@@ -10,6 +10,8 @@ use thiserror;
 
 use crate::common::error::CalError;
 
+use crate::common::error::ToCalError;
+
 /// CFError is not thread safe. This struct wraps CFError's output.
 #[derive(thiserror::Error, Debug)]
 #[error("{code} -- {description}")]
@@ -111,6 +113,24 @@ impl From<base::Error> for CalError {
     fn from(value: base::Error) -> Self {
         match value.code() {
             _ => CalError::other(anyhow!(value)),
+        }
+    }
+}
+
+impl<T> ToCalError<T> for Result<T, CFError> {
+    fn err_internal(self) -> Result<T, CalError> {
+        match self {
+            Ok(result) => Ok(result),
+            Err(e) => Err(CalError::from(e)),
+        }
+    }
+}
+
+impl<T> ToCalError<T> for Result<T, base::Error> {
+    fn err_internal(self) -> Result<T, CalError> {
+        match self {
+            Ok(result) => Ok(result),
+            Err(e) => Err(CalError::from(e)),
         }
     }
 }

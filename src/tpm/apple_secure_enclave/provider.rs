@@ -74,13 +74,11 @@ impl ProviderImpl for AppleSecureEnclaveProvider {
         debug_assert_eq!(spec.cipher, None);
         debug_assert_eq!(spec.signing_hash, CryptoHash::Sha2(Sha2Bits::Sha256));
 
-        let access_controll = match SecAccessControl::create_with_protection(
+        let access_controll = SecAccessControl::create_with_protection(
             Some(ProtectionMode::AccessibleAfterFirstUnlockThisDeviceOnly),
             0,
-        ) {
-            Ok(access_control) => access_control,
-            Err(e) => return Err(CalError::from(e)),
-        };
+        )
+        .err_internal()?;
 
         let key_options = GenerateKeyOptions {
             key_type: Some(KeyType::ec()),
@@ -91,10 +89,7 @@ impl ProviderImpl for AppleSecureEnclaveProvider {
             access_control: Some(access_controll),
         };
 
-        let sec_key: SecKey = match SecKey::new(&key_options) {
-            Ok(sec_key) => sec_key,
-            Err(e) => return Err(CalError::from(e)),
-        };
+        let sec_key: SecKey = SecKey::new(&key_options).err_internal()?;
 
         Ok(KeyPairHandle {
             implementation: AppleSecureEnclaveKeyPair {

@@ -3,7 +3,7 @@ use security_framework::key::Algorithm;
 use security_framework::key::SecKey;
 
 use crate::common::{
-    error::{CalError, KeyType},
+    error::{CalError, KeyType, ToCalError},
     traits::key_handle::KeyPairHandleImpl,
     DHExchange,
 };
@@ -15,13 +15,9 @@ pub(crate) struct AppleSecureEnclaveKeyPair {
 
 impl KeyPairHandleImpl for AppleSecureEnclaveKeyPair {
     fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
-        match self
-            .key_handle
+        self.key_handle
             .create_signature(Algorithm::ECDSASignatureMessageX962SHA256, data)
-        {
-            Ok(data) => Ok(data),
-            Err(e) => Err(e.into()),
-        }
+            .err_internal()
     }
 
     fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, CalError> {
@@ -29,14 +25,9 @@ impl KeyPairHandleImpl for AppleSecureEnclaveKeyPair {
             "SecKeyCopyPublicKey returned NULL".to_owned(),
             KeyType::Public,
         ))?;
-        match public_key.verify_signature(
-            Algorithm::ECDSASignatureMessageX962SHA256,
-            data,
-            signature,
-        ) {
-            Ok(result) => Ok(result),
-            Err(e) => Err(e.into()),
-        }
+        public_key
+            .verify_signature(Algorithm::ECDSASignatureMessageX962SHA256, data, signature)
+            .err_internal()
     }
 
     fn encrypt_data(&self, _data: &[u8]) -> Result<Vec<u8>, CalError> {
