@@ -3,35 +3,31 @@ use security_framework::key::Algorithm;
 use security_framework::key::SecKey;
 
 use crate::common::{
-    error::{CalError, KeyType},
+    error::{CalError, KeyType, ToCalError},
     traits::key_handle::KeyPairHandleImpl,
     DHExchange,
 };
 
+#[derive(Debug, Clone)]
 pub(crate) struct AppleSecureEnclaveKeyPair {
     pub(super) key_handle: SecKey,
 }
 
 impl KeyPairHandleImpl for AppleSecureEnclaveKeyPair {
     fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
-        match self
-            .key_handle
-            .create_signature(Algorithm::ECDSASignatureDigestX962SHA256, data)
-        {
-            Ok(data) => Ok(data),
-            Err(e) => Err(e.into()),
-        }
+        self.key_handle
+            .create_signature(Algorithm::ECDSASignatureMessageX962SHA256, data)
+            .err_internal()
     }
 
     fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, CalError> {
-        match self.key_handle.verify_signature(
-            Algorithm::ECDSASignatureDigestX962SHA256,
-            data,
-            signature,
-        ) {
-            Ok(result) => Ok(result),
-            Err(e) => Err(e.into()),
-        }
+        let public_key: SecKey = self.key_handle.public_key().ok_or(CalError::missing_key(
+            "SecKeyCopyPublicKey returned NULL".to_owned(),
+            KeyType::Public,
+        ))?;
+        public_key
+            .verify_signature(Algorithm::ECDSASignatureMessageX962SHA256, data, signature)
+            .err_internal()
     }
 
     fn encrypt_data(&self, _data: &[u8]) -> Result<Vec<u8>, CalError> {
@@ -74,6 +70,13 @@ impl KeyPairHandleImpl for AppleSecureEnclaveKeyPair {
                 None,
             )),
             Some(bytes) => Ok(BASE64_STANDARD.encode(bytes)),
+        }
+    }
+
+    fn delete(self) -> Result<(), CalError> {
+        match self.key_handle.delete() {
+            Ok(()) => Ok(()),
+            Err(e) => Err(e.into()),
         }
     }
 }

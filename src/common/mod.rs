@@ -14,6 +14,19 @@ pub mod factory;
 pub(crate) mod traits;
 
 macro_rules! delegate_enum {
+    ($(pub fn $method:ident(self $(,$arg:ident: $type:ty)* $(,)?) $(-> $ret:ty)?;)+) => {
+        $(
+            pub fn $method(self $(,$arg: $type)*) $(-> $ret)? {
+                match self.implementation.$method($($arg),*) {
+                    Ok(v) => Ok(v),
+                    Err(e) => {
+                        error!("Error in {}: {:?}", stringify!($method), e);
+                        Err(e)
+                    }
+                }
+            }
+        )+
+    };
     ($(pub fn $method:ident(&self $(,$arg:ident: $type:ty)* $(,)?) $(-> $ret:ty)?;)+) => {
         $(
             pub fn $method(&self $(,$arg: $type)*) $(-> $ret)? {
@@ -125,6 +138,7 @@ impl Provider {
     }
 }
 
+#[derive(Debug, Clone)]
 /// flutter_rust_bridge:opaque
 pub struct KeyPairHandle {
     pub(crate) implementation: KeyPairHandleImplEnum,
@@ -159,8 +173,13 @@ impl KeyPairHandle {
     delegate_enum! {
         pub fn id(&self) -> Result<String, CalError>;
     }
+
+    delegate_enum! {
+        pub fn delete(self) -> Result<(), CalError>;
+    }
 }
 
+#[derive(Debug, Clone)]
 /// flutter_rust_bridge:opaque
 pub struct KeyHandle {
     pub(crate) implementation: KeyHandleImplEnum,
@@ -183,9 +202,14 @@ impl KeyHandle {
     delegate_enum! {
         pub fn id(&self) -> Result<String, CalError>;
     }
+
+    delegate_enum! {
+        pub fn delete(self) -> Result<(), CalError>;
+    }
 }
 
 #[allow(dead_code)]
+#[derive(Debug, Clone)]
 pub struct DHExchange {
     pub(crate) implementation: DHKeyExchangeImplEnum,
 }
