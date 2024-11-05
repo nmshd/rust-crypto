@@ -17,7 +17,7 @@ impl KeyPairHandleImpl for AppleSecureEnclaveKeyPair {
     fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
         match self
             .key_handle
-            .create_signature(Algorithm::ECDSASignatureDigestX962SHA256, data)
+            .create_signature(Algorithm::ECDSASignatureMessageX962SHA256, data)
         {
             Ok(data) => Ok(data),
             Err(e) => Err(e.into()),
@@ -25,8 +25,12 @@ impl KeyPairHandleImpl for AppleSecureEnclaveKeyPair {
     }
 
     fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, CalError> {
-        match self.key_handle.verify_signature(
-            Algorithm::ECDSASignatureDigestX962SHA256,
+        let public_key: SecKey = self.key_handle.public_key().ok_or(CalError::missing_key(
+            "SecKeyCopyPublicKey returned NULL".to_owned(),
+            KeyType::Public,
+        ))?;
+        match public_key.verify_signature(
+            Algorithm::ECDSASignatureMessageX962SHA256,
             data,
             signature,
         ) {
