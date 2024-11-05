@@ -1,25 +1,32 @@
+use color_eyre::eyre::Result;
+
 use crate::common::{
     config::{KeyPairSpec, ProviderImplConfig},
     crypto::algorithms::{
         encryption::{AsymmetricKeySpec, EccCurve, EccSigningScheme},
         hashes::{CryptoHash, Sha2Bits},
     },
-    error::CalError,
     factory::create_provider_from_name,
 };
-use crate::tests::CleanupKeyPair;
+use crate::tests::{setup, CleanupKeyPair};
 
 #[test]
-fn test_create_apple_secure_provider_from_name() {
+fn test_create_apple_secure_provider_from_name() -> Result<()> {
+    setup();
+
     let _provider = create_provider_from_name(
         "APPLE_SECURE_ENCLAVE".to_owned(),
         ProviderImplConfig::AppleSecureEnclave {},
     )
     .expect("Failed initializing apple secure provider.");
+
+    Ok(())
 }
 
 #[test]
-fn test_create_key_with_provider() -> Result<(), CalError> {
+fn test_create_key_with_provider() -> Result<()> {
+    setup();
+
     let mut provider = create_provider_from_name(
         "APPLE_SECURE_ENCLAVE".to_owned(),
         ProviderImplConfig::AppleSecureEnclave {},
@@ -43,7 +50,9 @@ fn test_create_key_with_provider() -> Result<(), CalError> {
 }
 
 #[test]
-fn test_create_key_pair_sign_and_verify_data() -> Result<(), CalError> {
+fn test_create_key_pair_sign_and_verify_data() -> Result<()> {
+    setup();
+
     let mut provider = create_provider_from_name(
         "APPLE_SECURE_ENCLAVE".to_owned(),
         ProviderImplConfig::AppleSecureEnclave {},
@@ -72,7 +81,9 @@ fn test_create_key_pair_sign_and_verify_data() -> Result<(), CalError> {
 }
 
 #[test]
-fn test_load_key_pair() -> Result<(), CalError> {
+fn test_load_key_pair() -> Result<()> {
+    setup();
+
     let id;
     let _key_cleanup;
     {

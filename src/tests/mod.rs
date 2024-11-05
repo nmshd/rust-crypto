@@ -8,7 +8,13 @@ mod tpm;
 #[cfg(feature = "nks")]
 mod nks;
 
+use std::sync::Once;
+
+use color_eyre::install;
+
 use crate::common::KeyPairHandle;
+
+static COLOR_EYRE_INITIALIZATIOIN: Once = Once::new();
 
 /// When going out of scope, deletes the key pair it holds.
 #[allow(dead_code)]
@@ -30,4 +36,8 @@ impl CleanupKeyPair {
     fn new(key_pair_handle: KeyPairHandle) -> Self {
         Self { key_pair_handle }
     }
+}
+
+fn setup() {
+    COLOR_EYRE_INITIALIZATIOIN.call_once(|| install().unwrap());
 }
