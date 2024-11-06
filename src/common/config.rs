@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use std::cmp::{Eq, Ord, PartialEq, PartialOrd};
 use std::collections::HashSet;
 
@@ -76,9 +77,8 @@ pub struct ProviderImplConfig {
 }
 
 impl ProviderImplConfig {
-    #[cfg(feature = "android")]
     pub fn new(
-        java_vm: Arc<Mutex<JavaVM>>,
+        java_vm: Option<JavaVM>,
         get_fn: impl Fn(String) -> Pin<Box<dyn Future<Output = Option<Vec<u8>>> + Send>>
             + 'static
             + Send
@@ -93,7 +93,7 @@ impl ProviderImplConfig {
             + Sync,
     ) -> Self {
         Self {
-            java_vm: Some(java_vm),
+            java_vm: java_vm.map(|vm| Arc::new(Mutex::new(vm))),
             get_fn: Arc::new(get_fn),
             store_fn: Arc::new(store_fn),
             all_keys_fn: Arc::new(all_keys_fn),

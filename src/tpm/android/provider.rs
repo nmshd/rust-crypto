@@ -30,7 +30,7 @@ pub(crate) struct AndroidProviderFactory {}
 
 impl ProviderFactory for AndroidProviderFactory {
     fn get_name(&self) -> String {
-        "AndroidProvider".to_owned()
+        "ANDROID_PROVIDER".to_owned()
     }
 
     fn get_capabilities(&self, _impl_config: ProviderImplConfig) -> ProviderConfig {
@@ -336,7 +336,7 @@ impl ProviderImpl for AndroidProvider {
     }
 
     fn provider_name(&self) -> String {
-        "AndroidProvider".to_owned()
+        "ANDROID_PROVIDER".to_owned()
     }
 
     fn get_capabilities(&self) -> ProviderConfig {

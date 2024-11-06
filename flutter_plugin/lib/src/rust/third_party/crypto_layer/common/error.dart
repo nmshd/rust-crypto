@@ -71,5 +71,6 @@ enum KeyType {
   public,
   private,
   publicAndPrivate,
+  symmetric,
   ;
 }
