@@ -1,22 +1,50 @@
 use base64::prelude::*;
 use security_framework::key::Algorithm;
 use security_framework::key::SecKey;
+use serde::{Deserialize, Serialize};
 
 use crate::common::{
+    crypto::algorithms::hashes::{CryptoHash, Sha2Bits},
     error::{CalError, KeyType, ToCalError},
     traits::key_handle::KeyPairHandleImpl,
     DHExchange,
 };
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub(super) struct KeyPairMetadata {
+    pub hash: CryptoHash,
+}
+
+impl KeyPairMetadata {
+    fn hash(&self) -> Result<Algorithm, CalError> {
+        match self.hash {
+            CryptoHash::Sha1 => Ok(Algorithm::ECDSASignatureMessageX962SHA1),
+            CryptoHash::Sha2(bits) => match bits {
+                Sha2Bits::Sha224 => Ok(Algorithm::ECDSASignatureMessageX962SHA224),
+                Sha2Bits::Sha256 => Ok(Algorithm::ECDSASignatureMessageX962SHA256),
+                Sha2Bits::Sha384 => Ok(Algorithm::ECDSASignatureMessageX962SHA384),
+                Sha2Bits::Sha512 => Ok(Algorithm::ECDSASignatureMessageX962SHA512),
+                _ => Err(CalError::bad_parameter(format!("{:#?}", bits), true, None)),
+            },
+            _ => Err(CalError::bad_parameter(
+                "Only Sha1 and Sha2 are supported.".to_owned(),
+                true,
+                None,
+            )),
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub(crate) struct AppleSecureEnclaveKeyPair {
     pub(super) key_handle: SecKey,
+    pub(super) metadata: KeyPairMetadata,
 }
 
 impl KeyPairHandleImpl for AppleSecureEnclaveKeyPair {
     fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
         self.key_handle
-            .create_signature(Algorithm::ECDSASignatureMessageX962SHA256, data)
+            .create_signature(self.metadata.hash()?, data)
             .err_internal()
     }
 
@@ -26,7 +54,7 @@ impl KeyPairHandleImpl for AppleSecureEnclaveKeyPair {
             KeyType::Public,
         ))?;
         public_key
-            .verify_signature(Algorithm::ECDSASignatureMessageX962SHA256, data, signature)
+            .verify_signature(self.metadata.hash()?, data, signature)
             .err_internal()
     }
 
@@ -74,9 +102,6 @@ impl KeyPairHandleImpl for AppleSecureEnclaveKeyPair {
     }
 
     fn delete(self) -> Result<(), CalError> {
-        match self.key_handle.delete() {
-            Ok(()) => Ok(()),
-            Err(e) => Err(e.into()),
-        }
+        self.key_handle.delete().err_internal()
     }
 }
