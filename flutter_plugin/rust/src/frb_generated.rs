@@ -40,7 +40,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.5.1";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -471927094;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 2004918692;
 
 // Section: executor
 
@@ -78,6 +78,9 @@ fn wire__crate__api__crypto__get_default_config_impl(
                 decode_DartFn_Inputs_String_list_prim_u_8_strict_Output_bool_AnyhowException(
                     <flutter_rust_bridge::DartOpaque>::sse_decode(&mut deserializer),
                 );
+            let api_delete_fn = decode_DartFn_Inputs_String_Output_unit_AnyhowException(
+                <flutter_rust_bridge::DartOpaque>::sse_decode(&mut deserializer),
+            );
             let api_all_keys_fn = decode_DartFn_Inputs__Output_list_String_AnyhowException(
                 <flutter_rust_bridge::DartOpaque>::sse_decode(&mut deserializer),
             );
@@ -89,6 +92,7 @@ fn wire__crate__api__crypto__get_default_config_impl(
                             crate::api::crypto::get_default_config(
                                 api_get_fn,
                                 api_store_fn,
+                                api_delete_fn,
                                 api_all_keys_fn,
                             )
                             .await,
@@ -182,6 +186,39 @@ fn wire__crypto_layer__common__KeyHandle_decrypt_data_impl(
                         &*api_that_guard,
                         &api_encrypted_data,
                     )?;
+                    Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crypto_layer__common__KeyHandle_delete_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "KeyHandle_delete",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <KeyHandle>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, CalError>((move || {
+                    let output_ok = crypto_layer::common::KeyHandle::delete(api_that)?;
                     Ok(output_ok)
                 })())
             }
@@ -384,6 +421,39 @@ fn wire__crypto_layer__common__KeyPairHandle_decrypt_data_impl(
                         &*api_that_guard,
                         &api_data,
                     )?;
+                    Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crypto_layer__common__KeyPairHandle_delete_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "KeyPairHandle_delete",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <KeyPairHandle>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, CalError>((move || {
+                    let output_ok = crypto_layer::common::KeyPairHandle::delete(api_that)?;
                     Ok(output_ok)
                 })())
             }
@@ -1559,6 +1629,13 @@ const _: fn() = || {
             let _: String = description;
             let _: bool = internal;
         }
+        crypto_layer::common::error::CalErrorKind::InitializationError {
+            description,
+            internal,
+        } => {
+            let _: String = description;
+            let _: bool = internal;
+        }
         crypto_layer::common::error::CalErrorKind::UnsupportedAlgorithm(field0) => {
             let _: String = field0;
         }
@@ -1645,6 +1722,38 @@ fn decode_DartFn_Inputs_String_Output_opt_list_prim_u_8_strict_AnyhowException(
         let action = deserializer.cursor.read_u8().unwrap();
         let ans = match action {
             0 => std::result::Result::Ok(<Option<Vec<u8>>>::sse_decode(&mut deserializer)),
+            1 => std::result::Result::Err(
+                <flutter_rust_bridge::for_generated::anyhow::Error>::sse_decode(&mut deserializer),
+            ),
+            _ => unreachable!(),
+        };
+        deserializer.end();
+        let ans = ans.expect("Dart throws exception but Rust side assume it is not failable");
+        ans
+    }
+
+    move |arg0: String| {
+        flutter_rust_bridge::for_generated::convert_into_dart_fn_future(body(
+            dart_opaque.clone(),
+            arg0,
+        ))
+    }
+}
+fn decode_DartFn_Inputs_String_Output_unit_AnyhowException(
+    dart_opaque: flutter_rust_bridge::DartOpaque,
+) -> impl Fn(String) -> flutter_rust_bridge::DartFnFuture<()> {
+    use flutter_rust_bridge::IntoDart;
+
+    async fn body(dart_opaque: flutter_rust_bridge::DartOpaque, arg0: String) -> () {
+        let args = vec![arg0.into_into_dart().into_dart()];
+        let message = FLUTTER_RUST_BRIDGE_HANDLER
+            .dart_fn_invoke(dart_opaque, args)
+            .await;
+
+        let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+        let action = deserializer.cursor.read_u8().unwrap();
+        let ans = match action {
+            0 => std::result::Result::Ok(<()>::sse_decode(&mut deserializer)),
             1 => std::result::Result::Err(
                 <flutter_rust_bridge::for_generated::anyhow::Error>::sse_decode(&mut deserializer),
             ),
@@ -2010,10 +2119,18 @@ impl SseDecode for crypto_layer::common::error::CalErrorKind {
                 };
             }
             5 => {
+                let mut var_description = <String>::sse_decode(deserializer);
+                let mut var_internal = <bool>::sse_decode(deserializer);
+                return crypto_layer::common::error::CalErrorKind::InitializationError {
+                    description: var_description,
+                    internal: var_internal,
+                };
+            }
+            6 => {
                 let mut var_field0 = <String>::sse_decode(deserializer);
                 return crypto_layer::common::error::CalErrorKind::UnsupportedAlgorithm(var_field0);
             }
-            6 => {
+            7 => {
                 return crypto_layer::common::error::CalErrorKind::Other;
             }
             _ => {
@@ -2577,106 +2694,110 @@ fn pde_ffi_dispatcher_primary_impl(
             rust_vec_len,
             data_len,
         ),
-        4 => wire__crypto_layer__common__KeyHandle_encrypt_data_impl(
+        4 => wire__crypto_layer__common__KeyHandle_delete_impl(port, ptr, rust_vec_len, data_len),
+        5 => wire__crypto_layer__common__KeyHandle_encrypt_data_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        5 => wire__crypto_layer__common__KeyHandle_extract_key_impl(
+        6 => wire__crypto_layer__common__KeyHandle_extract_key_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        6 => wire__crypto_layer__common__KeyHandle_id_impl(port, ptr, rust_vec_len, data_len),
-        7 => wire__crypto_layer__common__KeyPairHandle_decrypt_data_impl(
+        7 => wire__crypto_layer__common__KeyHandle_id_impl(port, ptr, rust_vec_len, data_len),
+        8 => wire__crypto_layer__common__KeyPairHandle_decrypt_data_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        8 => wire__crypto_layer__common__KeyPairHandle_encrypt_data_impl(
+        9 => {
+            wire__crypto_layer__common__KeyPairHandle_delete_impl(port, ptr, rust_vec_len, data_len)
+        }
+        10 => wire__crypto_layer__common__KeyPairHandle_encrypt_data_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        9 => wire__crypto_layer__common__KeyPairHandle_get_public_key_impl(
+        11 => wire__crypto_layer__common__KeyPairHandle_get_public_key_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        10 => wire__crypto_layer__common__KeyPairHandle_id_impl(port, ptr, rust_vec_len, data_len),
-        11 => wire__crypto_layer__common__KeyPairHandle_sign_data_impl(
+        12 => wire__crypto_layer__common__KeyPairHandle_id_impl(port, ptr, rust_vec_len, data_len),
+        13 => wire__crypto_layer__common__KeyPairHandle_sign_data_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        12 => wire__crypto_layer__common__KeyPairHandle_verify_signature_impl(
+        14 => wire__crypto_layer__common__KeyPairHandle_verify_signature_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        13 => {
+        15 => {
             wire__crypto_layer__common__Provider_create_key_impl(port, ptr, rust_vec_len, data_len)
         }
-        14 => wire__crypto_layer__common__Provider_create_key_pair_impl(
+        16 => wire__crypto_layer__common__Provider_create_key_pair_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        15 => wire__crypto_layer__common__Provider_get_capabilities_impl(
+        17 => wire__crypto_layer__common__Provider_get_capabilities_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        16 => {
+        18 => {
             wire__crypto_layer__common__Provider_import_key_impl(port, ptr, rust_vec_len, data_len)
         }
-        17 => wire__crypto_layer__common__Provider_import_key_pair_impl(
+        19 => wire__crypto_layer__common__Provider_import_key_pair_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        18 => wire__crypto_layer__common__Provider_import_public_key_impl(
+        20 => wire__crypto_layer__common__Provider_import_public_key_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        19 => wire__crypto_layer__common__Provider_load_key_impl(port, ptr, rust_vec_len, data_len),
-        20 => wire__crypto_layer__common__Provider_load_key_pair_impl(
+        21 => wire__crypto_layer__common__Provider_load_key_impl(port, ptr, rust_vec_len, data_len),
+        22 => wire__crypto_layer__common__Provider_load_key_pair_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        21 => wire__crypto_layer__common__Provider_provider_name_impl(
+        23 => wire__crypto_layer__common__Provider_provider_name_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        22 => wire__crypto_layer__common__Provider_start_ephemeral_dh_exchange_impl(
+        24 => wire__crypto_layer__common__Provider_start_ephemeral_dh_exchange_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        23 => wire__crypto_layer__common__crypto__algorithms__encryption__cipher_default_impl(
+        25 => wire__crypto_layer__common__crypto__algorithms__encryption__cipher_default_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        24 => {
+        26 => {
             wire__crypto_layer__common__crypto__algorithms__encryption__symmetric_mode_default_impl(
                 port,
                 ptr,
@@ -2684,43 +2805,43 @@ fn pde_ffi_dispatcher_primary_impl(
                 data_len,
             )
         }
-        25 => wire__crypto_layer__common__crypto__algorithms__hashes__crypto_hash_default_impl(
+        27 => wire__crypto_layer__common__crypto__algorithms__hashes__crypto_hash_default_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        26 => wire__crypto_layer__common__crypto__pkcs__standards__oid_type_as_str_impl(
+        28 => wire__crypto_layer__common__crypto__pkcs__standards__oid_type_as_str_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        27 => wire__crypto_layer__common__error__CalError_backtrace_impl(
+        29 => wire__crypto_layer__common__error__CalError_backtrace_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        28 => wire__crypto_layer__common__error__CalError_error_kind_impl(
+        30 => wire__crypto_layer__common__error__CalError_error_kind_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        30 => wire__crypto_layer__common__factory__create_provider_impl(
+        32 => wire__crypto_layer__common__factory__create_provider_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        31 => wire__crypto_layer__common__factory__create_provider_from_name_impl(
+        33 => wire__crypto_layer__common__factory__create_provider_from_name_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        32 => wire__crypto_layer__common__factory__get_all_providers_impl(
+        34 => wire__crypto_layer__common__factory__get_all_providers_impl(
             port,
             ptr,
             rust_vec_len,
@@ -2916,10 +3037,19 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crypto_layer::common::error::C
                 internal.into_into_dart().into_dart(),
             ]
             .into_dart(),
+            crypto_layer::common::error::CalErrorKind::InitializationError {
+                description,
+                internal,
+            } => [
+                5.into_dart(),
+                description.into_into_dart().into_dart(),
+                internal.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
             crypto_layer::common::error::CalErrorKind::UnsupportedAlgorithm(field0) => {
-                [5.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+                [6.into_dart(), field0.into_into_dart().into_dart()].into_dart()
             }
-            crypto_layer::common::error::CalErrorKind::Other => [6.into_dart()].into_dart(),
+            crypto_layer::common::error::CalErrorKind::Other => [7.into_dart()].into_dart(),
             _ => {
                 unimplemented!("");
             }
@@ -3831,12 +3961,20 @@ impl SseEncode for crypto_layer::common::error::CalErrorKind {
                 <String>::sse_encode(description, serializer);
                 <bool>::sse_encode(internal, serializer);
             }
-            crypto_layer::common::error::CalErrorKind::UnsupportedAlgorithm(field0) => {
+            crypto_layer::common::error::CalErrorKind::InitializationError {
+                description,
+                internal,
+            } => {
                 <i32>::sse_encode(5, serializer);
+                <String>::sse_encode(description, serializer);
+                <bool>::sse_encode(internal, serializer);
+            }
+            crypto_layer::common::error::CalErrorKind::UnsupportedAlgorithm(field0) => {
+                <i32>::sse_encode(6, serializer);
                 <String>::sse_encode(field0, serializer);
             }
             crypto_layer::common::error::CalErrorKind::Other => {
-                <i32>::sse_encode(6, serializer);
+                <i32>::sse_encode(7, serializer);
             }
             _ => {
                 unimplemented!("");

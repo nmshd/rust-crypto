@@ -11,12 +11,16 @@ import 'common/crypto/algorithms/hashes.dart';
 import 'common/error.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`
+
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DHExchange>>
 abstract class DhExchange implements RustOpaqueInterface {}
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<KeyHandle>>
 abstract class KeyHandle implements RustOpaqueInterface {
   Future<Uint8List> decryptData({required List<int> encryptedData});
+
+  Future<void> delete();
 
   Future<Uint8List> encryptData({required List<int> data});
 
@@ -29,6 +33,9 @@ abstract class KeyHandle implements RustOpaqueInterface {
 abstract class KeyPairHandle implements RustOpaqueInterface {
   /// Abstraction of asymmetric key pair handles.
   Future<Uint8List> decryptData({required List<int> data});
+
+  /// Abstraction of asymmetric key pair handles.
+  Future<void> delete();
 
   /// Abstraction of asymmetric key pair handles.
   Future<Uint8List> encryptData({required List<int> data});

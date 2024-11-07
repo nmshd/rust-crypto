@@ -18,10 +18,14 @@ void main() async {
     KVStore store = KVStore();
 
     var implConf = await cal.getDefaultConfig(
-        getFn: store.get, storeFn: store.store, allKeysFn: store.allKeys);
+        getFn: store.get,
+        storeFn: store.store,
+        deleteFn: store.delete,
+        allKeysFn: store.allKeys);
 
     var providers = await cal.getAllProviders();
     for (var providerName in providers) {
+      store.clear();
       var provider = await cal.createProviderFromName(
           name: providerName, implConf: implConf);
       expect(provider, isNotNull);
@@ -34,6 +38,7 @@ void main() async {
                 asymSpec: asymSpec,
                 signingHash: const cal.CryptoHash_Sha2(cal.Sha2Bits.sha256)));
         expect(handle, isNotNull);
+        expect(store.count(), 1);
 
         var data = Uint8List(20);
         Random().fillBytes(data);
@@ -48,6 +53,9 @@ void main() async {
         var verified2 =
             await handle.verifySignature(data: data2, signature: signature);
         expect(verified2, isFalse);
+
+        handle.delete();
+        expect(store.count(), 0);
       }
     }
   });
@@ -56,7 +64,10 @@ void main() async {
     KVStore store = KVStore();
 
     var implConf = await cal.getDefaultConfig(
-        getFn: store.get, storeFn: store.store, allKeysFn: store.allKeys);
+        getFn: store.get,
+        storeFn: store.store,
+        deleteFn: store.delete,
+        allKeysFn: store.allKeys);
 
     var provider = await cal.createProviderFromName(
         name: "ANDROID_PROVIDER", implConf: implConf);

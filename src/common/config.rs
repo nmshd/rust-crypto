@@ -68,6 +68,8 @@ pub struct ProviderImplConfig {
         Arc<dyn Fn(String) -> Pin<Box<dyn Future<Output = Option<Vec<u8>>> + Send>> + Send + Sync>,
     pub(crate) store_fn:
         Arc<dyn Fn(String, Vec<u8>) -> Pin<Box<dyn Future<Output = bool> + Send>> + Send + Sync>,
+    pub(crate) delete_fn:
+        Arc<dyn Fn(String) -> Pin<Box<dyn Future<Output = ()> + Send>> + Send + Sync>,
     pub(crate) all_keys_fn:
         Arc<dyn Fn() -> Pin<Box<dyn Future<Output = Vec<String>> + Send>> + Send + Sync>,
 }
@@ -83,6 +85,7 @@ impl ProviderImplConfig {
             + 'static
             + Send
             + Sync,
+        delete_fn: impl Fn(String) -> Pin<Box<dyn Future<Output = ()> + Send>> + 'static + Send + Sync,
         all_keys_fn: impl Fn() -> Pin<Box<dyn Future<Output = Vec<String>> + Send>>
             + 'static
             + Send
@@ -92,6 +95,7 @@ impl ProviderImplConfig {
             java_vm,
             get_fn: Arc::new(get_fn),
             store_fn: Arc::new(store_fn),
+            delete_fn: Arc::new(delete_fn),
             all_keys_fn: Arc::new(all_keys_fn),
         }
     }
@@ -105,6 +109,7 @@ impl ProviderImplConfig {
             + 'static
             + Send
             + Sync,
+        delete_fn: impl Fn(String) -> Pin<Box<dyn Future<Output = ()> + Send>> + 'static + Send + Sync,
         all_keys_fn: impl Fn() -> Pin<Box<dyn Future<Output = Vec<String>> + Send>>
             + 'static
             + Send
@@ -114,6 +119,7 @@ impl ProviderImplConfig {
             java_vm: None,
             get_fn: Arc::new(get_fn),
             store_fn: Arc::new(store_fn),
+            delete_fn: Arc::new(delete_fn),
             all_keys_fn: Arc::new(all_keys_fn),
         }
     }

@@ -158,9 +158,10 @@ impl ProviderImpl for AndroidProvider {
 
         Ok(KeyHandle {
             implementation: Into::into(AndroidKeyHandle {
-                key_id: key_id,
+                key_id,
                 java_vm: self.java_vm.clone(),
                 spec,
+                impl_config: self.impl_config.clone(),
             }),
         })
     }
@@ -222,9 +223,10 @@ impl ProviderImpl for AndroidProvider {
 
         Ok(KeyPairHandle {
             implementation: Into::into(AndroidKeyPairHandle {
-                key_id: key_id,
+                key_id,
                 java_vm: self.java_vm.clone(),
                 spec,
+                impl_config: self.impl_config.clone(),
             }),
         })
     }
@@ -247,9 +249,10 @@ impl ProviderImpl for AndroidProvider {
         match spec {
             SerializableSpec::KeySpec(spec) => Ok(KeyHandle {
                 implementation: Into::into(AndroidKeyHandle {
-                    key_id: key_id,
+                    key_id,
                     java_vm: self.java_vm.clone(),
                     spec,
+                    impl_config: self.impl_config.clone(),
                 }),
             }),
             _ => Err(CalError::unsupported_algorithm(
@@ -268,9 +271,10 @@ impl ProviderImpl for AndroidProvider {
         match spec {
             SerializableSpec::KeyPairSpec(spec) => Ok(KeyPairHandle {
                 implementation: Into::into(AndroidKeyPairHandle {
-                    key_id: key_id,
+                    key_id,
                     java_vm: self.java_vm.clone(),
                     spec,
+                    impl_config: self.impl_config.clone(),
                 }),
             }),
             _ => Err(CalError::unsupported_algorithm(
@@ -309,6 +313,7 @@ impl ProviderImpl for AndroidProvider {
                 key_id: id,
                 java_vm: self.java_vm.clone(),
                 spec,
+                impl_config: self.impl_config.clone(),
             }),
         })
     }

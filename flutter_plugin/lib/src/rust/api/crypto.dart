@@ -10,6 +10,10 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 Future<ProviderImplConfig> getDefaultConfig(
         {required FutureOr<Uint8List?> Function(String) getFn,
         required FutureOr<bool> Function(String, Uint8List) storeFn,
+        required FutureOr<void> Function(String) deleteFn,
         required FutureOr<List<String>> Function() allKeysFn}) =>
     RustLib.instance.api.crateApiCryptoGetDefaultConfig(
-        getFn: getFn, storeFn: storeFn, allKeysFn: allKeysFn);
+        getFn: getFn,
+        storeFn: storeFn,
+        deleteFn: deleteFn,
+        allKeysFn: allKeysFn);

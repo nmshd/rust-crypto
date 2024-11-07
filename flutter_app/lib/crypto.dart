@@ -14,7 +14,10 @@ Future<Provider> getDefaultProvider() async {
   }
 
   var implConf = await getDefaultConfig(
-      getFn: store.get, storeFn: store.store, allKeysFn: store.allKeys);
+      getFn: store.get,
+      storeFn: store.store,
+      deleteFn: store.delete,
+      allKeysFn: store.allKeys);
   var provider =
       await createProviderFromName(name: providerName, implConf: implConf);
   return provider!;

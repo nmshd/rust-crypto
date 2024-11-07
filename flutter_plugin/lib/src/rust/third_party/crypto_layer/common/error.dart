@@ -58,6 +58,16 @@ sealed class CalErrorKind with _$CalErrorKind {
     /// `true` if caused within this library. `false` if caused by another library.
     required bool internal,
   }) = CalErrorKind_FailedOperation;
+
+  /// Failed to initialize a provider.
+  const factory CalErrorKind.initializationError({
+    required String description,
+
+    /// `true` if caused within this library. `false` if caused by another library.
+    required bool internal,
+  }) = CalErrorKind_InitializationError;
+
+  /// Function is not implemented.
   const factory CalErrorKind.unsupportedAlgorithm(
     String field0,
   ) = CalErrorKind_UnsupportedAlgorithm;
