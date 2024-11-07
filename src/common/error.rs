@@ -57,6 +57,15 @@ pub enum CalErrorKind {
         internal: bool,
     },
 
+    /// Failed to initialize a provider.
+    #[error("Failed Initalizing Provider: {description}")]
+    InitializationError {
+        description: String,
+        /// `true` if caused within this library. `false` if caused by another library.
+        internal: bool,
+    },
+
+    /// Function is not implemented.
     #[error("Unsupported Algorithm: {0}")]
     UnsupportedAlgorithm(String),
 
@@ -127,6 +136,20 @@ impl CalError {
                 internal,
             },
             source: source.unwrap_or_else(|| anyhow!("Failed Operation")),
+        }
+    }
+
+    pub(crate) fn failed_init(
+        description: String,
+        internal: bool,
+        source: Option<anyhow::Error>,
+    ) -> Self {
+        CalError {
+            error_kind: CalErrorKind::InitializationError {
+                description,
+                internal,
+            },
+            source: source.unwrap_or_else(|| anyhow!("Initalization Error")),
         }
     }
 

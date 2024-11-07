@@ -41,9 +41,13 @@ pub(crate) trait KeyHandleImpl: Send + Sync {
 
     /// Returns the id of the key, which can be used with `load_key`.
     fn id(&self) -> Result<String, CalError>;
+
+    /// Delete this key.
+    fn delete(self) -> Result<(), CalError>;
 }
 
 #[enum_dispatch]
+#[derive(Debug, Clone)]
 pub(crate) enum KeyHandleImplEnum {
     StubKeyHandle,
     #[cfg(feature = "android")]
@@ -95,9 +99,13 @@ pub(crate) trait KeyPairHandleImpl: Send + Sync {
 
     /// Returns the id of the key pair, which can be used with `load_key_pair`.
     fn id(&self) -> Result<String, CalError>;
+
+    /// Delete this key pair.
+    fn delete(self) -> Result<(), CalError>;
 }
 
 #[enum_dispatch]
+#[derive(Debug, Clone)]
 pub(crate) enum KeyPairHandleImplEnum {
     StubKeyPairHandle,
     #[cfg(feature = "android")]
@@ -117,6 +125,7 @@ pub(crate) trait DHKeyExchangeImpl: Send + Sync {
     fn add_external_final(self, external_key: &[u8]) -> Result<KeyHandleImplEnum, CalError>;
 }
 
+#[derive(Debug, Clone)]
 pub(crate) enum DHKeyExchangeImplEnum {
     #[cfg(feature = "android")]
     Android,

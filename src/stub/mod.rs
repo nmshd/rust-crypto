@@ -96,6 +96,7 @@ impl ProviderImpl for StubProvider {
     }
 }
 
+#[derive(Debug, Clone)]
 pub(crate) struct StubKeyPairHandle {}
 
 impl KeyPairHandleImpl for StubKeyPairHandle {
@@ -130,8 +131,13 @@ impl KeyPairHandleImpl for StubKeyPairHandle {
     fn id(&self) -> Result<String, CalError> {
         Ok("RANDOM_KEY_ID".to_owned())
     }
+
+    fn delete(self) -> Result<(), CalError> {
+        todo!()
+    }
 }
 
+#[derive(Debug, Clone)]
 pub(crate) struct StubKeyHandle {}
 
 impl KeyHandleImpl for StubKeyHandle {
@@ -149,5 +155,9 @@ impl KeyHandleImpl for StubKeyHandle {
 
     fn id(&self) -> Result<String, CalError> {
         Ok("RANDOM_KEY_ID".to_owned())
+    }
+
+    fn delete(self) -> Result<(), CalError> {
+        todo!()
     }
 }

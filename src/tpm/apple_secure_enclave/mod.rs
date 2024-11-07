@@ -10,6 +10,8 @@ use thiserror;
 
 use crate::common::error::CalError;
 
+use crate::common::error::ToCalError;
+
 /// CFError is not thread safe. This struct wraps CFError's output.
 #[derive(thiserror::Error, Debug)]
 #[error("{code} -- {description}")]
@@ -29,11 +31,18 @@ impl From<CFError> for CFErrorThreadSafe {
     }
 }
 
+// TODO: Fix this abhorent mess.
+
 impl CalError {
     fn from_cferr(error: CFError, context: String) -> Self {
-        let code = error.code();
+        let code = error.code() as u32;
         let wrapped_error = anyhow!(CFErrorThreadSafe::from(error));
         match code {
+            0xFFFF7B1E => CalError::failed_init(
+                "A required entitlement isn't present.".to_owned(),
+                false,
+                Some(wrapped_error),
+            ),
             0xFFFFFFCE
             | 0xFFFFFC73
             | 0xFFFFD99A
@@ -104,6 +113,24 @@ impl From<base::Error> for CalError {
     fn from(value: base::Error) -> Self {
         match value.code() {
             _ => CalError::other(anyhow!(value)),
+        }
+    }
+}
+
+impl<T> ToCalError<T> for Result<T, CFError> {
+    fn err_internal(self) -> Result<T, CalError> {
+        match self {
+            Ok(result) => Ok(result),
+            Err(e) => Err(CalError::from(e)),
+        }
+    }
+}
+
+impl<T> ToCalError<T> for Result<T, base::Error> {
+    fn err_internal(self) -> Result<T, CalError> {
+        match self {
+            Ok(result) => Ok(result),
+            Err(e) => Err(CalError::from(e)),
         }
     }
 }
