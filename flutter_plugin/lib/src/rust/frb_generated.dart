@@ -76,7 +76,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.5.1';
 
   @override
-  int get rustContentHash => 216136221;
+  int get rustContentHash => -471927094;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -181,6 +181,8 @@ abstract class RustLibApi extends BaseApi {
 
   Future<Provider?> cryptoLayerCommonFactoryCreateProviderFromName(
       {required String name, required ProviderImplConfig implConf});
+
+  Future<List<String>> cryptoLayerCommonFactoryGetAllProviders();
 
   RustArcIncrementStrongCountFnType
       get rust_arc_increment_strong_count_CalError;
@@ -1115,6 +1117,30 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(
         debugName: "create_provider_from_name",
         argNames: ["name", "implConf"],
+      );
+
+  @override
+  Future<List<String>> cryptoLayerCommonFactoryGetAllProviders() {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 32, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_list_String,
+        decodeErrorData: null,
+      ),
+      constMeta: kCryptoLayerCommonFactoryGetAllProvidersConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCryptoLayerCommonFactoryGetAllProvidersConstMeta =>
+      const TaskConstMeta(
+        debugName: "get_all_providers",
+        argNames: [],
       );
 
   Future<void> Function(int, dynamic)

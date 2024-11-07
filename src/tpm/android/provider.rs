@@ -49,7 +49,12 @@ impl ProviderFactory for AndroidProviderFactory {
 
     fn create_provider(&self, impl_config: ProviderImplConfig) -> ProviderImplEnum {
         ProviderImplEnum::from(AndroidProvider {
-            java_vm: impl_config.java_vm.clone().unwrap(),
+            java_vm: impl_config
+                .java_vm
+                .clone()
+                .unwrap()
+                .downcast::<Mutex<JavaVM>>()
+                .unwrap(),
             impl_config,
         })
     }

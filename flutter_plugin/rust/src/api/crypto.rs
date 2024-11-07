@@ -8,7 +8,7 @@ pub async fn get_default_config(
     all_keys_fn: impl Fn() -> DartFnFuture<Vec<String>> + 'static + Send + Sync,
 ) -> ProviderImplConfig {
     #[cfg(target_os = "android")]
-    let java_vm = Some(crate::api::android::get_java_vm());
+    let java_vm = Some(Arc::new(crate::api::android::get_java_vm()));
     #[cfg(not(target_os = "android"))]
     let java_vm = None;
 

@@ -25,7 +25,6 @@ strip = "symbols"
 [features]
 debug = []
 ffi = []
-default = ["android", "tpm"]
 android = ["tpm", "robusta_jni", "libloading"]
 nks = ["core", "x25519-dalek", "hcvault", "reqwest", "rand", "openssl", "arrayref", "dep:base64", "ed25519-dalek", "sodiumoxide"]
 hcvault = []
