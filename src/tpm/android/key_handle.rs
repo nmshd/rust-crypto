@@ -3,7 +3,7 @@ use std::sync::Arc;
 use super::utils::get_iv_size;
 use crate::{
     common::{
-        config::{KeyPairSpec, KeySpec},
+        config::{KeyPairSpec, KeySpec, ProviderImplConfig},
         error::{CalError, ToCalError},
         traits::key_handle::{KeyHandleImpl, KeyPairHandleImpl},
         DHExchange,
@@ -25,18 +25,38 @@ use robusta_jni::jni::{objects::JObject, JavaVM};
 use std::sync::Mutex;
 use tracing::{debug, info};
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub(crate) struct AndroidKeyHandle {
     pub(crate) key_id: String,
     pub(crate) spec: KeySpec,
     pub(crate) java_vm: Arc<Mutex<JavaVM>>,
+    pub(crate) impl_config: ProviderImplConfig,
 }
 
-#[derive(Debug, Clone)]
+impl std::fmt::Debug for AndroidKeyHandle {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("AndroidKeyHandle")
+            .field("key_id", &self.key_id)
+            .field("spec", &self.spec)
+            .finish()
+    }
+}
+
+#[derive(Clone)]
 pub(crate) struct AndroidKeyPairHandle {
     pub(crate) key_id: String,
     pub(crate) spec: KeyPairSpec,
     pub(crate) java_vm: Arc<Mutex<JavaVM>>,
+    pub(crate) impl_config: ProviderImplConfig,
+}
+
+impl std::fmt::Debug for AndroidKeyPairHandle {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("AndroidKeyHandle")
+            .field("key_id", &self.key_id)
+            .field("spec", &self.spec)
+            .finish()
+    }
 }
 
 impl KeyHandleImpl for AndroidKeyHandle {
@@ -98,6 +118,21 @@ impl KeyHandleImpl for AndroidKeyHandle {
 
     fn extract_key(&self) -> Result<Vec<u8>, CalError> {
         todo!()
+    }
+
+    fn delete(self) -> Result<(), CalError> {
+        let vm = self.java_vm.lock().unwrap();
+        let _attach_guard = vm.attach_current_thread().err_internal()?;
+        let env = vm.get_env().err_internal()?;
+
+        let keystore = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_owned()).err_internal()?;
+        keystore
+            .deleteEntry(&env, self.key_id.clone())
+            .err_internal()?;
+
+        smol::block_on((self.impl_config.delete_fn)(self.key_id));
+
+        Ok(())
     }
 
     fn id(&self) -> Result<String, CalError> {
@@ -248,6 +283,21 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
 
     fn start_dh_exchange(&self) -> Result<DHExchange, CalError> {
         todo!()
+    }
+
+    fn delete(self) -> Result<(), CalError> {
+        let vm = self.java_vm.lock().unwrap();
+        let _attach_guard = vm.attach_current_thread().err_internal()?;
+        let env = vm.get_env().err_internal()?;
+
+        let keystore = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_owned()).err_internal()?;
+        keystore
+            .deleteEntry(&env, self.key_id.clone())
+            .err_internal()?;
+
+        smol::block_on((self.impl_config.delete_fn)(self.key_id));
+
+        Ok(())
     }
 
     fn id(&self) -> Result<String, CalError> {

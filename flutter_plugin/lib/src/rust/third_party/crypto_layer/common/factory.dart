@@ -50,3 +50,7 @@ Future<Provider?> createProviderFromName(
         {required String name, required ProviderImplConfig implConf}) =>
     RustLib.instance.api.cryptoLayerCommonFactoryCreateProviderFromName(
         name: name, implConf: implConf);
+
+/// Returns the names of all available providers for testing.
+Future<List<String>> getAllProviders() =>
+    RustLib.instance.api.cryptoLayerCommonFactoryGetAllProviders();

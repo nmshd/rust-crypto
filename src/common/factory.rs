@@ -93,3 +93,8 @@ pub fn create_provider_from_name(name: String, impl_conf: ProviderImplConfig) ->
     }
     None
 }
+
+/// Returns the names of all available providers for testing.
+pub fn get_all_providers() -> Vec<String> {
+    ALL_PROVIDERS.iter().map(|p| p.get_name()).collect()
+}

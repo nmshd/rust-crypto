@@ -25,7 +25,6 @@ strip = "symbols"
 [features]
 debug = []
 ffi = []
-default = ["android", "tpm"]
 android = ["tpm", "robusta_jni", "libloading"]
 nks = ["core", "x25519-dalek", "hcvault", "reqwest", "rand", "openssl", "arrayref", "dep:base64", "ed25519-dalek", "sodiumoxide"]
 hcvault = []
@@ -85,6 +84,7 @@ libloading = {version = "0.8.5", optional = true}
 thiserror = "1.0.65"
 anyhow = { version = "1.0.91"}
 smol = "2.0.2"
+bincode = "1.3.3"
 
 [dev-dependencies]
 color-eyre = "0.6.3"

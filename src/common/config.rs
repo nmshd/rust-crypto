@@ -1,14 +1,13 @@
+#![allow(dead_code)]
+use std::any::Any;
 use std::cmp::{Eq, Ord, PartialEq, PartialOrd};
 use std::collections::HashSet;
 
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
-#[cfg(feature = "android")]
-use std::sync::Mutex;
 
-#[cfg(feature = "android")]
-use robusta_jni::jni::JavaVM;
+use serde::{Deserialize, Serialize};
 
 use super::crypto::algorithms::{
     encryption::{AsymmetricKeySpec, Cipher},
@@ -31,18 +30,24 @@ pub enum SecurityLevel {
 }
 
 /// flutter_rust_bridge:non_opaque
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct KeySpec {
     pub cipher: Cipher,
     pub signing_hash: CryptoHash,
 }
 
 /// flutter_rust_bridge:non_opaque
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct KeyPairSpec {
     pub asym_spec: AsymmetricKeySpec,
     pub cipher: Option<Cipher>,
     pub signing_hash: CryptoHash,
+}
+
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+pub(crate) enum SerializableSpec {
+    KeySpec(KeySpec),
+    KeyPairSpec(KeyPairSpec),
 }
 
 /// flutter_rust_bridge:non_opaque
@@ -58,20 +63,20 @@ pub struct ProviderConfig {
 /// flutter_rust_bridge:opaque
 #[derive(Clone)]
 pub struct ProviderImplConfig {
-    #[cfg(feature = "android")]
-    pub(crate) java_vm: Option<Arc<Mutex<JavaVM>>>,
+    pub(crate) java_vm: Option<Arc<dyn Any + Send + Sync>>,
     pub(crate) get_fn:
         Arc<dyn Fn(String) -> Pin<Box<dyn Future<Output = Option<Vec<u8>>> + Send>> + Send + Sync>,
     pub(crate) store_fn:
         Arc<dyn Fn(String, Vec<u8>) -> Pin<Box<dyn Future<Output = bool> + Send>> + Send + Sync>,
+    pub(crate) delete_fn:
+        Arc<dyn Fn(String) -> Pin<Box<dyn Future<Output = ()> + Send>> + Send + Sync>,
     pub(crate) all_keys_fn:
         Arc<dyn Fn() -> Pin<Box<dyn Future<Output = Vec<String>> + Send>> + Send + Sync>,
 }
 
 impl ProviderImplConfig {
-    #[cfg(feature = "android")]
     pub fn new(
-        java_vm: Arc<Mutex<JavaVM>>,
+        java_vm: Option<Arc<dyn Any + Send + Sync>>,
         get_fn: impl Fn(String) -> Pin<Box<dyn Future<Output = Option<Vec<u8>>> + Send>>
             + 'static
             + Send
@@ -80,15 +85,17 @@ impl ProviderImplConfig {
             + 'static
             + Send
             + Sync,
+        delete_fn: impl Fn(String) -> Pin<Box<dyn Future<Output = ()> + Send>> + 'static + Send + Sync,
         all_keys_fn: impl Fn() -> Pin<Box<dyn Future<Output = Vec<String>> + Send>>
             + 'static
             + Send
             + Sync,
     ) -> Self {
         Self {
-            java_vm: Some(java_vm),
+            java_vm,
             get_fn: Arc::new(get_fn),
             store_fn: Arc::new(store_fn),
+            delete_fn: Arc::new(delete_fn),
             all_keys_fn: Arc::new(all_keys_fn),
         }
     }
@@ -102,16 +109,17 @@ impl ProviderImplConfig {
             + 'static
             + Send
             + Sync,
+        delete_fn: impl Fn(String) -> Pin<Box<dyn Future<Output = ()> + Send>> + 'static + Send + Sync,
         all_keys_fn: impl Fn() -> Pin<Box<dyn Future<Output = Vec<String>> + Send>>
             + 'static
             + Send
             + Sync,
     ) -> Self {
         Self {
-            #[cfg(feature = "android")]
             java_vm: None,
             get_fn: Arc::new(get_fn),
             store_fn: Arc::new(store_fn),
+            delete_fn: Arc::new(delete_fn),
             all_keys_fn: Arc::new(all_keys_fn),
         }
     }

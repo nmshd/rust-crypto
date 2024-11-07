@@ -60,6 +60,23 @@ pub(crate) mod jni {
         ) -> JniResult<Certificate> {
         }
 
+        /// Deletes the entry identified by the given alias from this keystore.
+        ///
+        /// # Arguments
+        ///
+        /// * `env` - The JNI environment.
+        /// * `alias` - The alias of the entry to be deleted.
+        ///  
+        /// # Returns
+        ///
+        /// Returns a `JniResult` indicating the success or failure of the operation.
+        pub(crate) extern "java" fn deleteEntry(
+            &self,
+            env: &'borrow JNIEnv<'env>,
+            alias: String,
+        ) -> JniResult<()> {
+        }
+
         /// Retrieves a key from the KeyStore.
         ///
         /// # Arguments
