@@ -1,3 +1,4 @@
+use crate::common::traits::key_handle::DHKeyExchangeImpl;
 use config::{KeyPairSpec, KeySpec, ProviderConfig};
 use error::CalError;
 use tracing::error;
@@ -209,7 +210,21 @@ impl KeyHandle {
 }
 
 #[allow(dead_code)]
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct DHExchange {
     pub(crate) implementation: DHKeyExchangeImplEnum,
+}
+
+impl DHExchange {
+    delegate_enum! {
+        pub fn get_public_key(&self) -> Result<Vec<u8>, CalError>;
+    }
+
+    delegate_enum! {
+        pub fn add_external(&mut self, external_key: &[u8]) -> Result<Vec<u8>, CalError>;
+    }
+
+    delegate_enum! {
+        pub fn add_external_final(&mut self, external_key: &[u8]) -> Result<KeyHandleImplEnum, CalError>;
+    }
 }

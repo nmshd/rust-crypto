@@ -25,7 +25,7 @@ strip = "symbols"
 [features]
 debug = []
 ffi = []
-default = ["android", "tpm"]
+default = []
 android = ["tpm", "robusta_jni", "libloading"]
 nks = ["core", "x25519-dalek", "hcvault", "reqwest", "rand", "openssl", "arrayref", "dep:base64", "ed25519-dalek", "sodiumoxide"]
 hcvault = []
@@ -35,23 +35,29 @@ linux = ["tpm", "tss-esapi"]
 apple-secure-enclave = ["tpm", "dep:security-framework", "dep:core-foundation", "dep:base64"]
 win = ["tpm", "windows"]
 hsm = []
+software = ["rustls", "ring", "rustls-pki-types", "rustls-webpki", "pkcs8", "der"]
 yubi = ["hsm", "yubikey", "sha2", "x509-cert", "dep:base64", "rsa", "openssl"]
 
 [dependencies]
 arrayref = { version = "0.3.7", optional = true }
 base64 = { version = "0.22.1", optional = true }
 core-foundation = { version = "0.10.0", optional = true }
+der = { version = "0.7.9", optional = true }
 ed25519-dalek = { version = "2.1.1", optional = true }
 hex = { version = "0.4.3", optional = true }
 md-5 = { version = "0.10.6", optional = true }
 once_cell = { version = "1.19.0" }
 openssl = { version = "0.10.66", optional = true }
+pkcs8 = { version = "0.10.2", optional = true }
 rand = { version = "0.8.5", optional = true }
-reqwest = { version = "0.12.7", features = ["json"], optional = true }
+reqwest = { version = "0.12.9", features = ["json"], optional = true }
 ring = { version = "0.17.8", optional = true }
 robusta_jni = { version = "0.2", optional = true }
+rustls = { version = "0.23.16", optional = true }
+rustls-pki-types = { version = "1.10.0", optional = true }
+rustls-webpki = { version = "0.102.8", features = ["aws_lc_rs"], optional = true }
 rsa = { version = "0.9.6", optional = true }
-security-framework = { version = "3.0.0", optional = true, default-features = false, features = ["OSX_10_15"]}
+security-framework = { version = "3.0.0", optional = true, default-features = false, features = ["OSX_10_15"] }
 serde = { version = "1.0.208", features = ["derive"] }
 serde_json = { version = "1.0.125" }
 sha2 = { version = "0.10.8", optional = true }
@@ -81,9 +87,9 @@ x509-cert = { version = "0.2.5", optional = true }
 yubikey = { version = "0.8.0", optional = true, features = ["untested"] }
 nanoid = "0.4.0"
 enum_dispatch = "0.3.13"
-libloading = {version = "0.8.5", optional = true}
-thiserror = "1.0.65"
-anyhow = { version = "1.0.91"}
+libloading = { version = "0.8.5", optional = true }
+thiserror = "2.0.0"
+anyhow = "1.0.93"
 smol = "2.0.2"
 
 [dev-dependencies]

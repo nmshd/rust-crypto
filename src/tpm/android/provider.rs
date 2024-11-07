@@ -150,7 +150,7 @@ impl ProviderImpl for AndroidProvider {
 
         Ok(KeyHandle {
             implementation: Into::into(AndroidKeyHandle {
-                key_id: key_id,
+                key_id,
                 java_vm: self.java_vm.clone(),
                 spec,
             }),

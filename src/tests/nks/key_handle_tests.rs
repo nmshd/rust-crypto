@@ -190,5 +190,3 @@ fn test_encrypt_and_decrypt_aes_ctr() {
         &[KeyBits::Bits128, KeyBits::Bits192, KeyBits::Bits256],
     );
 }
-
-

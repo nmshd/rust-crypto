@@ -1,4 +1,6 @@
 #![allow(dead_code)]
+#[cfg(feature = "software")]
+use crate::software::key_handle::SoftwareKeyPairHandle;
 #[cfg(feature = "android")]
 use crate::tpm::android::key_handle::{AndroidKeyHandle, AndroidKeyPairHandle};
 #[cfg(feature = "apple-secure-enclave")]
@@ -6,6 +8,7 @@ use crate::tpm::apple_secure_enclave::key_handle::AppleSecureEnclaveKeyPair;
 
 use crate::{
     common::{error::CalError, DHExchange},
+    software::{key_handle::SoftwareKeyHandle, provider::SoftwareDHExchange},
     stub::{StubKeyHandle, StubKeyPairHandle},
 };
 use enum_dispatch::enum_dispatch;
@@ -52,6 +55,8 @@ pub(crate) enum KeyHandleImplEnum {
     StubKeyHandle,
     #[cfg(feature = "android")]
     AndroidKeyHandle,
+    #[cfg(feature = "software")]
+    SoftwareKeyHandle,
 }
 
 #[enum_dispatch(KeyPairHandleImplEnum)]
@@ -112,8 +117,11 @@ pub(crate) enum KeyPairHandleImplEnum {
     AndroidKeyPairHandle,
     #[cfg(feature = "apple-secure-enclave")]
     AppleSecureEnclaveKeyPair,
+    #[cfg(feature = "software")]
+    SoftwareKeyPairHandle,
 }
 
+#[enum_dispatch(DHKeyExchangeImplEnum)]
 pub(crate) trait DHKeyExchangeImpl: Send + Sync {
     /// Get the public key of the internal key pair to use for the other party
     fn get_public_key(&self) -> Result<Vec<u8>, CalError>;
@@ -122,12 +130,15 @@ pub(crate) trait DHKeyExchangeImpl: Send + Sync {
     fn add_external(&mut self, external_key: &[u8]) -> Result<Vec<u8>, CalError>;
 
     /// add the final external Keypair, derive a symmetric key from the shared secret and store the key
-    fn add_external_final(self, external_key: &[u8]) -> Result<KeyHandleImplEnum, CalError>;
+    fn add_external_final(&mut self, external_key: &[u8]) -> Result<KeyHandleImplEnum, CalError>;
 }
 
-#[derive(Debug, Clone)]
+#[enum_dispatch]
+#[derive(Debug)]
 pub(crate) enum DHKeyExchangeImplEnum {
+    // Stub,
     #[cfg(feature = "android")]
     Android,
-    Stub,
+    #[cfg(feature = "software")]
+    SoftwareDHExchange,
 }
