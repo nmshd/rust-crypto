@@ -8,9 +8,7 @@ use core_foundation::error::CFError;
 use security_framework::base;
 use thiserror;
 
-use crate::common::error::CalError;
-
-use crate::common::error::ToCalError;
+use crate::common::error::{CalError, ToCalError};
 
 /// CFError is not thread safe. This struct wraps CFError's output.
 #[derive(thiserror::Error, Debug)]

@@ -1,4 +1,5 @@
 use std::collections::HashSet;
+use std::sync::LazyLock;
 
 use anyhow::anyhow;
 use base64::prelude::*;
@@ -7,6 +8,9 @@ use security_framework::{
     item::{ItemClass, ItemSearchOptions, KeyClass, Location, Reference, SearchResult},
     key::{GenerateKeyOptions, KeyType, SecKey},
 };
+
+use serde_json::{from_slice, to_vec};
+use smol::block_on;
 
 use crate::common::{
     config::{KeyPairSpec, KeySpec, ProviderConfig, ProviderImplConfig, SecurityLevel},
@@ -21,6 +25,61 @@ use crate::common::{
 
 use crate::tpm::apple_secure_enclave::{key_handle::AppleSecureEnclaveKeyPair, *};
 
+use key_handle::KeyPairMetadata;
+
+static CAPABILITIES: LazyLock<ProviderConfig> = LazyLock::new(|| ProviderConfig {
+    max_security_level: SecurityLevel::Hardware,
+    min_security_level: SecurityLevel::Hardware,
+    supported_ciphers: HashSet::new(),
+    supported_asym_spec: HashSet::from([AsymmetricKeySpec::Ecc {
+        scheme: EccSigningScheme::EcDsa,
+        curve: EccCurve::P256,
+    }]),
+    supported_hashes: HashSet::from([
+        CryptoHash::Sha1,
+        CryptoHash::Sha2(Sha2Bits::Sha224),
+        CryptoHash::Sha2(Sha2Bits::Sha256),
+        CryptoHash::Sha2(Sha2Bits::Sha384),
+        CryptoHash::Sha2(Sha2Bits::Sha512),
+    ]),
+});
+
+fn check_key_pair_spec_for_compatibility(key_spec: &KeyPairSpec) -> Result<(), CalError> {
+    if !CAPABILITIES
+        .supported_hashes
+        .contains(&key_spec.signing_hash)
+    {
+        return Err(CalError::bad_parameter(
+            format!("Signing hash not supported: {:#?}", &key_spec.signing_hash),
+            true,
+            None,
+        ));
+    }
+
+    if !CAPABILITIES
+        .supported_asym_spec
+        .contains(&key_spec.asym_spec)
+    {
+        return Err(CalError::bad_parameter(
+            format!("Asymmetric spec not supported: {:#?}", &key_spec.asym_spec),
+            true,
+            None,
+        ));
+    }
+
+    if let Some(cipher) = &key_spec.cipher {
+        if !CAPABILITIES.supported_ciphers.contains(&cipher) {
+            return Err(CalError::bad_parameter(
+                format!("Cipher not supported: {:#?}", &key_spec.cipher),
+                true,
+                None,
+            ));
+        }
+    }
+
+    Ok(())
+}
+
 pub(crate) struct AppleSecureEnclaveFactory {}
 
 impl ProviderFactory for AppleSecureEnclaveFactory {
@@ -29,25 +88,17 @@ impl ProviderFactory for AppleSecureEnclaveFactory {
     }
 
     fn get_capabilities(&self, _impl_config: ProviderImplConfig) -> ProviderConfig {
-        ProviderConfig {
-            max_security_level: SecurityLevel::Hardware,
-            min_security_level: SecurityLevel::Hardware,
-            supported_ciphers: HashSet::new(),
-            supported_asym_spec: HashSet::from([AsymmetricKeySpec::Ecc {
-                scheme: EccSigningScheme::EcDsa,
-                curve: EccCurve::P256,
-            }]),
-            supported_hashes: HashSet::from([CryptoHash::Sha2(Sha2Bits::Sha256)]),
-        }
+        CAPABILITIES.clone()
     }
 
-    fn create_provider(&self, _impl_config: ProviderImplConfig) -> ProviderImplEnum {
-        AppleSecureEnclaveProvider {}.into()
+    fn create_provider(&self, impl_config: ProviderImplConfig) -> ProviderImplEnum {
+        AppleSecureEnclaveProvider { impl_config }.into()
     }
 }
 
-#[derive(Debug)]
-pub(crate) struct AppleSecureEnclaveProvider {}
+pub(crate) struct AppleSecureEnclaveProvider {
+    pub(crate) impl_config: ProviderImplConfig,
+}
 
 impl ProviderImpl for AppleSecureEnclaveProvider {
     fn create_key(&mut self, _spec: KeySpec) -> Result<KeyHandle, CalError> {
@@ -59,15 +110,7 @@ impl ProviderImpl for AppleSecureEnclaveProvider {
     }
 
     fn create_key_pair(&mut self, spec: KeyPairSpec) -> Result<KeyPairHandle, CalError> {
-        debug_assert_eq!(
-            spec.asym_spec,
-            AsymmetricKeySpec::Ecc {
-                scheme: EccSigningScheme::EcDsa,
-                curve: EccCurve::P256
-            }
-        );
-        debug_assert_eq!(spec.cipher, None);
-        debug_assert_eq!(spec.signing_hash, CryptoHash::Sha2(Sha2Bits::Sha256));
+        check_key_pair_spec_for_compatibility(&spec)?;
 
         let access_controll = SecAccessControl::create_with_protection(
             Some(ProtectionMode::AccessibleAfterFirstUnlockThisDeviceOnly),
@@ -86,12 +129,21 @@ impl ProviderImpl for AppleSecureEnclaveProvider {
 
         let sec_key: SecKey = SecKey::new(&key_options).err_internal()?;
 
-        Ok(KeyPairHandle {
+        let metadata = KeyPairMetadata {
+            hash: spec.signing_hash,
+        };
+
+        let key_pair = KeyPairHandle {
             implementation: AppleSecureEnclaveKeyPair {
                 key_handle: sec_key,
+                metadata: metadata.clone(),
             }
             .into(),
-        })
+        };
+
+        self.save_key_pair_metadata(key_pair.id()?, metadata)?;
+
+        Ok(key_pair)
     }
 
     fn load_key_pair(&mut self, key_id: String) -> Result<KeyPairHandle, CalError> {
@@ -154,9 +206,12 @@ impl ProviderImpl for AppleSecureEnclaveProvider {
             }
         };
 
+        let metadata = self.load_key_pair_metadata(key_id)?;
+
         Ok(KeyPairHandle {
             implementation: AppleSecureEnclaveKeyPair {
                 key_handle: sec_key,
+                metadata,
             }
             .into(),
         })
@@ -192,6 +247,52 @@ impl ProviderImpl for AppleSecureEnclaveProvider {
     }
 
     fn get_capabilities(&self) -> ProviderConfig {
-        todo!()
+        CAPABILITIES.clone()
+    }
+}
+
+impl AppleSecureEnclaveProvider {
+    fn save_key_pair_metadata(
+        &self,
+        key: String,
+        metadata: KeyPairMetadata,
+    ) -> Result<(), CalError> {
+        match to_vec(&metadata) {
+            Ok(result) => {
+                if block_on((*self.impl_config.store_fn)(key, result)) {
+                    Ok(())
+                } else {
+                    Err(CalError::failed_operation(
+                        "Failed saving metadata with store_fn.".to_owned(),
+                        true,
+                        None,
+                    ))
+                }
+            }
+            Err(e) => Err(CalError::failed_operation(
+                "Failed to serialize metadata.".to_owned(),
+                false,
+                Some(e.into()),
+            )),
+        }
+    }
+
+    fn load_key_pair_metadata(&self, key: String) -> Result<KeyPairMetadata, CalError> {
+        if let Some(data) = block_on((*self.impl_config.get_fn)(key)) {
+            match from_slice(&data) {
+                Ok(decoded_data) => Ok(decoded_data),
+                Err(e) => Err(CalError::failed_operation(
+                    "Failed decoding data from get_fn.".to_owned(),
+                    false,
+                    Some(e.into()),
+                )),
+            }
+        } else {
+            Err(CalError::missing_value(
+                "Failed loading data for key.".to_owned(),
+                false,
+                None,
+            ))
+        }
     }
 }
