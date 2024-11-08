@@ -152,7 +152,7 @@ impl ProviderImpl for AndroidProvider {
         kg.generateKey(&env).err_internal()?;
 
         let encoded_spec = bincode::serialize(&SerializableSpec::KeySpec(spec)).unwrap();
-        smol::block_on((self.impl_config.store_fn)(key_id.clone(), encoded_spec));
+        pollster::block_on((self.impl_config.store_fn)(key_id.clone(), encoded_spec));
 
         debug!("key generated");
 
@@ -219,7 +219,7 @@ impl ProviderImpl for AndroidProvider {
 
         // TODO: Store the KeySpec in Storage
         let encoded = bincode::serialize(&SerializableSpec::KeyPairSpec(spec)).unwrap();
-        smol::block_on((self.impl_config.store_fn)(key_id.clone(), encoded));
+        pollster::block_on((self.impl_config.store_fn)(key_id.clone(), encoded));
 
         Ok(KeyPairHandle {
             implementation: Into::into(AndroidKeyPairHandle {
@@ -242,7 +242,7 @@ impl ProviderImpl for AndroidProvider {
     /// Returns `Ok(())` if the key loading is successful, otherwise returns an error of type `CalError`.
     #[instrument]
     fn load_key(&mut self, key_id: String) -> Result<KeyHandle, CalError> {
-        let encoded = smol::block_on((self.impl_config.get_fn)(key_id.clone()))
+        let encoded = pollster::block_on((self.impl_config.get_fn)(key_id.clone()))
             .ok_or(CalError::missing_key(key_id.clone(), KeyType::Symmetric))?;
 
         let spec: SerializableSpec = bincode::deserialize(&encoded).unwrap();
@@ -263,7 +263,7 @@ impl ProviderImpl for AndroidProvider {
 
     #[instrument]
     fn load_key_pair(&mut self, key_id: String) -> Result<KeyPairHandle, CalError> {
-        let encoded = smol::block_on((self.impl_config.get_fn)(key_id.clone())).ok_or(
+        let encoded = pollster::block_on((self.impl_config.get_fn)(key_id.clone())).ok_or(
             CalError::missing_key(key_id.clone(), KeyType::PublicAndPrivate),
         )?;
 
