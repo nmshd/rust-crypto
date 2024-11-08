@@ -130,7 +130,7 @@ impl KeyHandleImpl for AndroidKeyHandle {
             .deleteEntry(&env, self.key_id.clone())
             .err_internal()?;
 
-        smol::block_on((self.impl_config.delete_fn)(self.key_id));
+        pollster::block_on((self.impl_config.delete_fn)(self.key_id));
 
         Ok(())
     }
@@ -295,7 +295,7 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
             .deleteEntry(&env, self.key_id.clone())
             .err_internal()?;
 
-        smol::block_on((self.impl_config.delete_fn)(self.key_id));
+        pollster::block_on((self.impl_config.delete_fn)(self.key_id));
 
         Ok(())
     }

@@ -60,7 +60,9 @@ impl TestStore {
         ProviderImplConfig {
             get_fn: Arc::new(|key| Box::pin(self.get(key))),
             store_fn: Arc::new(|key, value| Box::pin(self.store(key, value))),
+            delete_fn: Arc::new(|key| Box::pin(self.delete(key))),
             all_keys_fn: Arc::new(|| Box::pin(self.keys())),
+            java_vm: None,
         }
     }
 
@@ -73,6 +75,11 @@ impl TestStore {
         let mut w = self.store.write().unwrap();
         w.insert(key, value);
         true
+    }
+
+    async fn delete(&self, key: String) {
+        let mut r = self.store.write().unwrap();
+        r.remove(&key).unwrap();
     }
 
     async fn keys(&self) -> Vec<String> {
