@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 class SigningPage extends StatefulWidget {
   const SigningPage({super.key, required this.provider});
 
-  final cal.Provider provider;
+  final Future<cal.Provider>? provider;
 
   @override
   State<StatefulWidget> createState() => _SigningPageState();
@@ -27,25 +27,26 @@ class _SigningPageState extends State<SigningPage> {
   void initState() {
     super.initState();
 
-    widget.provider
-        .getCapabilities()
-        .then((caps) => caps.supportedAsymSpec)
-        .then((e) => {
-              setState(() {
-                _algos = e.toList();
-              })
-            });
+    if (widget.provider != null) {
+      widget.provider!
+          .then((provider) => provider.getCapabilities())
+          .then((caps) => caps.supportedAsymSpec)
+          .then((e) => {
+                setState(() {
+                  _algos = e.toList();
+                })
+              });
+    }
   }
 
-  void generateKey() {
+  void generateKey() async {
     if (_algoChoice != null) {
       var spec = cal.KeyPairSpec(
           asymSpec: _algoChoice!,
           signingHash: const cal.CryptoHash.sha2(cal.Sha2Bits.sha256));
-      widget.provider.createKeyPair(spec: spec).then((keyPair) {
-        setState(() {
-          _keyPairHandle = keyPair;
-        });
+      var keyPair = await (await widget.provider!).createKeyPair(spec: spec);
+      setState(() {
+        _keyPairHandle = keyPair;
       });
     }
   }

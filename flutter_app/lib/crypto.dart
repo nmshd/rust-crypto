@@ -22,3 +22,14 @@ Future<Provider> getDefaultProvider() async {
       await createProviderFromName(name: providerName, implConf: implConf);
   return provider!;
 }
+
+Future<Provider> getNamedProvider(String providerName) async {
+  var implConf = await getDefaultConfig(
+      getFn: store.get,
+      storeFn: store.store,
+      deleteFn: store.delete,
+      allKeysFn: store.allKeys);
+  var provider =
+      await createProviderFromName(name: providerName, implConf: implConf);
+  return provider!;
+}
