@@ -5,7 +5,7 @@ use crate::{
             SerializableSpec,
         },
         crypto::algorithms::{
-            encryption::{AsymmetricKeySpec, Cipher, SymmetricMode},
+            encryption::{AsymmetricKeySpec, Cipher, EccCurve, EccSigningScheme, SymmetricMode},
             KeyBits,
         },
         error::{CalError, KeyType, ToCalError},
@@ -14,12 +14,13 @@ use crate::{
     },
     tpm::android::{
         key_handle::{AndroidKeyHandle, AndroidKeyPairHandle},
-        utils::{get_cipher_name, get_mode_name, Padding},
+        utils::{get_cipher_name, get_cipher_padding, get_mode_name, Padding},
         wrapper::{self},
         ANDROID_KEYSTORE,
     },
 };
 
+use anyhow::anyhow;
 use nanoid::nanoid;
 use robusta_jni::jni::JavaVM;
 use std::sync::Mutex;
@@ -37,10 +38,17 @@ impl ProviderFactory for AndroidProviderFactory {
         ProviderConfig {
             min_security_level: SecurityLevel::Hardware,
             max_security_level: SecurityLevel::Hardware,
-            supported_asym_spec: vec![AsymmetricKeySpec::Rsa(KeyBits::Bits2048)]
-                .into_iter()
-                .collect(),
-            supported_ciphers: vec![Cipher::Aes(SymmetricMode::Gcm, KeyBits::Bits128)]
+            supported_asym_spec: vec![
+                AsymmetricKeySpec::Rsa(KeyBits::Bits2048),
+                AsymmetricKeySpec::Rsa(KeyBits::Bits1024),
+                AsymmetricKeySpec::Ecc {
+                    scheme: EccSigningScheme::EcDsa,
+                    curve: EccCurve::Secp256k1,
+                },
+            ]
+            .into_iter()
+            .collect(),
+            supported_ciphers: vec![Cipher::Aes(SymmetricMode::Cbc, KeyBits::Bits256)]
                 .into_iter()
                 .collect(),
             supported_hashes: HashSet::new(),
@@ -52,9 +60,9 @@ impl ProviderFactory for AndroidProviderFactory {
             java_vm: impl_config
                 .java_vm
                 .clone()
-                .unwrap()
+                .expect("no jvm provided")
                 .downcast::<Mutex<JavaVM>>()
-                .unwrap(),
+                .expect("downcast failed"),
             impl_config,
         })
     }
@@ -108,7 +116,7 @@ impl ProviderImpl for AndroidProvider {
                 kps_builder = kps_builder
                     .set_block_modes(&env, vec![get_mode_name(mode)?])
                     .err_internal()?
-                    .set_encryption_paddings(&env, vec!["NoPadding".to_owned()])
+                    .set_encryption_paddings(&env, vec![get_cipher_padding(spec.cipher)])
                     .err_internal()?
                     .set_key_size(&env, Into::<u32>::into(size) as i32)
                     .err_internal()?;
@@ -117,14 +125,14 @@ impl ProviderImpl for AndroidProvider {
                 kps_builder = kps_builder
                     .set_block_modes(&env, vec!["CBC".to_owned()])
                     .err_internal()?
-                    .set_encryption_paddings(&env, vec!["NoPadding".to_owned()])
+                    .set_encryption_paddings(&env, vec![get_cipher_padding(spec.cipher)])
                     .err_internal()?;
             }
             Cipher::TripleDes(_) => {
                 kps_builder = kps_builder
                     .set_block_modes(&env, vec!["CBC".to_owned()])
                     .err_internal()?
-                    .set_encryption_paddings(&env, vec!["NoPadding".to_owned()])
+                    .set_encryption_paddings(&env, vec![get_cipher_padding(spec.cipher)])
                     .err_internal()?;
             }
             Cipher::Rc2(_) | Cipher::Camellia(_, _) | Cipher::Rc4 | Cipher::Chacha20(_) => {
@@ -151,7 +159,8 @@ impl ProviderImpl for AndroidProvider {
 
         kg.generateKey(&env).err_internal()?;
 
-        let encoded_spec = bincode::serialize(&SerializableSpec::KeySpec(spec)).unwrap();
+        let encoded_spec = bincode::serialize(&SerializableSpec::KeySpec(spec))
+            .map_err(|e| CalError::other(anyhow!(e)))?;
         pollster::block_on((self.impl_config.store_fn)(key_id.clone(), encoded_spec));
 
         debug!("key generated");
@@ -218,7 +227,8 @@ impl ProviderImpl for AndroidProvider {
         kpg.generateKeyPair(&env).err_internal()?;
 
         // TODO: Store the KeySpec in Storage
-        let encoded = bincode::serialize(&SerializableSpec::KeyPairSpec(spec)).unwrap();
+        let encoded = bincode::serialize(&SerializableSpec::KeyPairSpec(spec))
+            .map_err(|e| CalError::other(anyhow!(e)))?;
         pollster::block_on((self.impl_config.store_fn)(key_id.clone(), encoded));
 
         Ok(KeyPairHandle {
@@ -245,7 +255,8 @@ impl ProviderImpl for AndroidProvider {
         let encoded = pollster::block_on((self.impl_config.get_fn)(key_id.clone()))
             .ok_or(CalError::missing_key(key_id.clone(), KeyType::Symmetric))?;
 
-        let spec: SerializableSpec = bincode::deserialize(&encoded).unwrap();
+        let spec: SerializableSpec =
+            bincode::deserialize(&encoded).map_err(|e| CalError::other(anyhow!(e)))?;
         match spec {
             SerializableSpec::KeySpec(spec) => Ok(KeyHandle {
                 implementation: Into::into(AndroidKeyHandle {
@@ -267,7 +278,8 @@ impl ProviderImpl for AndroidProvider {
             CalError::missing_key(key_id.clone(), KeyType::PublicAndPrivate),
         )?;
 
-        let spec: SerializableSpec = bincode::deserialize(&encoded).unwrap();
+        let spec: SerializableSpec =
+            bincode::deserialize(&encoded).map_err(|e| CalError::other(anyhow!(e)))?;
         match spec {
             SerializableSpec::KeyPairSpec(spec) => Ok(KeyPairHandle {
                 implementation: Into::into(AndroidKeyPairHandle {
