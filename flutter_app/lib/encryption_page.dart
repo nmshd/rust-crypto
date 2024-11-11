@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 class EncryptionPage extends StatefulWidget {
   const EncryptionPage({super.key, required this.provider});
 
-  final cal.Provider provider;
+  final Future<cal.Provider>? provider;
 
   @override
   State<StatefulWidget> createState() => _EncryptionPageState();
@@ -27,25 +27,26 @@ class _EncryptionPageState extends State<EncryptionPage> {
   void initState() {
     super.initState();
 
-    widget.provider
-        .getCapabilities()
-        .then((caps) => caps.supportedCiphers)
-        .then((e) => {
-              setState(() {
-                _ciphers = e.toList();
-              })
-            });
+    if (widget.provider != null) {
+      widget.provider!
+          .then((provider) => provider.getCapabilities())
+          .then((caps) => caps.supportedCiphers)
+          .then((e) => {
+                setState(() {
+                  _ciphers = e.toList();
+                })
+              });
+    }
   }
 
-  void generateKey() {
+  void generateKey() async {
     if (_cipherChoice != null) {
       var spec = cal.KeySpec(
           cipher: _cipherChoice!,
           signingHash: const cal.CryptoHash.sha2(cal.Sha2Bits.sha256));
-      widget.provider.createKey(spec: spec).then((keyPair) {
-        setState(() {
-          _keyHandle = keyPair;
-        });
+      var key = await (await widget.provider!).createKey(spec: spec);
+      setState(() {
+        _keyHandle = key;
       });
     }
   }
