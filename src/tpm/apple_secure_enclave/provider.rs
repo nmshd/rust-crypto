@@ -9,8 +9,8 @@ use security_framework::{
     key::{GenerateKeyOptions, KeyType, SecKey},
 };
 
+use pollster::block_on;
 use serde_json::{from_slice, to_vec};
-use smol::block_on;
 
 use crate::common::{
     config::{KeyPairSpec, KeySpec, ProviderConfig, ProviderImplConfig, SecurityLevel},
