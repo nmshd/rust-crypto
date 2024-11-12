@@ -13,11 +13,12 @@ use std::sync::Once;
 use std::sync::{Arc, RwLock};
 
 use color_eyre::install;
+use tracing_subscriber::{filter::LevelFilter, fmt, fmt::format::FmtSpan};
 
 use crate::common::config::ProviderImplConfig;
 use crate::common::KeyPairHandle;
 
-static COLOR_EYRE_INITIALIZATIOIN: Once = Once::new();
+static SETUP_INITIALIZATIOIN: Once = Once::new();
 
 /// When going out of scope, deletes the key pair it holds.
 #[allow(dead_code)]
@@ -42,7 +43,16 @@ impl CleanupKeyPair {
 }
 
 fn setup() {
-    COLOR_EYRE_INITIALIZATIOIN.call_once(|| install().unwrap());
+    SETUP_INITIALIZATIOIN.call_once(|| {
+        install().unwrap();
+
+        // Please change this subscriber as you see fit.
+        let _subscriber = fmt()
+            .with_max_level(LevelFilter::DEBUG)
+            .compact()
+            .with_span_events(FmtSpan::NONE)
+            .init();
+    });
 }
 
 struct TestStore {

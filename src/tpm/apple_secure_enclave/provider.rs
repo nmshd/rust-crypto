@@ -8,6 +8,7 @@ use security_framework::{
     item::{ItemClass, ItemSearchOptions, KeyClass, Location, Reference, SearchResult},
     key::{GenerateKeyOptions, KeyType, SecKey},
 };
+use tracing::instrument;
 
 use pollster::block_on;
 use rmp_serde::{from_slice, to_vec};
@@ -44,6 +45,7 @@ static CAPABILITIES: LazyLock<ProviderConfig> = LazyLock::new(|| ProviderConfig 
     ]),
 });
 
+#[instrument(level = "trace")]
 fn check_key_pair_spec_for_compatibility(key_spec: &KeyPairSpec) -> Result<(), CalError> {
     if !CAPABILITIES
         .supported_hashes
@@ -110,6 +112,7 @@ impl ProviderImpl for AppleSecureEnclaveProvider {
         Err(CalError::not_implemented())
     }
 
+    #[instrument]
     fn create_key_pair(&mut self, spec: KeyPairSpec) -> Result<KeyPairHandle, CalError> {
         check_key_pair_spec_for_compatibility(&spec)?;
 
@@ -148,6 +151,7 @@ impl ProviderImpl for AppleSecureEnclaveProvider {
         Ok(key_pair)
     }
 
+    #[instrument]
     fn load_key_pair(&mut self, key_id: String) -> Result<KeyPairHandle, CalError> {
         let label = match BASE64_STANDARD.decode(&key_id) {
             Ok(label) => label,
@@ -255,6 +259,7 @@ impl ProviderImpl for AppleSecureEnclaveProvider {
 }
 
 impl AppleSecureEnclaveProvider {
+    #[instrument(level = "trace")]
     fn save_key_pair_metadata(
         &self,
         key: String,
@@ -280,6 +285,7 @@ impl AppleSecureEnclaveProvider {
         }
     }
 
+    #[instrument(level = "trace")]
     fn load_key_pair_metadata(&self, key: String) -> Result<KeyPairMetadata, CalError> {
         if let Some(data) = block_on((*self.impl_config.get_fn)(key)) {
             match from_slice(&data) {
