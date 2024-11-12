@@ -2,7 +2,7 @@
 #[cfg(feature = "hsm")]
 mod hsm;
 
-#[cfg(feature = "tpm")]
+#[cfg(any(feature = "apple-secure-enclave", feature = "win", feature = "linux"))]
 mod tpm;
 
 #[cfg(feature = "nks")]
