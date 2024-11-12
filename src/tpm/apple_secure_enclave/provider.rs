@@ -11,7 +11,7 @@ use security_framework::{
 };
 
 use pollster::block_on;
-use serde_json::{from_slice, to_vec};
+use rmp_serde::{from_slice, to_vec};
 
 use crate::common::{
     config::{KeyPairSpec, KeySpec, ProviderConfig, ProviderImplConfig, SecurityLevel},

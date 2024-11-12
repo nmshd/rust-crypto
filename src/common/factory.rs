@@ -1,4 +1,4 @@
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
 
 use super::{
     config::{ProviderConfig, ProviderImplConfig},
@@ -11,7 +11,7 @@ use crate::tpm::android::provider::AndroidProviderFactory;
 #[cfg(feature = "apple-secure-enclave")]
 use crate::tpm::apple_secure_enclave::provider::AppleSecureEnclaveFactory;
 
-static ALL_PROVIDERS: Lazy<Vec<ProviderFactoryEnum>> = Lazy::new(|| {
+static ALL_PROVIDERS: LazyLock<Vec<ProviderFactoryEnum>> = LazyLock::new(|| {
     vec![
         #[cfg(feature = "android")]
         Into::into(AndroidProviderFactory {}),
