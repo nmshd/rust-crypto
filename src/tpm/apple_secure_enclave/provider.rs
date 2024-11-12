@@ -1,4 +1,5 @@
 use std::collections::HashSet;
+use std::fmt;
 use std::sync::LazyLock;
 
 use anyhow::anyhow;
@@ -294,5 +295,15 @@ impl AppleSecureEnclaveProvider {
                 None,
             ))
         }
+    }
+
+    fn delete_key_pair_metadata(&self, key: String) {
+        block_on((*self.impl_config.delete_fn)(key))
+    }
+}
+
+impl fmt::Debug for AppleSecureEnclaveProvider {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "AppleSecureEnclaveProvider")
     }
 }
