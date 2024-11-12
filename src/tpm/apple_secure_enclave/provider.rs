@@ -138,6 +138,7 @@ impl ProviderImpl for AppleSecureEnclaveProvider {
             implementation: AppleSecureEnclaveKeyPair {
                 key_handle: sec_key,
                 metadata: metadata.clone(),
+                del_fn: self.impl_config.delete_fn.clone(),
             }
             .into(),
         };
@@ -213,6 +214,7 @@ impl ProviderImpl for AppleSecureEnclaveProvider {
             implementation: AppleSecureEnclaveKeyPair {
                 key_handle: sec_key,
                 metadata,
+                del_fn: self.impl_config.delete_fn.clone(),
             }
             .into(),
         })
@@ -296,14 +298,10 @@ impl AppleSecureEnclaveProvider {
             ))
         }
     }
-
-    fn delete_key_pair_metadata(&self, key: String) {
-        block_on((*self.impl_config.delete_fn)(key))
-    }
 }
 
 impl fmt::Debug for AppleSecureEnclaveProvider {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "AppleSecureEnclaveProvider")
+        f.debug_struct("AppleSecureEnclaveProvider").finish()
     }
 }

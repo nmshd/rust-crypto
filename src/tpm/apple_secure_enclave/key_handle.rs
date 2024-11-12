@@ -1,4 +1,10 @@
+use std::fmt;
+use std::future::Future;
+use std::pin::Pin;
+use std::sync::Arc;
+
 use base64::prelude::*;
+use pollster::block_on;
 use security_framework::key::Algorithm;
 use security_framework::key::SecKey;
 use serde::{Deserialize, Serialize};
@@ -35,10 +41,12 @@ impl KeyPairMetadata {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub(crate) struct AppleSecureEnclaveKeyPair {
     pub(super) key_handle: SecKey,
     pub(super) metadata: KeyPairMetadata,
+    pub(super) del_fn:
+        Arc<dyn Fn(String) -> Pin<Box<dyn Future<Output = ()> + Send>> + Send + Sync>,
 }
 
 impl KeyPairHandleImpl for AppleSecureEnclaveKeyPair {
@@ -102,6 +110,16 @@ impl KeyPairHandleImpl for AppleSecureEnclaveKeyPair {
     }
 
     fn delete(self) -> Result<(), CalError> {
+        block_on((*self.del_fn)(self.id()?));
         self.key_handle.delete().err_internal()
+    }
+}
+
+impl fmt::Debug for AppleSecureEnclaveKeyPair {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("AppleSecureEnclaveKeyPair")
+            .field("key_handle", &self.key_handle)
+            .field("metadata", &self.metadata)
+            .finish()
     }
 }
