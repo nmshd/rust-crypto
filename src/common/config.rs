@@ -2,6 +2,7 @@
 use std::any::Any;
 use std::cmp::{Eq, Ord, PartialEq, PartialOrd};
 use std::collections::HashSet;
+use std::fmt;
 
 use std::future::Future;
 use std::pin::Pin;
@@ -122,6 +123,14 @@ impl ProviderImplConfig {
             delete_fn: Arc::new(delete_fn),
             all_keys_fn: Arc::new(all_keys_fn),
         }
+    }
+}
+
+impl fmt::Debug for ProviderImplConfig {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("ProviderImplConfig")
+            .field("java_vm", &self.java_vm)
+            .finish()
     }
 }
 

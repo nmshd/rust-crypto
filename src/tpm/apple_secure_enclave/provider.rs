@@ -1,5 +1,4 @@
 use std::collections::HashSet;
-use std::fmt;
 use std::sync::LazyLock;
 
 use anyhow::anyhow;
@@ -97,6 +96,7 @@ impl ProviderFactory for AppleSecureEnclaveFactory {
     }
 }
 
+#[derive(Debug)]
 pub(crate) struct AppleSecureEnclaveProvider {
     pub(crate) impl_config: ProviderImplConfig,
 }
@@ -297,11 +297,5 @@ impl AppleSecureEnclaveProvider {
                 None,
             ))
         }
-    }
-}
-
-impl fmt::Debug for AppleSecureEnclaveProvider {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("AppleSecureEnclaveProvider").finish()
     }
 }
