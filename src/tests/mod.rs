@@ -9,11 +9,16 @@ mod tpm;
 mod nks;
 
 use std::collections::HashMap;
+use std::io;
 use std::sync::Once;
 use std::sync::{Arc, RwLock};
 
 use color_eyre::install;
-use tracing_subscriber::{filter::LevelFilter, fmt, fmt::format::FmtSpan};
+use tracing_subscriber::{
+    filter::{EnvFilter, LevelFilter},
+    fmt,
+    fmt::format::FmtSpan,
+};
 
 use crate::common::config::ProviderImplConfig;
 use crate::common::KeyPairHandle;
@@ -47,10 +52,12 @@ fn setup() {
         install().unwrap();
 
         // Please change this subscriber as you see fit.
-        let _subscriber = fmt()
+        fmt()
             .with_max_level(LevelFilter::DEBUG)
             .compact()
-            .with_span_events(FmtSpan::NONE)
+            .with_span_events(FmtSpan::ACTIVE)
+            .with_writer(io::stderr)
+            .with_env_filter(EnvFilter::from_default_env())
             .init();
     });
 }
