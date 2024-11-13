@@ -22,6 +22,7 @@ use super::crypto::algorithms::{
 /// * [SecurityLevel::Network]: Provider uses a network key store (Hashicorp).
 /// * [SecurityLevel::Unsafe]: Provder uses software fallback.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum SecurityLevel {
     /// Highest security level
     Hardware = 4,
@@ -32,6 +33,7 @@ pub enum SecurityLevel {
 
 /// flutter_rust_bridge:non_opaque
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub struct KeySpec {
     pub cipher: Cipher,
     pub signing_hash: CryptoHash,
@@ -39,6 +41,7 @@ pub struct KeySpec {
 
 /// flutter_rust_bridge:non_opaque
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub struct KeyPairSpec {
     pub asym_spec: AsymmetricKeySpec,
     pub cipher: Option<Cipher>,
@@ -46,6 +49,7 @@ pub struct KeyPairSpec {
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub(crate) enum SerializableSpec {
     KeySpec(KeySpec),
     KeyPairSpec(KeyPairSpec),
@@ -53,6 +57,7 @@ pub(crate) enum SerializableSpec {
 
 /// flutter_rust_bridge:non_opaque
 #[derive(Clone, Debug)]
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub struct ProviderConfig {
     pub max_security_level: SecurityLevel,
     pub min_security_level: SecurityLevel,
@@ -63,14 +68,20 @@ pub struct ProviderConfig {
 
 /// flutter_rust_bridge:opaque
 #[derive(Clone)]
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub struct ProviderImplConfig {
+    #[cfg_attr(feature = "ts-interface", ts(type = "Uint8Array | undefined"))]
     pub(crate) java_vm: Option<Arc<dyn Any + Send + Sync>>,
+    #[cfg_attr(feature = "ts-interface", ts(type = "(string) => Uint8Array"))]
     pub(crate) get_fn:
         Arc<dyn Fn(String) -> Pin<Box<dyn Future<Output = Option<Vec<u8>>> + Send>> + Send + Sync>,
+    #[cfg_attr(feature = "ts-interface", ts(type = "(string, Uint8Array) => boolean"))]
     pub(crate) store_fn:
         Arc<dyn Fn(String, Vec<u8>) -> Pin<Box<dyn Future<Output = bool> + Send>> + Send + Sync>,
+    #[cfg_attr(feature = "ts-interface", ts(type = "(id) => void"))]
     pub(crate) delete_fn:
         Arc<dyn Fn(String) -> Pin<Box<dyn Future<Output = ()> + Send>> + Send + Sync>,
+    #[cfg_attr(feature = "ts-interface", ts(type = "() => string[]"))]
     pub(crate) all_keys_fn:
         Arc<dyn Fn() -> Pin<Box<dyn Future<Output = Vec<String>> + Send>> + Send + Sync>,
 }

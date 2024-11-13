@@ -25,6 +25,7 @@ use serde::{Deserialize, Serialize};
 /// This enum can be converted to and from `u32` values using the `From` trait implementations.
 #[repr(C)]
 #[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum KeyBits {
     Bits128,
     Bits192,

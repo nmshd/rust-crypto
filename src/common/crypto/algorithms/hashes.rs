@@ -12,6 +12,7 @@ use serde::{Deserialize, Serialize};
 /// flutter_rust_bridge:non_opaque
 #[repr(C)]
 #[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum CryptoHash {
     /// SHA-1 hashing algorithm.
     ///
@@ -76,6 +77,7 @@ impl Default for CryptoHash {
 /// flutter_rust_bridge:non_opaque
 #[repr(C)]
 #[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum Sha2Bits {
     /// 224-bit digest size.
     Sha224,
@@ -151,6 +153,7 @@ impl From<Sha2Bits> for u32 {
 /// flutter_rust_bridge:non_opaque
 #[repr(C)]
 #[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum Sha3Bits {
     /// 224-bit digest size for SHA-3.
     Sha3_224,

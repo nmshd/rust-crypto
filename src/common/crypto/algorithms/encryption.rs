@@ -39,6 +39,7 @@ use std::hash::Hash;
 /// flutter_rust_bridge:non_opaque
 #[repr(C)]
 #[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum AsymmetricKeySpec {
     /// RSA encryption with selectable key sizes.
     ///
@@ -63,6 +64,7 @@ pub enum AsymmetricKeySpec {
 /// flutter_rust_bridge:non_opaque
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum EccSigningScheme {
     /// ECDSA: Elliptic Curve Digital Signature Algorithm.
     EcDsa,
@@ -93,6 +95,7 @@ pub enum EccSigningScheme {
 /// flutter_rust_bridge:non_opaque
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum EccCurve {
     /// NIST P-256 curve.
     P256,
@@ -151,6 +154,7 @@ pub enum EccCurve {
 /// flutter_rust_bridge:non_opaque
 #[repr(C)]
 #[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum Cipher {
     /// AES (Advanced Encryption Standard) block cipher with selectable key sizes and modes.
     Aes(SymmetricMode, KeyBits),
@@ -205,6 +209,7 @@ impl Default for Cipher {
 /// flutter_rust_bridge:non_opaque
 #[repr(C)]
 #[derive(Clone, Debug, Default, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum SymmetricMode {
     /// AES in Galois/Counter Mode (GCM) with selectable key sizes.
     /// GCM is preferred for its performance and security, providing both encryption and authentication.
@@ -259,6 +264,7 @@ pub enum SymmetricMode {
 /// flutter_rust_bridge:non_opaque
 #[repr(C)]
 #[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum TripleDesNumKeys {
     /// Two-key Triple DES, using two different keys for encryption.
     Tdes2,
@@ -289,6 +295,7 @@ pub enum TripleDesNumKeys {
 /// flutter_rust_bridge:non_opaque
 #[repr(C)]
 #[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum Rc2KeyBits {
     /// RC2 with a 40-bit key.
     Rc2_40,
@@ -301,6 +308,7 @@ pub enum Rc2KeyBits {
 /// Specifies ChaCha20 Variant.
 /// flutter_rust_bridge:non_opaque
 #[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum ChCha20Mode {
     ChaCha20Poly1305,
     XChaCha20Poly1305,

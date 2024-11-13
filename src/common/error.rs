@@ -16,14 +16,18 @@ use thiserror;
 
 #[derive(thiserror::Error, Debug)]
 #[error("{error_kind}: {source}")]
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 #[repr(C)]
 pub struct CalError {
     error_kind: CalErrorKind,
+
+    #[cfg_attr(feature = "ts-interface", ts(skip))]
     source: anyhow::Error,
 }
 
 /// flutter_rust_bridge:non_opaque
 #[derive(thiserror::Error, Debug, Clone)]
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 #[repr(C)]
 pub enum CalErrorKind {
     /// This error is returned on calling functions that are not implemented.
@@ -171,6 +175,7 @@ impl CalError {
 
 /// Key type for error pertaining to said key.
 #[derive(Debug, Clone, Copy)]
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum KeyType {
     Public,
     Private,
