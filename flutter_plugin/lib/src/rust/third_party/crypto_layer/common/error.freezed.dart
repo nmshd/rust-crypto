@@ -24,6 +24,8 @@ mixin _$CalErrorKind {
     required TResult Function(String description, bool internal) missingValue,
     required TResult Function(String description, bool internal)
         failedOperation,
+    required TResult Function(String description, bool internal)
+        initializationError,
     required TResult Function(String field0) unsupportedAlgorithm,
     required TResult Function() other,
   }) =>
@@ -35,6 +37,7 @@ mixin _$CalErrorKind {
     TResult? Function(String keyId, KeyType keyType)? missingKey,
     TResult? Function(String description, bool internal)? missingValue,
     TResult? Function(String description, bool internal)? failedOperation,
+    TResult? Function(String description, bool internal)? initializationError,
     TResult? Function(String field0)? unsupportedAlgorithm,
     TResult? Function()? other,
   }) =>
@@ -46,6 +49,7 @@ mixin _$CalErrorKind {
     TResult Function(String keyId, KeyType keyType)? missingKey,
     TResult Function(String description, bool internal)? missingValue,
     TResult Function(String description, bool internal)? failedOperation,
+    TResult Function(String description, bool internal)? initializationError,
     TResult Function(String field0)? unsupportedAlgorithm,
     TResult Function()? other,
     required TResult orElse(),
@@ -59,6 +63,8 @@ mixin _$CalErrorKind {
     required TResult Function(CalErrorKind_MissingValue value) missingValue,
     required TResult Function(CalErrorKind_FailedOperation value)
         failedOperation,
+    required TResult Function(CalErrorKind_InitializationError value)
+        initializationError,
     required TResult Function(CalErrorKind_UnsupportedAlgorithm value)
         unsupportedAlgorithm,
     required TResult Function(CalErrorKind_Other value) other,
@@ -71,6 +77,8 @@ mixin _$CalErrorKind {
     TResult? Function(CalErrorKind_MissingKey value)? missingKey,
     TResult? Function(CalErrorKind_MissingValue value)? missingValue,
     TResult? Function(CalErrorKind_FailedOperation value)? failedOperation,
+    TResult? Function(CalErrorKind_InitializationError value)?
+        initializationError,
     TResult? Function(CalErrorKind_UnsupportedAlgorithm value)?
         unsupportedAlgorithm,
     TResult? Function(CalErrorKind_Other value)? other,
@@ -83,6 +91,8 @@ mixin _$CalErrorKind {
     TResult Function(CalErrorKind_MissingKey value)? missingKey,
     TResult Function(CalErrorKind_MissingValue value)? missingValue,
     TResult Function(CalErrorKind_FailedOperation value)? failedOperation,
+    TResult Function(CalErrorKind_InitializationError value)?
+        initializationError,
     TResult Function(CalErrorKind_UnsupportedAlgorithm value)?
         unsupportedAlgorithm,
     TResult Function(CalErrorKind_Other value)? other,
@@ -162,6 +172,8 @@ class _$CalErrorKind_NotImplementedImpl extends CalErrorKind_NotImplemented {
     required TResult Function(String description, bool internal) missingValue,
     required TResult Function(String description, bool internal)
         failedOperation,
+    required TResult Function(String description, bool internal)
+        initializationError,
     required TResult Function(String field0) unsupportedAlgorithm,
     required TResult Function() other,
   }) {
@@ -176,6 +188,7 @@ class _$CalErrorKind_NotImplementedImpl extends CalErrorKind_NotImplemented {
     TResult? Function(String keyId, KeyType keyType)? missingKey,
     TResult? Function(String description, bool internal)? missingValue,
     TResult? Function(String description, bool internal)? failedOperation,
+    TResult? Function(String description, bool internal)? initializationError,
     TResult? Function(String field0)? unsupportedAlgorithm,
     TResult? Function()? other,
   }) {
@@ -190,6 +203,7 @@ class _$CalErrorKind_NotImplementedImpl extends CalErrorKind_NotImplemented {
     TResult Function(String keyId, KeyType keyType)? missingKey,
     TResult Function(String description, bool internal)? missingValue,
     TResult Function(String description, bool internal)? failedOperation,
+    TResult Function(String description, bool internal)? initializationError,
     TResult Function(String field0)? unsupportedAlgorithm,
     TResult Function()? other,
     required TResult orElse(),
@@ -209,6 +223,8 @@ class _$CalErrorKind_NotImplementedImpl extends CalErrorKind_NotImplemented {
     required TResult Function(CalErrorKind_MissingValue value) missingValue,
     required TResult Function(CalErrorKind_FailedOperation value)
         failedOperation,
+    required TResult Function(CalErrorKind_InitializationError value)
+        initializationError,
     required TResult Function(CalErrorKind_UnsupportedAlgorithm value)
         unsupportedAlgorithm,
     required TResult Function(CalErrorKind_Other value) other,
@@ -224,6 +240,8 @@ class _$CalErrorKind_NotImplementedImpl extends CalErrorKind_NotImplemented {
     TResult? Function(CalErrorKind_MissingKey value)? missingKey,
     TResult? Function(CalErrorKind_MissingValue value)? missingValue,
     TResult? Function(CalErrorKind_FailedOperation value)? failedOperation,
+    TResult? Function(CalErrorKind_InitializationError value)?
+        initializationError,
     TResult? Function(CalErrorKind_UnsupportedAlgorithm value)?
         unsupportedAlgorithm,
     TResult? Function(CalErrorKind_Other value)? other,
@@ -239,6 +257,8 @@ class _$CalErrorKind_NotImplementedImpl extends CalErrorKind_NotImplemented {
     TResult Function(CalErrorKind_MissingKey value)? missingKey,
     TResult Function(CalErrorKind_MissingValue value)? missingValue,
     TResult Function(CalErrorKind_FailedOperation value)? failedOperation,
+    TResult Function(CalErrorKind_InitializationError value)?
+        initializationError,
     TResult Function(CalErrorKind_UnsupportedAlgorithm value)?
         unsupportedAlgorithm,
     TResult Function(CalErrorKind_Other value)? other,
@@ -348,6 +368,8 @@ class _$CalErrorKind_BadParameterImpl extends CalErrorKind_BadParameter {
     required TResult Function(String description, bool internal) missingValue,
     required TResult Function(String description, bool internal)
         failedOperation,
+    required TResult Function(String description, bool internal)
+        initializationError,
     required TResult Function(String field0) unsupportedAlgorithm,
     required TResult Function() other,
   }) {
@@ -362,6 +384,7 @@ class _$CalErrorKind_BadParameterImpl extends CalErrorKind_BadParameter {
     TResult? Function(String keyId, KeyType keyType)? missingKey,
     TResult? Function(String description, bool internal)? missingValue,
     TResult? Function(String description, bool internal)? failedOperation,
+    TResult? Function(String description, bool internal)? initializationError,
     TResult? Function(String field0)? unsupportedAlgorithm,
     TResult? Function()? other,
   }) {
@@ -376,6 +399,7 @@ class _$CalErrorKind_BadParameterImpl extends CalErrorKind_BadParameter {
     TResult Function(String keyId, KeyType keyType)? missingKey,
     TResult Function(String description, bool internal)? missingValue,
     TResult Function(String description, bool internal)? failedOperation,
+    TResult Function(String description, bool internal)? initializationError,
     TResult Function(String field0)? unsupportedAlgorithm,
     TResult Function()? other,
     required TResult orElse(),
@@ -395,6 +419,8 @@ class _$CalErrorKind_BadParameterImpl extends CalErrorKind_BadParameter {
     required TResult Function(CalErrorKind_MissingValue value) missingValue,
     required TResult Function(CalErrorKind_FailedOperation value)
         failedOperation,
+    required TResult Function(CalErrorKind_InitializationError value)
+        initializationError,
     required TResult Function(CalErrorKind_UnsupportedAlgorithm value)
         unsupportedAlgorithm,
     required TResult Function(CalErrorKind_Other value) other,
@@ -410,6 +436,8 @@ class _$CalErrorKind_BadParameterImpl extends CalErrorKind_BadParameter {
     TResult? Function(CalErrorKind_MissingKey value)? missingKey,
     TResult? Function(CalErrorKind_MissingValue value)? missingValue,
     TResult? Function(CalErrorKind_FailedOperation value)? failedOperation,
+    TResult? Function(CalErrorKind_InitializationError value)?
+        initializationError,
     TResult? Function(CalErrorKind_UnsupportedAlgorithm value)?
         unsupportedAlgorithm,
     TResult? Function(CalErrorKind_Other value)? other,
@@ -425,6 +453,8 @@ class _$CalErrorKind_BadParameterImpl extends CalErrorKind_BadParameter {
     TResult Function(CalErrorKind_MissingKey value)? missingKey,
     TResult Function(CalErrorKind_MissingValue value)? missingValue,
     TResult Function(CalErrorKind_FailedOperation value)? failedOperation,
+    TResult Function(CalErrorKind_InitializationError value)?
+        initializationError,
     TResult Function(CalErrorKind_UnsupportedAlgorithm value)?
         unsupportedAlgorithm,
     TResult Function(CalErrorKind_Other value)? other,
@@ -542,6 +572,8 @@ class _$CalErrorKind_MissingKeyImpl extends CalErrorKind_MissingKey {
     required TResult Function(String description, bool internal) missingValue,
     required TResult Function(String description, bool internal)
         failedOperation,
+    required TResult Function(String description, bool internal)
+        initializationError,
     required TResult Function(String field0) unsupportedAlgorithm,
     required TResult Function() other,
   }) {
@@ -556,6 +588,7 @@ class _$CalErrorKind_MissingKeyImpl extends CalErrorKind_MissingKey {
     TResult? Function(String keyId, KeyType keyType)? missingKey,
     TResult? Function(String description, bool internal)? missingValue,
     TResult? Function(String description, bool internal)? failedOperation,
+    TResult? Function(String description, bool internal)? initializationError,
     TResult? Function(String field0)? unsupportedAlgorithm,
     TResult? Function()? other,
   }) {
@@ -570,6 +603,7 @@ class _$CalErrorKind_MissingKeyImpl extends CalErrorKind_MissingKey {
     TResult Function(String keyId, KeyType keyType)? missingKey,
     TResult Function(String description, bool internal)? missingValue,
     TResult Function(String description, bool internal)? failedOperation,
+    TResult Function(String description, bool internal)? initializationError,
     TResult Function(String field0)? unsupportedAlgorithm,
     TResult Function()? other,
     required TResult orElse(),
@@ -589,6 +623,8 @@ class _$CalErrorKind_MissingKeyImpl extends CalErrorKind_MissingKey {
     required TResult Function(CalErrorKind_MissingValue value) missingValue,
     required TResult Function(CalErrorKind_FailedOperation value)
         failedOperation,
+    required TResult Function(CalErrorKind_InitializationError value)
+        initializationError,
     required TResult Function(CalErrorKind_UnsupportedAlgorithm value)
         unsupportedAlgorithm,
     required TResult Function(CalErrorKind_Other value) other,
@@ -604,6 +640,8 @@ class _$CalErrorKind_MissingKeyImpl extends CalErrorKind_MissingKey {
     TResult? Function(CalErrorKind_MissingKey value)? missingKey,
     TResult? Function(CalErrorKind_MissingValue value)? missingValue,
     TResult? Function(CalErrorKind_FailedOperation value)? failedOperation,
+    TResult? Function(CalErrorKind_InitializationError value)?
+        initializationError,
     TResult? Function(CalErrorKind_UnsupportedAlgorithm value)?
         unsupportedAlgorithm,
     TResult? Function(CalErrorKind_Other value)? other,
@@ -619,6 +657,8 @@ class _$CalErrorKind_MissingKeyImpl extends CalErrorKind_MissingKey {
     TResult Function(CalErrorKind_MissingKey value)? missingKey,
     TResult Function(CalErrorKind_MissingValue value)? missingValue,
     TResult Function(CalErrorKind_FailedOperation value)? failedOperation,
+    TResult Function(CalErrorKind_InitializationError value)?
+        initializationError,
     TResult Function(CalErrorKind_UnsupportedAlgorithm value)?
         unsupportedAlgorithm,
     TResult Function(CalErrorKind_Other value)? other,
@@ -738,6 +778,8 @@ class _$CalErrorKind_MissingValueImpl extends CalErrorKind_MissingValue {
     required TResult Function(String description, bool internal) missingValue,
     required TResult Function(String description, bool internal)
         failedOperation,
+    required TResult Function(String description, bool internal)
+        initializationError,
     required TResult Function(String field0) unsupportedAlgorithm,
     required TResult Function() other,
   }) {
@@ -752,6 +794,7 @@ class _$CalErrorKind_MissingValueImpl extends CalErrorKind_MissingValue {
     TResult? Function(String keyId, KeyType keyType)? missingKey,
     TResult? Function(String description, bool internal)? missingValue,
     TResult? Function(String description, bool internal)? failedOperation,
+    TResult? Function(String description, bool internal)? initializationError,
     TResult? Function(String field0)? unsupportedAlgorithm,
     TResult? Function()? other,
   }) {
@@ -766,6 +809,7 @@ class _$CalErrorKind_MissingValueImpl extends CalErrorKind_MissingValue {
     TResult Function(String keyId, KeyType keyType)? missingKey,
     TResult Function(String description, bool internal)? missingValue,
     TResult Function(String description, bool internal)? failedOperation,
+    TResult Function(String description, bool internal)? initializationError,
     TResult Function(String field0)? unsupportedAlgorithm,
     TResult Function()? other,
     required TResult orElse(),
@@ -785,6 +829,8 @@ class _$CalErrorKind_MissingValueImpl extends CalErrorKind_MissingValue {
     required TResult Function(CalErrorKind_MissingValue value) missingValue,
     required TResult Function(CalErrorKind_FailedOperation value)
         failedOperation,
+    required TResult Function(CalErrorKind_InitializationError value)
+        initializationError,
     required TResult Function(CalErrorKind_UnsupportedAlgorithm value)
         unsupportedAlgorithm,
     required TResult Function(CalErrorKind_Other value) other,
@@ -800,6 +846,8 @@ class _$CalErrorKind_MissingValueImpl extends CalErrorKind_MissingValue {
     TResult? Function(CalErrorKind_MissingKey value)? missingKey,
     TResult? Function(CalErrorKind_MissingValue value)? missingValue,
     TResult? Function(CalErrorKind_FailedOperation value)? failedOperation,
+    TResult? Function(CalErrorKind_InitializationError value)?
+        initializationError,
     TResult? Function(CalErrorKind_UnsupportedAlgorithm value)?
         unsupportedAlgorithm,
     TResult? Function(CalErrorKind_Other value)? other,
@@ -815,6 +863,8 @@ class _$CalErrorKind_MissingValueImpl extends CalErrorKind_MissingValue {
     TResult Function(CalErrorKind_MissingKey value)? missingKey,
     TResult Function(CalErrorKind_MissingValue value)? missingValue,
     TResult Function(CalErrorKind_FailedOperation value)? failedOperation,
+    TResult Function(CalErrorKind_InitializationError value)?
+        initializationError,
     TResult Function(CalErrorKind_UnsupportedAlgorithm value)?
         unsupportedAlgorithm,
     TResult Function(CalErrorKind_Other value)? other,
@@ -937,6 +987,8 @@ class _$CalErrorKind_FailedOperationImpl extends CalErrorKind_FailedOperation {
     required TResult Function(String description, bool internal) missingValue,
     required TResult Function(String description, bool internal)
         failedOperation,
+    required TResult Function(String description, bool internal)
+        initializationError,
     required TResult Function(String field0) unsupportedAlgorithm,
     required TResult Function() other,
   }) {
@@ -951,6 +1003,7 @@ class _$CalErrorKind_FailedOperationImpl extends CalErrorKind_FailedOperation {
     TResult? Function(String keyId, KeyType keyType)? missingKey,
     TResult? Function(String description, bool internal)? missingValue,
     TResult? Function(String description, bool internal)? failedOperation,
+    TResult? Function(String description, bool internal)? initializationError,
     TResult? Function(String field0)? unsupportedAlgorithm,
     TResult? Function()? other,
   }) {
@@ -965,6 +1018,7 @@ class _$CalErrorKind_FailedOperationImpl extends CalErrorKind_FailedOperation {
     TResult Function(String keyId, KeyType keyType)? missingKey,
     TResult Function(String description, bool internal)? missingValue,
     TResult Function(String description, bool internal)? failedOperation,
+    TResult Function(String description, bool internal)? initializationError,
     TResult Function(String field0)? unsupportedAlgorithm,
     TResult Function()? other,
     required TResult orElse(),
@@ -984,6 +1038,8 @@ class _$CalErrorKind_FailedOperationImpl extends CalErrorKind_FailedOperation {
     required TResult Function(CalErrorKind_MissingValue value) missingValue,
     required TResult Function(CalErrorKind_FailedOperation value)
         failedOperation,
+    required TResult Function(CalErrorKind_InitializationError value)
+        initializationError,
     required TResult Function(CalErrorKind_UnsupportedAlgorithm value)
         unsupportedAlgorithm,
     required TResult Function(CalErrorKind_Other value) other,
@@ -999,6 +1055,8 @@ class _$CalErrorKind_FailedOperationImpl extends CalErrorKind_FailedOperation {
     TResult? Function(CalErrorKind_MissingKey value)? missingKey,
     TResult? Function(CalErrorKind_MissingValue value)? missingValue,
     TResult? Function(CalErrorKind_FailedOperation value)? failedOperation,
+    TResult? Function(CalErrorKind_InitializationError value)?
+        initializationError,
     TResult? Function(CalErrorKind_UnsupportedAlgorithm value)?
         unsupportedAlgorithm,
     TResult? Function(CalErrorKind_Other value)? other,
@@ -1014,6 +1072,8 @@ class _$CalErrorKind_FailedOperationImpl extends CalErrorKind_FailedOperation {
     TResult Function(CalErrorKind_MissingKey value)? missingKey,
     TResult Function(CalErrorKind_MissingValue value)? missingValue,
     TResult Function(CalErrorKind_FailedOperation value)? failedOperation,
+    TResult Function(CalErrorKind_InitializationError value)?
+        initializationError,
     TResult Function(CalErrorKind_UnsupportedAlgorithm value)?
         unsupportedAlgorithm,
     TResult Function(CalErrorKind_Other value)? other,
@@ -1042,6 +1102,218 @@ abstract class CalErrorKind_FailedOperation extends CalErrorKind {
   @JsonKey(includeFromJson: false, includeToJson: false)
   _$$CalErrorKind_FailedOperationImplCopyWith<
           _$CalErrorKind_FailedOperationImpl>
+      get copyWith => throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$CalErrorKind_InitializationErrorImplCopyWith<$Res> {
+  factory _$$CalErrorKind_InitializationErrorImplCopyWith(
+          _$CalErrorKind_InitializationErrorImpl value,
+          $Res Function(_$CalErrorKind_InitializationErrorImpl) then) =
+      __$$CalErrorKind_InitializationErrorImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({String description, bool internal});
+}
+
+/// @nodoc
+class __$$CalErrorKind_InitializationErrorImplCopyWithImpl<$Res>
+    extends _$CalErrorKindCopyWithImpl<$Res,
+        _$CalErrorKind_InitializationErrorImpl>
+    implements _$$CalErrorKind_InitializationErrorImplCopyWith<$Res> {
+  __$$CalErrorKind_InitializationErrorImplCopyWithImpl(
+      _$CalErrorKind_InitializationErrorImpl _value,
+      $Res Function(_$CalErrorKind_InitializationErrorImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of CalErrorKind
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? description = null,
+    Object? internal = null,
+  }) {
+    return _then(_$CalErrorKind_InitializationErrorImpl(
+      description: null == description
+          ? _value.description
+          : description // ignore: cast_nullable_to_non_nullable
+              as String,
+      internal: null == internal
+          ? _value.internal
+          : internal // ignore: cast_nullable_to_non_nullable
+              as bool,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$CalErrorKind_InitializationErrorImpl
+    extends CalErrorKind_InitializationError {
+  const _$CalErrorKind_InitializationErrorImpl(
+      {required this.description, required this.internal})
+      : super._();
+
+  @override
+  final String description;
+
+  /// `true` if caused within this library. `false` if caused by another library.
+  @override
+  final bool internal;
+
+  @override
+  String toString() {
+    return 'CalErrorKind.initializationError(description: $description, internal: $internal)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$CalErrorKind_InitializationErrorImpl &&
+            (identical(other.description, description) ||
+                other.description == description) &&
+            (identical(other.internal, internal) ||
+                other.internal == internal));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, description, internal);
+
+  /// Create a copy of CalErrorKind
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$CalErrorKind_InitializationErrorImplCopyWith<
+          _$CalErrorKind_InitializationErrorImpl>
+      get copyWith => __$$CalErrorKind_InitializationErrorImplCopyWithImpl<
+          _$CalErrorKind_InitializationErrorImpl>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() notImplemented,
+    required TResult Function(String description, bool internal) badParameter,
+    required TResult Function(String keyId, KeyType keyType) missingKey,
+    required TResult Function(String description, bool internal) missingValue,
+    required TResult Function(String description, bool internal)
+        failedOperation,
+    required TResult Function(String description, bool internal)
+        initializationError,
+    required TResult Function(String field0) unsupportedAlgorithm,
+    required TResult Function() other,
+  }) {
+    return initializationError(description, internal);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? notImplemented,
+    TResult? Function(String description, bool internal)? badParameter,
+    TResult? Function(String keyId, KeyType keyType)? missingKey,
+    TResult? Function(String description, bool internal)? missingValue,
+    TResult? Function(String description, bool internal)? failedOperation,
+    TResult? Function(String description, bool internal)? initializationError,
+    TResult? Function(String field0)? unsupportedAlgorithm,
+    TResult? Function()? other,
+  }) {
+    return initializationError?.call(description, internal);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? notImplemented,
+    TResult Function(String description, bool internal)? badParameter,
+    TResult Function(String keyId, KeyType keyType)? missingKey,
+    TResult Function(String description, bool internal)? missingValue,
+    TResult Function(String description, bool internal)? failedOperation,
+    TResult Function(String description, bool internal)? initializationError,
+    TResult Function(String field0)? unsupportedAlgorithm,
+    TResult Function()? other,
+    required TResult orElse(),
+  }) {
+    if (initializationError != null) {
+      return initializationError(description, internal);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(CalErrorKind_NotImplemented value) notImplemented,
+    required TResult Function(CalErrorKind_BadParameter value) badParameter,
+    required TResult Function(CalErrorKind_MissingKey value) missingKey,
+    required TResult Function(CalErrorKind_MissingValue value) missingValue,
+    required TResult Function(CalErrorKind_FailedOperation value)
+        failedOperation,
+    required TResult Function(CalErrorKind_InitializationError value)
+        initializationError,
+    required TResult Function(CalErrorKind_UnsupportedAlgorithm value)
+        unsupportedAlgorithm,
+    required TResult Function(CalErrorKind_Other value) other,
+  }) {
+    return initializationError(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(CalErrorKind_NotImplemented value)? notImplemented,
+    TResult? Function(CalErrorKind_BadParameter value)? badParameter,
+    TResult? Function(CalErrorKind_MissingKey value)? missingKey,
+    TResult? Function(CalErrorKind_MissingValue value)? missingValue,
+    TResult? Function(CalErrorKind_FailedOperation value)? failedOperation,
+    TResult? Function(CalErrorKind_InitializationError value)?
+        initializationError,
+    TResult? Function(CalErrorKind_UnsupportedAlgorithm value)?
+        unsupportedAlgorithm,
+    TResult? Function(CalErrorKind_Other value)? other,
+  }) {
+    return initializationError?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(CalErrorKind_NotImplemented value)? notImplemented,
+    TResult Function(CalErrorKind_BadParameter value)? badParameter,
+    TResult Function(CalErrorKind_MissingKey value)? missingKey,
+    TResult Function(CalErrorKind_MissingValue value)? missingValue,
+    TResult Function(CalErrorKind_FailedOperation value)? failedOperation,
+    TResult Function(CalErrorKind_InitializationError value)?
+        initializationError,
+    TResult Function(CalErrorKind_UnsupportedAlgorithm value)?
+        unsupportedAlgorithm,
+    TResult Function(CalErrorKind_Other value)? other,
+    required TResult orElse(),
+  }) {
+    if (initializationError != null) {
+      return initializationError(this);
+    }
+    return orElse();
+  }
+}
+
+abstract class CalErrorKind_InitializationError extends CalErrorKind {
+  const factory CalErrorKind_InitializationError(
+      {required final String description,
+      required final bool internal}) = _$CalErrorKind_InitializationErrorImpl;
+  const CalErrorKind_InitializationError._() : super._();
+
+  String get description;
+
+  /// `true` if caused within this library. `false` if caused by another library.
+  bool get internal;
+
+  /// Create a copy of CalErrorKind
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$CalErrorKind_InitializationErrorImplCopyWith<
+          _$CalErrorKind_InitializationErrorImpl>
       get copyWith => throw _privateConstructorUsedError;
 }
 
@@ -1125,6 +1397,8 @@ class _$CalErrorKind_UnsupportedAlgorithmImpl
     required TResult Function(String description, bool internal) missingValue,
     required TResult Function(String description, bool internal)
         failedOperation,
+    required TResult Function(String description, bool internal)
+        initializationError,
     required TResult Function(String field0) unsupportedAlgorithm,
     required TResult Function() other,
   }) {
@@ -1139,6 +1413,7 @@ class _$CalErrorKind_UnsupportedAlgorithmImpl
     TResult? Function(String keyId, KeyType keyType)? missingKey,
     TResult? Function(String description, bool internal)? missingValue,
     TResult? Function(String description, bool internal)? failedOperation,
+    TResult? Function(String description, bool internal)? initializationError,
     TResult? Function(String field0)? unsupportedAlgorithm,
     TResult? Function()? other,
   }) {
@@ -1153,6 +1428,7 @@ class _$CalErrorKind_UnsupportedAlgorithmImpl
     TResult Function(String keyId, KeyType keyType)? missingKey,
     TResult Function(String description, bool internal)? missingValue,
     TResult Function(String description, bool internal)? failedOperation,
+    TResult Function(String description, bool internal)? initializationError,
     TResult Function(String field0)? unsupportedAlgorithm,
     TResult Function()? other,
     required TResult orElse(),
@@ -1172,6 +1448,8 @@ class _$CalErrorKind_UnsupportedAlgorithmImpl
     required TResult Function(CalErrorKind_MissingValue value) missingValue,
     required TResult Function(CalErrorKind_FailedOperation value)
         failedOperation,
+    required TResult Function(CalErrorKind_InitializationError value)
+        initializationError,
     required TResult Function(CalErrorKind_UnsupportedAlgorithm value)
         unsupportedAlgorithm,
     required TResult Function(CalErrorKind_Other value) other,
@@ -1187,6 +1465,8 @@ class _$CalErrorKind_UnsupportedAlgorithmImpl
     TResult? Function(CalErrorKind_MissingKey value)? missingKey,
     TResult? Function(CalErrorKind_MissingValue value)? missingValue,
     TResult? Function(CalErrorKind_FailedOperation value)? failedOperation,
+    TResult? Function(CalErrorKind_InitializationError value)?
+        initializationError,
     TResult? Function(CalErrorKind_UnsupportedAlgorithm value)?
         unsupportedAlgorithm,
     TResult? Function(CalErrorKind_Other value)? other,
@@ -1202,6 +1482,8 @@ class _$CalErrorKind_UnsupportedAlgorithmImpl
     TResult Function(CalErrorKind_MissingKey value)? missingKey,
     TResult Function(CalErrorKind_MissingValue value)? missingValue,
     TResult Function(CalErrorKind_FailedOperation value)? failedOperation,
+    TResult Function(CalErrorKind_InitializationError value)?
+        initializationError,
     TResult Function(CalErrorKind_UnsupportedAlgorithm value)?
         unsupportedAlgorithm,
     TResult Function(CalErrorKind_Other value)? other,
@@ -1276,6 +1558,8 @@ class _$CalErrorKind_OtherImpl extends CalErrorKind_Other {
     required TResult Function(String description, bool internal) missingValue,
     required TResult Function(String description, bool internal)
         failedOperation,
+    required TResult Function(String description, bool internal)
+        initializationError,
     required TResult Function(String field0) unsupportedAlgorithm,
     required TResult Function() other,
   }) {
@@ -1290,6 +1574,7 @@ class _$CalErrorKind_OtherImpl extends CalErrorKind_Other {
     TResult? Function(String keyId, KeyType keyType)? missingKey,
     TResult? Function(String description, bool internal)? missingValue,
     TResult? Function(String description, bool internal)? failedOperation,
+    TResult? Function(String description, bool internal)? initializationError,
     TResult? Function(String field0)? unsupportedAlgorithm,
     TResult? Function()? other,
   }) {
@@ -1304,6 +1589,7 @@ class _$CalErrorKind_OtherImpl extends CalErrorKind_Other {
     TResult Function(String keyId, KeyType keyType)? missingKey,
     TResult Function(String description, bool internal)? missingValue,
     TResult Function(String description, bool internal)? failedOperation,
+    TResult Function(String description, bool internal)? initializationError,
     TResult Function(String field0)? unsupportedAlgorithm,
     TResult Function()? other,
     required TResult orElse(),
@@ -1323,6 +1609,8 @@ class _$CalErrorKind_OtherImpl extends CalErrorKind_Other {
     required TResult Function(CalErrorKind_MissingValue value) missingValue,
     required TResult Function(CalErrorKind_FailedOperation value)
         failedOperation,
+    required TResult Function(CalErrorKind_InitializationError value)
+        initializationError,
     required TResult Function(CalErrorKind_UnsupportedAlgorithm value)
         unsupportedAlgorithm,
     required TResult Function(CalErrorKind_Other value) other,
@@ -1338,6 +1626,8 @@ class _$CalErrorKind_OtherImpl extends CalErrorKind_Other {
     TResult? Function(CalErrorKind_MissingKey value)? missingKey,
     TResult? Function(CalErrorKind_MissingValue value)? missingValue,
     TResult? Function(CalErrorKind_FailedOperation value)? failedOperation,
+    TResult? Function(CalErrorKind_InitializationError value)?
+        initializationError,
     TResult? Function(CalErrorKind_UnsupportedAlgorithm value)?
         unsupportedAlgorithm,
     TResult? Function(CalErrorKind_Other value)? other,
@@ -1353,6 +1643,8 @@ class _$CalErrorKind_OtherImpl extends CalErrorKind_Other {
     TResult Function(CalErrorKind_MissingKey value)? missingKey,
     TResult Function(CalErrorKind_MissingValue value)? missingValue,
     TResult Function(CalErrorKind_FailedOperation value)? failedOperation,
+    TResult Function(CalErrorKind_InitializationError value)?
+        initializationError,
     TResult Function(CalErrorKind_UnsupportedAlgorithm value)?
         unsupportedAlgorithm,
     TResult Function(CalErrorKind_Other value)? other,

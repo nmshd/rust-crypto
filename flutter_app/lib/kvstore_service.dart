@@ -20,7 +20,19 @@ class KVStore {
     return ret;
   }
 
+  void delete(String key) {
+    inner.remove(key);
+  }
+
   List<String> allKeys() {
     return inner.entries.map((e) => e.key).toList();
+  }
+
+  int count() {
+    return inner.length;
+  }
+
+  void clear() {
+    inner.clear();
   }
 }

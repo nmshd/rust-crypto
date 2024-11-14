@@ -5,17 +5,11 @@ use crate::common::{
     DHExchange,
 };
 use ring::{
-    aead::{Aad, LessSafeKey, Nonce, UnboundKey},
+    aead::{Aad, Algorithm, LessSafeKey, Nonce, UnboundKey, NONCE_LEN},
     rand::{SecureRandom, SystemRandom},
     signature::{EcdsaKeyPair, Signature, UnparsedPublicKey},
 };
 use std::sync::Arc;
-
-#[derive(Debug, Clone)]
-pub(crate) struct SoftwareKeyHandle {
-    pub(crate) key_id: String,
-    pub(crate) key: Arc<LessSafeKey>,
-}
 
 #[derive(Debug, Clone)]
 pub(crate) struct SoftwareKeyPairHandle {
@@ -25,11 +19,17 @@ pub(crate) struct SoftwareKeyPairHandle {
     pub(crate) public_key: Vec<u8>,
 }
 
+#[derive(Debug, Clone)]
+pub(crate) struct SoftwareKeyHandle {
+    pub(crate) key_id: String,
+    pub(crate) key: Arc<LessSafeKey>,
+}
+
 impl SoftwareKeyHandle {
     pub fn new(key_id: String, spec: Option<KeySpec>, key_data: Vec<u8>) -> Result<Self, CalError> {
         // Create the AES key for encryption and decryption
-        let unbound_key = UnboundKey::new(spec.as_ref().unwrap().cipher.into(), &key_data)
-            .expect("Failed to create AES key");
+        let algo: &Algorithm = spec.as_ref().unwrap().cipher.into();
+        let unbound_key = UnboundKey::new(algo, &key_data).expect("Failed to create AES key");
         let key = Arc::new(LessSafeKey::new(unbound_key));
 
         Ok(Self { key_id, key })
@@ -41,7 +41,7 @@ impl KeyHandleImpl for SoftwareKeyHandle {
         let rng = SystemRandom::new();
 
         // Generate a unique nonce for this encryption operation
-        let mut nonce_bytes = [0u8; 12];
+        let mut nonce_bytes = [0u8; NONCE_LEN];
         rng.fill(&mut nonce_bytes)
             .expect("Failed to generate nonce");
         let nonce = Nonce::assume_unique_for_key(nonce_bytes);
@@ -67,7 +67,14 @@ impl KeyHandleImpl for SoftwareKeyHandle {
 
     fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, CalError> {
         // Separate nonce and ciphertext
-        let (nonce_bytes, ciphertext) = encrypted_data.split_at(12);
+        if encrypted_data.len() <= NONCE_LEN {
+            return Err(CalError::failed_operation(
+                "Data too short".to_string(),
+                true,
+                None,
+            ));
+        }
+        let (nonce_bytes, ciphertext) = encrypted_data.split_at(NONCE_LEN);
         let nonce = Nonce::assume_unique_for_key(nonce_bytes.try_into().unwrap());
 
         // Prepare AAD as an empty slice
@@ -79,7 +86,7 @@ impl KeyHandleImpl for SoftwareKeyHandle {
         // Perform decryption
         self.key
             .open_in_place(nonce, aad, &mut in_out)
-            .expect("Decryption failed");
+            .map_err(|err| CalError::failed_operation(err.to_string(), true, None))?;
 
         // Remove the authentication tag
         in_out.truncate(in_out.len() - 16);

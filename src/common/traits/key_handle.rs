@@ -111,7 +111,7 @@ pub(crate) trait KeyPairHandleImpl: Send + Sync {
 
 #[enum_dispatch]
 #[derive(Debug, Clone)]
-pub(crate) enum KeyPairHandleImplEnum {
+pub enum KeyPairHandleImplEnum {
     StubKeyPairHandle,
     #[cfg(feature = "android")]
     AndroidKeyPairHandle,

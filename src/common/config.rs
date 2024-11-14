@@ -1,5 +1,5 @@
-#[cfg(feature = "android")]
-use std::sync::Mutex;
+#![allow(dead_code)]
+use std::any::Any;
 use std::{
     cmp::{Eq, Ord, PartialEq, PartialOrd},
     collections::HashSet,
@@ -8,8 +8,7 @@ use std::{
     sync::Arc,
 };
 
-#[cfg(feature = "android")]
-use robusta_jni::jni::JavaVM;
+use serde::{Deserialize, Serialize};
 
 use super::crypto::algorithms::{
     encryption::{AsymmetricKeySpec, Cipher},
@@ -26,19 +25,25 @@ type DynFuture<T> = Pin<Box<dyn Future<Output = T> + Send>>;
 /// The function takes a `String` key and returns a `DynFuture` resolving to an `Option<Vec<u8>>`.
 /// - If the key exists, it resolves to `Some(Vec<u8>)` containing the data.
 /// - If the key does not exist, it resolves to `None`.
-type GetFn = Arc<dyn Fn(String) -> DynFuture<Option<Vec<u8>>> + Send + Sync>;
+pub type GetFn = Arc<dyn Fn(String) -> DynFuture<Option<Vec<u8>>> + Send + Sync>;
 
 /// A thread-safe, shareable function that asynchronously stores data associated with a key.
 ///
 /// The function takes a `String` key and a `Vec<u8>` value, and returns a `DynFuture` resolving to a `bool`.
 /// - It resolves to `true` if the data was successfully stored.
 /// - It resolves to `false` if the storage operation failed.
-type StoreFn = Arc<dyn Fn(String, Vec<u8>) -> DynFuture<bool> + Send + Sync>;
+pub type StoreFn = Arc<dyn Fn(String, Vec<u8>) -> DynFuture<bool> + Send + Sync>;
+
+/// A thread-safe, shareable function that asynchronously deletes data associated with a key.
+///
+/// The function takes a `String` key and returns a `DynFuture` resolving to `()`.
+/// This function performs an asynchronous deletion operation and does not return any value.
+pub type DeleteFn = Arc<dyn Fn(String) -> Pin<Box<dyn Future<Output = ()> + Send>> + Send + Sync>;
 
 /// A thread-safe, shareable function that asynchronously retrieves all available keys.
 ///
 /// The function returns a `DynFuture` resolving to a `Vec<String>` containing all the keys.
-type AllKeysFn = Arc<dyn Fn() -> DynFuture<Vec<String>> + Send + Sync>;
+pub type AllKeysFn = Arc<dyn Fn() -> DynFuture<Vec<String>> + Send + Sync>;
 
 /// Enum describing the security level of a provider.
 ///
@@ -56,18 +61,24 @@ pub enum SecurityLevel {
 }
 
 /// flutter_rust_bridge:non_opaque
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, Default)]
 pub struct KeySpec {
     pub cipher: Cipher,
     pub signing_hash: CryptoHash,
 }
 
 /// flutter_rust_bridge:non_opaque
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, Default)]
 pub struct KeyPairSpec {
     pub asym_spec: AsymmetricKeySpec,
     pub cipher: Option<Cipher>,
     pub signing_hash: CryptoHash,
+}
+
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+pub(crate) enum SerializableSpec {
+    KeySpec(KeySpec),
+    KeyPairSpec(KeyPairSpec),
 }
 
 /// flutter_rust_bridge:non_opaque
@@ -83,80 +94,43 @@ pub struct ProviderConfig {
 /// flutter_rust_bridge:opaque
 #[derive(Clone)]
 pub struct ProviderImplConfig {
-    #[cfg(feature = "android")]
-    pub(crate) java_vm: Option<Arc<Mutex<JavaVM>>>,
+    pub(crate) java_vm: Option<Arc<dyn Any + Send + Sync>>,
     pub(crate) get_fn: GetFn,
     pub(crate) store_fn: StoreFn,
+    pub(crate) delete_fn: DeleteFn,
     pub(crate) all_keys_fn: AllKeysFn,
 }
 
 impl ProviderImplConfig {
-    #[cfg(feature = "android")]
     pub fn new(
-        java_vm: Arc<Mutex<JavaVM>>,
-        get_fn: impl Fn(String) -> Pin<Box<dyn Future<Output = Option<Vec<u8>>> + Send>>
-            + 'static
-            + Send
-            + Sync,
-        store_fn: impl Fn(String, Vec<u8>) -> Pin<Box<dyn Future<Output = bool> + Send>>
-            + 'static
-            + Send
-            + Sync,
-        all_keys_fn: impl Fn() -> Pin<Box<dyn Future<Output = Vec<String>> + Send>>
-            + 'static
-            + Send
-            + Sync,
+        java_vm: Option<Arc<dyn Any + Send + Sync>>,
+        get_fn: GetFn,
+        store_fn: StoreFn,
+        delete_fn: DeleteFn,
+        all_keys_fn: AllKeysFn,
     ) -> Self {
         Self {
-            java_vm: Some(java_vm),
-            get_fn: Arc::new(get_fn),
-            store_fn: Arc::new(store_fn),
-            all_keys_fn: Arc::new(all_keys_fn),
-        }
-    }
-
-    #[cfg(feature = "software")]
-    pub fn new(
-        get_fn: impl Fn(String) -> Pin<Box<dyn Future<Output = Option<Vec<u8>>> + Send>>
-            + 'static
-            + Send
-            + Sync,
-        store_fn: impl Fn(String, Vec<u8>) -> Pin<Box<dyn Future<Output = bool> + Send>>
-            + 'static
-            + Send
-            + Sync,
-        all_keys_fn: impl Fn() -> Pin<Box<dyn Future<Output = Vec<String>> + Send>>
-            + 'static
-            + Send
-            + Sync,
-    ) -> Self {
-        Self {
-            get_fn: Arc::new(get_fn),
-            store_fn: Arc::new(store_fn),
-            all_keys_fn: Arc::new(all_keys_fn),
+            java_vm,
+            get_fn,
+            store_fn,
+            delete_fn,
+            all_keys_fn,
         }
     }
 
     pub fn new_stub(
-        get_fn: impl Fn(String) -> Pin<Box<dyn Future<Output = Option<Vec<u8>>> + Send>>
-            + 'static
-            + Send
-            + Sync,
-        store_fn: impl Fn(String, Vec<u8>) -> Pin<Box<dyn Future<Output = bool> + Send>>
-            + 'static
-            + Send
-            + Sync,
-        all_keys_fn: impl Fn() -> Pin<Box<dyn Future<Output = Vec<String>> + Send>>
-            + 'static
-            + Send
-            + Sync,
+        java_vm: Option<Arc<dyn Any + Send + Sync>>,
+        get_fn: GetFn,
+        store_fn: StoreFn,
+        delete_fn: DeleteFn,
+        all_keys_fn: AllKeysFn,
     ) -> Self {
         Self {
-            #[cfg(feature = "android")]
-            java_vm: None,
-            get_fn: Arc::new(get_fn),
-            store_fn: Arc::new(store_fn),
-            all_keys_fn: Arc::new(all_keys_fn),
+            java_vm,
+            get_fn,
+            store_fn,
+            delete_fn,
+            all_keys_fn,
         }
     }
 }

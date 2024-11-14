@@ -7,11 +7,13 @@ import '../frb_generated.dart';
 import '../third_party/crypto_layer/common/config.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `get_java_vm`, `set_up_logging`
-
-Future<ProviderImplConfig> getAndroidConfig(
+Future<ProviderImplConfig> getDefaultConfig(
         {required FutureOr<Uint8List?> Function(String) getFn,
         required FutureOr<bool> Function(String, Uint8List) storeFn,
+        required FutureOr<void> Function(String) deleteFn,
         required FutureOr<List<String>> Function() allKeysFn}) =>
-    RustLib.instance.api.crateApiCryptoGetAndroidConfig(
-        getFn: getFn, storeFn: storeFn, allKeysFn: allKeysFn);
+    RustLib.instance.api.crateApiCryptoGetDefaultConfig(
+        getFn: getFn,
+        storeFn: storeFn,
+        deleteFn: deleteFn,
+        allKeysFn: allKeysFn);

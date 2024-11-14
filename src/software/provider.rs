@@ -5,7 +5,7 @@ use super::{
     SoftwareProvider, SoftwareProviderFactory,
 };
 use crate::common::{
-    config::{KeyPairSpec, KeySpec, ProviderConfig},
+    config::{KeyPairSpec, KeySpec, ProviderConfig, SerializableSpec},
     error::CalError,
     traits::{
         key_handle::{DHKeyExchangeImpl, KeyHandleImplEnum},
@@ -15,7 +15,7 @@ use crate::common::{
 };
 use nanoid::nanoid;
 use ring::{
-    aead::{LessSafeKey, UnboundKey, AES_256_GCM},
+    aead::{Algorithm, LessSafeKey, UnboundKey, AES_256_GCM},
     agreement::{self, EphemeralPrivateKey, PublicKey, UnparsedPublicKey, X25519},
     rand::{SecureRandom, SystemRandom},
     signature::{EcdsaKeyPair, KeyPair, ECDSA_P256_SHA256_ASN1_SIGNING},
@@ -25,14 +25,28 @@ impl ProviderImpl for SoftwareProvider {
     fn create_key(&mut self, spec: KeySpec) -> Result<KeyHandle, CalError> {
         let key_id = nanoid!(10);
 
-        // Generate AES-256 symmetric key
+        // Initialize the system random generator
         let rng = SystemRandom::new();
-        let mut key_data = vec![0u8; 32]; // 256-bit key for AES-256
+        let algo: &Algorithm = spec.cipher.into();
+
+        // Generate the symmetric key data
+        let mut key_data = vec![0u8; algo.key_len()];
         rng.fill(&mut key_data)
             .expect("Failed to generate symmetric key");
 
-        // Initialize SoftwareKeyHandle with the raw key data
-        let handle = SoftwareKeyHandle::new(key_id, Some(spec), key_data)?;
+        // Create an UnboundKey for the AES-GCM encryption
+        let unbound_key = UnboundKey::new(algo, &key_data).map_err(|_| {
+            CalError::failed_operation("Failed to create unbound AES key".to_owned(), true, None)
+        })?;
+
+        // Wrap it in a LessSafeKey for easier encryption/decryption
+        let less_safe_key = Arc::new(LessSafeKey::new(unbound_key));
+
+        // Initialize SoftwareKeyHandle with the LessSafeKey
+        let handle = SoftwareKeyHandle {
+            key_id,
+            key: less_safe_key,
+        };
 
         Ok(KeyHandle {
             implementation: handle.into(),
@@ -56,13 +70,16 @@ impl ProviderImpl for SoftwareProvider {
 
         // Generate ECC key pair using ring's SystemRandom for asymmetric keys
         let rng = SystemRandom::new();
-        let pkcs8_bytes =
-            EcdsaKeyPair::generate_pkcs8(spec.into(), &rng).expect("Failed to generate key pair");
+        let pkcs8_bytes = EcdsaKeyPair::generate_pkcs8(spec.into(), &rng)
+            .expect("Failed to generate private key");
 
         // Create an EcdsaKeyPair from the PKCS#8-encoded private key
         let key_pair =
             EcdsaKeyPair::from_pkcs8(&ECDSA_P256_SHA256_ASN1_SIGNING, pkcs8_bytes.as_ref(), &rng)
                 .expect("Failed to parse key pair");
+
+        self.save_key_pair_metadata(key_id.clone(), SerializableSpec::KeyPairSpec(spec))
+            .unwrap();
 
         // Extract the public key bytes
         let public_key = key_pair.public_key().as_ref().to_vec();
@@ -228,3 +245,4 @@ impl DHKeyExchangeImpl for SoftwareDHExchange {
         }))
     }
 }
+

@@ -57,23 +57,33 @@ fn test_create_key_pair_sign_and_verify_data() -> Result<()> {
         create_provider_from_name("APPLE_SECURE_ENCLAVE".to_owned(), STORE.impl_config())
             .expect("Failed initializing apple secure provider.");
 
-    let key_spec = KeyPairSpec {
-        asym_spec: AsymmetricKeySpec::Ecc {
-            scheme: EccSigningScheme::EcDsa,
-            curve: EccCurve::P256,
-        },
-        cipher: None,
-        signing_hash: CryptoHash::Sha2(Sha2Bits::Sha256),
-    };
+    let hashes = vec![
+        CryptoHash::Sha1,
+        CryptoHash::Sha2(Sha2Bits::Sha224),
+        CryptoHash::Sha2(Sha2Bits::Sha256),
+        CryptoHash::Sha2(Sha2Bits::Sha384),
+        CryptoHash::Sha2(Sha2Bits::Sha512),
+    ];
 
-    let key = provider.create_key_pair(key_spec)?;
-    let _key_cleanup = CleanupKeyPair::new(key.clone());
+    for hash in hashes {
+        let key_spec = KeyPairSpec {
+            asym_spec: AsymmetricKeySpec::Ecc {
+                scheme: EccSigningScheme::EcDsa,
+                curve: EccCurve::P256,
+            },
+            cipher: None,
+            signing_hash: hash,
+        };
 
-    let test_data = Vec::from(b"Hello World!");
+        let key = provider.create_key_pair(key_spec)?;
+        let _key_cleanup = CleanupKeyPair::new(key.clone());
 
-    let signature = key.sign_data(&test_data)?;
+        let test_data = Vec::from(b"Hello World!");
 
-    assert!(key.verify_signature(&test_data, &signature)?);
+        let signature = key.sign_data(&test_data)?;
+
+        assert!(key.verify_signature(&test_data, &signature)?);
+    }
 
     Ok(())
 }

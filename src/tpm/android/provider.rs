@@ -1,11 +1,14 @@
 use crate::{
     common::{
-        config::{KeyPairSpec, KeySpec, ProviderConfig, ProviderImplConfig, SecurityLevel},
+        config::{
+            KeyPairSpec, KeySpec, ProviderConfig, ProviderImplConfig, SecurityLevel,
+            SerializableSpec,
+        },
         crypto::algorithms::{
             encryption::{AsymmetricKeySpec, Cipher, SymmetricMode},
             KeyBits,
         },
-        error::{CalError, ToCalError},
+        error::{CalError, KeyType, ToCalError},
         traits::module_provider::{ProviderFactory, ProviderImpl, ProviderImplEnum},
         DHExchange, KeyHandle, KeyPairHandle,
     },
@@ -27,7 +30,7 @@ pub(crate) struct AndroidProviderFactory {}
 
 impl ProviderFactory for AndroidProviderFactory {
     fn get_name(&self) -> String {
-        "AndroidProvider".to_owned()
+        "ANDROID_PROVIDER".to_owned()
     }
 
     fn get_capabilities(&self, _impl_config: ProviderImplConfig) -> ProviderConfig {
@@ -46,7 +49,12 @@ impl ProviderFactory for AndroidProviderFactory {
 
     fn create_provider(&self, impl_config: ProviderImplConfig) -> ProviderImplEnum {
         ProviderImplEnum::from(AndroidProvider {
-            java_vm: impl_config.java_vm.clone().unwrap(),
+            java_vm: impl_config
+                .java_vm
+                .clone()
+                .unwrap()
+                .downcast::<Mutex<JavaVM>>()
+                .unwrap(),
             impl_config,
         })
     }
@@ -143,8 +151,8 @@ impl ProviderImpl for AndroidProvider {
 
         kg.generateKey(&env).err_internal()?;
 
-        // TODO: Store the KeySpec in Storage
-        smol::block_on((self.impl_config.store_fn)(key_id.clone(), vec![]));
+        let encoded_spec = bincode::serialize(&SerializableSpec::KeySpec(spec)).unwrap();
+        pollster::block_on((self.impl_config.store_fn)(key_id.clone(), encoded_spec));
 
         debug!("key generated");
 
@@ -153,6 +161,7 @@ impl ProviderImpl for AndroidProvider {
                 key_id,
                 java_vm: self.java_vm.clone(),
                 spec,
+                impl_config: self.impl_config.clone(),
             }),
         })
     }
@@ -209,13 +218,15 @@ impl ProviderImpl for AndroidProvider {
         kpg.generateKeyPair(&env).err_internal()?;
 
         // TODO: Store the KeySpec in Storage
-        smol::block_on((self.impl_config.store_fn)(key_id.clone(), vec![]));
+        let encoded = bincode::serialize(&SerializableSpec::KeyPairSpec(spec)).unwrap();
+        pollster::block_on((self.impl_config.store_fn)(key_id.clone(), encoded));
 
         Ok(KeyPairHandle {
             implementation: Into::into(AndroidKeyPairHandle {
-                key_id: key_id,
+                key_id,
                 java_vm: self.java_vm.clone(),
                 spec,
+                impl_config: self.impl_config.clone(),
             }),
         })
     }
@@ -231,14 +242,45 @@ impl ProviderImpl for AndroidProvider {
     /// Returns `Ok(())` if the key loading is successful, otherwise returns an error of type `CalError`.
     #[instrument]
     fn load_key(&mut self, key_id: String) -> Result<KeyHandle, CalError> {
-        // TODO: Somehow load the Keyspec from Storage
-        todo!("load keyspec from storage")
+        let encoded = pollster::block_on((self.impl_config.get_fn)(key_id.clone()))
+            .ok_or(CalError::missing_key(key_id.clone(), KeyType::Symmetric))?;
+
+        let spec: SerializableSpec = bincode::deserialize(&encoded).unwrap();
+        match spec {
+            SerializableSpec::KeySpec(spec) => Ok(KeyHandle {
+                implementation: Into::into(AndroidKeyHandle {
+                    key_id,
+                    java_vm: self.java_vm.clone(),
+                    spec,
+                    impl_config: self.impl_config.clone(),
+                }),
+            }),
+            _ => Err(CalError::unsupported_algorithm(
+                "Loading a Key Pair as a Symmetric Key".to_owned(),
+            )),
+        }
     }
 
     #[instrument]
     fn load_key_pair(&mut self, key_id: String) -> Result<KeyPairHandle, CalError> {
-        // TODO: Somehow load the Keyspec from Storage
-        todo!("load keyspec from storage")
+        let encoded = pollster::block_on((self.impl_config.get_fn)(key_id.clone())).ok_or(
+            CalError::missing_key(key_id.clone(), KeyType::PublicAndPrivate),
+        )?;
+
+        let spec: SerializableSpec = bincode::deserialize(&encoded).unwrap();
+        match spec {
+            SerializableSpec::KeyPairSpec(spec) => Ok(KeyPairHandle {
+                implementation: Into::into(AndroidKeyPairHandle {
+                    key_id,
+                    java_vm: self.java_vm.clone(),
+                    spec,
+                    impl_config: self.impl_config.clone(),
+                }),
+            }),
+            _ => Err(CalError::unsupported_algorithm(
+                "Loading a symmetric Key as a Key Pair".to_owned(),
+            )),
+        }
     }
 
     #[instrument]
@@ -271,6 +313,7 @@ impl ProviderImpl for AndroidProvider {
                 key_id: id,
                 java_vm: self.java_vm.clone(),
                 spec,
+                impl_config: self.impl_config.clone(),
             }),
         })
     }
@@ -303,7 +346,7 @@ impl ProviderImpl for AndroidProvider {
     }
 
     fn provider_name(&self) -> String {
-        "AndroidProvider".to_owned()
+        "ANDROID_PROVIDER".to_owned()
     }
 
     fn get_capabilities(&self) -> ProviderConfig {

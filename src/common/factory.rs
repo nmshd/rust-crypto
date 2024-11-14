@@ -5,11 +5,11 @@ use super::{
     traits::module_provider::{ProviderFactory, ProviderFactoryEnum},
     Provider,
 };
-use crate::stub::StubProviderFactory;
 #[cfg(feature = "android")]
 use crate::tpm::android::provider::AndroidProviderFactory;
 #[cfg(feature = "apple-secure-enclave")]
 use crate::tpm::apple_secure_enclave::provider::AppleSecureEnclaveFactory;
+use crate::{software::SoftwareProviderFactory, stub::StubProviderFactory};
 
 static ALL_PROVIDERS: Lazy<Vec<ProviderFactoryEnum>> = Lazy::new(|| {
     vec![
@@ -18,6 +18,8 @@ static ALL_PROVIDERS: Lazy<Vec<ProviderFactoryEnum>> = Lazy::new(|| {
         Into::into(StubProviderFactory {}),
         #[cfg(feature = "apple-secure-enclave")]
         Into::into(AppleSecureEnclaveFactory {}),
+        #[cfg(feature = "software")]
+        Into::into(SoftwareProviderFactory {}),
     ]
 });
 
@@ -92,4 +94,9 @@ pub fn create_provider_from_name(name: String, impl_conf: ProviderImplConfig) ->
         }
     }
     None
+}
+
+/// Returns the names of all available providers for testing.
+pub fn get_all_providers() -> Vec<String> {
+    ALL_PROVIDERS.iter().map(|p| p.get_name()).collect()
 }

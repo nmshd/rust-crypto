@@ -10,5 +10,4 @@ pub(crate) mod software;
 pub(crate) mod stub;
 #[cfg(test)]
 mod tests;
-#[cfg(feature = "tpm")]
 pub(crate) mod tpm;

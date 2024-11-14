@@ -174,6 +174,7 @@ pub enum KeyType {
     Public,
     Private,
     PublicAndPrivate,
+    Symmetric,
 }
 
 impl fmt::Display for KeyType {
@@ -182,6 +183,7 @@ impl fmt::Display for KeyType {
             Self::Private => write!(f, "private"),
             Self::Public => write!(f, "public"),
             Self::PublicAndPrivate => write!(f, "public and private"),
+            Self::Symmetric => write!(f, "symmetric"),
         }
     }
 }
