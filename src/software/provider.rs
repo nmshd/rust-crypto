@@ -70,13 +70,14 @@ impl ProviderImpl for SoftwareProvider {
 
         // Generate ECC key pair using ring's SystemRandom for asymmetric keys
         let rng = SystemRandom::new();
-        let pkcs8_bytes = EcdsaKeyPair::generate_pkcs8(spec.into(), &rng)
-            .expect("Failed to generate private key");
+        let algorithm = spec.asym_spec.into();
+
+        let pkcs8_bytes =
+            EcdsaKeyPair::generate_pkcs8(algorithm, &rng).expect("Failed to generate private key");
 
         // Create an EcdsaKeyPair from the PKCS#8-encoded private key
-        let key_pair =
-            EcdsaKeyPair::from_pkcs8(&ECDSA_P256_SHA256_ASN1_SIGNING, pkcs8_bytes.as_ref(), &rng)
-                .expect("Failed to parse key pair");
+        let key_pair = EcdsaKeyPair::from_pkcs8(algorithm, pkcs8_bytes.as_ref(), &rng)
+            .expect("Failed to parse key pair");
 
         self.save_key_pair_metadata(key_id.clone(), SerializableSpec::KeyPairSpec(spec))
             .unwrap();
@@ -245,4 +246,3 @@ impl DHKeyExchangeImpl for SoftwareDHExchange {
         }))
     }
 }
-

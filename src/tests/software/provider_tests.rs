@@ -41,12 +41,7 @@ mod tests {
             ))
         }
     }
-
-    // fn trim_trailing_zeros(data: &[u8]) -> &[u8] {
-    //     let end = data.iter().rposition(|&x| x != 0).map_or(0, |pos| pos + 1);
-    //     &data[..end]
-    // }
-
+    
     #[test]
     fn test_encrypt_decrypt_data() {
         let spec = KeySpec {

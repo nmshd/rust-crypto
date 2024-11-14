@@ -115,16 +115,17 @@ impl SoftwareKeyPairHandle {
         public_key: Vec<u8>,
     ) -> Result<Self, CalError> {
         let rng = SystemRandom::new();
+        let algorithm = spec.asym_spec.into();
 
-        // Create the signing key using both private and public key
+        // Create the signing key from PKCS#8-encoded private key
         let signing_key = Arc::new(
-            EcdsaKeyPair::from_private_key_and_public_key(
-                spec.asym_spec.into(),
-                &private_key,
-                &public_key,
-                &rng,
-            )
-            .expect("Failed to create key pair"),
+            EcdsaKeyPair::from_pkcs8(algorithm, &private_key, &rng).map_err(|e| {
+                CalError::failed_operation(
+                    format!("Failed to create key pair: {:?}", e),
+                    false,
+                    None,
+                )
+            })?,
         );
 
         Ok(Self {
@@ -149,35 +150,18 @@ impl SoftwareKeyPairHandle {
     }
 }
 
-impl KeyHandleImpl for SoftwareKeyPairHandle {
-    fn encrypt_data(&self, _data: &[u8]) -> Result<Vec<u8>, CalError> {
-        todo!("Encryption not supported for ECC keys")
-    }
-
-    fn decrypt_data(&self, _encrypted_data: &[u8]) -> Result<Vec<u8>, CalError> {
-        todo!("Decryption not supported for ECC keys")
-    }
-
-    fn extract_key(&self) -> Result<Vec<u8>, CalError> {
-        Ok(self.public_key.clone())
-    }
-
-    fn id(&self) -> Result<String, CalError> {
-        Ok(self.key_id.clone())
-    }
-
-    #[doc = " Delete this key."]
-    fn delete(self) -> Result<(), CalError> {
-        todo!()
-    }
-}
-
 impl KeyPairHandleImpl for SoftwareKeyPairHandle {
     fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
-        let signing_key = self
-            .signing_key
-            .as_ref()
-            .expect("No private key available for signing");
+        let signing_key = match self.signing_key.as_ref() {
+            Some(key) => key,
+            None => {
+                return Err(CalError::failed_operation(
+                    "No private key available for signing".to_string(),
+                    true,
+                    None,
+                ))
+            }
+        };
 
         // Secure random generator for signing
         let rng = SystemRandom::new();
@@ -228,3 +212,4 @@ impl KeyPairHandleImpl for SoftwareKeyPairHandle {
         todo!()
     }
 }
+
