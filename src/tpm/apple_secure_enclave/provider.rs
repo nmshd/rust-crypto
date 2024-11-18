@@ -89,8 +89,8 @@ impl ProviderFactory for AppleSecureEnclaveFactory {
         "APPLE_SECURE_ENCLAVE".to_owned()
     }
 
-    fn get_capabilities(&self, _impl_config: ProviderImplConfig) -> ProviderConfig {
-        CAPABILITIES.clone()
+    fn get_capabilities(&self, _impl_config: ProviderImplConfig) -> Option<ProviderConfig> {
+        Some(CAPABILITIES.clone())
     }
 
     fn create_provider(&self, impl_config: ProviderImplConfig) -> ProviderImplEnum {
@@ -253,8 +253,8 @@ impl ProviderImpl for AppleSecureEnclaveProvider {
         "APPLE_SECURE_ENCLAVE".to_owned()
     }
 
-    fn get_capabilities(&self) -> ProviderConfig {
-        CAPABILITIES.clone()
+    fn get_capabilities(&self) -> Option<ProviderConfig> {
+        Some(CAPABILITIES.clone())
     }
 }
 

@@ -30,10 +30,12 @@ class _EncryptionPageState extends State<EncryptionPage> {
     if (widget.provider != null) {
       widget.provider!
           .then((provider) => provider.getCapabilities())
-          .then((caps) => caps.supportedCiphers)
+          .then((caps) => caps?.supportedCiphers)
           .then((e) => {
                 setState(() {
-                  _ciphers = e.toList();
+                  if (e != null) {
+                    _ciphers = e.toList();
+                  }
                 })
               });
     }

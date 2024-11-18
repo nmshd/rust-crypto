@@ -31,10 +31,12 @@ class _SigningPageState extends State<SigningPage> {
     if (widget.provider != null) {
       widget.provider!
           .then((provider) => provider.getCapabilities())
-          .then((caps) => caps.supportedAsymSpec)
+          .then((caps) => caps?.supportedAsymSpec)
           .then((e) => {
                 setState(() {
-                  _algos = e.toList();
+                  if (e != null) {
+                    _algos = e.toList();
+                  }
                 })
               });
     }
@@ -46,10 +48,10 @@ class _SigningPageState extends State<SigningPage> {
           asymSpec: _algoChoice!,
           signingHash: const cal.CryptoHash.sha2(cal.Sha2Bits.sha256));
 
-      var keyPair;
+      cal.KeyPairHandle keyPair;
       try {
         keyPair = await (await widget.provider!).createKeyPair(spec: spec);
-      } on cal.CalErrorImpl catch (e, s) {
+      } on cal.CalErrorImpl catch (e) {
         debugPrint('Exception:\n$e');
         var errorKind = await e.errorKind();
         debugPrint("Error Kind: $errorKind");

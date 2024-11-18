@@ -272,6 +272,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Cipher? dco_decode_opt_box_autoadd_cipher(dynamic raw);
 
   @protected
+  ProviderConfig? dco_decode_opt_box_autoadd_provider_config(dynamic raw);
+
+  @protected
   Uint8List? dco_decode_opt_list_prim_u_8_strict(dynamic raw);
 
   @protected
@@ -507,6 +510,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Cipher? sse_decode_opt_box_autoadd_cipher(SseDeserializer deserializer);
+
+  @protected
+  ProviderConfig? sse_decode_opt_box_autoadd_provider_config(
+      SseDeserializer deserializer);
 
   @protected
   Uint8List? sse_decode_opt_list_prim_u_8_strict(SseDeserializer deserializer);
@@ -771,6 +778,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_opt_box_autoadd_cipher(
       Cipher? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_provider_config(
+      ProviderConfig? self, SseSerializer serializer);
 
   @protected
   void sse_encode_opt_list_prim_u_8_strict(

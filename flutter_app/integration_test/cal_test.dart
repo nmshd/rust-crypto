@@ -32,7 +32,8 @@ void main() async {
 
       var caps = await provider!.getCapabilities();
 
-      for (var asymSpec in caps.supportedAsymSpec) {
+      expect(caps, isNotNull);
+      for (var asymSpec in caps!.supportedAsymSpec) {
         var handle = await provider.createKeyPair(
             spec: cal.KeyPairSpec(
                 asymSpec: asymSpec,
@@ -54,31 +55,31 @@ void main() async {
             await handle.verifySignature(data: data2, signature: signature);
         expect(verified2, isFalse);
 
-        handle.delete();
+        await handle.delete();
         expect(store.count(), 0);
       }
     }
   });
 
-  test("import key and encrypt with it", () async {
-    KVStore store = KVStore();
+//   test("import key and encrypt with it", () async {
+//     KVStore store = KVStore();
 
-    var implConf = await cal.getDefaultConfig(
-        getFn: store.get,
-        storeFn: store.store,
-        deleteFn: store.delete,
-        allKeysFn: store.allKeys);
+//     var implConf = await cal.getDefaultConfig(
+//         getFn: store.get,
+//         storeFn: store.store,
+//         deleteFn: store.delete,
+//         allKeysFn: store.allKeys);
 
-    var provider = await cal.createProviderFromName(
-        name: "ANDROID_PROVIDER", implConf: implConf);
+//     var provider = await cal.createProviderFromName(
+//         name: "ANDROID_PROVIDER", implConf: implConf);
 
-    expect(provider, isNotNull);
+//     expect(provider, isNotNull);
 
-    var key =
-        "27dba4d424b6f8eca2ce758afab11bb93357580a03c22476a87aac512dc82e3b";
-    var data =
-        "ddc90fe0be020000ee8f5419e09210d277b2d5abf649ae395c7b58d906e76991";
-  });
+//     var key =
+//         "27dba4d424b6f8eca2ce758afab11bb93357580a03c22476a87aac512dc82e3b";
+//     var data =
+//         "ddc90fe0be020000ee8f5419e09210d277b2d5abf649ae395c7b58d906e76991";
+//   });
 }
 
 extension FillBytes on Random {

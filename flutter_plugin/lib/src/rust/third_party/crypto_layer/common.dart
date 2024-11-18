@@ -60,7 +60,7 @@ abstract class Provider implements RustOpaqueInterface {
 
   Future<KeyPairHandle> createKeyPair({required KeyPairSpec spec});
 
-  Future<ProviderConfig> getCapabilities();
+  Future<ProviderConfig?> getCapabilities();
 
   Future<KeyHandle> importKey({required KeySpec spec, required List<int> data});
 

@@ -137,7 +137,7 @@ abstract class RustLibApi extends BaseApi {
   Future<KeyPairHandle> cryptoLayerCommonProviderCreateKeyPair(
       {required Provider that, required KeyPairSpec spec});
 
-  Future<ProviderConfig> cryptoLayerCommonProviderGetCapabilities(
+  Future<ProviderConfig?> cryptoLayerCommonProviderGetCapabilities(
       {required Provider that});
 
   Future<KeyHandle> cryptoLayerCommonProviderImportKey(
@@ -719,7 +719,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<ProviderConfig> cryptoLayerCommonProviderGetCapabilities(
+  Future<ProviderConfig?> cryptoLayerCommonProviderGetCapabilities(
       {required Provider that}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
@@ -730,7 +730,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             funcId: 17, port: port_);
       },
       codec: SseCodec(
-        decodeSuccessData: sse_decode_provider_config,
+        decodeSuccessData: sse_decode_opt_box_autoadd_provider_config,
         decodeErrorData: null,
       ),
       constMeta: kCryptoLayerCommonProviderGetCapabilitiesConstMeta,
@@ -1906,6 +1906,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  ProviderConfig? dco_decode_opt_box_autoadd_provider_config(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_provider_config(raw);
+  }
+
+  @protected
   Uint8List? dco_decode_opt_list_prim_u_8_strict(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null ? null : dco_decode_list_prim_u_8_strict(raw);
@@ -2510,6 +2516,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
     if (sse_decode_bool(deserializer)) {
       return (sse_decode_box_autoadd_cipher(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  ProviderConfig? sse_decode_opt_box_autoadd_provider_config(
+      SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_provider_config(deserializer));
     } else {
       return null;
     }
@@ -3168,6 +3186,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_opt_box_autoadd_provider_config(
+      ProviderConfig? self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_provider_config(self, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_opt_list_prim_u_8_strict(
       Uint8List? self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
@@ -3419,7 +3448,7 @@ class ProviderImpl extends RustOpaque implements Provider {
       RustLib.instance.api
           .cryptoLayerCommonProviderCreateKeyPair(that: this, spec: spec);
 
-  Future<ProviderConfig> getCapabilities() =>
+  Future<ProviderConfig?> getCapabilities() =>
       RustLib.instance.api.cryptoLayerCommonProviderGetCapabilities(
         that: this,
       );

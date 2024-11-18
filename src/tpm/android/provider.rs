@@ -34,8 +34,13 @@ impl ProviderFactory for AndroidProviderFactory {
         "ANDROID_PROVIDER".to_owned()
     }
 
-    fn get_capabilities(&self, _impl_config: ProviderImplConfig) -> ProviderConfig {
-        ProviderConfig {
+    fn get_capabilities(&self, _impl_config: ProviderImplConfig) -> Option<ProviderConfig> {
+        let jvm = _impl_config.java_vm?;
+        let jvm = jvm.downcast::<Mutex<JavaVM>>().expect("downcast failed");
+        let jvm = jvm.lock().expect("locking failed");
+        let env = jvm.get_env().expect("getting jvm failed");
+        wrapper::context::has_strong_box(&env).ok()?;
+        Some(ProviderConfig {
             min_security_level: SecurityLevel::Hardware,
             max_security_level: SecurityLevel::Hardware,
             supported_asym_spec: vec![
@@ -52,7 +57,7 @@ impl ProviderFactory for AndroidProviderFactory {
                 .into_iter()
                 .collect(),
             supported_hashes: HashSet::new(),
-        }
+        })
     }
 
     fn create_provider(&self, impl_config: ProviderImplConfig) -> ProviderImplEnum {
@@ -361,7 +366,7 @@ impl ProviderImpl for AndroidProvider {
         "ANDROID_PROVIDER".to_owned()
     }
 
-    fn get_capabilities(&self) -> ProviderConfig {
+    fn get_capabilities(&self) -> Option<ProviderConfig> {
         AndroidProviderFactory {}.get_capabilities(self.impl_config.clone())
     }
 }

@@ -126,6 +126,7 @@ impl KeyHandleImpl for AndroidKeyHandle {
         let env = vm.get_env().err_internal()?;
 
         let keystore = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_owned()).err_internal()?;
+        keystore.load(&env, None).err_internal()?;
         keystore
             .deleteEntry(&env, self.key_id.clone())
             .err_internal()?;
@@ -291,6 +292,7 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
         let env = vm.get_env().err_internal()?;
 
         let keystore = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_owned()).err_internal()?;
+        keystore.load(&env, None).err_internal()?;
         keystore
             .deleteEntry(&env, self.key_id.clone())
             .err_internal()?;

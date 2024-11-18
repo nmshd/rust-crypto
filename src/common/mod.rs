@@ -134,7 +134,7 @@ impl Provider {
     }
 
     delegate_enum_bare! {
-        pub fn get_capabilities(&self) -> ProviderConfig;
+        pub fn get_capabilities(&self) -> Option<ProviderConfig>;
     }
 }
 

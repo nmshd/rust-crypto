@@ -2535,6 +2535,19 @@ impl SseDecode for Option<crypto_layer::common::crypto::algorithms::encryption::
     }
 }
 
+impl SseDecode for Option<crypto_layer::common::config::ProviderConfig> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<crypto_layer::common::config::ProviderConfig>::sse_decode(
+                deserializer,
+            ));
+        } else {
+            return None;
+        }
+    }
+}
+
 impl SseDecode for Option<Vec<u8>> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -4340,6 +4353,16 @@ impl SseEncode for Option<crypto_layer::common::crypto::algorithms::encryption::
             <crypto_layer::common::crypto::algorithms::encryption::Cipher>::sse_encode(
                 value, serializer,
             );
+        }
+    }
+}
+
+impl SseEncode for Option<crypto_layer::common::config::ProviderConfig> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <crypto_layer::common::config::ProviderConfig>::sse_encode(value, serializer);
         }
     }
 }
