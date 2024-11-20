@@ -11,12 +11,12 @@ $env:TS_RS_EXPORT_DIR = $prevEnv
 cd ./ts-interface
 
 
-if (Test-Path "./src/types/index.d.ts") {
-    Remove-Item "./src/types/index.d.ts"
+if (Test-Path "./src/types/index.ts") {
+    Remove-Item "./src/types/index.ts"
 }
 
-Get-ChildItem ./src/types/*.ts -Exclude "index.d.ts" | foreach {
-    $mod = ($_).Name
+Get-ChildItem ./src/types/*.ts -Exclude "index.ts" | foreach {
+    $mod = ($_).BaseName
     Write-Host "Writing $mod"
-    "export * from './$mod';" >> ./src/types/index.d.ts
+    "export * from './$mod';" >> ./src/types/index.ts
 }

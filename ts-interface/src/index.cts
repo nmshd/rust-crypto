@@ -9,5 +9,6 @@ export * from "./types/index";
 // which otherwise by default are `any`.
 declare module "./load.cjs" {
   export function hello(): string;
+  export function getAllProviders(): string[];
 }
 
