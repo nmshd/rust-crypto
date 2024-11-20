@@ -1,0 +1,17 @@
+[package]
+name = "crypto-layer-ts"
+version = "0.1.0"
+description = "crypto layer ts interface for nodejs"
+authors = ["j&s-soft AG"]
+license = "MIT"
+edition = "2021"
+exclude = ["index.node"]
+
+[lib]
+crate-type = ["cdylib"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+crypto-layer = { version = "0.1.0", path = "../../.." }
+neon = "1"

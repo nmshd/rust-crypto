@@ -1,0 +1,3 @@
+[workspace]
+members = ["crates/crypto-layer-ts"]
+resolver = "2"

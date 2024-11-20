@@ -70,15 +70,18 @@ pub struct ProviderConfig {
 #[derive(Clone)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub struct ProviderImplConfig {
-    #[cfg_attr(feature = "ts-interface", ts(type = "Uint8Array | undefined"))]
+    #[cfg_attr(feature = "ts-interface", ts(skip))]
     pub(crate) java_vm: Option<Arc<dyn Any + Send + Sync>>,
-    #[cfg_attr(feature = "ts-interface", ts(type = "(string) => Uint8Array"))]
+    #[cfg_attr(feature = "ts-interface", ts(type = "(id: string) => Uint8Array"))]
     pub(crate) get_fn:
         Arc<dyn Fn(String) -> Pin<Box<dyn Future<Output = Option<Vec<u8>>> + Send>> + Send + Sync>,
-    #[cfg_attr(feature = "ts-interface", ts(type = "(string, Uint8Array) => boolean"))]
+    #[cfg_attr(
+        feature = "ts-interface",
+        ts(type = "(id: string, data: Uint8Array) => boolean")
+    )]
     pub(crate) store_fn:
         Arc<dyn Fn(String, Vec<u8>) -> Pin<Box<dyn Future<Output = bool> + Send>> + Send + Sync>,
-    #[cfg_attr(feature = "ts-interface", ts(type = "(id) => void"))]
+    #[cfg_attr(feature = "ts-interface", ts(type = "(id: string) => void"))]
     pub(crate) delete_fn:
         Arc<dyn Fn(String) -> Pin<Box<dyn Future<Output = ()> + Send>> + Send + Sync>,
     #[cfg_attr(feature = "ts-interface", ts(type = "() => string[]"))]
