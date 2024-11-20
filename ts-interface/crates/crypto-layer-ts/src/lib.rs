@@ -1,5 +1,7 @@
 use neon::prelude::*;
 
+use crypto_layer::prelude::*;
+
 fn hello(mut cx: FunctionContext) -> JsResult<JsString> {
     Ok(cx.string("hello node"))
 }
