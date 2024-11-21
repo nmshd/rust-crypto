@@ -141,11 +141,11 @@ impl KeyPairHandleImpl for StubKeyPairHandle {
 pub(crate) struct StubKeyHandle {}
 
 impl KeyHandleImpl for StubKeyHandle {
-    fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
+    fn encrypt_data(&self, data: &[u8]) -> Result<(Vec<u8>, Vec<u8>), CalError> {
         todo!()
     }
 
-    fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, CalError> {
+    fn decrypt_data(&self, encrypted_data: &[u8], iv: &[u8]) -> Result<Vec<u8>, CalError> {
         todo!()
     }
 

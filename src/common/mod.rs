@@ -190,12 +190,13 @@ impl KeyHandle {
         pub fn extract_key(&self) -> Result<Vec<u8>, CalError>;
     }
     delegate_enum! {
-        pub fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError>;
+        pub fn encrypt_data(&self, data: &[u8]) -> Result<(Vec<u8>, Vec<u8>), CalError>;
     }
     delegate_enum! {
         pub fn decrypt_data(
             &self,
             encrypted_data: &[u8],
+            iv: &[u8],
         ) -> Result<Vec<u8>, CalError>;
     }
 

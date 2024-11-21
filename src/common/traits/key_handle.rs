@@ -25,17 +25,20 @@ pub(crate) trait KeyHandleImpl: Send + Sync {
     /// * `data` - A byte slice representing the data to be encrypted.
     ///
     /// # Returns
-    /// A `Result` containing the encrypted data as a `Vec<u8>` on success, or a `CalError` on failure.
-    fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError>;
+    /// A `Result` containing the encrypted data and the used iv as a `Vec<u8>` on success,
+    /// where the first value is the data and the second the iv,
+    /// or a `CalError` on failure.
+    fn encrypt_data(&self, data: &[u8]) -> Result<(Vec<u8>, Vec<u8>), CalError>;
 
     /// Decrypts the given encrypted data using the cryptographic key.
     ///
     /// # Arguments
     /// * `encrypted_data` - A byte slice representing the data to be decrypted.
+    /// * `iv` - A byte slice representing the initialization vector used for encryption.
     ///
     /// # Returns
     /// A `Result` containing the decrypted data as a `Vec<u8>` on success, or a `CalError` on failure.
-    fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, CalError>;
+    fn decrypt_data(&self, encrypted_data: &[u8], iv: &[u8]) -> Result<Vec<u8>, CalError>;
 
     fn extract_key(&self) -> Result<Vec<u8>, CalError>;
 
