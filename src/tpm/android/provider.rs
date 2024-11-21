@@ -27,19 +27,25 @@ use std::sync::Mutex;
 use std::{collections::HashSet, fmt::Debug, sync::Arc};
 use tracing::{debug, info, instrument};
 
-pub(crate) struct AndroidProviderFactory {}
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct AndroidProviderFactory {
+    pub(crate) secure_element: bool,
+}
 
 impl ProviderFactory for AndroidProviderFactory {
     fn get_name(&self) -> String {
-        "ANDROID_PROVIDER".to_owned()
+        if self.secure_element {
+            "ANDROID_PROVIDER_SECURE_ELEMENT".to_owned()
+        } else {
+            "ANDROID_PROVIDER".to_owned()
+        }
     }
 
     fn get_capabilities(&self, _impl_config: ProviderImplConfig) -> Option<ProviderConfig> {
-        let jvm = _impl_config.java_vm?;
-        let jvm = jvm.downcast::<Mutex<JavaVM>>().expect("downcast failed");
-        let jvm = jvm.lock().expect("locking failed");
-        let env = jvm.get_env().expect("getting jvm failed");
-        wrapper::context::has_strong_box(&env).ok()?;
+        // only check for Stronbox if secure element is enabled
+        if self.secure_element {
+            wrapper::context::has_strong_box().ok()?;
+        }
         Some(ProviderConfig {
             min_security_level: SecurityLevel::Hardware,
             max_security_level: SecurityLevel::Hardware,
@@ -69,6 +75,7 @@ impl ProviderFactory for AndroidProviderFactory {
                 .downcast::<Mutex<JavaVM>>()
                 .expect("downcast failed"),
             impl_config,
+            used_factory: *self,
         })
     }
 }
@@ -84,6 +91,7 @@ impl ProviderFactory for AndroidProviderFactory {
 pub(crate) struct AndroidProvider {
     impl_config: ProviderImplConfig,
     java_vm: Arc<Mutex<JavaVM>>,
+    used_factory: AndroidProviderFactory,
 }
 
 impl Debug for AndroidProvider {
@@ -149,7 +157,7 @@ impl ProviderImpl for AndroidProvider {
         }
 
         kps_builder = kps_builder
-            .set_is_strongbox_backed(&env, true)
+            .set_is_strongbox_backed(&env, self.used_factory.secure_element)
             .err_internal()?;
 
         let kps = kps_builder.build(&env).err_internal()?;
@@ -215,7 +223,7 @@ impl ProviderImpl for AndroidProvider {
             }
         };
         kps_builder = kps_builder
-            .set_is_strongbox_backed(&env, true)
+            .set_is_strongbox_backed(&env, self.used_factory.secure_element)
             .err_internal()?;
 
         let kps = kps_builder.build(&env).err_internal()?;
@@ -363,10 +371,10 @@ impl ProviderImpl for AndroidProvider {
     }
 
     fn provider_name(&self) -> String {
-        "ANDROID_PROVIDER".to_owned()
+        self.used_factory.get_name()
     }
 
     fn get_capabilities(&self) -> Option<ProviderConfig> {
-        AndroidProviderFactory {}.get_capabilities(self.impl_config.clone())
+        self.used_factory.get_capabilities(self.impl_config.clone())
     }
 }

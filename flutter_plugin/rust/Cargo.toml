@@ -19,6 +19,8 @@ crypto-layer = { path = "../../"}
 [target.'cfg(target_os = "android")'.dependencies]
 tracing-android = { version = "0.2.0" }
 crypto-layer = { path = "../../", features = ["android"] }
+jni = "0.19"
+ndk-context = "0.1"
 
 [target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies]
 crypto-layer = { path = "../../", features = ["apple-secure-enclave"] }
