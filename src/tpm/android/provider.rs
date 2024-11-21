@@ -23,8 +23,7 @@ use crate::{
 use anyhow::anyhow;
 use nanoid::nanoid;
 use robusta_jni::jni::JavaVM;
-use std::sync::Mutex;
-use std::{collections::HashSet, fmt::Debug, sync::Arc};
+use std::{collections::HashSet, fmt::Debug};
 use tracing::{debug, info, instrument};
 
 #[derive(Debug, Clone, Copy)]
@@ -68,12 +67,6 @@ impl ProviderFactory for AndroidProviderFactory {
 
     fn create_provider(&self, impl_config: ProviderImplConfig) -> ProviderImplEnum {
         ProviderImplEnum::from(AndroidProvider {
-            java_vm: impl_config
-                .java_vm
-                .clone()
-                .expect("no jvm provided")
-                .downcast::<Mutex<JavaVM>>()
-                .expect("downcast failed"),
             impl_config,
             used_factory: *self,
         })
@@ -90,7 +83,6 @@ impl ProviderFactory for AndroidProviderFactory {
 /// cryptographic operations on Android.
 pub(crate) struct AndroidProvider {
     impl_config: ProviderImplConfig,
-    java_vm: Arc<Mutex<JavaVM>>,
     used_factory: AndroidProviderFactory,
 }
 
@@ -113,11 +105,9 @@ impl ProviderImpl for AndroidProvider {
 
         info!("generating key: {}", key_id);
 
-        let vm = self.java_vm.lock().unwrap();
-        let _attach_guard = vm.attach_current_thread().err_internal()?;
-        let env = vm.get_env().expect("Get env failed");
-
-        info!("got env");
+        let vm = ndk_context::android_context().vm();
+        let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
+        let env = vm.attach_current_thread().err_internal()?;
 
         // build up key specs
         let mut kps_builder =
@@ -181,7 +171,6 @@ impl ProviderImpl for AndroidProvider {
         Ok(KeyHandle {
             implementation: Into::into(AndroidKeyHandle {
                 key_id,
-                java_vm: self.java_vm.clone(),
                 spec,
                 impl_config: self.impl_config.clone(),
             }),
@@ -192,9 +181,9 @@ impl ProviderImpl for AndroidProvider {
         let key_id = nanoid!(10);
         info!("generating key pair! {}", key_id);
 
-        let vm = self.java_vm.lock().unwrap();
-        let _attach_guard = vm.attach_current_thread().err_internal()?;
-        let env = vm.get_env().err_internal()?;
+        let vm = ndk_context::android_context().vm();
+        let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
+        let env = vm.attach_current_thread().err_internal()?;
 
         // build up key specs
         let mut kps_builder =
@@ -247,7 +236,6 @@ impl ProviderImpl for AndroidProvider {
         Ok(KeyPairHandle {
             implementation: Into::into(AndroidKeyPairHandle {
                 key_id,
-                java_vm: self.java_vm.clone(),
                 spec,
                 impl_config: self.impl_config.clone(),
             }),
@@ -274,7 +262,6 @@ impl ProviderImpl for AndroidProvider {
             SerializableSpec::KeySpec(spec) => Ok(KeyHandle {
                 implementation: Into::into(AndroidKeyHandle {
                     key_id,
-                    java_vm: self.java_vm.clone(),
                     spec,
                     impl_config: self.impl_config.clone(),
                 }),
@@ -297,7 +284,6 @@ impl ProviderImpl for AndroidProvider {
             SerializableSpec::KeyPairSpec(spec) => Ok(KeyPairHandle {
                 implementation: Into::into(AndroidKeyPairHandle {
                     key_id,
-                    java_vm: self.java_vm.clone(),
                     spec,
                     impl_config: self.impl_config.clone(),
                 }),
@@ -310,9 +296,9 @@ impl ProviderImpl for AndroidProvider {
 
     #[instrument]
     fn import_key(&mut self, spec: KeySpec, data: &[u8]) -> Result<KeyHandle, CalError> {
-        let vm = self.java_vm.lock().unwrap();
-        let _attach_guard = vm.attach_current_thread().err_internal()?;
-        let env = vm.get_env().err_internal()?;
+        let vm = ndk_context::android_context().vm();
+        let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
+        let env = vm.attach_current_thread().err_internal()?;
 
         let id = nanoid!(10);
 
@@ -336,7 +322,6 @@ impl ProviderImpl for AndroidProvider {
         Ok(KeyHandle {
             implementation: Into::into(AndroidKeyHandle {
                 key_id: id,
-                java_vm: self.java_vm.clone(),
                 spec,
                 impl_config: self.impl_config.clone(),
             }),
