@@ -48,6 +48,7 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@neon-rs/load": "^0.1.73"
+    "@neon-rs/load": "^0.1.73",
+    "crypto-layer-ts-types": "file:../ts-types"
   }
 }
