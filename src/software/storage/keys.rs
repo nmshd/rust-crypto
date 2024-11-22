@@ -3,6 +3,8 @@ use std::error::Error;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 
+use crate::common::error::CalError;
+
 /// Struct representing the Key Manager using `securestore`.
 pub struct KeyManager {
     secrets_manager: Arc<Mutex<SecretsManager>>,
@@ -72,6 +74,34 @@ impl KeyManager {
     pub fn list_keys(&self) -> Result<Vec<String>, Box<dyn Error>> {
         let manager = self.secrets_manager.lock().unwrap();
         Ok(manager.keys().map(|key| key.to_owned()).collect())
+    }
+
+    /// Deletes a key from the secrets store.
+    ///
+    /// # Arguments
+    /// * `key_id` - Identifier for the key to delete.
+    ///
+    /// # Returns
+    /// A `Result` indicating success or failure.
+    ///
+    /// # Errors
+    /// Returns an error if the key does not exist or if the deletion fails.
+    #[allow(dead_code)]
+    pub fn delete_key(&self, key_id: &str) -> Result<(), Box<dyn Error>> {
+        let mut manager = self.secrets_manager.lock().unwrap();
+        // Attempt to remove the key. The `remove` method returns an Option.
+        if manager.remove(key_id).is_ok() {
+            // If the key existed and was removed, save the updated store.
+            manager.save()?;
+            Ok(())
+        } else {
+            // If the key did not exist, return an error.
+            Err(Box::new(CalError::failed_operation(
+                format!("Key '{}' not found", key_id),
+                false,
+                None,
+            )))
+        }
     }
 
     #[allow(dead_code)]

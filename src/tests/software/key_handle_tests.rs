@@ -15,38 +15,61 @@ mod tests {
             traits::key_handle::{
                 KeyHandleImpl, KeyHandleImplEnum, KeyPairHandleImpl, KeyPairHandleImplEnum,
             },
-            KeyHandle, KeyPairHandle, Provider,
+            KeyHandle, KeyPairHandle,
         },
         software::{
             key_handle::{SoftwareKeyHandle, SoftwareKeyPairHandle},
             SoftwareProvider,
         },
     };
-    use lazy_static::lazy_static;
     use ring::rand::{SecureRandom, SystemRandom};
     use std::{
         str::from_utf8,
         sync::{Arc, Mutex},
     };
 
-    lazy_static! {
-        /// Shared Provider instance for the tests, protected by Arc<Mutex<>>
-        static ref PROVIDER: Arc<Mutex<Provider>> = Arc::new(Mutex::new(
-            factory::create_provider_from_name(
-                "SoftwareProvider".to_owned(),
-                SoftwareProvider::get_default_config(None),
-            ).unwrap()
-        ));
-    }
-
     mod key_pair_handle {
         use super::*;
+        use crate::{
+            common::{config::ConfigHandle, Provider},
+            software::SoftwareProviderAdditionalConfig,
+        };
+        use tempfile::Builder;
 
         /// Helper function to create a new key pair and extract the SoftwareKeyPairHandle
         fn create_software_key_pair_handle(
             spec: KeyPairSpec,
         ) -> Result<SoftwareKeyPairHandle, CalError> {
-            let key_pair_handle = PROVIDER.lock().unwrap().create_key_pair(spec)?;
+            let dir = Builder::new().prefix("metadata_test").tempdir().unwrap();
+            let md_db_path = dir.path().join("metadata_test.db");
+            let key_db_path = dir.path().join("keys_test.db");
+
+            // Create an instance of the concrete config
+            let software_config = SoftwareProviderAdditionalConfig {
+                metadata_path: Some(md_db_path.to_str().unwrap().to_string()),
+                keydb_path: Some(key_db_path.to_str().unwrap().to_string()),
+                keydb_pw: Some("insecure".to_string()),
+            };
+
+            // Wrap it in a `ConfigHandle`
+            let config_handle = ConfigHandle::new(Arc::new(software_config));
+
+            // Obtain the default provider implementation configuration
+            let provider_impl_config = SoftwareProvider::get_default_config(
+                Some(config_handle.clone()),
+                None,
+                None,
+                None,
+                None,
+            );
+
+            let mut provider: Provider = factory::create_provider_from_name(
+                "SoftwareProvider".to_owned(),
+                provider_impl_config,
+            )
+            .unwrap();
+
+            let key_pair_handle = provider.create_key_pair(spec)?;
             extract_software_key_pair_handle(&key_pair_handle)
         }
 
@@ -293,12 +316,42 @@ mod tests {
     }
     mod key_handle {
         use super::*;
+        use crate::{common::config::ConfigHandle, software::SoftwareProviderAdditionalConfig};
+        use tempfile::Builder;
 
         /// Helper function to create a new key and extract the SoftwareKeyHandle
         fn create_software_key_handle(
             spec: KeySpec,
         ) -> Result<Arc<Mutex<SoftwareKeyHandle>>, CalError> {
-            let key_handle = PROVIDER.lock().unwrap().create_key(spec)?;
+            let dir = Builder::new().prefix("metadata_test").tempdir().unwrap();
+            let md_db_path = dir.path().join("metadata_test.db");
+            let key_db_path = dir.path().join("keys_test.db");
+
+            // Create an instance of the concrete config
+            let software_config = SoftwareProviderAdditionalConfig {
+                metadata_path: Some(md_db_path.to_str().unwrap().to_string()),
+                keydb_path: Some(key_db_path.to_str().unwrap().to_string()),
+                keydb_pw: Some("insecure".to_string()),
+            };
+
+            // Wrap it in a `ConfigHandle`
+            let config_handle = ConfigHandle::new(Arc::new(software_config));
+
+            // Obtain the default provider implementation configuration
+            let provider_impl_config = SoftwareProvider::get_default_config(
+                Some(config_handle.clone()),
+                None,
+                None,
+                None,
+                None,
+            );
+
+            let mut provider = factory::create_provider_from_name(
+                "SoftwareProvider".to_owned(),
+                provider_impl_config,
+            )
+            .unwrap();
+            let key_handle = provider.create_key(spec)?;
             extract_software_key_handle(&key_handle)
         }
 

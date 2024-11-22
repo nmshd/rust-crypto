@@ -5,11 +5,13 @@ use super::{
     traits::module_provider::{ProviderFactory, ProviderFactoryEnum},
     Provider,
 };
+#[cfg(feature = "software")]
+use crate::software::SoftwareProviderFactory;
+use crate::stub::StubProviderFactory;
 #[cfg(feature = "android")]
 use crate::tpm::android::provider::AndroidProviderFactory;
 #[cfg(feature = "apple-secure-enclave")]
 use crate::tpm::apple_secure_enclave::provider::AppleSecureEnclaveFactory;
-use crate::{software::SoftwareProviderFactory, stub::StubProviderFactory};
 
 static ALL_PROVIDERS: Lazy<Vec<ProviderFactoryEnum>> = Lazy::new(|| {
     vec![

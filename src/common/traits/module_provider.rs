@@ -2,6 +2,10 @@
 use crate::software::{SoftwareProvider, SoftwareProviderFactory};
 #[cfg(feature = "android")]
 use crate::tpm::android::provider::{AndroidProvider, AndroidProviderFactory};
+#[cfg(feature = "apple-secure-enclave")]
+use crate::tpm::apple_secure_enclave::provider::{
+    AppleSecureEnclaveFactory, AppleSecureEnclaveProvider,
+};
 use crate::{
     common::{
         config::{KeyPairSpec, KeySpec, ProviderConfig, ProviderImplConfig},
@@ -11,11 +15,6 @@ use crate::{
     stub::{StubProvider, StubProviderFactory},
 };
 use enum_dispatch::enum_dispatch;
-
-#[cfg(feature = "apple-secure-enclave")]
-use crate::tpm::apple_secure_enclave::provider::{
-    AppleSecureEnclaveFactory, AppleSecureEnclaveProvider,
-};
 
 #[enum_dispatch(ProviderFactoryEnum)]
 pub(crate) trait ProviderFactory: Send + Sync {

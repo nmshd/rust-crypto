@@ -131,7 +131,7 @@ impl SoftwareKeyPairHandle {
         Ok(Self {
             key_id,
             spec,
-            signing_key: Some(signing_key.clone()),
+            signing_key: Some(signing_key),
             public_key,
         })
     }
@@ -212,4 +212,3 @@ impl KeyPairHandleImpl for SoftwareKeyPairHandle {
         todo!()
     }
 }
-

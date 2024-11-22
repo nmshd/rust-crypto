@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 use std::any::Any;
+use std::fmt::Debug;
 use std::{
     cmp::{Eq, Ord, PartialEq, PartialOrd},
     collections::HashSet,
@@ -75,10 +76,57 @@ pub struct KeyPairSpec {
     pub signing_hash: CryptoHash,
 }
 
+/// flutter_rust_bridge:non_opaque
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub(crate) enum SerializableSpec {
     KeySpec(KeySpec),
     KeyPairSpec(KeyPairSpec),
+}
+
+/// A trait for encapsulating additional configuration data with support for dynamic downcasting.
+///
+/// Implementing this trait allows different configuration types to be stored as trait objects
+/// (`dyn AdditionalConfig`) and later downcasted to their concrete types when specific functionality
+/// is required.
+pub trait AdditionalData: Any + Debug + Send + Sync {
+    /// Provides a reference to `self` as `&dyn Any` to enable downcasting to concrete types.
+    fn as_any(&self) -> &dyn Any;
+}
+
+/// Automatically implements `AdditionalConfig` for any type that satisfies `Any + Debug + Send + Sync`.
+///
+/// This blanket implementation allows diverse types to be used as additional configuration
+/// without requiring individual trait implementations. It enables dynamic configuration
+/// handling by leveraging Rust's trait bounds and dynamic downcasting capabilities.
+impl<T: Any + Debug + Send + Sync> AdditionalData for T {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
+/// A handle encapsulating additional configuration, enabling dynamic downcasting.
+///
+/// This struct wraps an `Arc<dyn AdditionalConfig>`, allowing for thread-safe sharing and
+/// dynamic dispatch of configuration data. The `opaque` attribute ensures that this type
+/// is treated as an opaque type in Flutter Rust Bridge, hiding its internal structure.
+/// flutter_rust_bridge:opaque
+#[derive(Debug)]
+pub struct ConfigHandle {
+    pub(crate) implementation: Arc<dyn AdditionalData>,
+}
+
+impl ConfigHandle {
+    pub fn new(implementation: Arc<dyn AdditionalData>) -> Self {
+        Self { implementation }
+    }
+}
+
+impl Clone for ConfigHandle {
+    fn clone(&self) -> Self {
+        ConfigHandle {
+            implementation: Arc::clone(&self.implementation),
+        }
+    }
 }
 
 /// flutter_rust_bridge:non_opaque
@@ -99,15 +147,18 @@ pub struct ProviderImplConfig {
     pub(crate) store_fn: StoreFn,
     pub(crate) delete_fn: DeleteFn,
     pub(crate) all_keys_fn: AllKeysFn,
+    pub(crate) additional_config: Option<ConfigHandle>,
 }
 
 impl ProviderImplConfig {
+    /// Creates a new `ProviderImplConfig` instance.
     pub fn new(
         java_vm: Option<Arc<dyn Any + Send + Sync>>,
         get_fn: GetFn,
         store_fn: StoreFn,
         delete_fn: DeleteFn,
         all_keys_fn: AllKeysFn,
+        additional_config: Option<ConfigHandle>,
     ) -> Self {
         Self {
             java_vm,
@@ -115,23 +166,41 @@ impl ProviderImplConfig {
             store_fn,
             delete_fn,
             all_keys_fn,
+            additional_config,
         }
     }
 
+    /// Creates a new stubbed `ProviderImplConfig` instance for testing or default purposes.
     pub fn new_stub(
         java_vm: Option<Arc<dyn Any + Send + Sync>>,
         get_fn: GetFn,
         store_fn: StoreFn,
         delete_fn: DeleteFn,
         all_keys_fn: AllKeysFn,
+        additional_config: Option<ConfigHandle>,
     ) -> Self {
-        Self {
+        Self::new(
             java_vm,
             get_fn,
             store_fn,
             delete_fn,
             all_keys_fn,
-        }
+            additional_config,
+        )
+    }
+
+    /// Method to retrieve the additional configuration as a concrete type.
+    ///
+    /// This method attempts to downcast the `additional_config` to the specified concrete type `T`.
+    /// If the downcast succeeds, it returns `Some(&T)`; otherwise, it returns `None`.
+    pub fn get_additional_config_as<T: Any + 'static>(&self) -> Option<&T> {
+        self.additional_config.as_ref().and_then(|config_handle| {
+            config_handle
+                .implementation
+                .as_ref()
+                .as_any()
+                .downcast_ref::<T>()
+        })
     }
 }
 

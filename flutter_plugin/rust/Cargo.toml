@@ -8,7 +8,7 @@ crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
 flutter_rust_bridge_codegen = "2.5.0"
-flutter_rust_bridge = "=2.5.1"
+flutter_rust_bridge = "=2.6.0"
 robusta_jni = "0.2"
 libloading = "0.8.5"
 tracing = { version = "0.1.40", features = ["attributes"] }
