@@ -1,7 +1,7 @@
 $ErrorActionPreference = "Stop"
 
 $pkgRoot = $PSScriptRoot
-$indexFilePath = "src/types/index.ts"
+$indexFilePath = "generated/index.ts"
 
 $indexFileFullPath = Join-Path $pkgRoot $indexFilePath
 $indexFileParentPath = Split-Path -Path $indexFileFullPath -Parent
