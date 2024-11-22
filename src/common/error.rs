@@ -79,7 +79,7 @@ impl CalError {
     pub(crate) fn other(source: anyhow::Error) -> Self {
         Self {
             error_kind: CalErrorKind::Other,
-            source: source,
+            source,
         }
     }
 
@@ -118,7 +118,7 @@ impl CalError {
     ) -> Self {
         Self {
             error_kind: CalErrorKind::MissingValue {
-                description: description,
+                description,
                 internal,
             },
             source: source.unwrap_or_else(|| anyhow!("Missing Value Error")),

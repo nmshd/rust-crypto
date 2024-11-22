@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
+
 import 'package:cal_flutter_plugin/cal_flutter_plugin.dart' as cal;
 import 'package:flutter/material.dart';
 
@@ -17,6 +18,7 @@ class _EncryptionPageState extends State<EncryptionPage> {
   List<cal.Cipher> _ciphers = [];
   cal.Cipher? _cipherChoice;
   String? _encryptedData;
+  String? _iv;
   String? _decryptedData;
   final TextEditingController _dataToEncryptController =
       TextEditingController();
@@ -30,10 +32,12 @@ class _EncryptionPageState extends State<EncryptionPage> {
     if (widget.provider != null) {
       widget.provider!
           .then((provider) => provider.getCapabilities())
-          .then((caps) => caps.supportedCiphers)
+          .then((caps) => caps?.supportedCiphers)
           .then((e) => {
                 setState(() {
-                  _ciphers = e.toList();
+                  if (e != null) {
+                    _ciphers = e.toList();
+                  }
                 })
               });
     }
@@ -52,11 +56,12 @@ class _EncryptionPageState extends State<EncryptionPage> {
   }
 
   Future<void> encryptData() async {
-    Uint8List signature = await _keyHandle!.encryptData(
+    var (data, iv) = await _keyHandle!.encryptData(
         data: Uint8List.fromList(_dataToEncryptController.text.codeUnits));
 
     setState(() {
-      _encryptedData = base64Encode(signature);
+      _encryptedData = base64Encode(data);
+      _iv = base64Encode(iv);
     });
   }
 
@@ -69,7 +74,8 @@ class _EncryptionPageState extends State<EncryptionPage> {
   Future<void> decryptData() async {
     Uint8List decryptedData = await _keyHandle!.decryptData(
         encryptedData:
-            Uint8List.fromList(base64Decode(_dataToDecryptController.text)));
+            Uint8List.fromList(base64Decode(_dataToDecryptController.text)),
+        iv: Uint8List.fromList(base64Decode(_iv!)));
     setState(() {
       _decryptedData = String.fromCharCodes(decryptedData);
     });

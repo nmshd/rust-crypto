@@ -14,7 +14,13 @@ use crate::tpm::apple_secure_enclave::provider::AppleSecureEnclaveFactory;
 static ALL_PROVIDERS: LazyLock<Vec<ProviderFactoryEnum>> = LazyLock::new(|| {
     vec![
         #[cfg(feature = "android")]
-        Into::into(AndroidProviderFactory {}),
+        Into::into(AndroidProviderFactory {
+            secure_element: true,
+        }),
+        #[cfg(feature = "android")]
+        Into::into(AndroidProviderFactory {
+            secure_element: false,
+        }),
         Into::into(StubProviderFactory {}),
         #[cfg(feature = "apple-secure-enclave")]
         Into::into(AppleSecureEnclaveFactory {}),
@@ -67,8 +73,8 @@ fn provider_supports_capabilities(
 pub fn create_provider(conf: ProviderConfig, impl_conf: ProviderImplConfig) -> Option<Provider> {
     for provider in ALL_PROVIDERS.iter() {
         let provider_caps = provider.get_capabilities(impl_conf.clone());
-
-        if provider_supports_capabilities(&provider_caps, &conf) {
+        let supported = provider_caps.map(|caps| provider_supports_capabilities(&caps, &conf));
+        if supported.unwrap_or(false) {
             return Some(Provider {
                 implementation: provider.create_provider(impl_conf),
             });

@@ -23,19 +23,29 @@ use crate::{
 use anyhow::anyhow;
 use nanoid::nanoid;
 use robusta_jni::jni::JavaVM;
-use std::sync::Mutex;
-use std::{collections::HashSet, fmt::Debug, sync::Arc};
+use std::{collections::HashSet, fmt::Debug};
 use tracing::{debug, info, instrument};
 
-pub(crate) struct AndroidProviderFactory {}
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct AndroidProviderFactory {
+    pub(crate) secure_element: bool,
+}
 
 impl ProviderFactory for AndroidProviderFactory {
     fn get_name(&self) -> String {
-        "ANDROID_PROVIDER".to_owned()
+        if self.secure_element {
+            "ANDROID_PROVIDER_SECURE_ELEMENT".to_owned()
+        } else {
+            "ANDROID_PROVIDER".to_owned()
+        }
     }
 
-    fn get_capabilities(&self, _impl_config: ProviderImplConfig) -> ProviderConfig {
-        ProviderConfig {
+    fn get_capabilities(&self, _impl_config: ProviderImplConfig) -> Option<ProviderConfig> {
+        // only check for Stronbox if secure element is enabled
+        if self.secure_element {
+            wrapper::context::has_strong_box().ok()?;
+        }
+        Some(ProviderConfig {
             min_security_level: SecurityLevel::Hardware,
             max_security_level: SecurityLevel::Hardware,
             supported_asym_spec: vec![
@@ -52,18 +62,13 @@ impl ProviderFactory for AndroidProviderFactory {
                 .into_iter()
                 .collect(),
             supported_hashes: HashSet::new(),
-        }
+        })
     }
 
     fn create_provider(&self, impl_config: ProviderImplConfig) -> ProviderImplEnum {
         ProviderImplEnum::from(AndroidProvider {
-            java_vm: impl_config
-                .java_vm
-                .clone()
-                .expect("no jvm provided")
-                .downcast::<Mutex<JavaVM>>()
-                .expect("downcast failed"),
             impl_config,
+            used_factory: *self,
         })
     }
 }
@@ -78,7 +83,7 @@ impl ProviderFactory for AndroidProviderFactory {
 /// cryptographic operations on Android.
 pub(crate) struct AndroidProvider {
     impl_config: ProviderImplConfig,
-    java_vm: Arc<Mutex<JavaVM>>,
+    used_factory: AndroidProviderFactory,
 }
 
 impl Debug for AndroidProvider {
@@ -100,11 +105,9 @@ impl ProviderImpl for AndroidProvider {
 
         info!("generating key: {}", key_id);
 
-        let vm = self.java_vm.lock().unwrap();
-        let _attach_guard = vm.attach_current_thread().err_internal()?;
-        let env = vm.get_env().expect("Get env failed");
-
-        info!("got env");
+        let vm = ndk_context::android_context().vm();
+        let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
+        let env = vm.attach_current_thread().err_internal()?;
 
         // build up key specs
         let mut kps_builder =
@@ -144,7 +147,7 @@ impl ProviderImpl for AndroidProvider {
         }
 
         kps_builder = kps_builder
-            .set_is_strongbox_backed(&env, true)
+            .set_is_strongbox_backed(&env, self.used_factory.secure_element)
             .err_internal()?;
 
         let kps = kps_builder.build(&env).err_internal()?;
@@ -168,7 +171,6 @@ impl ProviderImpl for AndroidProvider {
         Ok(KeyHandle {
             implementation: Into::into(AndroidKeyHandle {
                 key_id,
-                java_vm: self.java_vm.clone(),
                 spec,
                 impl_config: self.impl_config.clone(),
             }),
@@ -179,9 +181,9 @@ impl ProviderImpl for AndroidProvider {
         let key_id = nanoid!(10);
         info!("generating key pair! {}", key_id);
 
-        let vm = self.java_vm.lock().unwrap();
-        let _attach_guard = vm.attach_current_thread().err_internal()?;
-        let env = vm.get_env().err_internal()?;
+        let vm = ndk_context::android_context().vm();
+        let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
+        let env = vm.attach_current_thread().err_internal()?;
 
         // build up key specs
         let mut kps_builder =
@@ -210,7 +212,7 @@ impl ProviderImpl for AndroidProvider {
             }
         };
         kps_builder = kps_builder
-            .set_is_strongbox_backed(&env, true)
+            .set_is_strongbox_backed(&env, self.used_factory.secure_element)
             .err_internal()?;
 
         let kps = kps_builder.build(&env).err_internal()?;
@@ -234,7 +236,6 @@ impl ProviderImpl for AndroidProvider {
         Ok(KeyPairHandle {
             implementation: Into::into(AndroidKeyPairHandle {
                 key_id,
-                java_vm: self.java_vm.clone(),
                 spec,
                 impl_config: self.impl_config.clone(),
             }),
@@ -261,7 +262,6 @@ impl ProviderImpl for AndroidProvider {
             SerializableSpec::KeySpec(spec) => Ok(KeyHandle {
                 implementation: Into::into(AndroidKeyHandle {
                     key_id,
-                    java_vm: self.java_vm.clone(),
                     spec,
                     impl_config: self.impl_config.clone(),
                 }),
@@ -284,7 +284,6 @@ impl ProviderImpl for AndroidProvider {
             SerializableSpec::KeyPairSpec(spec) => Ok(KeyPairHandle {
                 implementation: Into::into(AndroidKeyPairHandle {
                     key_id,
-                    java_vm: self.java_vm.clone(),
                     spec,
                     impl_config: self.impl_config.clone(),
                 }),
@@ -297,9 +296,9 @@ impl ProviderImpl for AndroidProvider {
 
     #[instrument]
     fn import_key(&mut self, spec: KeySpec, data: &[u8]) -> Result<KeyHandle, CalError> {
-        let vm = self.java_vm.lock().unwrap();
-        let _attach_guard = vm.attach_current_thread().err_internal()?;
-        let env = vm.get_env().err_internal()?;
+        let vm = ndk_context::android_context().vm();
+        let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
+        let env = vm.attach_current_thread().err_internal()?;
 
         let id = nanoid!(10);
 
@@ -323,7 +322,6 @@ impl ProviderImpl for AndroidProvider {
         Ok(KeyHandle {
             implementation: Into::into(AndroidKeyHandle {
                 key_id: id,
-                java_vm: self.java_vm.clone(),
                 spec,
                 impl_config: self.impl_config.clone(),
             }),
@@ -358,10 +356,10 @@ impl ProviderImpl for AndroidProvider {
     }
 
     fn provider_name(&self) -> String {
-        "ANDROID_PROVIDER".to_owned()
+        self.used_factory.get_name()
     }
 
-    fn get_capabilities(&self) -> ProviderConfig {
-        AndroidProviderFactory {}.get_capabilities(self.impl_config.clone())
+    fn get_capabilities(&self) -> Option<ProviderConfig> {
+        self.used_factory.get_capabilities(self.impl_config.clone())
     }
 }

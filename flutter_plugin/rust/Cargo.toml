@@ -7,8 +7,8 @@ edition = "2021"
 crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
-flutter_rust_bridge_codegen = "2.5.0"
-flutter_rust_bridge = "=2.5.1"
+flutter_rust_bridge_codegen = "2.6.0"
+flutter_rust_bridge = "=2.6.0"
 robusta_jni = "0.2"
 libloading = "0.8.5"
 tracing = { version = "0.1.40", features = ["attributes"] }
@@ -19,6 +19,8 @@ crypto-layer = { path = "../../"}
 [target.'cfg(target_os = "android")'.dependencies]
 tracing-android = { version = "0.2.0" }
 crypto-layer = { path = "../../", features = ["android"] }
+jni = "0.19"
+ndk-context = "0.1"
 
 [target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies]
 crypto-layer = { path = "../../", features = ["apple-secure-enclave"] }

@@ -1,8 +1,6 @@
 #![allow(dead_code)]
-use std::any::Any;
 use std::cmp::{Eq, Ord, PartialEq, PartialOrd};
 use std::collections::HashSet;
-use std::fmt;
 
 use std::future::Future;
 use std::pin::Pin;
@@ -64,7 +62,6 @@ pub struct ProviderConfig {
 /// flutter_rust_bridge:opaque
 #[derive(Clone)]
 pub struct ProviderImplConfig {
-    pub(crate) java_vm: Option<Arc<dyn Any + Send + Sync>>,
     pub(crate) get_fn:
         Arc<dyn Fn(String) -> Pin<Box<dyn Future<Output = Option<Vec<u8>>> + Send>> + Send + Sync>,
     pub(crate) store_fn:
@@ -75,9 +72,14 @@ pub struct ProviderImplConfig {
         Arc<dyn Fn() -> Pin<Box<dyn Future<Output = Vec<String>> + Send>> + Send + Sync>,
 }
 
+impl std::fmt::Debug for ProviderImplConfig {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ProviderImplConfig{opaque}").finish()
+    }
+}
+
 impl ProviderImplConfig {
     pub fn new(
-        java_vm: Option<Arc<dyn Any + Send + Sync>>,
         get_fn: impl Fn(String) -> Pin<Box<dyn Future<Output = Option<Vec<u8>>> + Send>>
             + 'static
             + Send
@@ -93,7 +95,6 @@ impl ProviderImplConfig {
             + Sync,
     ) -> Self {
         Self {
-            java_vm,
             get_fn: Arc::new(get_fn),
             store_fn: Arc::new(store_fn),
             delete_fn: Arc::new(delete_fn),
@@ -117,20 +118,11 @@ impl ProviderImplConfig {
             + Sync,
     ) -> Self {
         Self {
-            java_vm: None,
             get_fn: Arc::new(get_fn),
             store_fn: Arc::new(store_fn),
             delete_fn: Arc::new(delete_fn),
             all_keys_fn: Arc::new(all_keys_fn),
         }
-    }
-}
-
-impl fmt::Debug for ProviderImplConfig {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("ProviderImplConfig")
-            .field("java_vm", &self.java_vm)
-            .finish()
     }
 }
 
