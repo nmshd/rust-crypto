@@ -21,8 +21,10 @@ pub(super) fn get_java_vm() -> JavaVM {
     // let lib = unsafe { libloading::os::unix::Library::new("libart.so") }
     // .map_err(|e| TpmError::InitializationError(format!("could not find libart.so: {e}")))?;
 
-    let get_created_java_vms: JniGetCreatedJavaVms =
-        unsafe { *lib.get(JNI_GET_JAVA_VMS_NAME).unwrap() };
+    let get_created_java_vms: JniGetCreatedJavaVms = unsafe {
+        *lib.get(JNI_GET_JAVA_VMS_NAME)
+            .expect("failed to get JNI_GET_JAVA_VMS_NAME")
+    };
 
     // now that we have the function, we can call it
     let mut buffer = [std::ptr::null_mut::<jni::sys::JavaVM>(); 1];
@@ -39,12 +41,13 @@ pub(super) fn get_java_vm() -> JavaVM {
         panic!("No Java VM found");
     }
 
-    let jvm = unsafe { JavaVM::from_raw(buffer[0]).unwrap() };
+    let jvm = unsafe { JavaVM::from_raw(buffer[0]).expect("could not create jvm from buffer") };
     jvm.attach_current_thread().unwrap();
     jvm
 }
 
 pub(super) fn set_up_logging() {
-    let subscriber = Registry::default().with(tracing_android::layer("RUST").unwrap());
+    let subscriber = Registry::default()
+        .with(tracing_android::layer("RUST").expect("could not create android logger"));
     let _ = tracing::subscriber::set_global_default(subscriber);
 }
