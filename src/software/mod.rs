@@ -49,7 +49,7 @@ impl ProviderFactory for SoftwareProviderFactory {
         "SoftwareProvider".to_owned()
     }
 
-    fn get_capabilities(&self, _impl_config: ProviderImplConfig) -> ProviderConfig {
+    fn get_capabilities(&self, _impl_config: ProviderImplConfig) -> Option<ProviderConfig> {
         let mut supported_asym_specs = HashSet::new();
         supported_asym_specs.insert(AsymmetricKeySpec::Ecc {
             scheme: EccSigningScheme::EcDsa,
@@ -61,13 +61,13 @@ impl ProviderFactory for SoftwareProviderFactory {
         supported_hashes.insert(CryptoHash::Sha2(Sha2Bits::Sha384));
         supported_hashes.insert(CryptoHash::Sha2(Sha2Bits::Sha512));
 
-        ProviderConfig {
+        Some(ProviderConfig {
             min_security_level: SecurityLevel::Software,
             max_security_level: SecurityLevel::Software,
             supported_asym_spec: supported_asym_specs,
             supported_ciphers: HashSet::new(),
             supported_hashes,
-        }
+        })
     }
 
     fn create_provider(&self, impl_config: ProviderImplConfig) -> ProviderImplEnum {

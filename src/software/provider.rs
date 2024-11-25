@@ -240,7 +240,7 @@ impl ProviderImpl for SoftwareProvider {
         "SoftwareProvider".to_owned()
     }
 
-    fn get_capabilities(&self) -> ProviderConfig {
+    fn get_capabilities(&self) ->Option<ProviderConfig> {
         SoftwareProviderFactory::default().get_capabilities(self.impl_config.clone())
     }
 }

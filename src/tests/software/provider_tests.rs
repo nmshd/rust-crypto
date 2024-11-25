@@ -118,7 +118,7 @@ mod tests {
 
             // Party B decrypts the data
             let decrypted_data = symmetric_key_handle_b
-                .decrypt_data(&encrypted_data)
+                .decrypt_data(&encrypted_data.0, &[])
                 .expect("Decryption failed on party B");
 
             // The decrypted data should match the original plaintext
@@ -251,12 +251,12 @@ mod tests {
                 .expect("Encryption failed");
 
             assert_ne!(
-                encrypted_data, plaintext,
+                encrypted_data.0, plaintext,
                 "Encrypted data should not match plaintext"
             );
 
             let decrypted_data = software_key_handle
-                .decrypt_data(&encrypted_data)
+                .decrypt_data(&encrypted_data.0, &[])
                 .expect("Decryption failed");
 
             assert_eq!(
@@ -282,7 +282,7 @@ mod tests {
                 .expect("Encryption failed");
 
             let decrypted_data = software_key_handle
-                .decrypt_data(&encrypted_data)
+                .decrypt_data(&encrypted_data.0, &[])
                 .expect("Decryption failed");
 
             assert_eq!(
@@ -308,7 +308,7 @@ mod tests {
                 .encrypt_data(plaintext)
                 .expect("Encryption failed");
 
-            let decrypted_result = software_key_handle2.decrypt_data(&encrypted_data);
+            let decrypted_result = software_key_handle2.decrypt_data(&encrypted_data.0, &[]);
 
             assert!(
                 decrypted_result.is_err(),
@@ -331,9 +331,9 @@ mod tests {
                 .encrypt_data(plaintext)
                 .expect("Encryption failed");
 
-            encrypted_data[15] ^= 0xFF;
+            encrypted_data.0[15] ^= 0xFF;
 
-            let decrypted_result = software_key_handle.decrypt_data(&encrypted_data);
+            let decrypted_result = software_key_handle.decrypt_data(&encrypted_data.0, &[]);
 
             assert!(
                 decrypted_result.is_err(),
@@ -371,7 +371,7 @@ mod tests {
                 .expect("Encryption failed");
 
             let decrypted_data = software_key_handle
-                .decrypt_data(&encrypted_data)
+                .decrypt_data(&encrypted_data.0, &[])
                 .expect("Decryption failed");
 
             assert_eq!(
@@ -406,11 +406,11 @@ mod tests {
             );
 
             let decrypted_data1 = software_key_handle
-                .decrypt_data(&encrypted_data1)
+                .decrypt_data(&encrypted_data1.0, &[])
                 .expect("Decryption failed");
 
             let decrypted_data2 = software_key_handle
-                .decrypt_data(&encrypted_data2)
+                .decrypt_data(&encrypted_data2.0, &[])
                 .expect("Decryption failed");
 
             assert_eq!(
@@ -438,7 +438,7 @@ mod tests {
             let rng = SystemRandom::new();
             rng.fill(&mut random_data).unwrap();
 
-            let decrypted_result = software_key_handle.decrypt_data(&random_data);
+            let decrypted_result = software_key_handle.decrypt_data(&random_data, &[]);
 
             assert!(
                 decrypted_result.is_err(),
@@ -455,7 +455,7 @@ mod tests {
 
             let software_key_handle = create_software_key_handle(spec).unwrap();
             let short_data = vec![0u8; 10];
-            let decrypted_result = software_key_handle.decrypt_data(&short_data);
+            let decrypted_result = software_key_handle.decrypt_data(&short_data, &[]);
 
             assert!(
                 decrypted_result.is_err(),
@@ -484,7 +484,7 @@ mod tests {
                 .encrypt_data(plaintext)
                 .expect("Encryption failed");
 
-            let decrypted_result = software_key_handle128.decrypt_data(&encrypted_data);
+            let decrypted_result = software_key_handle128.decrypt_data(&encrypted_data.0, &[]);
 
             assert!(
                 decrypted_result.is_err(),
@@ -515,7 +515,7 @@ mod tests {
                     .expect("Encryption failed");
 
                 let decrypted_data = software_key_handle
-                    .decrypt_data(&encrypted_data)
+                    .decrypt_data(&encrypted_data.0, &[])
                     .expect("Decryption failed");
 
                 assert_eq!(
