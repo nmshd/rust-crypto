@@ -7,8 +7,20 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug",
-            "program": "${workspaceFolder}/<executable file>",
+            "name": "Debug unit tests in library 'crypto_layer'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--features=\"software\"",
+                    "--package=crypto-layer"
+                ],
+                "filter": {
+                    "name": "crypto_layer",
+                    "kind": "lib"
+                }
+            },
             "args": [],
             "cwd": "${workspaceFolder}"
         }

@@ -241,7 +241,11 @@ impl KeyHandle for TpmProvider {
     /// A `Result` indicating whether the signature is valid (`true`) or not (`false`),
     /// or a `SecurityModuleError` on failure.
     #[instrument]
-    async fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, SecurityModuleError> {
+    async fn verify_signature(
+        &self,
+        data: &[u8],
+        signature: &[u8],
+    ) -> Result<bool, SecurityModuleError> {
         let mut alg_handle: BCRYPT_ALG_HANDLE = self.hash.unwrap().into();
         let alg_id: PCWSTR = self.hash.unwrap().into();
 

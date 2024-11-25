@@ -73,9 +73,7 @@ sealed class CryptoHash with _$CryptoHash {
 /// ```rust
 /// use crypto_layer::common::crypto::algorithms::hashes::Sha2Bits;
 ///
-/// fn main() {
-///     let digest_size = Sha2Bits::Sha512;
-/// }
+/// let digest_size = Sha2Bits::Sha512;
 /// ```
 ///
 /// # Note
@@ -120,9 +118,7 @@ enum Sha2Bits {
 /// ```rust
 /// use crypto_layer::common::crypto::algorithms::hashes::Sha3Bits;
 ///
-/// fn main() {
-///     let digest_size = Sha3Bits::Sha3_384;
-/// }
+/// let digest_size = Sha3Bits::Sha3_384;
 /// ```
 ///
 /// # Note

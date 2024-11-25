@@ -12,8 +12,6 @@ use thiserror;
 /// The provider implementation should map errors from native libraries to this enum.
 /// Most if not all errors should have a source for backtraces.
 /// If other fields are usefull for understanding the error, they should also exist.
-///
-
 #[derive(thiserror::Error, Debug)]
 #[error("{error_kind}: {source}")]
 #[repr(C)]

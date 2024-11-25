@@ -5,6 +5,8 @@ use super::{
     traits::module_provider::{ProviderFactory, ProviderFactoryEnum},
     Provider,
 };
+#[cfg(feature = "software")]
+use crate::software::SoftwareProviderFactory;
 use crate::stub::StubProviderFactory;
 #[cfg(feature = "android")]
 use crate::tpm::android::provider::AndroidProviderFactory;
@@ -24,6 +26,8 @@ static ALL_PROVIDERS: LazyLock<Vec<ProviderFactoryEnum>> = LazyLock::new(|| {
         Into::into(StubProviderFactory {}),
         #[cfg(feature = "apple-secure-enclave")]
         Into::into(AppleSecureEnclaveFactory {}),
+        #[cfg(feature = "software")]
+        Into::into(SoftwareProviderFactory {}),
     ]
 });
 
