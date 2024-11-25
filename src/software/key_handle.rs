@@ -37,7 +37,7 @@ impl SoftwareKeyHandle {
 }
 
 impl KeyHandleImpl for SoftwareKeyHandle {
-    fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
+    fn encrypt_data(&self, data: &[u8]) -> Result<(Vec<u8>, std::vec::Vec<u8>), CalError> {
         let rng = SystemRandom::new();
 
         // Generate a unique nonce for this encryption operation
@@ -62,10 +62,10 @@ impl KeyHandleImpl for SoftwareKeyHandle {
         let mut encrypted_data = nonce_bytes.to_vec();
         encrypted_data.extend(&in_out);
 
-        Ok(encrypted_data)
+        Ok((encrypted_data, vec![]))
     }
 
-    fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, CalError> {
+    fn decrypt_data(&self, encrypted_data: &[u8], iv: &[u8]) -> Result<Vec<u8>, CalError> {
         // Separate nonce and ciphertext
         if encrypted_data.len() <= NONCE_LEN {
             return Err(CalError::failed_operation(
