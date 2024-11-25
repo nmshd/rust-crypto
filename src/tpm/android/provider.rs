@@ -42,8 +42,8 @@ impl ProviderFactory for AndroidProviderFactory {
 
     fn get_capabilities(&self, _impl_config: ProviderImplConfig) -> Option<ProviderConfig> {
         // only check for Stronbox if secure element is enabled
-        if self.secure_element {
-            wrapper::context::has_strong_box().ok()?;
+        if self.secure_element && !wrapper::context::has_strong_box().ok()? {
+            return None;
         }
         Some(ProviderConfig {
             min_security_level: SecurityLevel::Hardware,
