@@ -23,7 +23,7 @@ pub(crate) trait ProviderFactory: Send + Sync {
     /// Returns security level and supported algorithms of a provider.
     ///
     /// [ProviderConfig] returned stores in HashSets all Hashes, Ciphers and AsymmetricKeySpecs a provider supports.
-    fn get_capabilities(&self, impl_config: ProviderImplConfig) -> ProviderConfig;
+    fn get_capabilities(&self, impl_config: ProviderImplConfig) -> Option<ProviderConfig>;
     fn create_provider(&self, impl_config: ProviderImplConfig) -> ProviderImplEnum;
 }
 
@@ -126,7 +126,7 @@ pub(crate) trait ProviderImpl: Send + Sync {
 
     fn provider_name(&self) -> String;
 
-    fn get_capabilities(&self) -> ProviderConfig;
+    fn get_capabilities(&self) -> Option<ProviderConfig>;
 }
 
 #[enum_dispatch]

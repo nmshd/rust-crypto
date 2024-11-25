@@ -150,6 +150,12 @@ pub struct ProviderImplConfig {
     pub(crate) additional_config: Option<ConfigHandle>,
 }
 
+impl std::fmt::Debug for ProviderImplConfig {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ProviderImplConfig{opaque}").finish()
+    }
+}
+
 impl ProviderImplConfig {
     /// Creates a new `ProviderImplConfig` instance.
     pub fn new(

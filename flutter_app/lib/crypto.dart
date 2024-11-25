@@ -9,6 +9,8 @@ Future<Provider> getDefaultProvider() async {
   String providerName;
   if (Platform.isAndroid) {
     providerName = "ANDROID_PROVIDER";
+  } else if (Platform.isMacOS || Platform.isIOS) {
+    providerName = "APPLE_SECURE_ENCLAVE";
   } else {
     providerName = "STUB_PROVIDER";
   }

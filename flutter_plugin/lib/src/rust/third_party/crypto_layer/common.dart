@@ -18,11 +18,12 @@ abstract class DhExchange implements RustOpaqueInterface {}
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<KeyHandle>>
 abstract class KeyHandle implements RustOpaqueInterface {
-  Future<Uint8List> decryptData({required List<int> encryptedData});
+  Future<Uint8List> decryptData(
+      {required List<int> encryptedData, required List<int> iv});
 
   Future<void> delete();
 
-  Future<Uint8List> encryptData({required List<int> data});
+  Future<(Uint8List, Uint8List)> encryptData({required List<int> data});
 
   Future<Uint8List> extractKey();
 
@@ -60,7 +61,7 @@ abstract class Provider implements RustOpaqueInterface {
 
   Future<KeyPairHandle> createKeyPair({required KeyPairSpec spec});
 
-  Future<ProviderConfig> getCapabilities();
+  Future<ProviderConfig?> getCapabilities();
 
   Future<KeyHandle> importKey({required KeySpec spec, required List<int> data});
 

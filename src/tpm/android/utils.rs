@@ -63,33 +63,6 @@ pub fn get_hash_name(hash: CryptoHash) -> Result<String, CalError> {
     }
 }
 
-pub fn get_iv_size(value: Cipher) -> usize {
-    match value {
-        Cipher::Aes(mode, _) => match mode {
-            SymmetricMode::Gcm => 12,
-            SymmetricMode::Ccm => 16,
-            SymmetricMode::Ecb => 16,
-            SymmetricMode::Cbc => 16,
-            SymmetricMode::Cfb => 16,
-            SymmetricMode::Ofb => 16,
-            SymmetricMode::Ctr => 16,
-        },
-        Cipher::TripleDes(_) => 8,
-        _ => unimplemented!("not supported"),
-    }
-}
-
-pub fn store_iv(mut data: Vec<u8>, mut iv: Vec<u8>) -> Vec<u8> {
-    iv.append(&mut data);
-    iv
-}
-
-pub fn load_iv(data: &[u8], iv_size: usize) -> (Vec<u8>, Vec<u8>) {
-    let iv = Vec::from(&data[0..iv_size]);
-    let data = Vec::from(&data[iv_size..]);
-    (data, iv)
-}
-
 pub fn get_mode_name(mode: SymmetricMode) -> Result<String, CalError> {
     match mode {
         SymmetricMode::Ecb => Ok("ECB".to_string()),

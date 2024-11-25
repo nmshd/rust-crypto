@@ -24,14 +24,14 @@ impl ProviderFactory for StubProviderFactory {
         PROVIDER_NAME.to_owned()
     }
 
-    fn get_capabilities(&self, impl_config: ProviderImplConfig) -> ProviderConfig {
-        ProviderConfig {
+    fn get_capabilities(&self, impl_config: ProviderImplConfig) -> Option<ProviderConfig> {
+        Some(ProviderConfig {
             min_security_level: SecurityLevel::Software,
             max_security_level: SecurityLevel::Software,
             supported_asym_spec: HashSet::new(),
             supported_ciphers: HashSet::new(),
             supported_hashes: HashSet::new(),
-        }
+        })
     }
 
     fn create_provider(&self, impl_config: ProviderImplConfig) -> ProviderImplEnum {
@@ -91,7 +91,7 @@ impl ProviderImpl for StubProvider {
         PROVIDER_NAME.to_owned()
     }
 
-    fn get_capabilities(&self) -> ProviderConfig {
+    fn get_capabilities(&self) -> Option<ProviderConfig> {
         StubProviderFactory {}.get_capabilities(self.impl_config.clone())
     }
 }
@@ -141,11 +141,11 @@ impl KeyPairHandleImpl for StubKeyPairHandle {
 pub(crate) struct StubKeyHandle {}
 
 impl KeyHandleImpl for StubKeyHandle {
-    fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
+    fn encrypt_data(&self, data: &[u8]) -> Result<(Vec<u8>, Vec<u8>), CalError> {
         todo!()
     }
 
-    fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, CalError> {
+    fn decrypt_data(&self, encrypted_data: &[u8], iv: &[u8]) -> Result<Vec<u8>, CalError> {
         todo!()
     }
 

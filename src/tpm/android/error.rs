@@ -1,9 +1,8 @@
 use anyhow::{anyhow, Context};
+use robusta_jni::jni::JavaVM;
 use tracing::{info, warn};
 
 use crate::common::error::{CalError, ToCalError};
-
-use super::wrapper;
 
 #[derive(Debug)]
 pub(crate) struct JavaException(String);
@@ -34,8 +33,9 @@ fn err_internal<T>(res: robusta_jni::jni::errors::Result<T>) -> Result<T, anyhow
         Err(e) => {
             info!("err_internal: {:?}", e);
             // check if a java exception was thrown
-            let vm = wrapper::get_java_vm()?;
-            let env = vm.get_env().map_err(anyhow::Error::new)?;
+            let vm = ndk_context::android_context().vm();
+            let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
+            let env = vm.attach_current_thread().err_internal()?;
             if env.exception_check().map_err(anyhow::Error::new)? {
                 // get the exception message and put it into the error
                 env.exception_describe().map_err(anyhow::Error::new)?;

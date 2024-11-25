@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
+
 import 'package:cal_flutter_plugin/cal_flutter_plugin.dart' as cal;
 import 'package:flutter/material.dart';
 
@@ -30,10 +31,12 @@ class _SigningPageState extends State<SigningPage> {
     if (widget.provider != null) {
       widget.provider!
           .then((provider) => provider.getCapabilities())
-          .then((caps) => caps.supportedAsymSpec)
+          .then((caps) => caps?.supportedAsymSpec)
           .then((e) => {
                 setState(() {
-                  _algos = e.toList();
+                  if (e != null) {
+                    _algos = e.toList();
+                  }
                 })
               });
     }
@@ -44,7 +47,19 @@ class _SigningPageState extends State<SigningPage> {
       var spec = cal.KeyPairSpec(
           asymSpec: _algoChoice!,
           signingHash: const cal.CryptoHash.sha2(cal.Sha2Bits.sha256));
-      var keyPair = await (await widget.provider!).createKeyPair(spec: spec);
+
+      cal.KeyPairHandle keyPair;
+      try {
+        keyPair = await (await widget.provider!).createKeyPair(spec: spec);
+      } on cal.CalErrorImpl catch (e) {
+        debugPrint('Exception:\n$e');
+        var errorKind = await e.errorKind();
+        debugPrint("Error Kind: $errorKind");
+        var backtrace = await e.backtrace();
+        debugPrint('Back trace:\n $backtrace');
+        rethrow;
+      }
+
       setState(() {
         _keyPairHandle = keyPair;
       });

@@ -393,6 +393,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Cipher? dco_decode_opt_box_autoadd_cipher(dynamic raw);
 
   @protected
+  ProviderConfig? dco_decode_opt_box_autoadd_provider_config(dynamic raw);
+
+  @protected
   Uint8List? dco_decode_opt_list_prim_u_8_strict(dynamic raw);
 
   @protected
@@ -400,6 +403,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Rc2KeyBits dco_decode_rc_2_key_bits(dynamic raw);
+
+  @protected
+  (Uint8List, Uint8List)
+      dco_decode_record_list_prim_u_8_strict_list_prim_u_8_strict(dynamic raw);
 
   @protected
   SecurityLevel dco_decode_security_level(dynamic raw);
@@ -720,6 +727,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Cipher? sse_decode_opt_box_autoadd_cipher(SseDeserializer deserializer);
 
   @protected
+  ProviderConfig? sse_decode_opt_box_autoadd_provider_config(
+      SseDeserializer deserializer);
+
+  @protected
   Uint8List? sse_decode_opt_list_prim_u_8_strict(SseDeserializer deserializer);
 
   @protected
@@ -727,6 +738,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Rc2KeyBits sse_decode_rc_2_key_bits(SseDeserializer deserializer);
+
+  @protected
+  (Uint8List, Uint8List)
+      sse_decode_record_list_prim_u_8_strict_list_prim_u_8_strict(
+          SseDeserializer deserializer);
 
   @protected
   SecurityLevel sse_decode_security_level(SseDeserializer deserializer);
@@ -1074,6 +1090,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       Cipher? self, SseSerializer serializer);
 
   @protected
+  void sse_encode_opt_box_autoadd_provider_config(
+      ProviderConfig? self, SseSerializer serializer);
+
+  @protected
   void sse_encode_opt_list_prim_u_8_strict(
       Uint8List? self, SseSerializer serializer);
 
@@ -1083,6 +1103,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_rc_2_key_bits(Rc2KeyBits self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_record_list_prim_u_8_strict_list_prim_u_8_strict(
+      (Uint8List, Uint8List) self, SseSerializer serializer);
 
   @protected
   void sse_encode_security_level(SecurityLevel self, SseSerializer serializer);
