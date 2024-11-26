@@ -15,3 +15,4 @@ crate-type = ["cdylib"]
 [dependencies]
 crypto-layer = { version = "0.1.0", path = "../../.." }
 neon = "1"
+thiserror = "2.0.3"
