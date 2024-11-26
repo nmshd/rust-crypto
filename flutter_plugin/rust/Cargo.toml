@@ -18,7 +18,7 @@ crypto-layer = { path = "../../"}
 
 [target.'cfg(target_os = "android")'.dependencies]
 tracing-android = { version = "0.2.0" }
-crypto-layer = { path = "../../", features = ["android"] }
+crypto-layer = { path = "../../", features = ["android", "software"] }
 jni = "0.19"
 ndk-context = "0.1"
 

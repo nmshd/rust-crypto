@@ -2,7 +2,8 @@ use config::{KeyPairSpec, KeySpec, ProviderConfig};
 use error::CalError;
 use tracing::error;
 #[cfg(feature = "software")]
-use traits::key_handle::{DHKeyExchangeImpl, DHKeyExchangeImplEnum};
+use traits::key_handle::DHKeyExchangeImpl;
+use traits::key_handle::DHKeyExchangeImplEnum;
 use traits::key_handle::{
     KeyHandleImpl, KeyHandleImplEnum, KeyPairHandleImpl, KeyPairHandleImplEnum,
 };
