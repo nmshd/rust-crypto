@@ -3,6 +3,8 @@ use serde::{Deserialize, Serialize};
 use std::cmp::{Eq, PartialEq};
 use std::hash::Hash;
 
+use strum::EnumString;
+
 /// Represents the available encryption algorithms.
 ///
 /// This enum provides a C-compatible representation of different encryption
@@ -38,7 +40,7 @@ use std::hash::Hash;
 /// facilitating interfacing with C code or when ABI compatibility is required.
 /// flutter_rust_bridge:non_opaque
 #[repr(C)]
-#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, EnumString)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum AsymmetricKeySpec {
     /// RSA encryption with selectable key sizes.
@@ -63,7 +65,7 @@ pub enum AsymmetricKeySpec {
 
 /// flutter_rust_bridge:non_opaque
 #[repr(C)]
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, EnumString)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum EccSigningScheme {
     /// ECDSA: Elliptic Curve Digital Signature Algorithm.
@@ -72,6 +74,12 @@ pub enum EccSigningScheme {
     EcDaa,
     /// EC-Schnorr: A Schnorr signature scheme variant using elliptic curves.
     EcSchnorr,
+}
+
+impl Default for EccSigningScheme {
+    fn default() -> Self {
+        EccSigningScheme::EcDsa
+    }
 }
 
 /// Specifies the curve types for Elliptic Curve Digital Signature Algorithm (ECDSA).
@@ -94,7 +102,7 @@ pub enum EccSigningScheme {
 /// Uses `#[repr(C)]` for C language compatibility.
 /// flutter_rust_bridge:non_opaque
 #[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, EnumString)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum EccCurve {
     /// NIST P-256 curve.
@@ -119,6 +127,12 @@ pub enum EccCurve {
     Curve448,
     /// FRP256v1, a French curve providing strong security and performance.
     Frp256v1,
+}
+
+impl Default for EccCurve {
+    fn default() -> Self {
+        EccCurve::P256
+    }
 }
 
 /// Represents the available cipher algorithms.
@@ -153,7 +167,7 @@ pub enum EccCurve {
 /// facilitating ABI compatibility and interfacing with C code.
 /// flutter_rust_bridge:non_opaque
 #[repr(C)]
-#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, EnumString)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum Cipher {
     /// AES (Advanced Encryption Standard) block cipher with selectable key sizes and modes.
@@ -208,7 +222,7 @@ impl Default for Cipher {
 /// `#[repr(C)]` attribute is used for C compatibility.
 /// flutter_rust_bridge:non_opaque
 #[repr(C)]
-#[derive(Clone, Debug, Default, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, EnumString)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum SymmetricMode {
     /// AES in Galois/Counter Mode (GCM) with selectable key sizes.
@@ -263,13 +277,19 @@ pub enum SymmetricMode {
 /// Uses `#[repr(C)]` for C language compatibility.
 /// flutter_rust_bridge:non_opaque
 #[repr(C)]
-#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, EnumString)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum TripleDesNumKeys {
     /// Two-key Triple DES, using two different keys for encryption.
     Tdes2,
     /// Three-key Triple DES, providing enhanced security with three different keys.
     Tdes3,
+}
+
+impl Default for TripleDesNumKeys {
+    fn default() -> Self {
+        TripleDesNumKeys::Tdes3
+    }
 }
 
 /// Specifies the key sizes for the RC2 block cipher.
@@ -294,7 +314,7 @@ pub enum TripleDesNumKeys {
 /// Marked with `#[repr(C)]` to ensure compatibility with C-based environments.
 /// flutter_rust_bridge:non_opaque
 #[repr(C)]
-#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, EnumString)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum Rc2KeyBits {
     /// RC2 with a 40-bit key.
@@ -305,11 +325,23 @@ pub enum Rc2KeyBits {
     Rc2_128,
 }
 
+impl Default for Rc2KeyBits {
+    fn default() -> Self {
+        Rc2KeyBits::Rc2_128
+    }
+}
+
 /// Specifies ChaCha20 Variant.
 /// flutter_rust_bridge:non_opaque
-#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, EnumString)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum ChCha20Mode {
     ChaCha20Poly1305,
     XChaCha20Poly1305,
+}
+
+impl Default for ChCha20Mode {
+    fn default() -> Self {
+        ChCha20Mode::XChaCha20Poly1305
+    }
 }

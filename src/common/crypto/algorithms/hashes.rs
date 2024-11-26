@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use strum::EnumString;
+
 /// Represents the available hashing algorithms.
 ///
 /// This enum provides a C-compatible representation of various hashing algorithms,
@@ -11,7 +13,7 @@ use serde::{Deserialize, Serialize};
 /// Prefer using more secure algorithms like SHA-2 or SHA-3 for cryptographic purposes.
 /// flutter_rust_bridge:non_opaque
 #[repr(C)]
-#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, EnumString)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum CryptoHash {
     /// SHA-1 hashing algorithm.
@@ -76,7 +78,7 @@ impl Default for CryptoHash {
 /// `#[repr(C)]` attribute is used for C compatibility, facilitating interoperability with C-based systems.
 /// flutter_rust_bridge:non_opaque
 #[repr(C)]
-#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, EnumString)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum Sha2Bits {
     /// 224-bit digest size.
@@ -125,6 +127,12 @@ impl From<Sha2Bits> for u32 {
     }
 }
 
+impl Default for Sha2Bits {
+    fn default() -> Self {
+        Sha2Bits::Sha512
+    }
+}
+
 /// Specifies the digest sizes for the SHA-3 family of hashing algorithms.
 ///
 /// SHA-3, also known as Keccak, offers a range of digest sizes to accommodate various
@@ -152,7 +160,7 @@ impl From<Sha2Bits> for u32 {
 /// Uses `#[repr(C)]` for C language compatibility, important for interoperability with C-based systems.
 /// flutter_rust_bridge:non_opaque
 #[repr(C)]
-#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, EnumString)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum Sha3Bits {
     /// 224-bit digest size for SHA-3.
@@ -193,5 +201,11 @@ impl From<Sha3Bits> for u32 {
             Sha3Bits::Sha3_384 => 384,
             Sha3Bits::Sha3_512 => 512,
         }
+    }
+}
+
+impl Default for Sha3Bits {
+    fn default() -> Self {
+        Sha3Bits::Sha3_512
     }
 }

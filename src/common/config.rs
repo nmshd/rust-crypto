@@ -10,6 +10,8 @@ use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
 
+use strum::EnumString;
+
 use super::crypto::algorithms::{
     encryption::{AsymmetricKeySpec, Cipher},
     hashes::CryptoHash,
@@ -21,7 +23,7 @@ use super::crypto::algorithms::{
 /// * [SecurityLevel::Software]: Provder uses the systems software keystore.
 /// * [SecurityLevel::Network]: Provider uses a network key store (Hashicorp).
 /// * [SecurityLevel::Unsafe]: Provder uses software fallback.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, EnumString)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum SecurityLevel {
     /// Highest security level

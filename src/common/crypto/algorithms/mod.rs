@@ -5,6 +5,8 @@ use std::hash::Hash;
 
 use serde::{Deserialize, Serialize};
 
+use strum::EnumString;
+
 /// Represents the bit length of a cryptographic key.
 ///
 /// This enum defines various key bit lengths commonly used in cryptography.
@@ -24,7 +26,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// This enum can be converted to and from `u32` values using the `From` trait implementations.
 #[repr(C)]
-#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, EnumString)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum KeyBits {
     Bits128,
@@ -101,5 +103,11 @@ impl From<i32> for KeyBits {
             8192 => KeyBits::Bits8192,
             _ => unimplemented!("Unsupported key size"),
         }
+    }
+}
+
+impl Default for KeyBits {
+    fn default() -> Self {
+        KeyBits::Bits256
     }
 }
