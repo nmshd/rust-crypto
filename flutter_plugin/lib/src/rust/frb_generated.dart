@@ -136,20 +136,17 @@ abstract class RustLibApi extends BaseApi {
       required List<int> signature});
 
   Future<ProviderImplConfig> cryptoLayerCommonConfigProviderImplConfigNew(
-      {ArcAny? javaVm,
-      required ArcFnStringDynFutureOptionVecU8 getFn,
+      {required ArcFnStringDynFutureOptionVecU8 getFn,
       required ArcFnStringVecU8DynFutureBool storeFn,
       required ArcFnStringPinBoxFutureOutput deleteFn,
       required ArcFnDynFutureVecString allKeysFn,
       ConfigHandle? additionalConfig});
 
   Future<ProviderImplConfig> cryptoLayerCommonConfigProviderImplConfigNewStub(
-      {ArcAny? javaVm,
-      required ArcFnStringDynFutureOptionVecU8 getFn,
+      {required ArcFnStringDynFutureOptionVecU8 getFn,
       required ArcFnStringVecU8DynFutureBool storeFn,
       required ArcFnStringPinBoxFutureOutput deleteFn,
-      required ArcFnDynFutureVecString allKeysFn,
-      ConfigHandle? additionalConfig});
+      required ArcFnDynFutureVecString allKeysFn});
 
   Future<KeyHandle> cryptoLayerCommonProviderCreateKey(
       {required Provider that, required KeySpec spec});
@@ -232,12 +229,6 @@ abstract class RustLibApi extends BaseApi {
 
   CrossPlatformFinalizerArg
       get rust_arc_decrement_strong_count_ArcAdditionalDataPtr;
-
-  RustArcIncrementStrongCountFnType get rust_arc_increment_strong_count_ArcAny;
-
-  RustArcDecrementStrongCountFnType get rust_arc_decrement_strong_count_ArcAny;
-
-  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_ArcAnyPtr;
 
   RustArcIncrementStrongCountFnType
       get rust_arc_increment_strong_count_ArcFnDynFutureVecString;
@@ -779,8 +770,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @override
   Future<ProviderImplConfig> cryptoLayerCommonConfigProviderImplConfigNew(
-      {ArcAny? javaVm,
-      required ArcFnStringDynFutureOptionVecU8 getFn,
+      {required ArcFnStringDynFutureOptionVecU8 getFn,
       required ArcFnStringVecU8DynFutureBool storeFn,
       required ArcFnStringPinBoxFutureOutput deleteFn,
       required ArcFnDynFutureVecString allKeysFn,
@@ -788,8 +778,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynAnySendSync(
-            javaVm, serializer);
         sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynFnStringDynFutureOptionVecu8SendSync(
             getFn, serializer);
         sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynFnStringVecu8DynFutureboolSendSync(
@@ -809,14 +797,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeErrorData: null,
       ),
       constMeta: kCryptoLayerCommonConfigProviderImplConfigNewConstMeta,
-      argValues: [
-        javaVm,
-        getFn,
-        storeFn,
-        deleteFn,
-        allKeysFn,
-        additionalConfig
-      ],
+      argValues: [getFn, storeFn, deleteFn, allKeysFn, additionalConfig],
       apiImpl: this,
     ));
   }
@@ -825,7 +806,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(
         debugName: "ProviderImplConfig_new",
         argNames: [
-          "javaVm",
           "getFn",
           "storeFn",
           "deleteFn",
@@ -836,17 +816,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @override
   Future<ProviderImplConfig> cryptoLayerCommonConfigProviderImplConfigNewStub(
-      {ArcAny? javaVm,
-      required ArcFnStringDynFutureOptionVecU8 getFn,
+      {required ArcFnStringDynFutureOptionVecU8 getFn,
       required ArcFnStringVecU8DynFutureBool storeFn,
       required ArcFnStringPinBoxFutureOutput deleteFn,
-      required ArcFnDynFutureVecString allKeysFn,
-      ConfigHandle? additionalConfig}) {
+      required ArcFnDynFutureVecString allKeysFn}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynAnySendSync(
-            javaVm, serializer);
         sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynFnStringDynFutureOptionVecu8SendSync(
             getFn, serializer);
         sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynFnStringVecu8DynFutureboolSendSync(
@@ -855,8 +831,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             deleteFn, serializer);
         sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynFnDynFutureVecStringSendSync(
             allKeysFn, serializer);
-        sse_encode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerConfigHandle(
-            additionalConfig, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
             funcId: 17, port: port_);
       },
@@ -866,14 +840,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeErrorData: null,
       ),
       constMeta: kCryptoLayerCommonConfigProviderImplConfigNewStubConstMeta,
-      argValues: [
-        javaVm,
-        getFn,
-        storeFn,
-        deleteFn,
-        allKeysFn,
-        additionalConfig
-      ],
+      argValues: [getFn, storeFn, deleteFn, allKeysFn],
       apiImpl: this,
     ));
   }
@@ -882,14 +849,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       get kCryptoLayerCommonConfigProviderImplConfigNewStubConstMeta =>
           const TaskConstMeta(
             debugName: "ProviderImplConfig_new_stub",
-            argNames: [
-              "javaVm",
-              "getFn",
-              "storeFn",
-              "deleteFn",
-              "allKeysFn",
-              "additionalConfig"
-            ],
+            argNames: ["getFn", "storeFn", "deleteFn", "allKeysFn"],
           );
 
   @override
@@ -1719,14 +1679,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynAdditionalData;
 
   RustArcIncrementStrongCountFnType
-      get rust_arc_increment_strong_count_ArcAny => wire
-          .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynAnySendSync;
-
-  RustArcDecrementStrongCountFnType
-      get rust_arc_decrement_strong_count_ArcAny => wire
-          .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynAnySendSync;
-
-  RustArcIncrementStrongCountFnType
       get rust_arc_increment_strong_count_ArcFnDynFutureVecString => wire
           .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynFnDynFutureVecStringSendSync;
 
@@ -1832,14 +1784,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return ArcAdditionalDataImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  ArcAny
-      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynAnySendSync(
-          dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return ArcAnyImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -2027,14 +1971,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  ArcAny
-      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynAnySendSync(
-          dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return ArcAnyImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
   ArcFnDynFutureVecString
       dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynFnDynFutureVecStringSendSync(
           dynamic raw) {
@@ -2191,15 +2127,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   bool dco_decode_bool(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as bool;
-  }
-
-  @protected
-  ArcAny
-      dco_decode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynAnySendSync(
-          dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynAnySendSync(
-        raw);
   }
 
   @protected
@@ -2458,17 +2385,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  ArcAny?
-      dco_decode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynAnySendSync(
-          dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return raw == null
-        ? null
-        : dco_decode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynAnySendSync(
-            raw);
-  }
-
-  @protected
   ConfigHandle?
       dco_decode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerConfigHandle(
           dynamic raw) {
@@ -2604,15 +2520,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return ArcAdditionalDataImpl.frbInternalSseDecode(
-        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
-  }
-
-  @protected
-  ArcAny
-      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynAnySendSync(
-          SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return ArcAnyImpl.frbInternalSseDecode(
         sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
   }
 
@@ -2785,15 +2692,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  ArcAny
-      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynAnySendSync(
-          SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return ArcAnyImpl.frbInternalSseDecode(
-        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
-  }
-
-  @protected
   ArcFnDynFutureVecString
       sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynFnDynFutureVecStringSendSync(
           SseDeserializer deserializer) {
@@ -2952,15 +2850,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   bool sse_decode_bool(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getUint8() != 0;
-  }
-
-  @protected
-  ArcAny
-      sse_decode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynAnySendSync(
-          SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return (sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynAnySendSync(
-        deserializer));
   }
 
   @protected
@@ -3246,20 +3135,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  ArcAny?
-      sse_decode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynAnySendSync(
-          SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    if (sse_decode_bool(deserializer)) {
-      return (sse_decode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynAnySendSync(
-          deserializer));
-    } else {
-      return null;
-    }
-  }
-
-  @protected
   ConfigHandle?
       sse_decode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerConfigHandle(
           SseDeserializer deserializer) {
@@ -3423,15 +3298,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_usize(
         (self as ArcAdditionalDataImpl).frbInternalSseEncode(move: true),
         serializer);
-  }
-
-  @protected
-  void
-      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynAnySendSync(
-          ArcAny self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-        (self as ArcAnyImpl).frbInternalSseEncode(move: true), serializer);
   }
 
   @protected
@@ -3661,15 +3527,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynAnySendSync(
-          ArcAny self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-        (self as ArcAnyImpl).frbInternalSseEncode(move: null), serializer);
-  }
-
-  @protected
-  void
       sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynFnDynFutureVecStringSendSync(
           ArcFnDynFutureVecString self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
@@ -3833,15 +3690,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_bool(bool self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putUint8(self ? 1 : 0);
-  }
-
-  @protected
-  void
-      sse_encode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynAnySendSync(
-          ArcAny self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynAnySendSync(
-        self, serializer);
   }
 
   @protected
@@ -4112,19 +3960,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-      sse_encode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynAnySendSync(
-          ArcAny? self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    sse_encode_bool(self != null, serializer);
-    if (self != null) {
-      sse_encode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynAnySendSync(
-          self, serializer);
-    }
-  }
-
-  @protected
-  void
       sse_encode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerConfigHandle(
           ConfigHandle? self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
@@ -4274,26 +4109,6 @@ class ArcAdditionalDataImpl extends RustOpaque implements ArcAdditionalData {
         RustLib.instance.api.rust_arc_decrement_strong_count_ArcAdditionalData,
     rustArcDecrementStrongCountPtr: RustLib
         .instance.api.rust_arc_decrement_strong_count_ArcAdditionalDataPtr,
-  );
-}
-
-@sealed
-class ArcAnyImpl extends RustOpaque implements ArcAny {
-  // Not to be used by end users
-  ArcAnyImpl.frbInternalDcoDecode(List<dynamic> wire)
-      : super.frbInternalDcoDecode(wire, _kStaticData);
-
-  // Not to be used by end users
-  ArcAnyImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
-      : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
-
-  static final _kStaticData = RustArcStaticData(
-    rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_ArcAny,
-    rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_ArcAny,
-    rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_ArcAnyPtr,
   );
 }
 

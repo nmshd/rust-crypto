@@ -14,7 +14,7 @@ libloading = "0.8.5"
 tracing = { version = "0.1.40", features = ["attributes"] }
 tracing-subscriber = "0.3.18"
 anyhow = "1.0.91"
-crypto-layer = { path = "../../"}
+crypto-layer = { path = "../../", features = ["software"]}
 
 [target.'cfg(target_os = "android")'.dependencies]
 tracing-android = { version = "0.2.0" }

@@ -172,7 +172,6 @@ impl SoftwareProvider {
             );
 
             ProviderImplConfig::new(
-                None,
                 get_fn,
                 store_fn,
                 delete_fn,

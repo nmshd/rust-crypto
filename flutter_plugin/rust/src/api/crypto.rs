@@ -1,5 +1,6 @@
 use crypto_layer::common::config::ProviderImplConfig;
 
+use std::sync::Arc;
 use flutter_rust_bridge::DartFnFuture;
 
 pub async fn get_default_config(
@@ -9,5 +10,5 @@ pub async fn get_default_config(
     all_keys_fn: impl Fn() -> DartFnFuture<Vec<String>> + 'static + Send + Sync,
 ) -> ProviderImplConfig {
 
-    ProviderImplConfig::new(get_fn, store_fn, delete_fn, all_keys_fn)
+    ProviderImplConfig::new(Arc::new(get_fn), Arc::new(store_fn), Arc::new(delete_fn), Arc::new(all_keys_fn), None)
 }
