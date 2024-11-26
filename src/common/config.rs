@@ -146,7 +146,7 @@ pub struct ProviderImplConfig {
     pub(crate) store_fn: StoreFn,
     pub(crate) delete_fn: DeleteFn,
     pub(crate) all_keys_fn: AllKeysFn,
-    pub(crate) additional_config: Option<ConfigHandle>,
+    pub(crate) additional_config: Option<Arc<dyn Any + Send + Sync>>,
 }
 
 impl std::fmt::Debug for ProviderImplConfig {
@@ -162,7 +162,7 @@ impl ProviderImplConfig {
         store_fn: StoreFn,
         delete_fn: DeleteFn,
         all_keys_fn: AllKeysFn,
-        additional_config: Option<ConfigHandle>,
+        additional_config: Option<Arc<dyn Any + Send + Sync>>,
     ) -> Self {
         Self {
             get_fn,
@@ -187,14 +187,10 @@ impl ProviderImplConfig {
     ///
     /// This method attempts to downcast the `additional_config` to the specified concrete type `T`.
     /// If the downcast succeeds, it returns `Some(&T)`; otherwise, it returns `None`.
-    pub fn get_additional_config_as<T: Any + 'static>(&self) -> Option<&T> {
-        self.additional_config.as_ref().and_then(|config_handle| {
-            config_handle
-                .implementation
-                .as_ref()
-                .as_any()
-                .downcast_ref::<T>()
-        })
+    pub fn get_additional_config_as<T: Clone + 'static>(&self) -> Option<T> {
+        self.additional_config
+            .as_ref()
+            .and_then(|c| c.downcast_ref::<T>().cloned())
     }
 }
 

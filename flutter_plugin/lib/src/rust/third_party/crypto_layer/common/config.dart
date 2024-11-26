@@ -17,6 +17,9 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc < dyn AdditionalData >>>
 abstract class ArcAdditionalData implements RustOpaqueInterface {}
 
+// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc < dyn Any + Send + Sync >>>
+abstract class ArcAny implements RustOpaqueInterface {}
+
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc < dyn Fn () -> DynFuture < Vec < String > > + Send + Sync >>>
 abstract class ArcFnDynFutureVecString implements RustOpaqueInterface {}
 
@@ -47,7 +50,7 @@ abstract class ProviderImplConfig implements RustOpaqueInterface {
           required ArcFnStringVecU8DynFutureBool storeFn,
           required ArcFnStringPinBoxFutureOutput deleteFn,
           required ArcFnDynFutureVecString allKeysFn,
-          ConfigHandle? additionalConfig}) =>
+          ArcAny? additionalConfig}) =>
       RustLib.instance.api.cryptoLayerCommonConfigProviderImplConfigNew(
           getFn: getFn,
           storeFn: storeFn,

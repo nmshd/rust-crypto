@@ -1,8 +1,7 @@
+use crate::common::traits::key_handle::DHKeyExchangeImpl;
 use config::{KeyPairSpec, KeySpec, ProviderConfig};
 use error::CalError;
 use tracing::error;
-#[cfg(feature = "software")]
-use traits::key_handle::DHKeyExchangeImpl;
 use traits::key_handle::DHKeyExchangeImplEnum;
 use traits::key_handle::{
     KeyHandleImpl, KeyHandleImplEnum, KeyPairHandleImpl, KeyPairHandleImplEnum,
@@ -217,7 +216,6 @@ pub struct DHExchange {
     pub(crate) implementation: DHKeyExchangeImplEnum,
 }
 
-#[cfg(feature = "software")]
 impl DHExchange {
     delegate_enum! {
         pub fn get_public_key(&self) -> Result<Vec<u8>, CalError>;
@@ -228,6 +226,6 @@ impl DHExchange {
     }
 
     delegate_enum! {
-        pub fn add_external_final(&mut self, external_key: &[u8]) -> Result<KeyHandleImplEnum, CalError>;
+        pub fn add_external_final(&mut self, external_key: &[u8]) -> Result<KeyHandle, CalError>;
     }
 }

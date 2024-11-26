@@ -10,8 +10,8 @@ use crate::tpm::android::key_handle::{AndroidKeyHandle, AndroidKeyPairHandle};
 use crate::tpm::apple_secure_enclave::key_handle::AppleSecureEnclaveKeyPair;
 
 use crate::{
-    common::{error::CalError, DHExchange},
-    stub::{StubKeyHandle, StubKeyPairHandle},
+    common::{error::CalError, DHExchange, KeyHandle},
+    stub::{StubDHKeyExchange, StubKeyHandle, StubKeyPairHandle},
 };
 use enum_dispatch::enum_dispatch;
 
@@ -126,7 +126,14 @@ pub enum KeyPairHandleImplEnum {
     SoftwareKeyPairHandle,
 }
 
-#[cfg(feature = "software")]
+#[enum_dispatch]
+#[derive(Debug)]
+pub(crate) enum DHKeyExchangeImplEnum {
+    StubDHKeyExchange,
+    #[cfg(feature = "software")]
+    SoftwareDHExchange,
+}
+
 #[enum_dispatch(DHKeyExchangeImplEnum)]
 pub(crate) trait DHKeyExchangeImpl: Send + Sync {
     /// Get the public key of the internal key pair to use for the other party
@@ -136,38 +143,5 @@ pub(crate) trait DHKeyExchangeImpl: Send + Sync {
     fn add_external(&mut self, external_key: &[u8]) -> Result<Vec<u8>, CalError>;
 
     /// add the final external Keypair, derive a symmetric key from the shared secret and store the key
-    fn add_external_final(&mut self, external_key: &[u8]) -> Result<KeyHandleImplEnum, CalError>;
-}
-
-#[cfg(feature = "software")]
-#[enum_dispatch]
-#[derive(Debug)]
-pub(crate) enum DHKeyExchangeImplEnum {
-    // Stub,
-    #[cfg(feature = "android")]
-    Android,
-    #[cfg(feature = "software")]
-    SoftwareDHExchange,
-}
-
-#[cfg(not(feature = "software"))]
-pub(crate) trait DHKeyExchangeImpl: Send + Sync {
-    /// Get the public key of the internal key pair to use for the other party
-    fn get_public_key(&self) -> Result<Vec<u8>, CalError>;
-
-    /// add an external public point and compute the shared secret. The raw secret is returned to use in another round of the key exchange
-    fn add_external(&mut self, external_key: &[u8]) -> Result<Vec<u8>, CalError>;
-
-    /// add the final external Keypair, derive a symmetric key from the shared secret and store the key
-    fn add_external_final(&mut self, external_key: &[u8]) -> Result<KeyHandleImplEnum, CalError>;
-}
-
-#[cfg(not(feature = "software"))]
-#[derive(Debug)]
-pub(crate) enum DHKeyExchangeImplEnum {
-    // Stub,
-    #[cfg(feature = "android")]
-    Android,
-    #[cfg(feature = "software")]
-    SoftwareDHExchange,
+    fn add_external_final(&mut self, external_key: &[u8]) -> Result<KeyHandle, CalError>;
 }

@@ -232,7 +232,7 @@ impl ProviderImpl for SoftwareProvider {
 
         // Wrap in DHExchange and return
         Ok(DHExchange {
-            implementation: dh_exchange.into(), 
+            implementation: dh_exchange.into(),
         })
     }
 
@@ -240,7 +240,7 @@ impl ProviderImpl for SoftwareProvider {
         "SoftwareProvider".to_owned()
     }
 
-    fn get_capabilities(&self) ->Option<ProviderConfig> {
+    fn get_capabilities(&self) -> Option<ProviderConfig> {
         SoftwareProviderFactory::default().get_capabilities(self.impl_config.clone())
     }
 }
@@ -302,7 +302,7 @@ impl DHKeyExchangeImpl for SoftwareDHExchange {
     }
 
     /// Computes the final shared secret, derives a symmetric key, and returns it as a key handle
-    fn add_external_final(&mut self, external_key: &[u8]) -> Result<KeyHandleImplEnum, CalError> {
+    fn add_external_final(&mut self, external_key: &[u8]) -> Result<KeyHandle, CalError> {
         // Parse the final external public key
         let peer_public_key = UnparsedPublicKey::new(&X25519, external_key);
 
@@ -329,9 +329,11 @@ impl DHKeyExchangeImpl for SoftwareDHExchange {
         let symmetric_key = Arc::new(LessSafeKey::new(unbound_key));
 
         // Return the symmetric key wrapped in KeyHandleImplEnum
-        Ok(KeyHandleImplEnum::SoftwareKeyHandle(SoftwareKeyHandle {
-            key_id: self.key_id.clone(),
-            key: symmetric_key,
-        }))
+        Ok(KeyHandle {
+            implementation: KeyHandleImplEnum::SoftwareKeyHandle(SoftwareKeyHandle {
+                key_id: self.key_id.clone(),
+                key: symmetric_key,
+            }),
+        })
     }
 }

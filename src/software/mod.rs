@@ -23,13 +23,15 @@ use ring::{
 };
 use serde::{Deserialize, Serialize};
 use serde_json::to_vec;
+use std::any::Any;
 use std::collections::HashSet;
+use std::sync::Arc;
 use storage::{keys::KeyManager, metadata::MetadataDatabase};
 use tracing::debug;
 
-pub mod key_handle;
-pub mod provider;
-pub mod storage;
+pub(crate) mod key_handle;
+pub(crate) mod provider;
+pub(crate) mod storage;
 
 #[derive(Clone, Debug)]
 pub struct SoftwareProviderAdditionalConfig {
@@ -104,30 +106,12 @@ impl SoftwareProvider {
     /// A `ProviderImplConfig` instance initialized with the provided or default configurations and function closures.
     #[allow(dead_code)]
     pub(crate) fn get_default_config(
-        config: Option<ConfigHandle>,
+        config: Arc<dyn Any + Send + Sync>,
         get_fn: Option<GetFn>,
         store_fn: Option<StoreFn>,
         delete_fn: Option<DeleteFn>,
         all_keys_fn: Option<AllKeysFn>,
     ) -> ProviderImplConfig {
-        debug!("Received config: {:?}", config);
-
-        // Ensure that the config is present
-        let config_handle = config.expect("Config is None when entering get_default_config!");
-
-        // Attempt to downcast the `AdditionalConfig` to `SoftwareProviderAdditionalConfig`
-        let conf_cast = config_handle
-            .implementation
-            .as_ref()
-            .as_any()
-            .downcast_ref::<SoftwareProviderAdditionalConfig>();
-
-        debug!("Downcast result: {:?}", conf_cast);
-
-        // Handle the downcast result
-        let software_config =
-            conf_cast.expect("Failed to downcast to SoftwareProviderAdditionalConfig");
-
         // Use provided functions or initialize from metadata_db if a path is given (and the field exists)
         #[cfg(feature = "software-metadata")]
         {
@@ -152,14 +136,7 @@ impl SoftwareProvider {
             };
 
             // Create the ProviderImplConfig instance
-            ProviderImplConfig::new(
-                None,
-                get_fn,
-                store_fn,
-                delete_fn,
-                all_keys_fn,
-                Some(config_handle.clone()),
-            )
+            ProviderImplConfig::new(None, get_fn, store_fn, delete_fn, all_keys_fn, Some(config))
         }
 
         #[cfg(not(feature = "software-metadata"))]
@@ -171,13 +148,7 @@ impl SoftwareProvider {
                 all_keys_fn.unwrap(),
             );
 
-            ProviderImplConfig::new(
-                get_fn,
-                store_fn,
-                delete_fn,
-                all_keys_fn,
-                Some(config_handle.clone()),
-            )
+            ProviderImplConfig::new(get_fn, store_fn, delete_fn, all_keys_fn, Some(config))
         }
     }
 

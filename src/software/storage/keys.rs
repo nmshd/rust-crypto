@@ -6,7 +6,7 @@ use std::sync::{Arc, Mutex};
 use crate::common::error::CalError;
 
 /// Struct representing the Key Manager using `securestore`.
-pub struct KeyManager {
+pub(crate) struct KeyManager {
     secrets_manager: Arc<Mutex<SecretsManager>>,
 }
 
