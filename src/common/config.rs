@@ -149,6 +149,16 @@ pub struct ProviderImplConfig {
     pub(crate) additional_config: Option<Arc<dyn Any + Send + Sync>>,
 }
 
+enum AdditionalConfig {
+    SoftwareProvider {
+        db_path: String,
+        
+    }
+    YubiHsmProvider {
+        pass: Vec<u8>,   
+    }
+}
+
 impl std::fmt::Debug for ProviderImplConfig {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("ProviderImplConfig{opaque}").finish()
