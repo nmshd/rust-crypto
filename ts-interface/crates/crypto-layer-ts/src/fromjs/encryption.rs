@@ -6,8 +6,8 @@ use std::str::FromStr;
 use super::error::{js_result, match_variant_result, ConversionError};
 use super::{from_wrapped_enum, is_pair};
 
-pub fn from_wrapped_cipher<'a>(
-    cx: &mut impl Context<'a>,
+pub fn from_wrapped_cipher(
+    cx: &mut FunctionContext,
     wrapped_cipher: Handle<JsValue>,
 ) -> Result<Cipher, ConversionError> {
     let (mut cipher, obj_option): (Cipher, _) = from_wrapped_enum(cx, wrapped_cipher)?;
@@ -60,7 +60,7 @@ pub fn from_wrapped_keybits<'a>(
 }
 
 pub fn from_wrapped_asymm_spec<'a>(
-    cx: &mut impl Context<'a>,
+    cx: &mut FunctionContext,
     wrapped: Handle<JsValue>,
 ) -> Result<AsymmetricKeySpec, ConversionError> {
     let (mut spec, value) = from_wrapped_enum::<AsymmetricKeySpec>(cx, wrapped)?;
