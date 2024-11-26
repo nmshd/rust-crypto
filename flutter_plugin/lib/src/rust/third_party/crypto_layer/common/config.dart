@@ -17,9 +17,6 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc < dyn AdditionalData >>>
 abstract class ArcAdditionalData implements RustOpaqueInterface {}
 
-// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc < dyn Any + Send + Sync >>>
-abstract class ArcAny implements RustOpaqueInterface {}
-
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc < dyn Fn () -> DynFuture < Vec < String > > + Send + Sync >>>
 abstract class ArcFnDynFutureVecString implements RustOpaqueInterface {}
 
@@ -46,14 +43,12 @@ abstract class ProviderImplConfig implements RustOpaqueInterface {
   // HINT: Make it `#[frb(sync)]` to let it become the default constructor of Dart class.
   /// Creates a new `ProviderImplConfig` instance.
   static Future<ProviderImplConfig> newInstance(
-          {ArcAny? javaVm,
-          required ArcFnStringDynFutureOptionVecU8 getFn,
+          {required ArcFnStringDynFutureOptionVecU8 getFn,
           required ArcFnStringVecU8DynFutureBool storeFn,
           required ArcFnStringPinBoxFutureOutput deleteFn,
           required ArcFnDynFutureVecString allKeysFn,
           ConfigHandle? additionalConfig}) =>
       RustLib.instance.api.cryptoLayerCommonConfigProviderImplConfigNew(
-          javaVm: javaVm,
           getFn: getFn,
           storeFn: storeFn,
           deleteFn: deleteFn,
@@ -62,19 +57,15 @@ abstract class ProviderImplConfig implements RustOpaqueInterface {
 
   /// Creates a new stubbed `ProviderImplConfig` instance for testing or default purposes.
   static Future<ProviderImplConfig> newStub(
-          {ArcAny? javaVm,
-          required ArcFnStringDynFutureOptionVecU8 getFn,
+          {required ArcFnStringDynFutureOptionVecU8 getFn,
           required ArcFnStringVecU8DynFutureBool storeFn,
           required ArcFnStringPinBoxFutureOutput deleteFn,
-          required ArcFnDynFutureVecString allKeysFn,
-          ConfigHandle? additionalConfig}) =>
+          required ArcFnDynFutureVecString allKeysFn}) =>
       RustLib.instance.api.cryptoLayerCommonConfigProviderImplConfigNewStub(
-          javaVm: javaVm,
           getFn: getFn,
           storeFn: storeFn,
           deleteFn: deleteFn,
-          allKeysFn: allKeysFn,
-          additionalConfig: additionalConfig);
+          allKeysFn: allKeysFn);
 }
 
 abstract class AdditionalData {

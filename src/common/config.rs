@@ -19,7 +19,7 @@ use super::crypto::algorithms::{
 /// A type alias for a pinned, heap-allocated, dynamically dispatched future that is `Send`.
 ///
 /// This simplifies the notation for futures returned by asynchronous functions.
-type DynFuture<T> = Pin<Box<dyn Future<Output = T> + Send>>;
+pub type DynFuture<T> = Pin<Box<dyn Future<Output = T> + Send>>;
 
 /// A thread-safe, shareable function that asynchronously retrieves data associated with a key.
 ///
@@ -142,7 +142,6 @@ pub struct ProviderConfig {
 /// flutter_rust_bridge:opaque
 #[derive(Clone)]
 pub struct ProviderImplConfig {
-    pub(crate) java_vm: Option<Arc<dyn Any + Send + Sync>>,
     pub(crate) get_fn: GetFn,
     pub(crate) store_fn: StoreFn,
     pub(crate) delete_fn: DeleteFn,
@@ -159,7 +158,6 @@ impl std::fmt::Debug for ProviderImplConfig {
 impl ProviderImplConfig {
     /// Creates a new `ProviderImplConfig` instance.
     pub fn new(
-        java_vm: Option<Arc<dyn Any + Send + Sync>>,
         get_fn: GetFn,
         store_fn: StoreFn,
         delete_fn: DeleteFn,
@@ -167,7 +165,6 @@ impl ProviderImplConfig {
         additional_config: Option<ConfigHandle>,
     ) -> Self {
         Self {
-            java_vm,
             get_fn,
             store_fn,
             delete_fn,
@@ -178,21 +175,12 @@ impl ProviderImplConfig {
 
     /// Creates a new stubbed `ProviderImplConfig` instance for testing or default purposes.
     pub fn new_stub(
-        java_vm: Option<Arc<dyn Any + Send + Sync>>,
         get_fn: GetFn,
         store_fn: StoreFn,
         delete_fn: DeleteFn,
         all_keys_fn: AllKeysFn,
-        additional_config: Option<ConfigHandle>,
     ) -> Self {
-        Self::new(
-            java_vm,
-            get_fn,
-            store_fn,
-            delete_fn,
-            all_keys_fn,
-            additional_config,
-        )
+        Self::new(get_fn, store_fn, delete_fn, all_keys_fn, None)
     }
 
     /// Method to retrieve the additional configuration as a concrete type.
