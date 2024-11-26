@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use strum::EnumString;
+use strum::{EnumIter, EnumString};
 
 /// Represents the available hashing algorithms.
 ///
@@ -13,7 +13,7 @@ use strum::EnumString;
 /// Prefer using more secure algorithms like SHA-2 or SHA-3 for cryptographic purposes.
 /// flutter_rust_bridge:non_opaque
 #[repr(C)]
-#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, EnumString)]
+#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, EnumString, EnumIter)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum CryptoHash {
     /// SHA-1 hashing algorithm.
@@ -78,7 +78,7 @@ impl Default for CryptoHash {
 /// `#[repr(C)]` attribute is used for C compatibility, facilitating interoperability with C-based systems.
 /// flutter_rust_bridge:non_opaque
 #[repr(C)]
-#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, EnumString)]
+#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, EnumString, EnumIter)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum Sha2Bits {
     /// 224-bit digest size.
@@ -160,7 +160,7 @@ impl Default for Sha2Bits {
 /// Uses `#[repr(C)]` for C language compatibility, important for interoperability with C-based systems.
 /// flutter_rust_bridge:non_opaque
 #[repr(C)]
-#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, EnumString)]
+#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, EnumString, EnumIter)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum Sha3Bits {
     /// 224-bit digest size for SHA-3.

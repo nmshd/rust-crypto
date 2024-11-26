@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::cmp::{Eq, PartialEq};
 use std::hash::Hash;
 
-use strum::EnumString;
+use strum::{EnumIter, EnumString};
 
 /// Represents the available encryption algorithms.
 ///
@@ -40,7 +40,7 @@ use strum::EnumString;
 /// facilitating interfacing with C code or when ABI compatibility is required.
 /// flutter_rust_bridge:non_opaque
 #[repr(C)]
-#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, EnumString)]
+#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, EnumString, EnumIter)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum AsymmetricKeySpec {
     /// RSA encryption with selectable key sizes.
@@ -65,7 +65,7 @@ pub enum AsymmetricKeySpec {
 
 /// flutter_rust_bridge:non_opaque
 #[repr(C)]
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, EnumString)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, EnumString, EnumIter)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum EccSigningScheme {
     /// ECDSA: Elliptic Curve Digital Signature Algorithm.
@@ -102,7 +102,7 @@ impl Default for EccSigningScheme {
 /// Uses `#[repr(C)]` for C language compatibility.
 /// flutter_rust_bridge:non_opaque
 #[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, EnumString)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, EnumString, EnumIter)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum EccCurve {
     /// NIST P-256 curve.
@@ -167,7 +167,7 @@ impl Default for EccCurve {
 /// facilitating ABI compatibility and interfacing with C code.
 /// flutter_rust_bridge:non_opaque
 #[repr(C)]
-#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, EnumString)]
+#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, EnumString, EnumIter)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum Cipher {
     /// AES (Advanced Encryption Standard) block cipher with selectable key sizes and modes.
@@ -222,7 +222,9 @@ impl Default for Cipher {
 /// `#[repr(C)]` attribute is used for C compatibility.
 /// flutter_rust_bridge:non_opaque
 #[repr(C)]
-#[derive(Clone, Debug, Default, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, EnumString)]
+#[derive(
+    Clone, Debug, Default, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, EnumString, EnumIter,
+)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum SymmetricMode {
     /// AES in Galois/Counter Mode (GCM) with selectable key sizes.
@@ -277,7 +279,7 @@ pub enum SymmetricMode {
 /// Uses `#[repr(C)]` for C language compatibility.
 /// flutter_rust_bridge:non_opaque
 #[repr(C)]
-#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, EnumString)]
+#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, EnumString, EnumIter)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum TripleDesNumKeys {
     /// Two-key Triple DES, using two different keys for encryption.
@@ -314,7 +316,7 @@ impl Default for TripleDesNumKeys {
 /// Marked with `#[repr(C)]` to ensure compatibility with C-based environments.
 /// flutter_rust_bridge:non_opaque
 #[repr(C)]
-#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, EnumString)]
+#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, EnumString, EnumIter)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum Rc2KeyBits {
     /// RC2 with a 40-bit key.
@@ -333,7 +335,7 @@ impl Default for Rc2KeyBits {
 
 /// Specifies ChaCha20 Variant.
 /// flutter_rust_bridge:non_opaque
-#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, EnumString)]
+#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, EnumString, EnumIter)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum ChCha20Mode {
     ChaCha20Poly1305,
