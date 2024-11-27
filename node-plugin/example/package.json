@@ -1,0 +1,14 @@
+{
+  "name": "cal-node-example",
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "crypto-layer-node": "file:.."
+  }
+}

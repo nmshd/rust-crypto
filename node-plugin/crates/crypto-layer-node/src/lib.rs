@@ -16,14 +16,14 @@ fn export_get_all_providers(mut cx: FunctionContext) -> JsResult<JsArray> {
     wrap_string_array(&mut cx, get_all_providers())
 }
 
-fn export_create_provider(mut cx: FunctionContext) -> JsResult<JsObject> {
+/* fn export_create_provider(mut cx: FunctionContext) -> JsResult<JsObject> {
     let config_js = cx.argument::<JsObject>(0)?;
     let impl_config_js = cx.argument::<JsObject>(1)?;
 
     /* let provider = cx.empty_object(); */
 
     todo!()
-}
+} */
 
 #[neon::main]
 fn main(mut cx: ModuleContext) -> NeonResult<()> {
