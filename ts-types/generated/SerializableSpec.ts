@@ -2,6 +2,9 @@
 import type { KeyPairSpec } from "./KeyPairSpec";
 import type { KeySpec } from "./KeySpec";
 
+/**
+ * flutter_rust_bridge:non_opaque
+ */
 export type SerializableSpec = { "KeySpec": KeySpec } | {
   "KeyPairSpec": KeyPairSpec;
 };

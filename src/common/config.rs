@@ -150,10 +150,19 @@ pub struct ProviderConfig {
 #[derive(Clone)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub struct ProviderImplConfig {
+    #[cfg_attr(feature = "ts-interface", ts(type = "(id: string) => Uint8Array"))]
     pub(crate) get_fn: GetFn,
+    #[cfg_attr(
+        feature = "ts-interface",
+        ts(type = "(id: string, data: Uint8Array) => boolean")
+    )]
     pub(crate) store_fn: StoreFn,
+    #[cfg_attr(feature = "ts-interface", ts(type = "(id: string) => void"))]
     pub(crate) delete_fn: DeleteFn,
+    #[cfg_attr(feature = "ts-interface", ts(type = "() => string[]"))]
     pub(crate) all_keys_fn: AllKeysFn,
+    // This will change soon?
+    #[cfg_attr(feature = "ts-interface", ts(skip))]
     pub(crate) additional_config: Option<ConfigHandle>,
 }
 

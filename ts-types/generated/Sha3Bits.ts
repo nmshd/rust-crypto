@@ -18,9 +18,7 @@
  * ```rust
  * use crypto_layer::common::crypto::algorithms::hashes::Sha3Bits;
  *
- * fn main() {
- *     let digest_size = Sha3Bits::Sha3_384;
- * }
+ * let digest_size = Sha3Bits::Sha3_384;
  * ```
  *
  * # Note

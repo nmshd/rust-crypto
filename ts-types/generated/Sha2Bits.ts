@@ -16,9 +16,7 @@
  * ```rust
  * use crypto_layer::common::crypto::algorithms::hashes::Sha2Bits;
  *
- * fn main() {
- *     let digest_size = Sha2Bits::Sha512;
- * }
+ * let digest_size = Sha2Bits::Sha512;
  * ```
  *
  * # Note

@@ -13,9 +13,7 @@
  * ```rust
  * use crypto_layer::common::crypto::algorithms::encryption::SymmetricMode;
  *
- * fn main() {
- *     let mode = SymmetricMode::Gcm;
- * }
+ * let mode = SymmetricMode::Gcm;
  * ```
  *
  * # Note

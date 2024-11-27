@@ -13,9 +13,7 @@
  * ```rust
  * use crypto_layer::common::crypto::algorithms::encryption:: Rc2KeyBits;
  *
- * fn main() {
- *     let key_size = Rc2KeyBits::Rc2_128;
- * }
+ * let key_size = Rc2KeyBits::Rc2_128;
  * ```
  *
  * # Note

@@ -13,9 +13,7 @@
  * ```rust
  * use crypto_layer::common::crypto::algorithms::encryption::TripleDesNumKeys;
  *
- * fn main() {
- *     let des_config = TripleDesNumKeys::Tdes3;
- * }
+ * let des_config = TripleDesNumKeys::Tdes3;
  * ```
  *
  * # Note
