@@ -25,7 +25,6 @@
 
 // Section: imports
 
-use std::any::Any;
 use std::future::Future;
 use std::pin::Pin;
 
@@ -45,7 +44,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.6.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -1450789020;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1667022161;
 
 // Section: executor
 
@@ -148,41 +147,6 @@ fn wire__crypto_layer__common__error__CalError_error_kind_impl(
                     let api_that_guard = api_that_guard.unwrap();
                     let output_ok = Result::<_, ()>::Ok(
                         crypto_layer::common::error::CalError::error_kind(&*api_that_guard),
-                    )?;
-                    Ok(output_ok)
-                })())
-            }
-        },
-    )
-}
-fn wire__crypto_layer__common__config__ConfigHandle_new_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "ConfigHandle_new",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_implementation = <Arc<dyn AdditionalData>>::sse_decode(&mut deserializer);
-            deserializer.end();
-            move |context| {
-                transform_result_sse::<_, ()>((move || {
-                    let output_ok = Result::<_, ()>::Ok(
-                        crypto_layer::common::config::ConfigHandle::new(api_implementation),
                     )?;
                     Ok(output_ok)
                 })())
@@ -966,8 +930,7 @@ fn wire__crypto_layer__common__config__ProviderImplConfig_new_impl(
                 <Arc<dyn Fn() -> DynFuture<Vec<String>> + Send + Sync>>::sse_decode(
                     &mut deserializer,
                 );
-            let api_additional_config =
-                <Option<Arc<dyn Any + Send + Sync>>>::sse_decode(&mut deserializer);
+            let api_additional_config = <Vec<AdditionalConfig>>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
                 transform_result_sse::<_, ()>((move || {
@@ -2280,10 +2243,7 @@ fn decode_DartFn_Inputs__Output_list_String_AnyhowException(
     }
 }
 flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
-    flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc<dyn AdditionalData>>
-);
-flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
-    flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc<dyn Any + Send + Sync>>
+    flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AdditionalConfig>
 );
 flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
     flutter_rust_bridge::for_generated::RustAutoOpaqueInner<
@@ -2307,9 +2267,6 @@ flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
 );
 flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
     flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CalError>
-);
-flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
-    flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ConfigHandle>
 );
 flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
     flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DHExchange>
@@ -2337,21 +2294,11 @@ impl SseDecode for flutter_rust_bridge::for_generated::anyhow::Error {
     }
 }
 
-impl SseDecode for Arc<dyn AdditionalData> {
+impl SseDecode for AdditionalConfig {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <RustOpaqueMoi<
-            flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc<dyn AdditionalData>>,
-        >>::sse_decode(deserializer);
-        return flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(inner);
-    }
-}
-
-impl SseDecode for Arc<dyn Any + Send + Sync> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <RustOpaqueMoi<
-            flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc<dyn Any + Send + Sync>>,
+            flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AdditionalConfig>,
         >>::sse_decode(deserializer);
         return flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(inner);
     }
@@ -2410,16 +2357,6 @@ impl SseDecode for CalError {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <RustOpaqueMoi<
             flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CalError>,
-        >>::sse_decode(deserializer);
-        return flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(inner);
-    }
-}
-
-impl SseDecode for ConfigHandle {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <RustOpaqueMoi<
-            flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ConfigHandle>,
         >>::sse_decode(deserializer);
         return flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(inner);
     }
@@ -2484,21 +2421,7 @@ impl SseDecode for flutter_rust_bridge::DartOpaque {
 }
 
 impl SseDecode
-    for RustOpaqueMoi<
-        flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc<dyn AdditionalData>>,
-    >
-{
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <usize>::sse_decode(deserializer);
-        return decode_rust_opaque_moi(inner);
-    }
-}
-
-impl SseDecode
-    for RustOpaqueMoi<
-        flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc<dyn Any + Send + Sync>>,
-    >
+    for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AdditionalConfig>>
 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -2565,16 +2488,6 @@ impl SseDecode
 
 impl SseDecode
     for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CalError>>
-{
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <usize>::sse_decode(deserializer);
-        return decode_rust_opaque_moi(inner);
-    }
-}
-
-impl SseDecode
-    for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ConfigHandle>>
 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3017,6 +2930,18 @@ impl SseDecode for crypto_layer::common::error::KeyType {
     }
 }
 
+impl SseDecode for Vec<AdditionalConfig> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = vec![];
+        for idx_ in 0..len_ {
+            ans_.push(<AdditionalConfig>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
 impl SseDecode for Vec<String> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3142,17 +3067,6 @@ impl SseDecode for crypto_layer::common::crypto::pkcs::standards::OidType {
             47 => crypto_layer::common::crypto::pkcs::standards::OidType::Pkcs9SigningTime,
             _ => unreachable!("Invalid variant for OidType: {}", inner),
         };
-    }
-}
-
-impl SseDecode for Option<Arc<dyn Any + Send + Sync>> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        if (<bool>::sse_decode(deserializer)) {
-            return Some(<Arc<dyn Any + Send + Sync>>::sse_decode(deserializer));
-        } else {
-            return None;
-        }
     }
 }
 
@@ -3357,48 +3271,47 @@ fn pde_ffi_dispatcher_primary_impl(
     match func_id {
                         1 => wire__crypto_layer__common__error__CalError_backtrace_impl(port, ptr, rust_vec_len, data_len),
 2 => wire__crypto_layer__common__error__CalError_error_kind_impl(port, ptr, rust_vec_len, data_len),
-3 => wire__crypto_layer__common__config__ConfigHandle_new_impl(port, ptr, rust_vec_len, data_len),
-4 => wire__crypto_layer__common__DhExchange_add_external_impl(port, ptr, rust_vec_len, data_len),
-5 => wire__crypto_layer__common__DhExchange_add_external_final_impl(port, ptr, rust_vec_len, data_len),
-6 => wire__crypto_layer__common__DhExchange_get_public_key_impl(port, ptr, rust_vec_len, data_len),
-7 => wire__crypto_layer__common__KeyHandle_decrypt_data_impl(port, ptr, rust_vec_len, data_len),
-8 => wire__crypto_layer__common__KeyHandle_delete_impl(port, ptr, rust_vec_len, data_len),
-9 => wire__crypto_layer__common__KeyHandle_encrypt_data_impl(port, ptr, rust_vec_len, data_len),
-10 => wire__crypto_layer__common__KeyHandle_extract_key_impl(port, ptr, rust_vec_len, data_len),
-11 => wire__crypto_layer__common__KeyHandle_id_impl(port, ptr, rust_vec_len, data_len),
-12 => wire__crypto_layer__common__KeyPairHandle_decrypt_data_impl(port, ptr, rust_vec_len, data_len),
-13 => wire__crypto_layer__common__KeyPairHandle_delete_impl(port, ptr, rust_vec_len, data_len),
-14 => wire__crypto_layer__common__KeyPairHandle_encrypt_data_impl(port, ptr, rust_vec_len, data_len),
-15 => wire__crypto_layer__common__KeyPairHandle_get_public_key_impl(port, ptr, rust_vec_len, data_len),
-16 => wire__crypto_layer__common__KeyPairHandle_id_impl(port, ptr, rust_vec_len, data_len),
-17 => wire__crypto_layer__common__KeyPairHandle_sign_data_impl(port, ptr, rust_vec_len, data_len),
-18 => wire__crypto_layer__common__KeyPairHandle_verify_signature_impl(port, ptr, rust_vec_len, data_len),
-19 => wire__crypto_layer__common__config__ProviderImplConfig_new_impl(port, ptr, rust_vec_len, data_len),
-20 => wire__crypto_layer__common__config__ProviderImplConfig_new_stub_impl(port, ptr, rust_vec_len, data_len),
-21 => wire__crypto_layer__common__Provider_create_key_impl(port, ptr, rust_vec_len, data_len),
-22 => wire__crypto_layer__common__Provider_create_key_pair_impl(port, ptr, rust_vec_len, data_len),
-23 => wire__crypto_layer__common__Provider_get_capabilities_impl(port, ptr, rust_vec_len, data_len),
-24 => wire__crypto_layer__common__Provider_import_key_impl(port, ptr, rust_vec_len, data_len),
-25 => wire__crypto_layer__common__Provider_import_key_pair_impl(port, ptr, rust_vec_len, data_len),
-26 => wire__crypto_layer__common__Provider_import_public_key_impl(port, ptr, rust_vec_len, data_len),
-27 => wire__crypto_layer__common__Provider_load_key_impl(port, ptr, rust_vec_len, data_len),
-28 => wire__crypto_layer__common__Provider_load_key_pair_impl(port, ptr, rust_vec_len, data_len),
-29 => wire__crypto_layer__common__Provider_provider_name_impl(port, ptr, rust_vec_len, data_len),
-30 => wire__crypto_layer__common__Provider_start_ephemeral_dh_exchange_impl(port, ptr, rust_vec_len, data_len),
-33 => wire__crypto_layer__common__crypto__algorithms__encryption__asymmetric_key_spec_default_impl(port, ptr, rust_vec_len, data_len),
-34 => wire__crypto_layer__common__crypto__algorithms__encryption__cipher_default_impl(port, ptr, rust_vec_len, data_len),
-35 => wire__crypto_layer__common__factory__create_provider_impl(port, ptr, rust_vec_len, data_len),
-36 => wire__crypto_layer__common__factory__create_provider_from_name_impl(port, ptr, rust_vec_len, data_len),
-37 => wire__crypto_layer__common__crypto__algorithms__hashes__crypto_hash_default_impl(port, ptr, rust_vec_len, data_len),
-38 => wire__crypto_layer__common__crypto__algorithms__encryption__ecc_curve_default_impl(port, ptr, rust_vec_len, data_len),
-39 => wire__crypto_layer__common__crypto__algorithms__encryption__ecc_signing_scheme_default_impl(port, ptr, rust_vec_len, data_len),
-40 => wire__crypto_layer__common__factory__get_all_providers_impl(port, ptr, rust_vec_len, data_len),
-41 => wire__crate__api__crypto__get_default_config_impl(port, ptr, rust_vec_len, data_len),
-42 => wire__crate__api__simple__init_app_impl(port, ptr, rust_vec_len, data_len),
-43 => wire__crypto_layer__common__config__key_pair_spec_default_impl(port, ptr, rust_vec_len, data_len),
-44 => wire__crypto_layer__common__config__key_spec_default_impl(port, ptr, rust_vec_len, data_len),
-45 => wire__crypto_layer__common__crypto__pkcs__standards__oid_type_as_str_impl(port, ptr, rust_vec_len, data_len),
-46 => wire__crypto_layer__common__crypto__algorithms__encryption__symmetric_mode_default_impl(port, ptr, rust_vec_len, data_len),
+3 => wire__crypto_layer__common__DhExchange_add_external_impl(port, ptr, rust_vec_len, data_len),
+4 => wire__crypto_layer__common__DhExchange_add_external_final_impl(port, ptr, rust_vec_len, data_len),
+5 => wire__crypto_layer__common__DhExchange_get_public_key_impl(port, ptr, rust_vec_len, data_len),
+6 => wire__crypto_layer__common__KeyHandle_decrypt_data_impl(port, ptr, rust_vec_len, data_len),
+7 => wire__crypto_layer__common__KeyHandle_delete_impl(port, ptr, rust_vec_len, data_len),
+8 => wire__crypto_layer__common__KeyHandle_encrypt_data_impl(port, ptr, rust_vec_len, data_len),
+9 => wire__crypto_layer__common__KeyHandle_extract_key_impl(port, ptr, rust_vec_len, data_len),
+10 => wire__crypto_layer__common__KeyHandle_id_impl(port, ptr, rust_vec_len, data_len),
+11 => wire__crypto_layer__common__KeyPairHandle_decrypt_data_impl(port, ptr, rust_vec_len, data_len),
+12 => wire__crypto_layer__common__KeyPairHandle_delete_impl(port, ptr, rust_vec_len, data_len),
+13 => wire__crypto_layer__common__KeyPairHandle_encrypt_data_impl(port, ptr, rust_vec_len, data_len),
+14 => wire__crypto_layer__common__KeyPairHandle_get_public_key_impl(port, ptr, rust_vec_len, data_len),
+15 => wire__crypto_layer__common__KeyPairHandle_id_impl(port, ptr, rust_vec_len, data_len),
+16 => wire__crypto_layer__common__KeyPairHandle_sign_data_impl(port, ptr, rust_vec_len, data_len),
+17 => wire__crypto_layer__common__KeyPairHandle_verify_signature_impl(port, ptr, rust_vec_len, data_len),
+18 => wire__crypto_layer__common__config__ProviderImplConfig_new_impl(port, ptr, rust_vec_len, data_len),
+19 => wire__crypto_layer__common__config__ProviderImplConfig_new_stub_impl(port, ptr, rust_vec_len, data_len),
+20 => wire__crypto_layer__common__Provider_create_key_impl(port, ptr, rust_vec_len, data_len),
+21 => wire__crypto_layer__common__Provider_create_key_pair_impl(port, ptr, rust_vec_len, data_len),
+22 => wire__crypto_layer__common__Provider_get_capabilities_impl(port, ptr, rust_vec_len, data_len),
+23 => wire__crypto_layer__common__Provider_import_key_impl(port, ptr, rust_vec_len, data_len),
+24 => wire__crypto_layer__common__Provider_import_key_pair_impl(port, ptr, rust_vec_len, data_len),
+25 => wire__crypto_layer__common__Provider_import_public_key_impl(port, ptr, rust_vec_len, data_len),
+26 => wire__crypto_layer__common__Provider_load_key_impl(port, ptr, rust_vec_len, data_len),
+27 => wire__crypto_layer__common__Provider_load_key_pair_impl(port, ptr, rust_vec_len, data_len),
+28 => wire__crypto_layer__common__Provider_provider_name_impl(port, ptr, rust_vec_len, data_len),
+29 => wire__crypto_layer__common__Provider_start_ephemeral_dh_exchange_impl(port, ptr, rust_vec_len, data_len),
+31 => wire__crypto_layer__common__crypto__algorithms__encryption__asymmetric_key_spec_default_impl(port, ptr, rust_vec_len, data_len),
+32 => wire__crypto_layer__common__crypto__algorithms__encryption__cipher_default_impl(port, ptr, rust_vec_len, data_len),
+33 => wire__crypto_layer__common__factory__create_provider_impl(port, ptr, rust_vec_len, data_len),
+34 => wire__crypto_layer__common__factory__create_provider_from_name_impl(port, ptr, rust_vec_len, data_len),
+35 => wire__crypto_layer__common__crypto__algorithms__hashes__crypto_hash_default_impl(port, ptr, rust_vec_len, data_len),
+36 => wire__crypto_layer__common__crypto__algorithms__encryption__ecc_curve_default_impl(port, ptr, rust_vec_len, data_len),
+37 => wire__crypto_layer__common__crypto__algorithms__encryption__ecc_signing_scheme_default_impl(port, ptr, rust_vec_len, data_len),
+38 => wire__crypto_layer__common__factory__get_all_providers_impl(port, ptr, rust_vec_len, data_len),
+39 => wire__crate__api__crypto__get_default_config_impl(port, ptr, rust_vec_len, data_len),
+40 => wire__crate__api__simple__init_app_impl(port, ptr, rust_vec_len, data_len),
+41 => wire__crypto_layer__common__config__key_pair_spec_default_impl(port, ptr, rust_vec_len, data_len),
+42 => wire__crypto_layer__common__config__key_spec_default_impl(port, ptr, rust_vec_len, data_len),
+43 => wire__crypto_layer__common__crypto__pkcs__standards__oid_type_as_str_impl(port, ptr, rust_vec_len, data_len),
+44 => wire__crypto_layer__common__crypto__algorithms__encryption__symmetric_mode_default_impl(port, ptr, rust_vec_len, data_len),
                         _ => unreachable!(),
                     }
 }
@@ -3418,41 +3331,16 @@ fn pde_ffi_dispatcher_sync_impl(
 // Section: rust2dart
 
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<Arc<dyn AdditionalData>> {
+impl flutter_rust_bridge::IntoDart for FrbWrapper<AdditionalConfig> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self.0)
             .into_dart()
     }
 }
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for FrbWrapper<Arc<dyn AdditionalData>>
-{
-}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<AdditionalConfig> {}
 
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<Arc<dyn AdditionalData>>>
-    for Arc<dyn AdditionalData>
-{
-    fn into_into_dart(self) -> FrbWrapper<Arc<dyn AdditionalData>> {
-        self.into()
-    }
-}
-
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<Arc<dyn Any + Send + Sync>> {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self.0)
-            .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for FrbWrapper<Arc<dyn Any + Send + Sync>>
-{
-}
-
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<Arc<dyn Any + Send + Sync>>>
-    for Arc<dyn Any + Send + Sync>
-{
-    fn into_into_dart(self) -> FrbWrapper<Arc<dyn Any + Send + Sync>> {
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<AdditionalConfig>> for AdditionalConfig {
+    fn into_into_dart(self) -> FrbWrapper<AdditionalConfig> {
         self.into()
     }
 }
@@ -3571,21 +3459,6 @@ impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<
 
 impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<CalError>> for CalError {
     fn into_into_dart(self) -> FrbWrapper<CalError> {
-        self.into()
-    }
-}
-
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<ConfigHandle> {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self.0)
-            .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<ConfigHandle> {}
-
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<ConfigHandle>> for ConfigHandle {
-    fn into_into_dart(self) -> FrbWrapper<ConfigHandle> {
         self.into()
     }
 }
@@ -4441,27 +4314,10 @@ impl SseEncode for flutter_rust_bridge::for_generated::anyhow::Error {
     }
 }
 
-impl SseEncode for Arc<dyn AdditionalData> {
+impl SseEncode for AdditionalConfig {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <RustOpaqueMoi<
-            flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc<dyn AdditionalData>>,
-        >>::sse_encode(
-            flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self),
-            serializer,
-        );
-    }
-}
-
-impl SseEncode for Arc<dyn Any + Send + Sync> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <RustOpaqueMoi<
-            flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc<dyn Any + Send + Sync>>,
-        >>::sse_encode(
-            flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self),
-            serializer,
-        );
+        <RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AdditionalConfig>>>::sse_encode(flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self), serializer);
     }
 }
 
@@ -4528,13 +4384,6 @@ impl SseEncode for CalError {
     }
 }
 
-impl SseEncode for ConfigHandle {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ConfigHandle>>>::sse_encode(flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self), serializer);
-    }
-}
-
 impl SseEncode for DHExchange {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -4578,22 +4427,7 @@ impl SseEncode for flutter_rust_bridge::DartOpaque {
 }
 
 impl SseEncode
-    for RustOpaqueMoi<
-        flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc<dyn AdditionalData>>,
-    >
-{
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        let (ptr, size) = self.sse_encode_raw();
-        <usize>::sse_encode(ptr, serializer);
-        <i32>::sse_encode(size, serializer);
-    }
-}
-
-impl SseEncode
-    for RustOpaqueMoi<
-        flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc<dyn Any + Send + Sync>>,
-    >
+    for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AdditionalConfig>>
 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -4665,17 +4499,6 @@ impl SseEncode
 
 impl SseEncode
     for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CalError>>
-{
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        let (ptr, size) = self.sse_encode_raw();
-        <usize>::sse_encode(ptr, serializer);
-        <i32>::sse_encode(size, serializer);
-    }
-}
-
-impl SseEncode
-    for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ConfigHandle>>
 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -5105,6 +4928,16 @@ impl SseEncode for crypto_layer::common::error::KeyType {
     }
 }
 
+impl SseEncode for Vec<AdditionalConfig> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <AdditionalConfig>::sse_encode(item, serializer);
+        }
+    }
+}
+
 impl SseEncode for Vec<String> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -5213,16 +5046,6 @@ crypto_layer::common::crypto::pkcs::standards::OidType::Pkcs9ContentType => { 45
 crypto_layer::common::crypto::pkcs::standards::OidType::Pkcs9MessageDigest => { 46 }
 crypto_layer::common::crypto::pkcs::standards::OidType::Pkcs9SigningTime => { 47 }
  _ => { unimplemented!(""); }}, serializer);
-    }
-}
-
-impl SseEncode for Option<Arc<dyn Any + Send + Sync>> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <bool>::sse_encode(self.is_some(), serializer);
-        if let Some(value) = self {
-            <Arc<dyn Any + Send + Sync>>::sse_encode(value, serializer);
-        }
     }
 }
 
@@ -5450,31 +5273,17 @@ mod io {
     flutter_rust_bridge::frb_generated_boilerplate_io!();
 
     #[no_mangle]
-    pub extern "C" fn frbgen_cal_flutter_plugin_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynAdditionalData(
+    pub extern "C" fn frbgen_cal_flutter_plugin_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAdditionalConfig(
         ptr: *const std::ffi::c_void,
     ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc < dyn AdditionalData >>>::increment_strong_count(ptr as _);
+        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AdditionalConfig>>::increment_strong_count(ptr as _);
     }
 
     #[no_mangle]
-    pub extern "C" fn frbgen_cal_flutter_plugin_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynAdditionalData(
+    pub extern "C" fn frbgen_cal_flutter_plugin_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAdditionalConfig(
         ptr: *const std::ffi::c_void,
     ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc < dyn AdditionalData >>>::decrement_strong_count(ptr as _);
-    }
-
-    #[no_mangle]
-    pub extern "C" fn frbgen_cal_flutter_plugin_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynAnySendSync(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc < dyn Any + Send + Sync >>>::increment_strong_count(ptr as _);
-    }
-
-    #[no_mangle]
-    pub extern "C" fn frbgen_cal_flutter_plugin_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynAnySendSync(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc < dyn Any + Send + Sync >>>::decrement_strong_count(ptr as _);
+        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AdditionalConfig>>::decrement_strong_count(ptr as _);
     }
 
     #[no_mangle]
@@ -5580,20 +5389,6 @@ mod io {
     }
 
     #[no_mangle]
-    pub extern "C" fn frbgen_cal_flutter_plugin_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerConfigHandle(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ConfigHandle>>::increment_strong_count(ptr as _);
-    }
-
-    #[no_mangle]
-    pub extern "C" fn frbgen_cal_flutter_plugin_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerConfigHandle(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ConfigHandle>>::decrement_strong_count(ptr as _);
-    }
-
-    #[no_mangle]
     pub extern "C" fn frbgen_cal_flutter_plugin_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHExchange(
         ptr: *const std::ffi::c_void,
     ) {
@@ -5692,31 +5487,17 @@ mod web {
     flutter_rust_bridge::frb_generated_boilerplate_web!();
 
     #[wasm_bindgen]
-    pub fn rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynAdditionalData(
+    pub fn rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAdditionalConfig(
         ptr: *const std::ffi::c_void,
     ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc < dyn AdditionalData >>>::increment_strong_count(ptr as _);
+        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AdditionalConfig>>::increment_strong_count(ptr as _);
     }
 
     #[wasm_bindgen]
-    pub fn rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynAdditionalData(
+    pub fn rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAdditionalConfig(
         ptr: *const std::ffi::c_void,
     ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc < dyn AdditionalData >>>::decrement_strong_count(ptr as _);
-    }
-
-    #[wasm_bindgen]
-    pub fn rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynAnySendSync(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc < dyn Any + Send + Sync >>>::increment_strong_count(ptr as _);
-    }
-
-    #[wasm_bindgen]
-    pub fn rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynAnySendSync(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc < dyn Any + Send + Sync >>>::decrement_strong_count(ptr as _);
+        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AdditionalConfig>>::decrement_strong_count(ptr as _);
     }
 
     #[wasm_bindgen]
@@ -5819,20 +5600,6 @@ mod web {
         ptr: *const std::ffi::c_void,
     ) {
         MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CalError>>::decrement_strong_count(ptr as _);
-    }
-
-    #[wasm_bindgen]
-    pub fn rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerConfigHandle(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ConfigHandle>>::increment_strong_count(ptr as _);
-    }
-
-    #[wasm_bindgen]
-    pub fn rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerConfigHandle(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ConfigHandle>>::decrement_strong_count(ptr as _);
     }
 
     #[wasm_bindgen]

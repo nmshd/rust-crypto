@@ -11,28 +11,41 @@ use ring::{
 };
 use std::sync::Arc;
 
+use super::StorageManager;
+
 #[derive(Debug, Clone)]
 pub(crate) struct SoftwareKeyPairHandle {
     pub(crate) key_id: String,
     pub(crate) spec: KeyPairSpec,
     pub(crate) signing_key: Option<Arc<EcdsaKeyPair>>,
     pub(crate) public_key: Vec<u8>,
+    pub(crate) storage_manager: StorageManager,
 }
 
 #[derive(Debug, Clone)]
 pub(crate) struct SoftwareKeyHandle {
     pub(crate) key_id: String,
     pub(crate) key: Arc<LessSafeKey>,
+    pub(crate) storage_manager: StorageManager,
 }
 
 impl SoftwareKeyHandle {
-    pub fn new(key_id: String, spec: Option<KeySpec>, key_data: Vec<u8>) -> Result<Self, CalError> {
+    pub fn new(
+        key_id: String,
+        spec: Option<KeySpec>,
+        key_data: Vec<u8>,
+        storage_manager: StorageManager,
+    ) -> Result<Self, CalError> {
         // Create the AES key for encryption and decryption
         let algo: &Algorithm = spec.as_ref().unwrap().cipher.into();
         let unbound_key = UnboundKey::new(algo, &key_data).expect("Failed to create AES key");
         let key = Arc::new(LessSafeKey::new(unbound_key));
 
-        Ok(Self { key_id, key })
+        Ok(Self {
+            key_id,
+            key,
+            storage_manager,
+        })
     }
 }
 
@@ -103,7 +116,8 @@ impl KeyHandleImpl for SoftwareKeyHandle {
 
     #[doc = " Delete this key."]
     fn delete(self) -> Result<(), CalError> {
-        todo!()
+        self.storage_manager.delete(self.key_id);
+        Ok(())
     }
 }
 
@@ -113,6 +127,7 @@ impl SoftwareKeyPairHandle {
         spec: KeyPairSpec,
         private_key: Vec<u8>,
         public_key: Vec<u8>,
+        storage_manager: StorageManager,
     ) -> Result<Self, CalError> {
         let rng = SystemRandom::new();
         let algorithm = spec.asym_spec.into();
@@ -133,6 +148,7 @@ impl SoftwareKeyPairHandle {
             spec,
             signing_key: Some(signing_key),
             public_key,
+            storage_manager,
         })
     }
 
@@ -140,12 +156,14 @@ impl SoftwareKeyPairHandle {
         key_id: String,
         spec: KeyPairSpec,
         public_key: Vec<u8>,
+        storage_manager: StorageManager,
     ) -> Result<Self, CalError> {
         Ok(Self {
             key_id,
             spec,
             signing_key: None,
             public_key,
+            storage_manager,
         })
     }
 }
@@ -209,6 +227,7 @@ impl KeyPairHandleImpl for SoftwareKeyPairHandle {
 
     #[doc = " Delete this key pair."]
     fn delete(self) -> Result<(), CalError> {
-        todo!()
+        self.storage_manager.delete(self.key_id);
+        Ok(())
     }
 }
