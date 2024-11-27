@@ -1,17 +1,16 @@
-# crypto-layer-ts
+# crypto-layer-node
 
-**crypto-layer-ts:** crypto layer ts interface for nodejs
+**Crypto Layer TS interface for nodejs.**
 
 This project was bootstrapped by [create-neon](https://www.npmjs.com/package/create-neon).
 
-## Building crypto-layer-ts
+## Building crypto-layer-node
 
-Building crypto-layer-ts requires a [supported version of Node and Rust](https://github.com/neon-bindings/neon#platform-support).
+Building crypto-layer-node requires a [supported version of Node and Rust](https://github.com/neon-bindings/neon#platform-support).
 
 To run the build, run:
 
 ```pwsh
-./Generate-Types.ps1
 npm i
 npm run build
 ```
@@ -57,7 +56,7 @@ Runs the unit tests by calling `cargo test`. You can learn more about [adding te
 The directory structure of this project is:
 
 ```
-crypto-layer-ts/
+node-plugin/
 ├── Cargo.toml
 ├── README.md
 ├── lib/
