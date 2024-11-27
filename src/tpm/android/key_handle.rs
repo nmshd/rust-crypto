@@ -1,6 +1,3 @@
-use std::sync::Arc;
-
-use super::utils::get_iv_size;
 use crate::{
     common::{
         config::{KeyPairSpec, KeySpec, ProviderImplConfig},
@@ -9,9 +6,7 @@ use crate::{
         DHExchange,
     },
     tpm::android::{
-        utils::{
-            get_asym_cipher_mode, get_signature_algorithm, get_sym_cipher_mode, load_iv, store_iv,
-        },
+        utils::{get_asym_cipher_mode, get_signature_algorithm, get_sym_cipher_mode},
         wrapper::{
             self,
             key_generation::iv_parameter_spec::jni::IvParameterSpec,
@@ -22,14 +17,12 @@ use crate::{
 };
 
 use robusta_jni::jni::{objects::JObject, JavaVM};
-use std::sync::Mutex;
 use tracing::{debug, info};
 
 #[derive(Clone)]
 pub(crate) struct AndroidKeyHandle {
     pub(crate) key_id: String,
     pub(crate) spec: KeySpec,
-    pub(crate) java_vm: Arc<Mutex<JavaVM>>,
     pub(crate) impl_config: ProviderImplConfig,
 }
 
@@ -46,7 +39,6 @@ impl std::fmt::Debug for AndroidKeyHandle {
 pub(crate) struct AndroidKeyPairHandle {
     pub(crate) key_id: String,
     pub(crate) spec: KeyPairSpec,
-    pub(crate) java_vm: Arc<Mutex<JavaVM>>,
     pub(crate) impl_config: ProviderImplConfig,
 }
 
@@ -60,12 +52,12 @@ impl std::fmt::Debug for AndroidKeyPairHandle {
 }
 
 impl KeyHandleImpl for AndroidKeyHandle {
-    fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
+    fn encrypt_data(&self, data: &[u8]) -> Result<(Vec<u8>, Vec<u8>), CalError> {
         info!("encrypting");
 
-        let vm = self.java_vm.lock().unwrap();
-        let _attach_guard = vm.attach_current_thread().err_internal()?;
-        let env = vm.get_env().err_internal()?;
+        let vm = ndk_context::android_context().vm();
+        let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
+        let env = vm.attach_current_thread().err_internal()?;
 
         let key_store = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_owned()).err_internal()?;
         key_store.load(&env, None).err_internal()?;
@@ -83,15 +75,14 @@ impl KeyHandleImpl for AndroidKeyHandle {
         cipher.init(&env, 1, key.raw.as_obj()).err_internal()?;
         let iv = cipher.getIV(&env).err_internal()?;
         let encrypted = cipher.doFinal(&env, data.to_vec()).err_internal()?;
-        let encrypted = store_iv(encrypted, iv);
 
-        Ok(encrypted)
+        Ok((encrypted, iv))
     }
 
-    fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, CalError> {
-        let vm = self.java_vm.lock().unwrap();
-        let _attach_guard = vm.attach_current_thread().err_internal()?;
-        let env = vm.get_env().err_internal()?;
+    fn decrypt_data(&self, encrypted_data: &[u8], iv: &[u8]) -> Result<Vec<u8>, CalError> {
+        let vm = ndk_context::android_context().vm();
+        let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
+        let env = vm.attach_current_thread().err_internal()?;
 
         let cipher_mode = get_sym_cipher_mode(self.spec.cipher)?;
 
@@ -105,13 +96,14 @@ impl KeyHandleImpl for AndroidKeyHandle {
             .getKey(&env, self.key_id.to_owned(), JObject::null())
             .err_internal()?;
 
-        let (data, iv) = load_iv(encrypted_data, get_iv_size(self.spec.cipher));
         let iv_spec = IvParameterSpec::new(&env, &iv).err_internal()?;
         cipher
             .init2(&env, 2, key, iv_spec.raw.as_obj())
             .err_internal()?;
 
-        let decrypted = cipher.doFinal(&env, data).err_internal()?;
+        let decrypted = cipher
+            .doFinal(&env, encrypted_data.to_vec())
+            .err_internal()?;
 
         Ok(decrypted)
     }
@@ -121,11 +113,12 @@ impl KeyHandleImpl for AndroidKeyHandle {
     }
 
     fn delete(self) -> Result<(), CalError> {
-        let vm = self.java_vm.lock().unwrap();
-        let _attach_guard = vm.attach_current_thread().err_internal()?;
-        let env = vm.get_env().err_internal()?;
+        let vm = ndk_context::android_context().vm();
+        let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
+        let env = vm.attach_current_thread().err_internal()?;
 
         let keystore = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_owned()).err_internal()?;
+        keystore.load(&env, None).err_internal()?;
         keystore
             .deleteEntry(&env, self.key_id.clone())
             .err_internal()?;
@@ -144,9 +137,9 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
     fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
         info!("signing");
 
-        let vm = self.java_vm.lock().unwrap();
-        let _attach_guard = vm.attach_current_thread().err_internal()?;
-        let env = vm.get_env().err_internal()?;
+        let vm = ndk_context::android_context().vm();
+        let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
+        let env = vm.attach_current_thread().err_internal()?;
 
         let key_store = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_string()).err_internal()?;
         key_store.load(&env, None).err_internal()?;
@@ -174,9 +167,9 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
     fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, CalError> {
         info!("verifiying");
 
-        let vm = self.java_vm.lock().unwrap();
-        let _attach_guard = vm.attach_current_thread().err_internal()?;
-        let env = vm.get_env().err_internal()?;
+        let vm = ndk_context::android_context().vm();
+        let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
+        let env = vm.attach_current_thread().err_internal()?;
 
         let key_store = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_string()).err_internal()?;
         key_store.load(&env, None).err_internal()?;
@@ -204,9 +197,9 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
     fn encrypt_data(&self, encryped_data: &[u8]) -> Result<Vec<u8>, CalError> {
         info!("encrypting");
 
-        let vm = self.java_vm.lock().unwrap();
-        let _attach_guard = vm.attach_current_thread().err_internal()?;
-        let env = vm.get_env().err_internal()?;
+        let vm = ndk_context::android_context().vm();
+        let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
+        let env = vm.attach_current_thread().err_internal()?;
 
         let key_store = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_owned()).err_internal()?;
         key_store.load(&env, None).err_internal()?;
@@ -233,9 +226,9 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
     fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, CalError> {
         info!("decrypting");
 
-        let vm = self.java_vm.lock().unwrap();
-        let _attach_guard = vm.attach_current_thread().err_internal()?;
-        let env = vm.get_env().err_internal()?;
+        let vm = ndk_context::android_context().vm();
+        let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
+        let env = vm.attach_current_thread().err_internal()?;
 
         let key_store = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_owned()).err_internal()?;
         key_store.load(&env, None).err_internal()?;
@@ -261,9 +254,9 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
     fn get_public_key(&self) -> Result<Vec<u8>, CalError> {
         info!("getting public key");
 
-        let vm = self.java_vm.lock().unwrap();
-        let _attach_guard = vm.attach_current_thread().err_internal()?;
-        let env = vm.get_env().err_internal()?;
+        let vm = ndk_context::android_context().vm();
+        let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
+        let env = vm.attach_current_thread().err_internal()?;
 
         let key_store = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_owned()).err_internal()?;
         key_store.load(&env, None).err_internal()?;
@@ -286,11 +279,12 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
     }
 
     fn delete(self) -> Result<(), CalError> {
-        let vm = self.java_vm.lock().unwrap();
-        let _attach_guard = vm.attach_current_thread().err_internal()?;
-        let env = vm.get_env().err_internal()?;
+        let vm = ndk_context::android_context().vm();
+        let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
+        let env = vm.attach_current_thread().err_internal()?;
 
         let keystore = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_owned()).err_internal()?;
+        keystore.load(&env, None).err_internal()?;
         keystore
             .deleteEntry(&env, self.key_id.clone())
             .err_internal()?;

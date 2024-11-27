@@ -1,5 +1,11 @@
-use enum_dispatch::enum_dispatch;
-
+#[cfg(feature = "software")]
+use crate::software::{SoftwareProvider, SoftwareProviderFactory};
+#[cfg(feature = "android")]
+use crate::tpm::android::provider::{AndroidProvider, AndroidProviderFactory};
+#[cfg(feature = "apple-secure-enclave")]
+use crate::tpm::apple_secure_enclave::provider::{
+    AppleSecureEnclaveFactory, AppleSecureEnclaveProvider,
+};
 use crate::{
     common::{
         config::{KeyPairSpec, KeySpec, ProviderConfig, ProviderImplConfig},
@@ -8,14 +14,7 @@ use crate::{
     },
     stub::{StubProvider, StubProviderFactory},
 };
-
-#[cfg(feature = "android")]
-use crate::tpm::android::provider::{AndroidProvider, AndroidProviderFactory};
-
-#[cfg(feature = "apple-secure-enclave")]
-use crate::tpm::apple_secure_enclave::provider::{
-    AppleSecureEnclaveFactory, AppleSecureEnclaveProvider,
-};
+use enum_dispatch::enum_dispatch;
 
 #[enum_dispatch(ProviderFactoryEnum)]
 pub(crate) trait ProviderFactory: Send + Sync {
@@ -24,7 +23,7 @@ pub(crate) trait ProviderFactory: Send + Sync {
     /// Returns security level and supported algorithms of a provider.
     ///
     /// [ProviderConfig] returned stores in HashSets all Hashes, Ciphers and AsymmetricKeySpecs a provider supports.
-    fn get_capabilities(&self, impl_config: ProviderImplConfig) -> ProviderConfig;
+    fn get_capabilities(&self, impl_config: ProviderImplConfig) -> Option<ProviderConfig>;
     fn create_provider(&self, impl_config: ProviderImplConfig) -> ProviderImplEnum;
 }
 
@@ -35,6 +34,8 @@ pub(crate) enum ProviderFactoryEnum {
     AndroidProviderFactory,
     #[cfg(feature = "apple-secure-enclave")]
     AppleSecureEnclaveFactory,
+    #[cfg(feature = "software")]
+    SoftwareProviderFactory,
 }
 
 /// Defines the interface for a security module provider.
@@ -125,7 +126,7 @@ pub(crate) trait ProviderImpl: Send + Sync {
 
     fn provider_name(&self) -> String;
 
-    fn get_capabilities(&self) -> ProviderConfig;
+    fn get_capabilities(&self) -> Option<ProviderConfig>;
 }
 
 #[enum_dispatch]
@@ -135,4 +136,6 @@ pub(crate) enum ProviderImplEnum {
     AndroidProvider,
     #[cfg(feature = "apple-secure-enclave")]
     AppleSecureEnclaveProvider,
+    #[cfg(feature = "software")]
+    SoftwareProvider,
 }

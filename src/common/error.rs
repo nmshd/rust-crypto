@@ -12,8 +12,6 @@ use thiserror;
 /// The provider implementation should map errors from native libraries to this enum.
 /// Most if not all errors should have a source for backtraces.
 /// If other fields are usefull for understanding the error, they should also exist.
-///
-
 #[derive(thiserror::Error, Debug)]
 #[error("{error_kind}: {source}")]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
@@ -83,7 +81,7 @@ impl CalError {
     pub(crate) fn other(source: anyhow::Error) -> Self {
         Self {
             error_kind: CalErrorKind::Other,
-            source: source,
+            source,
         }
     }
 
@@ -122,7 +120,7 @@ impl CalError {
     ) -> Self {
         Self {
             error_kind: CalErrorKind::MissingValue {
-                description: description,
+                description,
                 internal,
             },
             source: source.unwrap_or_else(|| anyhow!("Missing Value Error")),

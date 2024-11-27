@@ -63,12 +63,22 @@ pub enum AsymmetricKeySpec {
     },
 }
 
+impl Default for AsymmetricKeySpec {
+    fn default() -> Self {
+        Self::Ecc {
+            scheme: Default::default(),
+            curve: Default::default(),
+        }
+    }
+}
+
 /// flutter_rust_bridge:non_opaque
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, EnumString, EnumIter)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum EccSigningScheme {
     /// ECDSA: Elliptic Curve Digital Signature Algorithm.
+    #[default]
     EcDsa,
     /// ECDAA: Elliptic Curve Direct Anonymous Attestation.
     EcDaa,
@@ -106,6 +116,7 @@ impl Default for EccSigningScheme {
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum EccCurve {
     /// NIST P-256 curve.
+    #[default]
     P256,
     /// NIST P-384 curve.
     P384,
@@ -212,9 +223,7 @@ impl Default for Cipher {
 /// ```rust
 /// use crypto_layer::common::crypto::algorithms::encryption::SymmetricMode;
 ///
-/// fn main() {
-///     let mode = SymmetricMode::Gcm;
-/// }
+/// let mode = SymmetricMode::Gcm;
 /// ```
 ///
 /// # Note
@@ -269,9 +278,7 @@ pub enum SymmetricMode {
 /// ```rust
 /// use crypto_layer::common::crypto::algorithms::encryption::TripleDesNumKeys;
 ///
-/// fn main() {
-///     let des_config = TripleDesNumKeys::Tdes3;
-/// }
+/// let des_config = TripleDesNumKeys::Tdes3;
 /// ```
 ///
 /// # Note
@@ -306,9 +313,7 @@ impl Default for TripleDesNumKeys {
 /// ```rust
 /// use crypto_layer::common::crypto::algorithms::encryption:: Rc2KeyBits;
 ///
-/// fn main() {
-///     let key_size = Rc2KeyBits::Rc2_128;
-/// }
+/// let key_size = Rc2KeyBits::Rc2_128;
 /// ```
 ///
 /// # Note

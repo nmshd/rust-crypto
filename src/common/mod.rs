@@ -1,9 +1,11 @@
 use config::{KeyPairSpec, KeySpec, ProviderConfig};
 use error::CalError;
 use tracing::error;
+#[cfg(feature = "software")]
+use traits::key_handle::DHKeyExchangeImpl;
+use traits::key_handle::DHKeyExchangeImplEnum;
 use traits::key_handle::{
-    DHKeyExchangeImplEnum, KeyHandleImpl, KeyHandleImplEnum, KeyPairHandleImpl,
-    KeyPairHandleImplEnum,
+    KeyHandleImpl, KeyHandleImplEnum, KeyPairHandleImpl, KeyPairHandleImplEnum,
 };
 use traits::module_provider::{ProviderImpl, ProviderImplEnum};
 
@@ -136,7 +138,7 @@ impl Provider {
     }
 
     delegate_enum_bare! {
-        pub fn get_capabilities(&self) -> ProviderConfig;
+        pub fn get_capabilities(&self) -> Option<ProviderConfig>;
     }
 }
 
@@ -196,12 +198,13 @@ impl KeyHandle {
         pub fn extract_key(&self) -> Result<Vec<u8>, CalError>;
     }
     delegate_enum! {
-        pub fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError>;
+        pub fn encrypt_data(&self, data: &[u8]) -> Result<(Vec<u8>, Vec<u8>), CalError>;
     }
     delegate_enum! {
         pub fn decrypt_data(
             &self,
             encrypted_data: &[u8],
+            iv: &[u8],
         ) -> Result<Vec<u8>, CalError>;
     }
 
@@ -220,4 +223,19 @@ impl KeyHandle {
 pub struct DHExchange {
     #[cfg_attr(feature = "ts-interface", ts(skip))]
     pub(crate) implementation: DHKeyExchangeImplEnum,
+}
+
+#[cfg(feature = "software")]
+impl DHExchange {
+    delegate_enum! {
+        pub fn get_public_key(&self) -> Result<Vec<u8>, CalError>;
+    }
+
+    delegate_enum! {
+        pub fn add_external(&mut self, external_key: &[u8]) -> Result<Vec<u8>, CalError>;
+    }
+
+    delegate_enum! {
+        pub fn add_external_final(&mut self, external_key: &[u8]) -> Result<KeyHandleImplEnum, CalError>;
+    }
 }

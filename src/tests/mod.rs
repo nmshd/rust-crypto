@@ -8,6 +8,9 @@ mod tpm;
 #[cfg(feature = "nks")]
 mod nks;
 
+#[cfg(feature = "software-keystore")]
+mod software;
+
 use std::collections::HashMap;
 use std::io;
 use std::sync::Once;
@@ -80,6 +83,7 @@ impl TestStore {
             delete_fn: Arc::new(|key| Box::pin(self.delete(key))),
             all_keys_fn: Arc::new(|| Box::pin(self.keys())),
             java_vm: None,
+            additional_config: None,
         }
     }
 

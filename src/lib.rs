@@ -5,6 +5,8 @@ pub mod ffi;
 pub mod hsm;
 #[cfg(feature = "nks")]
 pub mod nks;
+#[cfg(feature = "software")]
+pub(crate) mod software;
 pub(crate) mod stub;
 #[cfg(test)]
 mod tests;

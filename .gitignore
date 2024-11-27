@@ -13,3 +13,4 @@ Cargo.lock
 /.idea/*
 /logs
 /bindings
+/metadata.db

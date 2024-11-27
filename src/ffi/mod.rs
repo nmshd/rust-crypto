@@ -1,3 +1,3 @@
 pub mod factory;
-mod provider;
 mod key_handle;
+mod provider;
