@@ -163,7 +163,7 @@ pub(crate) trait DHKeyExchangeImpl: Send + Sync {
 }
 
 #[cfg(not(feature = "software"))]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) enum DHKeyExchangeImplEnum {
     // Stub,
     #[cfg(feature = "android")]

@@ -82,7 +82,6 @@ impl TestStore {
             store_fn: Arc::new(|key, value| Box::pin(self.store(key, value))),
             delete_fn: Arc::new(|key| Box::pin(self.delete(key))),
             all_keys_fn: Arc::new(|| Box::pin(self.keys())),
-            java_vm: None,
             additional_config: None,
         }
     }

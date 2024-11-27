@@ -74,7 +74,9 @@ impl Default for AsymmetricKeySpec {
 
 /// flutter_rust_bridge:non_opaque
 #[repr(C)]
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, EnumString, EnumIter)]
+#[derive(
+    Copy, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, EnumString, EnumIter, Default,
+)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum EccSigningScheme {
     /// ECDSA: Elliptic Curve Digital Signature Algorithm.
@@ -84,12 +86,6 @@ pub enum EccSigningScheme {
     EcDaa,
     /// EC-Schnorr: A Schnorr signature scheme variant using elliptic curves.
     EcSchnorr,
-}
-
-impl Default for EccSigningScheme {
-    fn default() -> Self {
-        EccSigningScheme::EcDsa
-    }
 }
 
 /// Specifies the curve types for Elliptic Curve Digital Signature Algorithm (ECDSA).
@@ -112,7 +108,9 @@ impl Default for EccSigningScheme {
 /// Uses `#[repr(C)]` for C language compatibility.
 /// flutter_rust_bridge:non_opaque
 #[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, EnumString, EnumIter)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, EnumString, EnumIter, Default,
+)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum EccCurve {
     /// NIST P-256 curve.
@@ -138,12 +136,6 @@ pub enum EccCurve {
     Curve448,
     /// FRP256v1, a French curve providing strong security and performance.
     Frp256v1,
-}
-
-impl Default for EccCurve {
-    fn default() -> Self {
-        EccCurve::P256
-    }
 }
 
 /// Represents the available cipher algorithms.
