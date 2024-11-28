@@ -25,7 +25,7 @@ use std::collections::HashSet;
 
 pub(crate) mod key_handle;
 pub(crate) mod provider;
-pub(crate) mod storage;
+// pub(crate) mod storage;
 
 #[derive(Default)]
 pub(crate) struct SoftwareProviderFactory {}
@@ -40,6 +40,14 @@ impl ProviderFactory for SoftwareProviderFactory {
         supported_asym_specs.insert(AsymmetricKeySpec::Ecc {
             scheme: EccSigningScheme::EcDsa,
             curve: EccCurve::P256,
+        });
+        supported_asym_specs.insert(AsymmetricKeySpec::Ecc {
+            scheme: EccSigningScheme::EcDsa,
+            curve: EccCurve::P384,
+        });
+        supported_asym_specs.insert(AsymmetricKeySpec::Ecc {
+            scheme: EccSigningScheme::EcDsa,
+            curve: EccCurve::Curve25519,
         });
 
         let mut supported_hashes = HashSet::new();

@@ -5,6 +5,7 @@ use super::{
 use crate::{
     common::{
         config::{KeyPairSpec, KeySpec, ProviderConfig},
+        crypto::algorithms::encryption::{AsymmetricKeySpec, EccCurve},
         error::CalError,
         traits::{
             key_handle::{DHKeyExchangeImpl, KeyHandleImplEnum},
@@ -12,7 +13,7 @@ use crate::{
         },
         DHExchange, KeyHandle, KeyPairHandle,
     },
-    storage::{KeyData, Spec, StorageField},
+    storage::{KeyData, Spec},
 };
 use nanoid::nanoid;
 use ring::{
@@ -43,7 +44,7 @@ impl ProviderImpl for SoftwareProvider {
 
         let storage_data = KeyData {
             id: key_id.clone(),
-            secret_data: Some(StorageField::Raw(key_data)),
+            secret_data: Some(key_data),
             public_data: None,
             additional_data: None,
             spec: Spec::KeySpec(spec),
@@ -80,7 +81,7 @@ impl ProviderImpl for SoftwareProvider {
         };
 
         let key_data = match storage_data.secret_data {
-            Some(StorageField::Raw(v)) => v,
+            Some(v) => v,
             _ => {
                 return Err(CalError::failed_operation(
                     "no sensitive data for key found".to_owned(),
@@ -113,37 +114,50 @@ impl ProviderImpl for SoftwareProvider {
     fn create_key_pair(&mut self, spec: KeyPairSpec) -> Result<KeyPairHandle, CalError> {
         let key_id = nanoid!(10);
 
-        // Generate ECC key pair using ring's SystemRandom for asymmetric keys
-        let rng = SystemRandom::new();
-        let algorithm: &EcdsaSigningAlgorithm = spec.asym_spec.into();
-        let pkcs8_bytes =
-            EcdsaKeyPair::generate_pkcs8(algorithm, &rng).expect("Failed to generate private key");
+        let storage_data = if let AsymmetricKeySpec::Ecc {
+            scheme: _,
+            curve: EccCurve::Curve25519,
+        } = spec.asym_spec
+        {
+            let keypair = ed25519_compact::KeyPair::from_seed(ed25519_compact::Seed::default());
+            KeyData {
+                id: key_id.clone(),
+                secret_data: Some(keypair.sk.to_vec()),
+                public_data: Some(keypair.pk.to_vec()),
+                additional_data: None,
+                spec: Spec::KeyPairSpec(spec),
+            }
+        } else {
+            // Generate ECC key pair using ring's SystemRandom for asymmetric keys
+            let rng = SystemRandom::new();
+            let algorithm: &EcdsaSigningAlgorithm = spec.asym_spec.into();
+            let pkcs8_bytes = EcdsaKeyPair::generate_pkcs8(algorithm, &rng)
+                .expect("Failed to generate private key");
 
-        // Create an EcdsaKeyPair from the PKCS#8-encoded private key
-        let key_pair = EcdsaKeyPair::from_pkcs8(algorithm, pkcs8_bytes.as_ref(), &rng)
-            .expect("Failed to parse key pair");
+            // Create an EcdsaKeyPair from the PKCS#8-encoded private key
+            let key_pair = EcdsaKeyPair::from_pkcs8(algorithm, pkcs8_bytes.as_ref(), &rng)
+                .expect("Failed to parse key pair");
 
-        let storage_data = KeyData {
-            id: key_id.clone(),
-            secret_data: Some(StorageField::Raw(pkcs8_bytes.as_ref().to_vec())),
-            public_data: Some(key_pair.public_key().as_ref().to_vec()),
-            additional_data: None,
-            spec: Spec::KeyPairSpec(spec),
+            KeyData {
+                id: key_id.clone(),
+                secret_data: Some(pkcs8_bytes.as_ref().to_vec()),
+                public_data: Some(key_pair.public_key().as_ref().to_vec()),
+                additional_data: None,
+                spec: Spec::KeyPairSpec(spec),
+            }
         };
 
-        self.storage_manager.store(key_id.clone(), storage_data)?;
-
-        // Extract the public key bytes
-        let public_key = key_pair.public_key().as_ref().to_vec();
+        self.storage_manager
+            .store(key_id.clone(), storage_data.clone())?;
 
         // Initialize SoftwareKeyPairHandle with the private and public key bytes
-        let handle = SoftwareKeyPairHandle::new(
+        let handle = SoftwareKeyPairHandle {
             key_id,
             spec,
-            pkcs8_bytes.as_ref().to_vec(),
-            public_key,
-            self.storage_manager.clone(),
-        )?;
+            signing_key: storage_data.secret_data,
+            public_key: storage_data.public_data.unwrap(),
+            storage_manager: self.storage_manager.clone(),
+        };
 
         Ok(KeyPairHandle {
             implementation: handle.into(),
@@ -163,17 +177,7 @@ impl ProviderImpl for SoftwareProvider {
             ));
         };
 
-        let key_data = match storage_data.secret_data {
-            Some(StorageField::Raw(v)) => Some(v),
-            Some(StorageField::Encryped { data: _, iv: _ }) => {
-                return Err(CalError::failed_operation(
-                    "sensitive key data can not be decrypted".to_owned(),
-                    true,
-                    None,
-                ))
-            }
-            None => None,
-        };
+        let key_data = storage_data.secret_data;
 
         let public_key = match storage_data.public_data {
             Some(v) => v,
@@ -186,20 +190,12 @@ impl ProviderImpl for SoftwareProvider {
             }
         };
 
-        let handle = match key_data {
-            Some(private_key) => SoftwareKeyPairHandle::new(
-                key_id,
-                spec,
-                private_key,
-                public_key,
-                self.storage_manager.clone(),
-            )?,
-            None => SoftwareKeyPairHandle::new_public_only(
-                key_id,
-                spec,
-                public_key,
-                self.storage_manager.clone(),
-            )?,
+        let handle = SoftwareKeyPairHandle {
+            key_id,
+            spec,
+            signing_key: key_data,
+            public_key,
+            storage_manager: self.storage_manager.clone(),
         };
 
         Ok(KeyPairHandle {
@@ -221,7 +217,7 @@ impl ProviderImpl for SoftwareProvider {
         // store key
         let storage_data = KeyData {
             id: key_id.clone(),
-            secret_data: Some(StorageField::Raw(data.to_vec())),
+            secret_data: Some(data.to_vec()),
             public_data: None,
             additional_data: None,
             spec: Spec::KeySpec(spec),
@@ -243,17 +239,17 @@ impl ProviderImpl for SoftwareProvider {
         let key_id = nanoid!(10);
 
         // Initialize SoftwareKeyPairHandle with separate private and public key bytes
-        let handle = SoftwareKeyPairHandle::new(
-            key_id.clone(),
+        let handle = SoftwareKeyPairHandle {
+            key_id: key_id.clone(),
             spec,
-            private_key.to_vec(),
-            public_key.to_vec(),
-            self.storage_manager.clone(),
-        )?;
+            signing_key: Some(private_key.to_vec()),
+            public_key: public_key.to_vec(),
+            storage_manager: self.storage_manager.clone(),
+        };
 
         let storage_data = KeyData {
             id: key_id.clone(),
-            secret_data: Some(StorageField::Raw(private_key.to_vec())),
+            secret_data: Some(private_key.to_vec()),
             public_data: Some(public_key.to_vec()),
             additional_data: None,
             spec: Spec::KeyPairSpec(spec),
@@ -272,12 +268,13 @@ impl ProviderImpl for SoftwareProvider {
         public_key: &[u8],
     ) -> Result<KeyPairHandle, CalError> {
         let key_id = nanoid!(10);
-        let handle = SoftwareKeyPairHandle::new_public_only(
-            key_id.clone(),
+        let handle = SoftwareKeyPairHandle {
+            key_id: key_id.clone(),
             spec,
-            public_key.to_vec(),
-            self.storage_manager.clone(),
-        )?;
+            public_key: public_key.to_vec(),
+            signing_key: None,
+            storage_manager: self.storage_manager.clone(),
+        };
 
         let storage_data = KeyData {
             id: key_id.clone(),
