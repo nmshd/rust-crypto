@@ -1,5 +1,4 @@
 #![allow(dead_code)]
-use std::any::Any;
 use std::fmt::Debug;
 use std::{
     cmp::{Eq, Ord, PartialEq, PartialOrd},
@@ -15,6 +14,7 @@ use super::crypto::algorithms::{
     encryption::{AsymmetricKeySpec, Cipher},
     hashes::CryptoHash,
 };
+use super::KeyHandle;
 
 /// A type alias for a pinned, heap-allocated, dynamically dispatched future that is `Send`.
 ///
@@ -77,59 +77,6 @@ pub struct KeyPairSpec {
 }
 
 /// flutter_rust_bridge:non_opaque
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
-pub(crate) enum SerializableSpec {
-    KeySpec(KeySpec),
-    KeyPairSpec(KeyPairSpec),
-}
-
-/// A trait for encapsulating additional configuration data with support for dynamic downcasting.
-///
-/// Implementing this trait allows different configuration types to be stored as trait objects
-/// (`dyn AdditionalConfig`) and later downcasted to their concrete types when specific functionality
-/// is required.
-pub trait AdditionalData: Any + Debug + Send + Sync {
-    /// Provides a reference to `self` as `&dyn Any` to enable downcasting to concrete types.
-    fn as_any(&self) -> &dyn Any;
-}
-
-/// Automatically implements `AdditionalConfig` for any type that satisfies `Any + Debug + Send + Sync`.
-///
-/// This blanket implementation allows diverse types to be used as additional configuration
-/// without requiring individual trait implementations. It enables dynamic configuration
-/// handling by leveraging Rust's trait bounds and dynamic downcasting capabilities.
-impl<T: Any + Debug + Send + Sync> AdditionalData for T {
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-}
-
-/// A handle encapsulating additional configuration, enabling dynamic downcasting.
-///
-/// This struct wraps an `Arc<dyn AdditionalConfig>`, allowing for thread-safe sharing and
-/// dynamic dispatch of configuration data. The `opaque` attribute ensures that this type
-/// is treated as an opaque type in Flutter Rust Bridge, hiding its internal structure.
-/// flutter_rust_bridge:opaque
-#[derive(Debug)]
-pub struct ConfigHandle {
-    pub(crate) implementation: Arc<dyn AdditionalData>,
-}
-
-impl ConfigHandle {
-    pub fn new(implementation: Arc<dyn AdditionalData>) -> Self {
-        Self { implementation }
-    }
-}
-
-impl Clone for ConfigHandle {
-    fn clone(&self) -> Self {
-        ConfigHandle {
-            implementation: Arc::clone(&self.implementation),
-        }
-    }
-}
-
-/// flutter_rust_bridge:non_opaque
 #[derive(Clone, Debug)]
 pub struct ProviderConfig {
     pub max_security_level: SecurityLevel,
@@ -142,11 +89,25 @@ pub struct ProviderConfig {
 /// flutter_rust_bridge:opaque
 #[derive(Clone)]
 pub struct ProviderImplConfig {
-    pub(crate) get_fn: GetFn,
-    pub(crate) store_fn: StoreFn,
-    pub(crate) delete_fn: DeleteFn,
-    pub(crate) all_keys_fn: AllKeysFn,
-    pub(crate) additional_config: Option<ConfigHandle>,
+    pub additional_config: Vec<AdditionalConfig>,
+}
+
+#[derive(Clone)]
+pub enum AdditionalConfig {
+    KVStoreConfig {
+        get_fn: GetFn,
+        store_fn: StoreFn,
+        delete_fn: DeleteFn,
+        all_keys_fn: AllKeysFn,
+    },
+    FileStoreConfig {
+        db_path: String,
+        secure_path: String,
+        pass: String,
+    },
+    StorageConfig {
+        key_handle: KeyHandle,
+    },
 }
 
 impl std::fmt::Debug for ProviderImplConfig {
@@ -162,15 +123,16 @@ impl ProviderImplConfig {
         store_fn: StoreFn,
         delete_fn: DeleteFn,
         all_keys_fn: AllKeysFn,
-        additional_config: Option<ConfigHandle>,
+        mut additional_config: Vec<AdditionalConfig>,
     ) -> Self {
-        Self {
+        let kv_config = AdditionalConfig::KVStoreConfig {
             get_fn,
             store_fn,
             delete_fn,
             all_keys_fn,
-            additional_config,
-        }
+        };
+        additional_config.push(kv_config);
+        Self { additional_config }
     }
 
     /// Creates a new stubbed `ProviderImplConfig` instance for testing or default purposes.
@@ -180,21 +142,7 @@ impl ProviderImplConfig {
         delete_fn: DeleteFn,
         all_keys_fn: AllKeysFn,
     ) -> Self {
-        Self::new(get_fn, store_fn, delete_fn, all_keys_fn, None)
-    }
-
-    /// Method to retrieve the additional configuration as a concrete type.
-    ///
-    /// This method attempts to downcast the `additional_config` to the specified concrete type `T`.
-    /// If the downcast succeeds, it returns `Some(&T)`; otherwise, it returns `None`.
-    pub fn get_additional_config_as<T: Any + 'static>(&self) -> Option<&T> {
-        self.additional_config.as_ref().and_then(|config_handle| {
-            config_handle
-                .implementation
-                .as_ref()
-                .as_any()
-                .downcast_ref::<T>()
-        })
+        Self::new(get_fn, store_fn, delete_fn, all_keys_fn, vec![])
     }
 }
 

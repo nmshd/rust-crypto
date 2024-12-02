@@ -187,6 +187,7 @@ impl fmt::Display for KeyType {
     }
 }
 
+#[allow(dead_code)]
 pub(crate) trait ToCalError<T> {
     fn err_internal(self) -> Result<T, CalError>;
 }

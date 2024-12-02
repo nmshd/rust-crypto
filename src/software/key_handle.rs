@@ -1,5 +1,6 @@
 use crate::common::{
     config::{KeyPairSpec, KeySpec},
+    crypto::algorithms::encryption::{AsymmetricKeySpec, EccCurve},
     error::CalError,
     traits::key_handle::{KeyHandleImpl, KeyPairHandleImpl},
     DHExchange,
@@ -10,29 +11,43 @@ use ring::{
     signature::{EcdsaKeyPair, Signature, UnparsedPublicKey},
 };
 use std::sync::Arc;
+use tracing::warn;
+
+use super::StorageManager;
 
 #[derive(Debug, Clone)]
 pub(crate) struct SoftwareKeyPairHandle {
     pub(crate) key_id: String,
     pub(crate) spec: KeyPairSpec,
-    pub(crate) signing_key: Option<Arc<EcdsaKeyPair>>,
+    pub(crate) signing_key: Option<Vec<u8>>,
     pub(crate) public_key: Vec<u8>,
+    pub(crate) storage_manager: StorageManager,
 }
 
 #[derive(Debug, Clone)]
 pub(crate) struct SoftwareKeyHandle {
     pub(crate) key_id: String,
     pub(crate) key: Arc<LessSafeKey>,
+    pub(crate) storage_manager: StorageManager,
 }
 
 impl SoftwareKeyHandle {
-    pub fn new(key_id: String, spec: Option<KeySpec>, key_data: Vec<u8>) -> Result<Self, CalError> {
+    pub fn new(
+        key_id: String,
+        spec: Option<KeySpec>,
+        key_data: Vec<u8>,
+        storage_manager: StorageManager,
+    ) -> Result<Self, CalError> {
         // Create the AES key for encryption and decryption
         let algo: &Algorithm = spec.as_ref().unwrap().cipher.into();
         let unbound_key = UnboundKey::new(algo, &key_data).expect("Failed to create AES key");
         let key = Arc::new(LessSafeKey::new(unbound_key));
 
-        Ok(Self { key_id, key })
+        Ok(Self {
+            key_id,
+            key,
+            storage_manager,
+        })
     }
 }
 
@@ -65,7 +80,7 @@ impl KeyHandleImpl for SoftwareKeyHandle {
         Ok((encrypted_data, vec![]))
     }
 
-    fn decrypt_data(&self, encrypted_data: &[u8], iv: &[u8]) -> Result<Vec<u8>, CalError> {
+    fn decrypt_data(&self, encrypted_data: &[u8], _iv: &[u8]) -> Result<Vec<u8>, CalError> {
         // Separate nonce and ciphertext
         if encrypted_data.len() <= NONCE_LEN {
             return Err(CalError::failed_operation(
@@ -103,50 +118,8 @@ impl KeyHandleImpl for SoftwareKeyHandle {
 
     #[doc = " Delete this key."]
     fn delete(self) -> Result<(), CalError> {
-        todo!()
-    }
-}
-
-impl SoftwareKeyPairHandle {
-    pub fn new(
-        key_id: String,
-        spec: KeyPairSpec,
-        private_key: Vec<u8>,
-        public_key: Vec<u8>,
-    ) -> Result<Self, CalError> {
-        let rng = SystemRandom::new();
-        let algorithm = spec.asym_spec.into();
-
-        // Create the signing key from PKCS#8-encoded private key
-        let signing_key = Arc::new(
-            EcdsaKeyPair::from_pkcs8(algorithm, &private_key, &rng).map_err(|e| {
-                CalError::failed_operation(
-                    format!("Failed to create key pair: {:?}", e),
-                    false,
-                    None,
-                )
-            })?,
-        );
-
-        Ok(Self {
-            key_id,
-            spec,
-            signing_key: Some(signing_key),
-            public_key,
-        })
-    }
-
-    pub fn new_public_only(
-        key_id: String,
-        spec: KeyPairSpec,
-        public_key: Vec<u8>,
-    ) -> Result<Self, CalError> {
-        Ok(Self {
-            key_id,
-            spec,
-            signing_key: None,
-            public_key,
-        })
+        self.storage_manager.delete(self.key_id);
+        Ok(())
     }
 }
 
@@ -163,23 +136,85 @@ impl KeyPairHandleImpl for SoftwareKeyPairHandle {
             }
         };
 
-        // Secure random generator for signing
-        let rng = SystemRandom::new();
+        match self.spec.asym_spec {
+            AsymmetricKeySpec::Ecc { curve, .. } => match curve {
+                EccCurve::Curve25519 => ed25519_compact::SecretKey::from_slice(&signing_key)
+                    .map(|key| {
+                        key.sign(data, Some(ed25519_compact::Noise::generate()))
+                            .to_vec()
+                    })
+                    .map_err(|_| {
+                        CalError::failed_operation(
+                            "Failed to use signing key".to_string(),
+                            true,
+                            None,
+                        )
+                    }),
+                EccCurve::P256 | EccCurve::P384 => {
+                    // Secure random generator for signing
+                    let rng = SystemRandom::new();
 
-        // Sign the data
-        let signature: Signature = signing_key.sign(&rng, data).expect("Signing failed");
+                    let signing_key = EcdsaKeyPair::from_pkcs8(
+                        self.spec.asym_spec.into(),
+                        signing_key.as_slice(),
+                        &rng,
+                    )
+                    .map_err(|_| {
+                        CalError::failed_operation(
+                            "Failed to use signing key".to_string(),
+                            true,
+                            None,
+                        )
+                    })?;
 
-        Ok(signature.as_ref().to_vec())
+                    // Sign the data
+                    let signature: Signature = signing_key.sign(&rng, data).map_err(|_| {
+                        CalError::failed_operation(
+                            "Failed to use signing key".to_string(),
+                            true,
+                            None,
+                        )
+                    })?;
+
+                    Ok(signature.as_ref().to_vec())
+                }
+                _ => todo!(),
+            },
+            _ => todo!(),
+        }
     }
 
     fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, CalError> {
-        // Create an UnparsedPublicKey using the algorithm and the public key bytes
-        let public_key = UnparsedPublicKey::new(self.spec.asym_spec.into(), &self.public_key);
-
-        // Verify the signature with the provided data and signature
-        match public_key.verify(data, signature) {
-            Ok(_) => Ok(true),
-            Err(_) => Ok(false),
+        warn!("Verifying signature");
+        match self.spec.asym_spec {
+            AsymmetricKeySpec::Ecc { curve, .. } => match curve {
+                EccCurve::Curve25519 => {
+                    ed25519_compact::PublicKey::from_slice(self.public_key.as_slice())
+                        .and_then(|key| {
+                            ed25519_compact::Signature::from_slice(signature)
+                                .map(|signature| (key, signature))
+                        })
+                        .map(|(key, signature)| key.verify(data, &signature).is_ok())
+                        .map_err(|_| {
+                            CalError::failed_operation(
+                                "Failed to use public key".to_string(),
+                                true,
+                                None,
+                            )
+                        })
+                }
+                EccCurve::P256 | EccCurve::P384 => {
+                    // Create an UnparsedPublicKey using the algorithm and the public key bytes
+                    Ok(
+                        UnparsedPublicKey::new(self.spec.asym_spec.into(), &self.public_key)
+                            .verify(data, signature)
+                            .inspect_err(|e| warn!("Failed to verify signature: {e:?}"))
+                            .is_ok(),
+                    )
+                }
+                _ => todo!(),
+            },
+            _ => todo!(),
         }
     }
 
@@ -209,6 +244,7 @@ impl KeyPairHandleImpl for SoftwareKeyPairHandle {
 
     #[doc = " Delete this key pair."]
     fn delete(self) -> Result<(), CalError> {
-        todo!()
+        self.storage_manager.delete(self.key_id);
+        Ok(())
     }
 }

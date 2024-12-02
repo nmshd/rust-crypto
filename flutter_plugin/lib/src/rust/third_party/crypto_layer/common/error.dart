@@ -4,7 +4,6 @@
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
 import '../../../frb_generated.dart';
-import '../../../lib.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'error.freezed.dart';
@@ -17,6 +16,9 @@ abstract class CalError implements RustOpaqueInterface {
 
   Future<CalErrorKind> errorKind();
 }
+
+// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<T>>
+abstract class T implements RustOpaqueInterface {}
 
 abstract class ToCalError {
   Future<T> errInternal();
