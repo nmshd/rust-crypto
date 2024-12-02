@@ -89,7 +89,7 @@ pub struct ProviderConfig {
 /// flutter_rust_bridge:opaque
 #[derive(Clone)]
 pub struct ProviderImplConfig {
-    pub(crate) additional_config: Vec<AdditionalConfig>,
+    pub additional_config: Vec<AdditionalConfig>,
 }
 
 #[derive(Clone)]

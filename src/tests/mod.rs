@@ -8,13 +8,13 @@ mod tpm;
 #[cfg(feature = "nks")]
 mod nks;
 
-#[cfg(feature = "software-keystore")]
+#[cfg(feature = "software")]
 mod software;
 
 use std::collections::HashMap;
-use std::io;
 use std::sync::Once;
 use std::sync::{Arc, RwLock};
+use std::{io, vec};
 
 use color_eyre::install;
 use tracing_subscriber::{
@@ -23,7 +23,7 @@ use tracing_subscriber::{
     fmt::format::FmtSpan,
 };
 
-use crate::common::config::ProviderImplConfig;
+use crate::common::config::{AdditionalConfig, ProviderImplConfig};
 use crate::common::KeyPairHandle;
 
 static SETUP_INITIALIZATIOIN: Once = Once::new();
@@ -77,13 +77,15 @@ impl TestStore {
     }
 
     fn impl_config<'a: 'static>(&'a self) -> ProviderImplConfig {
-        ProviderImplConfig {
+        let kv_store = AdditionalConfig::KVStoreConfig {
             get_fn: Arc::new(|key| Box::pin(self.get(key))),
             store_fn: Arc::new(|key, value| Box::pin(self.store(key, value))),
             delete_fn: Arc::new(|key| Box::pin(self.delete(key))),
             all_keys_fn: Arc::new(|| Box::pin(self.keys())),
-            java_vm: None,
-            additional_config: None,
+        };
+
+        ProviderImplConfig {
+            additional_config: vec![kv_store],
         }
     }
 

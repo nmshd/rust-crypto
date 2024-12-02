@@ -30,64 +30,20 @@ mod tests {
 
     mod key_pair_handle {
         use super::*;
-        use crate::{
-            common::{config::ConfigHandle, Provider},
-            software::SoftwareProviderAdditionalConfig,
-        };
-        use tempfile::Builder;
+        use crate::{common::Provider, tests::TestStore};
+
+        static mut STORE: std::sync::LazyLock<TestStore> =
+            std::sync::LazyLock::new(|| TestStore::new());
 
         /// Helper function to create a new key pair and extract the SoftwareKeyPairHandle
-        fn create_software_key_pair_handle(
-            spec: KeyPairSpec,
-        ) -> Result<SoftwareKeyPairHandle, CalError> {
-            let dir = Builder::new().prefix("metadata_test").tempdir().unwrap();
-            let md_db_path = dir.path().join("metadata_test.db");
-            let key_db_path = dir.path().join("keys_test.db");
+        fn create_key_pair_handle(spec: KeyPairSpec) -> Result<KeyPairHandle, CalError> {
+            let impl_config = unsafe { STORE.impl_config().clone() };
 
-            // Create an instance of the concrete config
-            let software_config = SoftwareProviderAdditionalConfig {
-                metadata_path: Some(md_db_path.to_str().unwrap().to_string()),
-                keydb_path: Some(key_db_path.to_str().unwrap().to_string()),
-                keydb_pw: Some("insecure".to_string()),
-            };
+            let mut provider: Provider =
+                factory::create_provider_from_name("SoftwareProvider".to_owned(), impl_config)
+                    .unwrap();
 
-            // Wrap it in a `ConfigHandle`
-            let config_handle = ConfigHandle::new(Arc::new(software_config));
-
-            // Obtain the default provider implementation configuration
-            let provider_impl_config = SoftwareProvider::get_default_config(
-                Some(config_handle.clone()),
-                None,
-                None,
-                None,
-                None,
-            );
-
-            let mut provider: Provider = factory::create_provider_from_name(
-                "SoftwareProvider".to_owned(),
-                provider_impl_config,
-            )
-            .unwrap();
-
-            let key_pair_handle = provider.create_key_pair(spec)?;
-            extract_software_key_pair_handle(&key_pair_handle)
-        }
-
-        /// Helper function to extract the SoftwareKeyPairHandle from a KeyPairHandle
-        fn extract_software_key_pair_handle(
-            key_pair_handle: &KeyPairHandle,
-        ) -> Result<SoftwareKeyPairHandle, CalError> {
-            if let KeyPairHandleImplEnum::SoftwareKeyPairHandle(ref handle) =
-                key_pair_handle.implementation
-            {
-                Ok(handle.clone())
-            } else {
-                Err(CalError::failed_operation(
-                    "Expected SoftwareKeyPairHandle".to_owned(),
-                    true,
-                    None,
-                ))
-            }
+            provider.create_key_pair(spec)
         }
 
         #[test]
@@ -103,7 +59,7 @@ mod tests {
             };
 
             // Create a new key pair and get the SoftwareKeyPairHandle
-            let software_key_pair_handle = create_software_key_pair_handle(spec).unwrap();
+            let software_key_pair_handle = create_key_pair_handle(spec).unwrap();
 
             let data = b"Data to sign";
 
@@ -133,7 +89,7 @@ mod tests {
             };
 
             // Create a new key pair and get the SoftwareKeyPairHandle
-            let software_key_pair_handle = create_software_key_pair_handle(spec).unwrap();
+            let software_key_pair_handle = create_key_pair_handle(spec).unwrap();
 
             let data = b"Data to sign";
             let wrong_data = b"Wrong data";
@@ -167,8 +123,8 @@ mod tests {
             };
 
             // Create two key pairs
-            let software_key_pair_handle1 = create_software_key_pair_handle(spec).unwrap();
-            let software_key_pair_handle2 = create_software_key_pair_handle(spec).unwrap();
+            let software_key_pair_handle1 = create_key_pair_handle(spec).unwrap();
+            let software_key_pair_handle2 = create_key_pair_handle(spec).unwrap();
 
             let data = b"Data to sign";
 
@@ -201,7 +157,7 @@ mod tests {
             };
 
             // Create a new key pair and get the SoftwareKeyPairHandle
-            let software_key_pair_handle = create_software_key_pair_handle(spec).unwrap();
+            let software_key_pair_handle = create_key_pair_handle(spec).unwrap();
 
             // Get the public key
             let public_key = software_key_pair_handle
@@ -223,21 +179,24 @@ mod tests {
                 signing_hash: CryptoHash::Sha2(Sha2Bits::Sha256),
             };
 
-            // Create a new key pair and get the SoftwareKeyPairHandle
-            let software_key_pair_handle = create_software_key_pair_handle(spec).unwrap();
+            let impl_config = unsafe { STORE.impl_config().clone() };
+
+            let mut provider: Provider =
+                factory::create_provider_from_name("SoftwareProvider".to_owned(), impl_config)
+                    .unwrap();
+
+            let key_pair_handle = provider.create_key_pair(spec).unwrap();
 
             // Get the public key
-            let public_key = software_key_pair_handle
+            let public_key = key_pair_handle
                 .get_public_key()
                 .expect("Failed to get public key");
 
             // Create a public-only key pair handle
-            let public_only_key_pair_handle = SoftwareKeyPairHandle::new_public_only(
-                "public_only_key".to_owned(),
-                spec,
-                public_key,
-            )
-            .expect("Failed to create public-only key pair handle");
+
+            let public_only_key_pair_handle = provider
+                .import_public_key(spec, &public_key)
+                .expect("Failed to create public-only key pair handle");
 
             let data = b"Data to sign";
 
@@ -262,28 +221,27 @@ mod tests {
                 signing_hash: CryptoHash::Sha2(Sha2Bits::Sha256),
             };
 
-            // Create a new key pair and get the SoftwareKeyPairHandle
-            let software_key_pair_handle = create_software_key_pair_handle(spec).unwrap();
+            let impl_config = unsafe { STORE.impl_config().clone() };
+
+            let mut provider: Provider =
+                factory::create_provider_from_name("SoftwareProvider".to_owned(), impl_config)
+                    .unwrap();
+
+            let key_pair_handle = provider.create_key_pair(spec).unwrap();
 
             // Get the public key
-            let public_key = software_key_pair_handle
+            let public_key = key_pair_handle
                 .get_public_key()
                 .expect("Failed to get public key");
 
-            // Create a public-only key pair handle
-            let public_only_key_pair_handle = SoftwareKeyPairHandle::new_public_only(
-                "public_only_key".to_owned(),
-                spec,
-                public_key.clone(),
-            )
-            .expect("Failed to create public-only key pair handle");
+            let public_only_key_pair_handle = provider
+                .import_public_key(spec, &public_key)
+                .expect("Failed to create public-only key pair handle");
 
             let data = b"Data to sign";
 
             // Sign the data with the original key pair
-            let signature = software_key_pair_handle
-                .sign_data(data)
-                .expect("Signing failed");
+            let signature = key_pair_handle.sign_data(data).expect("Signing failed");
 
             // Verify the signature with the public-only key pair handle
             let verified = public_only_key_pair_handle
@@ -306,7 +264,7 @@ mod tests {
             };
 
             // Create a new key pair and get the SoftwareKeyPairHandle
-            let software_key_pair_handle = create_software_key_pair_handle(spec).unwrap();
+            let software_key_pair_handle = create_key_pair_handle(spec).unwrap();
 
             // Get the key ID
             let key_id = software_key_pair_handle.id().unwrap();
@@ -315,59 +273,21 @@ mod tests {
         }
     }
     mod key_handle {
+        use crate::tests::TestStore;
+
         use super::*;
-        use crate::{common::config::ConfigHandle, software::SoftwareProviderAdditionalConfig};
-        use tempfile::Builder;
+
+        static mut STORE: std::sync::LazyLock<TestStore> =
+            std::sync::LazyLock::new(|| TestStore::new());
 
         /// Helper function to create a new key and extract the SoftwareKeyHandle
-        fn create_software_key_handle(
-            spec: KeySpec,
-        ) -> Result<Arc<Mutex<SoftwareKeyHandle>>, CalError> {
-            let dir = Builder::new().prefix("metadata_test").tempdir().unwrap();
-            let md_db_path = dir.path().join("metadata_test.db");
-            let key_db_path = dir.path().join("keys_test.db");
+        fn create_software_key_handle(spec: KeySpec) -> Result<KeyHandle, CalError> {
+            let impl_config = unsafe { STORE.impl_config().clone() };
 
-            // Create an instance of the concrete config
-            let software_config = SoftwareProviderAdditionalConfig {
-                metadata_path: Some(md_db_path.to_str().unwrap().to_string()),
-                keydb_path: Some(key_db_path.to_str().unwrap().to_string()),
-                keydb_pw: Some("insecure".to_string()),
-            };
-
-            // Wrap it in a `ConfigHandle`
-            let config_handle = ConfigHandle::new(Arc::new(software_config));
-
-            // Obtain the default provider implementation configuration
-            let provider_impl_config = SoftwareProvider::get_default_config(
-                Some(config_handle.clone()),
-                None,
-                None,
-                None,
-                None,
-            );
-
-            let mut provider = factory::create_provider_from_name(
-                "SoftwareProvider".to_owned(),
-                provider_impl_config,
-            )
-            .unwrap();
-            let key_handle = provider.create_key(spec)?;
-            extract_software_key_handle(&key_handle)
-        }
-
-        /// Helper function to extract the SoftwareKeyHandle from a KeyHandle
-        fn extract_software_key_handle(
-            key_handle: &KeyHandle,
-        ) -> Result<Arc<Mutex<SoftwareKeyHandle>>, CalError> {
-            if let KeyHandleImplEnum::SoftwareKeyHandle(ref handle) = key_handle.implementation {
-                Ok(Arc::new(Mutex::new(handle.clone())))
-            } else {
-                Err(CalError::failed_operation(
-                    "Expected SoftwareKeyHandle".to_string(),
-                    true,
-                    None,
-                ))
-            }
+            let mut provider =
+                factory::create_provider_from_name("SoftwareProvider".to_owned(), impl_config)
+                    .unwrap();
+            provider.create_key(spec)
         }
 
         #[test]
@@ -382,8 +302,6 @@ mod tests {
             let plaintext = b"Test data for encryption and decryption via provider.";
 
             let encrypted_data = software_key_handle
-                .lock()
-                .unwrap()
                 .encrypt_data(plaintext)
                 .expect("Encryption failed");
 
@@ -393,8 +311,6 @@ mod tests {
             );
 
             let decrypted_data = software_key_handle
-                .lock()
-                .unwrap()
                 .decrypt_data(&encrypted_data.0, &[])
                 .expect("Decryption failed");
 
@@ -417,14 +333,10 @@ mod tests {
             let plaintext: &[u8] = &[];
 
             let encrypted_data = software_key_handle
-                .lock()
-                .unwrap()
                 .encrypt_data(plaintext)
                 .expect("Encryption failed");
 
             let decrypted_data = software_key_handle
-                .lock()
-                .unwrap()
                 .decrypt_data(&encrypted_data.0, &[])
                 .expect("Decryption failed");
 
@@ -448,15 +360,10 @@ mod tests {
             let plaintext = b"Data encrypted with key 1";
 
             let encrypted_data = software_key_handle1
-                .lock()
-                .unwrap()
                 .encrypt_data(plaintext)
                 .expect("Encryption failed");
 
-            let decrypted_result = software_key_handle2
-                .lock()
-                .unwrap()
-                .decrypt_data(&encrypted_data.0, &[]);
+            let decrypted_result = software_key_handle2.decrypt_data(&encrypted_data.0, &[]);
 
             assert!(
                 decrypted_result.is_err(),
@@ -476,17 +383,12 @@ mod tests {
             let plaintext = b"Data to encrypt and then tamper with.";
 
             let mut encrypted_data = software_key_handle
-                .lock()
-                .unwrap()
                 .encrypt_data(plaintext)
                 .expect("Encryption failed");
 
             encrypted_data.0[15] ^= 0xFF;
 
-            let decrypted_result = software_key_handle
-                .lock()
-                .unwrap()
-                .decrypt_data(&encrypted_data.0, &[]);
+            let decrypted_result = software_key_handle.decrypt_data(&encrypted_data.0, &[]);
 
             assert!(
                 decrypted_result.is_err(),
@@ -503,7 +405,7 @@ mod tests {
 
             let software_key_handle = create_software_key_handle(spec).unwrap();
 
-            let key_id = software_key_handle.lock().unwrap().id().unwrap();
+            let key_id = software_key_handle.id().unwrap();
 
             assert!(!key_id.is_empty(), "Key ID should not be empty");
         }
@@ -520,14 +422,10 @@ mod tests {
             let plaintext = vec![0x61; 1_048_576]; // 1 MB of data
 
             let encrypted_data = software_key_handle
-                .lock()
-                .unwrap()
                 .encrypt_data(&plaintext)
                 .expect("Encryption failed");
 
             let decrypted_data = software_key_handle
-                .lock()
-                .unwrap()
                 .decrypt_data(&encrypted_data.0, &[])
                 .expect("Decryption failed");
 
@@ -550,14 +448,10 @@ mod tests {
             let plaintext = b"Same plaintext encrypted multiple times";
 
             let encrypted_data1 = software_key_handle
-                .lock()
-                .unwrap()
                 .encrypt_data(plaintext)
                 .expect("Encryption failed");
 
             let encrypted_data2 = software_key_handle
-                .lock()
-                .unwrap()
                 .encrypt_data(plaintext)
                 .expect("Encryption failed");
 
@@ -567,14 +461,10 @@ mod tests {
             );
 
             let decrypted_data1 = software_key_handle
-                .lock()
-                .unwrap()
                 .decrypt_data(&encrypted_data1.0, &[])
                 .expect("Decryption failed");
 
             let decrypted_data2 = software_key_handle
-                .lock()
-                .unwrap()
                 .decrypt_data(&encrypted_data2.0, &[])
                 .expect("Decryption failed");
 
@@ -603,10 +493,7 @@ mod tests {
             let rng = SystemRandom::new();
             rng.fill(&mut random_data).unwrap();
 
-            let decrypted_result = software_key_handle
-                .lock()
-                .unwrap()
-                .decrypt_data(&random_data, &[]);
+            let decrypted_result = software_key_handle.decrypt_data(&random_data, &[]);
 
             assert!(
                 decrypted_result.is_err(),
@@ -625,10 +512,7 @@ mod tests {
 
             let short_data = vec![0u8; 10];
 
-            let decrypted_result = software_key_handle
-                .lock()
-                .unwrap()
-                .decrypt_data(&short_data, &[]);
+            let decrypted_result = software_key_handle.decrypt_data(&short_data, &[]);
 
             assert!(
                 decrypted_result.is_err(),
@@ -654,15 +538,10 @@ mod tests {
             let plaintext = b"Testing encryption with different cipher specs";
 
             let encrypted_data = software_key_handle256
-                .lock()
-                .unwrap()
                 .encrypt_data(plaintext)
                 .expect("Encryption failed");
 
-            let decrypted_result = software_key_handle128
-                .lock()
-                .unwrap()
-                .decrypt_data(&encrypted_data.0, &[]);
+            let decrypted_result = software_key_handle128.decrypt_data(&encrypted_data.0, &[]);
 
             assert!(
                 decrypted_result.is_err(),
@@ -689,14 +568,10 @@ mod tests {
                 let software_key_handle = create_software_key_handle(spec).unwrap();
 
                 let encrypted_data = software_key_handle
-                    .lock()
-                    .unwrap()
                     .encrypt_data(plaintext)
                     .expect("Encryption failed");
 
                 let decrypted_data = software_key_handle
-                    .lock()
-                    .unwrap()
                     .decrypt_data(&encrypted_data.0, &[])
                     .expect("Decryption failed");
 
