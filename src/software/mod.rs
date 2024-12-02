@@ -43,12 +43,13 @@ impl ProviderFactory for SoftwareProviderFactory {
         });
         supported_asym_specs.insert(AsymmetricKeySpec::Ecc {
             scheme: EccSigningScheme::EcDsa,
-            curve: EccCurve::P384,
-        });
-        supported_asym_specs.insert(AsymmetricKeySpec::Ecc {
-            scheme: EccSigningScheme::EcDsa,
             curve: EccCurve::Curve25519,
         });
+
+        let mut cipher_set = HashSet::new();
+        cipher_set.insert(Cipher::Aes(SymmetricMode::Gcm, KeyBits::Bits128));
+        cipher_set.insert(Cipher::Aes(SymmetricMode::Gcm, KeyBits::Bits256));
+        cipher_set.insert(Cipher::Chacha20(ChCha20Mode::ChaCha20Poly1305));
 
         let mut supported_hashes = HashSet::new();
         supported_hashes.insert(CryptoHash::Sha2(Sha2Bits::Sha256));
@@ -59,7 +60,7 @@ impl ProviderFactory for SoftwareProviderFactory {
             min_security_level: SecurityLevel::Software,
             max_security_level: SecurityLevel::Software,
             supported_asym_spec: supported_asym_specs,
-            supported_ciphers: HashSet::new(),
+            supported_ciphers: cipher_set,
             supported_hashes,
         })
     }
