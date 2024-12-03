@@ -1,32 +1,16 @@
 #[cfg(test)]
 mod tests {
-    use crate::{
-        common::{
-            config::{KeyPairSpec, KeySpec},
-            crypto::algorithms::{
-                encryption::{
-                    AsymmetricKeySpec, Cipher, EccCurve, EccSigningScheme, SymmetricMode,
-                },
-                hashes::{CryptoHash, Sha2Bits},
-                KeyBits,
-            },
-            error::CalError,
-            factory,
-            traits::key_handle::{
-                KeyHandleImpl, KeyHandleImplEnum, KeyPairHandleImpl, KeyPairHandleImplEnum,
-            },
-            KeyHandle, KeyPairHandle,
+    use crate::common::{
+        config::{KeyPairSpec, KeySpec},
+        crypto::algorithms::{
+            encryption::{AsymmetricKeySpec, Cipher},
+            hashes::CryptoHash,
         },
-        software::{
-            key_handle::{SoftwareKeyHandle, SoftwareKeyPairHandle},
-            SoftwareProvider,
-        },
+        error::CalError,
+        factory, KeyHandle, KeyPairHandle,
     };
     use ring::rand::{SecureRandom, SystemRandom};
-    use std::{
-        str::from_utf8,
-        sync::{Arc, Mutex},
-    };
+    use std::str::from_utf8;
 
     mod key_pair_handle {
         use super::*;
@@ -50,12 +34,9 @@ mod tests {
         fn test_sign_and_verify() {
             // Define a KeyPairSpec for ECDSA with P256 curve
             let spec = KeyPairSpec {
-                asym_spec: AsymmetricKeySpec::Ecc {
-                    scheme: EccSigningScheme::EcDsa,
-                    curve: EccCurve::P256,
-                },
+                asym_spec: AsymmetricKeySpec::P256,
                 cipher: None,
-                signing_hash: CryptoHash::Sha2(Sha2Bits::Sha256),
+                signing_hash: CryptoHash::Sha2_256,
             };
 
             // Create a new key pair and get the SoftwareKeyPairHandle
@@ -80,12 +61,9 @@ mod tests {
         fn test_verify_with_wrong_data() {
             // Define a KeyPairSpec for ECDSA with P256 curve
             let spec = KeyPairSpec {
-                asym_spec: AsymmetricKeySpec::Ecc {
-                    scheme: EccSigningScheme::EcDsa,
-                    curve: EccCurve::P256,
-                },
+                asym_spec: AsymmetricKeySpec::P256,
                 cipher: None,
-                signing_hash: CryptoHash::Sha2(Sha2Bits::Sha256),
+                signing_hash: CryptoHash::Sha2_256,
             };
 
             // Create a new key pair and get the SoftwareKeyPairHandle
@@ -114,12 +92,9 @@ mod tests {
         fn test_verify_with_wrong_key() {
             // Define a KeyPairSpec for ECDSA with P256 curve
             let spec = KeyPairSpec {
-                asym_spec: AsymmetricKeySpec::Ecc {
-                    scheme: EccSigningScheme::EcDsa,
-                    curve: EccCurve::P256,
-                },
+                asym_spec: AsymmetricKeySpec::P256,
                 cipher: None,
-                signing_hash: CryptoHash::Sha2(Sha2Bits::Sha256),
+                signing_hash: CryptoHash::Sha2_256,
             };
 
             // Create two key pairs
@@ -148,12 +123,9 @@ mod tests {
         fn test_get_public_key() {
             // Define a KeyPairSpec for ECDSA with P256 curve
             let spec = KeyPairSpec {
-                asym_spec: AsymmetricKeySpec::Ecc {
-                    scheme: EccSigningScheme::EcDsa,
-                    curve: EccCurve::P256,
-                },
+                asym_spec: AsymmetricKeySpec::P256,
                 cipher: None,
-                signing_hash: CryptoHash::Sha2(Sha2Bits::Sha256),
+                signing_hash: CryptoHash::Sha2_256,
             };
 
             // Create a new key pair and get the SoftwareKeyPairHandle
@@ -171,12 +143,9 @@ mod tests {
         fn test_sign_with_public_only_key() {
             // Define a KeyPairSpec for ECDSA with P256 curve
             let spec = KeyPairSpec {
-                asym_spec: AsymmetricKeySpec::Ecc {
-                    scheme: EccSigningScheme::EcDsa,
-                    curve: EccCurve::P256,
-                },
+                asym_spec: AsymmetricKeySpec::P256,
                 cipher: None,
-                signing_hash: CryptoHash::Sha2(Sha2Bits::Sha256),
+                signing_hash: CryptoHash::Sha2_256,
             };
 
             let impl_config = unsafe { STORE.impl_config().clone() };
@@ -213,12 +182,9 @@ mod tests {
         fn test_verify_with_public_only_key() {
             // Define a KeyPairSpec for ECDSA with P256 curve
             let spec = KeyPairSpec {
-                asym_spec: AsymmetricKeySpec::Ecc {
-                    scheme: EccSigningScheme::EcDsa,
-                    curve: EccCurve::P256,
-                },
+                asym_spec: AsymmetricKeySpec::P256,
                 cipher: None,
-                signing_hash: CryptoHash::Sha2(Sha2Bits::Sha256),
+                signing_hash: CryptoHash::Sha2_256,
             };
 
             let impl_config = unsafe { STORE.impl_config().clone() };
@@ -255,12 +221,9 @@ mod tests {
         fn test_id_method() {
             // Define a KeyPairSpec for ECDSA with P256 curve
             let spec = KeyPairSpec {
-                asym_spec: AsymmetricKeySpec::Ecc {
-                    scheme: EccSigningScheme::EcDsa,
-                    curve: EccCurve::P256,
-                },
+                asym_spec: AsymmetricKeySpec::P256,
                 cipher: None,
-                signing_hash: CryptoHash::Sha2(Sha2Bits::Sha256),
+                signing_hash: CryptoHash::Sha2_256,
             };
 
             // Create a new key pair and get the SoftwareKeyPairHandle
@@ -293,7 +256,7 @@ mod tests {
         #[test]
         fn test_encrypt_decrypt_data() {
             let spec = KeySpec {
-                cipher: Cipher::Aes(SymmetricMode::Gcm, KeyBits::Bits256),
+                cipher: Cipher::AesGcm256,
                 ..Default::default()
             };
 
@@ -324,7 +287,7 @@ mod tests {
         #[test]
         fn test_encrypt_decrypt_empty_data() {
             let spec = KeySpec {
-                cipher: Cipher::Aes(SymmetricMode::Gcm, KeyBits::Bits128),
+                cipher: Cipher::AesGcm128,
                 ..Default::default()
             };
 
@@ -350,7 +313,7 @@ mod tests {
         #[test]
         fn test_decrypt_with_wrong_key() {
             let spec = KeySpec {
-                cipher: Cipher::Aes(SymmetricMode::Gcm, KeyBits::Bits256),
+                cipher: Cipher::AesGcm256,
                 ..Default::default()
             };
 
@@ -374,7 +337,7 @@ mod tests {
         #[test]
         fn test_decrypt_modified_ciphertext() {
             let spec = KeySpec {
-                cipher: Cipher::Aes(SymmetricMode::Gcm, KeyBits::Bits256),
+                cipher: Cipher::AesGcm256,
                 ..Default::default()
             };
 
@@ -399,7 +362,7 @@ mod tests {
         #[test]
         fn test_id_method() {
             let spec = KeySpec {
-                cipher: Cipher::Aes(SymmetricMode::Gcm, KeyBits::Bits128),
+                cipher: Cipher::AesGcm128,
                 ..Default::default()
             };
 
@@ -413,7 +376,7 @@ mod tests {
         #[test]
         fn wtest_encrypt_decrypt_large_data() {
             let spec = KeySpec {
-                cipher: Cipher::Aes(SymmetricMode::Gcm, KeyBits::Bits256),
+                cipher: Cipher::AesGcm256,
                 ..Default::default()
             };
 
@@ -439,7 +402,7 @@ mod tests {
         #[test]
         fn test_encrypt_same_plaintext_multiple_times() {
             let spec = KeySpec {
-                cipher: Cipher::Aes(SymmetricMode::Gcm, KeyBits::Bits128),
+                cipher: Cipher::AesGcm128,
                 ..Default::default()
             };
 
@@ -483,7 +446,7 @@ mod tests {
         #[test]
         fn test_decrypt_random_data() {
             let spec = KeySpec {
-                cipher: Cipher::Aes(SymmetricMode::Gcm, KeyBits::Bits256),
+                cipher: Cipher::AesGcm256,
                 ..Default::default()
             };
 
@@ -504,7 +467,7 @@ mod tests {
         #[test]
         fn test_decrypt_short_data() {
             let spec = KeySpec {
-                cipher: Cipher::Aes(SymmetricMode::Gcm, KeyBits::Bits256),
+                cipher: Cipher::AesGcm256,
                 ..Default::default()
             };
 
@@ -523,12 +486,12 @@ mod tests {
         #[test]
         fn test_encrypt_decrypt_different_cipher_spec() {
             let spec256 = KeySpec {
-                cipher: Cipher::Aes(SymmetricMode::Gcm, KeyBits::Bits256),
+                cipher: Cipher::AesGcm256,
                 ..Default::default()
             };
 
             let spec128 = KeySpec {
-                cipher: Cipher::Aes(SymmetricMode::Gcm, KeyBits::Bits128),
+                cipher: Cipher::AesGcm128,
                 ..Default::default()
             };
 
@@ -553,11 +516,11 @@ mod tests {
         fn test_encrypt_decrypt_multiple_keys() {
             let specs = vec![
                 KeySpec {
-                    cipher: Cipher::Aes(SymmetricMode::Gcm, KeyBits::Bits128),
+                    cipher: Cipher::AesGcm128,
                     ..Default::default()
                 },
                 KeySpec {
-                    cipher: Cipher::Aes(SymmetricMode::Gcm, KeyBits::Bits256),
+                    cipher: Cipher::AesGcm256,
                     ..Default::default()
                 },
             ];
