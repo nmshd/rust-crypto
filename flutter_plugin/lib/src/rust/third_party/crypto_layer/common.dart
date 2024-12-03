@@ -14,7 +14,13 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `fmt`, `fmt`, `fmt`
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DHExchange>>
-abstract class DhExchange implements RustOpaqueInterface {}
+abstract class DhExchange implements RustOpaqueInterface {
+  Future<Uint8List> addExternal({required List<int> externalKey});
+
+  Future<KeyHandle> addExternalFinal({required List<int> externalKey});
+
+  Future<Uint8List> getPublicKey();
+}
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<KeyHandle>>
 abstract class KeyHandle implements RustOpaqueInterface {

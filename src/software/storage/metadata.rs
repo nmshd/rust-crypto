@@ -6,7 +6,7 @@ use super::METADATA_TABLE;
 
 /// Struct representing a database for storing metadata and cryptographic keys.
 #[derive(Clone)]
-pub struct MetadataDatabase {
+pub(crate) struct MetadataDatabase {
     db: Arc<Database>,
 }
 

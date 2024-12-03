@@ -4,39 +4,16 @@
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
 import '../../../frb_generated.dart';
+import '../../../lib.dart';
 import 'crypto/algorithms.dart';
 import 'crypto/algorithms/encryption.dart';
 import 'crypto/algorithms/hashes.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they have generic arguments: `get_additional_config_as`
-// These types are ignored because they are not used by any `pub` functions: `SerializableSpec`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_receiver_is_total_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `cmp`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `partial_cmp`
-// These functions are ignored (category: IgnoreBecauseNotAllowedOwner): `as_any`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_receiver_is_total_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `cmp`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `partial_cmp`
 
-// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc < dyn AdditionalData >>>
-abstract class ArcAdditionalData implements RustOpaqueInterface {}
-
-// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc < dyn Fn () -> DynFuture < Vec < String > > + Send + Sync >>>
-abstract class ArcFnDynFutureVecString implements RustOpaqueInterface {}
-
-// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc < dyn Fn (String) -> DynFuture < Option < Vec < u8 > > > + Send + Sync >>>
-abstract class ArcFnStringDynFutureOptionVecU8 implements RustOpaqueInterface {}
-
-// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc < dyn Fn (String) -> Pin < Box < dyn Future < Output = () > + Send > > + Send + Sync >>>
-abstract class ArcFnStringPinBoxFutureOutput implements RustOpaqueInterface {}
-
-// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc < dyn Fn (String , Vec < u8 >) -> DynFuture < bool > + Send + Sync >>>
-abstract class ArcFnStringVecU8DynFutureBool implements RustOpaqueInterface {}
-
-// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ConfigHandle>>
-abstract class ConfigHandle implements RustOpaqueInterface {
-  // HINT: Make it `#[frb(sync)]` to let it become the default constructor of Dart class.
-  static Future<ConfigHandle> newInstance(
-          {required ArcAdditionalData implementation}) =>
-      RustLib.instance.api.cryptoLayerCommonConfigConfigHandleNew(
-          implementation: implementation);
-}
+// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AdditionalConfig>>
+abstract class AdditionalConfig implements RustOpaqueInterface {}
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ProviderImplConfig>>
 abstract class ProviderImplConfig implements RustOpaqueInterface {
@@ -47,7 +24,7 @@ abstract class ProviderImplConfig implements RustOpaqueInterface {
           required ArcFnStringVecU8DynFutureBool storeFn,
           required ArcFnStringPinBoxFutureOutput deleteFn,
           required ArcFnDynFutureVecString allKeysFn,
-          ConfigHandle? additionalConfig}) =>
+          required List<AdditionalConfig> additionalConfig}) =>
       RustLib.instance.api.cryptoLayerCommonConfigProviderImplConfigNew(
           getFn: getFn,
           storeFn: storeFn,
@@ -66,11 +43,6 @@ abstract class ProviderImplConfig implements RustOpaqueInterface {
           storeFn: storeFn,
           deleteFn: deleteFn,
           allKeysFn: allKeysFn);
-}
-
-abstract class AdditionalData {
-  /// Provides a reference to `self` as `&dyn Any` to enable downcasting to concrete types.
-  Future<void> asAny();
 }
 
 /// flutter_rust_bridge:non_opaque

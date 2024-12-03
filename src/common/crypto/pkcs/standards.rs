@@ -11,7 +11,7 @@
 ///
 /// ```rust
 /// use crypto_layer::common::crypto::pkcs::standards::{PkiStandards, PkcsType};
-/// pki_standard = PkiStandards::Pkcs(PkcsType::Pkcs1);
+/// let pki_standard = PkiStandards::Pkcs(PkcsType::Pkcs1);
 /// ```
 ///
 /// Using `PkiStandards` with X.509 Certificates:
@@ -19,7 +19,7 @@
 /// ```rust
 /// use crypto_layer::common::crypto::pkcs::standards::{PkiStandards, X509Type};
 ///
-/// pki_standard = PkiStandards::X509(X509Type::Certificate);
+/// let pki_standard = PkiStandards::X509(X509Type::Certificate);
 /// ```
 ///
 /// # Note
@@ -52,7 +52,7 @@ pub enum PkiStandards {
 /// ```rust
 /// use crypto_layer::common::crypto::pkcs::standards::PkcsType;
 ///
-/// pkcs_type = PkcsType::Pkcs1;
+/// let pkcs_type = PkcsType::Pkcs1;
 /// ```
 ///
 /// # Note
@@ -93,7 +93,7 @@ pub enum PkcsType {
 /// ```rust
 /// use crypto_layer::common::crypto::pkcs::standards::X509Type;
 ///
-/// x509_type = X509Type::Certificate;
+/// let x509_type = X509Type::Certificate;
 /// ```
 ///
 /// # Note
@@ -125,7 +125,7 @@ pub enum X509Type {
 /// ```rust
 /// use crypto_layer::common::crypto::pkcs::standards::{ObjectIdentifiers, OidType};
 ///
-/// oid = ObjectIdentifiers::Oid(OidType::RsaEncryption);
+/// let oid = ObjectIdentifiers::Oid(OidType::RsaEncryption);
 /// ```
 ///
 /// # Note
@@ -175,7 +175,7 @@ pub enum ObjectIdentifiers {
 /// ```rust
 /// use crypto_layer::common::crypto::pkcs::standards::OidType;
 ///
-/// oid_type = OidType::Aes256Cbc;
+/// let oid_type = OidType::Aes256Cbc;
 /// ```
 ///
 /// # Note

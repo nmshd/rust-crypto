@@ -9,7 +9,7 @@ use crate::common::{
     config::{KeyPairSpec, KeySpec, ProviderConfig, ProviderImplConfig, SecurityLevel},
     error::CalError,
     traits::{
-        key_handle::{KeyHandleImpl, KeyPairHandleImpl},
+        key_handle::{DHKeyExchangeImpl, KeyHandleImpl, KeyPairHandleImpl},
         module_provider::{ProviderFactory, ProviderImpl, ProviderImplEnum},
     },
     DHExchange, KeyHandle, KeyPairHandle,
@@ -94,6 +94,10 @@ impl ProviderImpl for StubProvider {
     fn get_capabilities(&self) -> Option<ProviderConfig> {
         StubProviderFactory {}.get_capabilities(self.impl_config.clone())
     }
+
+    fn get_all_keys(&self) -> Result<Vec<crate::common::config::Spec>, CalError> {
+        todo!()
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -158,6 +162,26 @@ impl KeyHandleImpl for StubKeyHandle {
     }
 
     fn delete(self) -> Result<(), CalError> {
+        todo!()
+    }
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct StubDHKeyExchange;
+
+impl DHKeyExchangeImpl for StubDHKeyExchange {
+    /// Get the public key of the internal key pair to use for the other party
+    fn get_public_key(&self) -> Result<Vec<u8>, CalError> {
+        todo!()
+    }
+
+    /// add an external public point and compute the shared secret. The raw secret is returned to use in another round of the key exchange
+    fn add_external(&mut self, external_key: &[u8]) -> Result<Vec<u8>, CalError> {
+        todo!()
+    }
+
+    /// add the final external Keypair, derive a symmetric key from the shared secret and store the key
+    fn add_external_final(&mut self, external_key: &[u8]) -> Result<KeyHandle, CalError> {
         todo!()
     }
 }

@@ -7,6 +7,7 @@ pub mod hsm;
 pub mod nks;
 #[cfg(feature = "software")]
 pub(crate) mod software;
+pub(crate) mod storage;
 pub(crate) mod stub;
 #[cfg(test)]
 mod tests;

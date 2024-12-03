@@ -6,5 +6,14 @@
 import 'frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<T>>
-abstract class T implements RustOpaqueInterface {}
+// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc < dyn Fn () -> DynFuture < Vec < String > > + Send + Sync >>>
+abstract class ArcFnDynFutureVecString implements RustOpaqueInterface {}
+
+// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc < dyn Fn (String) -> DynFuture < Option < Vec < u8 > > > + Send + Sync >>>
+abstract class ArcFnStringDynFutureOptionVecU8 implements RustOpaqueInterface {}
+
+// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc < dyn Fn (String) -> Pin < Box < dyn Future < Output = () > + Send > > + Send + Sync >>>
+abstract class ArcFnStringPinBoxFutureOutput implements RustOpaqueInterface {}
+
+// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc < dyn Fn (String , Vec < u8 >) -> DynFuture < bool > + Send + Sync >>>
+abstract class ArcFnStringVecU8DynFutureBool implements RustOpaqueInterface {}

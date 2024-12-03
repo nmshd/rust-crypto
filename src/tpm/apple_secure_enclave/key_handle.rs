@@ -1,61 +1,47 @@
 use std::fmt;
-use std::future::Future;
-use std::pin::Pin;
-use std::sync::Arc;
 
 use base64::prelude::*;
-use pollster::block_on;
 use security_framework::key::Algorithm;
 use security_framework::key::SecKey;
-use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
+use crate::common::config::KeyPairSpec;
+use crate::common::error::ToCalError;
 use crate::common::{
-    crypto::algorithms::hashes::{CryptoHash, Sha2Bits},
-    error::{CalError, KeyType, ToCalError},
+    crypto::algorithms::hashes::CryptoHash,
+    error::{CalError, KeyType},
     traits::key_handle::KeyPairHandleImpl,
     DHExchange,
 };
+use crate::storage::StorageManager;
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub(super) struct KeyPairMetadata {
-    pub hash: CryptoHash,
-}
-
-impl KeyPairMetadata {
-    #[instrument(level = "trace")]
-    fn hash(&self) -> Result<Algorithm, CalError> {
-        match self.hash {
-            CryptoHash::Sha1 => Ok(Algorithm::ECDSASignatureMessageX962SHA1),
-            CryptoHash::Sha2(bits) => match bits {
-                Sha2Bits::Sha224 => Ok(Algorithm::ECDSASignatureMessageX962SHA224),
-                Sha2Bits::Sha256 => Ok(Algorithm::ECDSASignatureMessageX962SHA256),
-                Sha2Bits::Sha384 => Ok(Algorithm::ECDSASignatureMessageX962SHA384),
-                Sha2Bits::Sha512 => Ok(Algorithm::ECDSASignatureMessageX962SHA512),
-                _ => Err(CalError::bad_parameter(format!("{:#?}", bits), true, None)),
-            },
-            _ => Err(CalError::bad_parameter(
-                "Only Sha1 and Sha2 are supported.".to_owned(),
-                true,
-                None,
-            )),
-        }
+#[instrument(level = "trace")]
+fn hash_kind(hash: CryptoHash) -> Result<Algorithm, CalError> {
+    match hash {
+        CryptoHash::Sha2_224 => Ok(Algorithm::ECDSASignatureMessageX962SHA224),
+        CryptoHash::Sha2_256 => Ok(Algorithm::ECDSASignatureMessageX962SHA256),
+        CryptoHash::Sha2_384 => Ok(Algorithm::ECDSASignatureMessageX962SHA384),
+        CryptoHash::Sha2_512 => Ok(Algorithm::ECDSASignatureMessageX962SHA512),
+        _ => Err(CalError::bad_parameter(
+            "Only Sha2 is supported.".to_owned(),
+            true,
+            None,
+        )),
     }
 }
 
 #[derive(Clone)]
 pub(crate) struct AppleSecureEnclaveKeyPair {
     pub(super) key_handle: SecKey,
-    pub(super) metadata: KeyPairMetadata,
-    pub(super) del_fn:
-        Arc<dyn Fn(String) -> Pin<Box<dyn Future<Output = ()> + Send>> + Send + Sync>,
+    pub(super) spec: KeyPairSpec,
+    pub(super) storage_manager: StorageManager,
 }
 
 impl KeyPairHandleImpl for AppleSecureEnclaveKeyPair {
     #[instrument(level = "trace", skip(data))]
     fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
         self.key_handle
-            .create_signature(self.metadata.hash()?, data)
+            .create_signature(hash_kind(self.spec.signing_hash)?, data)
             .err_internal()
     }
 
@@ -66,7 +52,7 @@ impl KeyPairHandleImpl for AppleSecureEnclaveKeyPair {
             KeyType::Public,
         ))?;
         public_key
-            .verify_signature(self.metadata.hash()?, data, signature)
+            .verify_signature(hash_kind(self.spec.signing_hash)?, data, signature)
             .err_internal()
     }
 
@@ -117,7 +103,7 @@ impl KeyPairHandleImpl for AppleSecureEnclaveKeyPair {
 
     #[instrument]
     fn delete(self) -> Result<(), CalError> {
-        block_on((*self.del_fn)(self.id()?));
+        self.storage_manager.delete(self.id()?);
         self.key_handle.delete().err_internal()
     }
 }
@@ -126,7 +112,7 @@ impl fmt::Debug for AppleSecureEnclaveKeyPair {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("AppleSecureEnclaveKeyPair")
             .field("key_handle", &self.key_handle)
-            .field("metadata", &self.metadata)
+            .field("metadata", &self.spec)
             .finish()
     }
 }

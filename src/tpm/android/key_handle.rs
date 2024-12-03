@@ -1,10 +1,11 @@
 use crate::{
     common::{
-        config::{KeyPairSpec, KeySpec, ProviderImplConfig},
+        config::{KeyPairSpec, KeySpec},
         error::{CalError, ToCalError},
         traits::key_handle::{KeyHandleImpl, KeyPairHandleImpl},
         DHExchange,
     },
+    storage::StorageManager,
     tpm::android::{
         utils::{get_asym_cipher_mode, get_signature_algorithm, get_sym_cipher_mode},
         wrapper::{
@@ -19,36 +20,18 @@ use crate::{
 use robusta_jni::jni::{objects::JObject, JavaVM};
 use tracing::{debug, info};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub(crate) struct AndroidKeyHandle {
     pub(crate) key_id: String,
     pub(crate) spec: KeySpec,
-    pub(crate) impl_config: ProviderImplConfig,
+    pub(crate) storage_manager: StorageManager,
 }
 
-impl std::fmt::Debug for AndroidKeyHandle {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("AndroidKeyHandle")
-            .field("key_id", &self.key_id)
-            .field("spec", &self.spec)
-            .finish()
-    }
-}
-
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub(crate) struct AndroidKeyPairHandle {
     pub(crate) key_id: String,
     pub(crate) spec: KeyPairSpec,
-    pub(crate) impl_config: ProviderImplConfig,
-}
-
-impl std::fmt::Debug for AndroidKeyPairHandle {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("AndroidKeyHandle")
-            .field("key_id", &self.key_id)
-            .field("spec", &self.spec)
-            .finish()
-    }
+    pub(crate) storage_manager: StorageManager,
 }
 
 impl KeyHandleImpl for AndroidKeyHandle {
@@ -123,7 +106,7 @@ impl KeyHandleImpl for AndroidKeyHandle {
             .deleteEntry(&env, self.key_id.clone())
             .err_internal()?;
 
-        pollster::block_on((self.impl_config.delete_fn)(self.key_id));
+        self.storage_manager.delete(self.key_id);
 
         Ok(())
     }
@@ -289,7 +272,7 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
             .deleteEntry(&env, self.key_id.clone())
             .err_internal()?;
 
-        pollster::block_on((self.impl_config.delete_fn)(self.key_id));
+        self.storage_manager.delete(self.key_id);
 
         Ok(())
     }

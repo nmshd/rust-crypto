@@ -1,17 +1,15 @@
 use crate::{
     common::{
-        config::{
-            KeyPairSpec, KeySpec, ProviderConfig, ProviderImplConfig, SecurityLevel,
-            SerializableSpec,
-        },
+        config::{KeyPairSpec, KeySpec, ProviderConfig, ProviderImplConfig, SecurityLevel},
         crypto::algorithms::{
             encryption::{AsymmetricKeySpec, Cipher, EccCurve, EccSigningScheme, SymmetricMode},
             KeyBits,
         },
-        error::{CalError, KeyType, ToCalError},
+        error::{CalError, ToCalError},
         traits::module_provider::{ProviderFactory, ProviderImpl, ProviderImplEnum},
         DHExchange, KeyHandle, KeyPairHandle,
     },
+    storage::{KeyData, Spec, StorageManager},
     tpm::android::{
         key_handle::{AndroidKeyHandle, AndroidKeyPairHandle},
         utils::{get_cipher_name, get_cipher_padding, get_mode_name, Padding},
@@ -20,7 +18,6 @@ use crate::{
     },
 };
 
-use anyhow::anyhow;
 use nanoid::nanoid;
 use robusta_jni::jni::JavaVM;
 use std::{collections::HashSet, fmt::Debug};
@@ -66,9 +63,12 @@ impl ProviderFactory for AndroidProviderFactory {
     }
 
     fn create_provider(&self, impl_config: ProviderImplConfig) -> ProviderImplEnum {
+        let storage_manager = StorageManager::new(self.get_name(), &impl_config.additional_config);
+
         ProviderImplEnum::from(AndroidProvider {
             impl_config,
             used_factory: *self,
+            storage_manager,
         })
     }
 }
@@ -84,6 +84,7 @@ impl ProviderFactory for AndroidProviderFactory {
 pub(crate) struct AndroidProvider {
     impl_config: ProviderImplConfig,
     used_factory: AndroidProviderFactory,
+    storage_manager: StorageManager,
 }
 
 impl Debug for AndroidProvider {
@@ -162,9 +163,15 @@ impl ProviderImpl for AndroidProvider {
 
         kg.generateKey(&env).err_internal()?;
 
-        let encoded_spec = bincode::serialize(&SerializableSpec::KeySpec(spec))
-            .map_err(|e| CalError::other(anyhow!(e)))?;
-        pollster::block_on((self.impl_config.store_fn)(key_id.clone(), encoded_spec));
+        let storage_data = KeyData {
+            id: key_id.clone(),
+            secret_data: None,
+            public_data: None,
+            additional_data: None,
+            spec: Spec::KeySpec(spec),
+        };
+
+        self.storage_manager.store(key_id.clone(), storage_data)?;
 
         debug!("key generated");
 
@@ -172,7 +179,7 @@ impl ProviderImpl for AndroidProvider {
             implementation: Into::into(AndroidKeyHandle {
                 key_id,
                 spec,
-                impl_config: self.impl_config.clone(),
+                storage_manager: self.storage_manager.clone(),
             }),
         })
     }
@@ -228,16 +235,21 @@ impl ProviderImpl for AndroidProvider {
 
         kpg.generateKeyPair(&env).err_internal()?;
 
-        // TODO: Store the KeySpec in Storage
-        let encoded = bincode::serialize(&SerializableSpec::KeyPairSpec(spec))
-            .map_err(|e| CalError::other(anyhow!(e)))?;
-        pollster::block_on((self.impl_config.store_fn)(key_id.clone(), encoded));
+        let storage_data = KeyData {
+            id: key_id.clone(),
+            secret_data: None,
+            public_data: None,
+            additional_data: None,
+            spec: Spec::KeyPairSpec(spec),
+        };
+
+        self.storage_manager.store(key_id.clone(), storage_data)?;
 
         Ok(KeyPairHandle {
             implementation: Into::into(AndroidKeyPairHandle {
                 key_id,
                 spec,
-                impl_config: self.impl_config.clone(),
+                storage_manager: self.storage_manager.clone(),
             }),
         })
     }
@@ -253,17 +265,14 @@ impl ProviderImpl for AndroidProvider {
     /// Returns `Ok(())` if the key loading is successful, otherwise returns an error of type `CalError`.
     #[instrument]
     fn load_key(&mut self, key_id: String) -> Result<KeyHandle, CalError> {
-        let encoded = pollster::block_on((self.impl_config.get_fn)(key_id.clone()))
-            .ok_or(CalError::missing_key(key_id.clone(), KeyType::Symmetric))?;
+        let store_data = self.storage_manager.get(key_id.clone())?;
 
-        let spec: SerializableSpec =
-            bincode::deserialize(&encoded).map_err(|e| CalError::other(anyhow!(e)))?;
-        match spec {
-            SerializableSpec::KeySpec(spec) => Ok(KeyHandle {
+        match store_data.spec {
+            Spec::KeySpec(spec) => Ok(KeyHandle {
                 implementation: Into::into(AndroidKeyHandle {
                     key_id,
                     spec,
-                    impl_config: self.impl_config.clone(),
+                    storage_manager: self.storage_manager.clone(),
                 }),
             }),
             _ => Err(CalError::unsupported_algorithm(
@@ -274,18 +283,14 @@ impl ProviderImpl for AndroidProvider {
 
     #[instrument]
     fn load_key_pair(&mut self, key_id: String) -> Result<KeyPairHandle, CalError> {
-        let encoded = pollster::block_on((self.impl_config.get_fn)(key_id.clone())).ok_or(
-            CalError::missing_key(key_id.clone(), KeyType::PublicAndPrivate),
-        )?;
+        let store_data = self.storage_manager.get(key_id.clone())?;
 
-        let spec: SerializableSpec =
-            bincode::deserialize(&encoded).map_err(|e| CalError::other(anyhow!(e)))?;
-        match spec {
-            SerializableSpec::KeyPairSpec(spec) => Ok(KeyPairHandle {
+        match store_data.spec {
+            Spec::KeyPairSpec(spec) => Ok(KeyPairHandle {
                 implementation: Into::into(AndroidKeyPairHandle {
                     key_id,
                     spec,
-                    impl_config: self.impl_config.clone(),
+                    storage_manager: self.storage_manager.clone(),
                 }),
             }),
             _ => Err(CalError::unsupported_algorithm(
@@ -319,11 +324,21 @@ impl ProviderImpl for AndroidProvider {
             .set_entry(&env, id.clone(), key.raw.as_obj(), None)
             .err_internal()?;
 
+        let storage_data = KeyData {
+            id: id.clone(),
+            secret_data: None,
+            public_data: None,
+            additional_data: None,
+            spec: Spec::KeySpec(spec),
+        };
+
+        self.storage_manager.store(id.clone(), storage_data)?;
+
         Ok(KeyHandle {
             implementation: Into::into(AndroidKeyHandle {
                 key_id: id,
                 spec,
-                impl_config: self.impl_config.clone(),
+                storage_manager: self.storage_manager.clone(),
             }),
         })
     }

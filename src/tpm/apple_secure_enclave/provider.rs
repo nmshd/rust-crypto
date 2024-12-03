@@ -10,38 +10,29 @@ use security_framework::{
 };
 use tracing::instrument;
 
-use pollster::block_on;
-use rmp_serde::{from_slice, to_vec};
-
-use crate::common::{
-    config::{KeyPairSpec, KeySpec, ProviderConfig, ProviderImplConfig, SecurityLevel},
-    crypto::algorithms::{
-        encryption::{AsymmetricKeySpec, EccCurve, EccSigningScheme},
-        hashes::{CryptoHash, Sha2Bits},
+use crate::{
+    common::{
+        config::{KeyPairSpec, KeySpec, ProviderConfig, ProviderImplConfig, SecurityLevel, Spec},
+        crypto::algorithms::{encryption::AsymmetricKeySpec, hashes::CryptoHash},
+        error::CalError,
+        traits::module_provider::{ProviderFactory, ProviderImpl, ProviderImplEnum},
+        DHExchange, KeyHandle, KeyPairHandle,
     },
-    error::CalError,
-    traits::module_provider::{ProviderFactory, ProviderImpl, ProviderImplEnum},
-    DHExchange, KeyHandle, KeyPairHandle,
+    storage::{KeyData, StorageManager},
 };
 
 use crate::tpm::apple_secure_enclave::{key_handle::AppleSecureEnclaveKeyPair, *};
-
-use key_handle::KeyPairMetadata;
 
 static CAPABILITIES: LazyLock<ProviderConfig> = LazyLock::new(|| ProviderConfig {
     max_security_level: SecurityLevel::Hardware,
     min_security_level: SecurityLevel::Hardware,
     supported_ciphers: HashSet::new(),
-    supported_asym_spec: HashSet::from([AsymmetricKeySpec::Ecc {
-        scheme: EccSigningScheme::EcDsa,
-        curve: EccCurve::P256,
-    }]),
+    supported_asym_spec: HashSet::from([AsymmetricKeySpec::P256]),
     supported_hashes: HashSet::from([
-        CryptoHash::Sha1,
-        CryptoHash::Sha2(Sha2Bits::Sha224),
-        CryptoHash::Sha2(Sha2Bits::Sha256),
-        CryptoHash::Sha2(Sha2Bits::Sha384),
-        CryptoHash::Sha2(Sha2Bits::Sha512),
+        CryptoHash::Sha2_224,
+        CryptoHash::Sha2_256,
+        CryptoHash::Sha2_384,
+        CryptoHash::Sha2_512,
     ]),
 });
 
@@ -94,13 +85,14 @@ impl ProviderFactory for AppleSecureEnclaveFactory {
     }
 
     fn create_provider(&self, impl_config: ProviderImplConfig) -> ProviderImplEnum {
-        AppleSecureEnclaveProvider { impl_config }.into()
+        let storage_manager = StorageManager::new(self.get_name(), &impl_config.additional_config);
+        AppleSecureEnclaveProvider { storage_manager }.into()
     }
 }
 
 #[derive(Debug)]
 pub(crate) struct AppleSecureEnclaveProvider {
-    pub(crate) impl_config: ProviderImplConfig,
+    pub(crate) storage_manager: StorageManager,
 }
 
 impl ProviderImpl for AppleSecureEnclaveProvider {
@@ -133,20 +125,26 @@ impl ProviderImpl for AppleSecureEnclaveProvider {
 
         let sec_key: SecKey = SecKey::new(&key_options).err_internal()?;
 
-        let metadata = KeyPairMetadata {
-            hash: spec.signing_hash,
-        };
-
         let key_pair = KeyPairHandle {
             implementation: AppleSecureEnclaveKeyPair {
                 key_handle: sec_key,
-                metadata: metadata.clone(),
-                del_fn: self.impl_config.delete_fn.clone(),
+                spec,
+                storage_manager: self.storage_manager.clone(),
             }
             .into(),
         };
 
-        self.save_key_pair_metadata(key_pair.id()?, metadata)?;
+        let id = key_pair.id()?;
+
+        let storage_data = KeyData {
+            id: id.clone(),
+            secret_data: None,
+            public_data: None,
+            additional_data: None,
+            spec: Spec::KeyPairSpec(spec),
+        };
+
+        self.storage_manager.store(id, storage_data)?;
 
         Ok(key_pair)
     }
@@ -160,6 +158,17 @@ impl ProviderImpl for AppleSecureEnclaveProvider {
                     "Failed decoding base64 string.".to_owned(),
                     false,
                     Some(anyhow!(e)),
+                ))
+            }
+        };
+
+        let spec = match self.storage_manager.get(key_id.clone())?.spec {
+            Spec::KeyPairSpec(v) => v,
+            Spec::KeySpec(_) => {
+                return Err(CalError::failed_operation(
+                    "trying to load symmetric key as KeyPair".to_owned(),
+                    true,
+                    None,
                 ))
             }
         };
@@ -212,13 +221,11 @@ impl ProviderImpl for AppleSecureEnclaveProvider {
             }
         };
 
-        let metadata = self.load_key_pair_metadata(key_id)?;
-
         Ok(KeyPairHandle {
             implementation: AppleSecureEnclaveKeyPair {
                 key_handle: sec_key,
-                metadata,
-                del_fn: self.impl_config.delete_fn.clone(),
+                spec,
+                storage_manager: self.storage_manager.clone(),
             }
             .into(),
         })
@@ -256,52 +263,8 @@ impl ProviderImpl for AppleSecureEnclaveProvider {
     fn get_capabilities(&self) -> Option<ProviderConfig> {
         Some(CAPABILITIES.clone())
     }
-}
 
-impl AppleSecureEnclaveProvider {
-    #[instrument(level = "trace")]
-    fn save_key_pair_metadata(
-        &self,
-        key: String,
-        metadata: KeyPairMetadata,
-    ) -> Result<(), CalError> {
-        match to_vec(&metadata) {
-            Ok(result) => {
-                if block_on((*self.impl_config.store_fn)(key, result)) {
-                    Ok(())
-                } else {
-                    Err(CalError::failed_operation(
-                        "Failed saving metadata with store_fn.".to_owned(),
-                        true,
-                        None,
-                    ))
-                }
-            }
-            Err(e) => Err(CalError::failed_operation(
-                "Failed to serialize metadata.".to_owned(),
-                false,
-                Some(e.into()),
-            )),
-        }
-    }
-
-    #[instrument(level = "trace")]
-    fn load_key_pair_metadata(&self, key: String) -> Result<KeyPairMetadata, CalError> {
-        if let Some(data) = block_on((*self.impl_config.get_fn)(key)) {
-            match from_slice(&data) {
-                Ok(decoded_data) => Ok(decoded_data),
-                Err(e) => Err(CalError::failed_operation(
-                    "Failed decoding data from get_fn.".to_owned(),
-                    false,
-                    Some(e.into()),
-                )),
-            }
-        } else {
-            Err(CalError::missing_value(
-                "Failed loading data for key.".to_owned(),
-                false,
-                None,
-            ))
-        }
+    fn get_all_keys(&self) -> Result<Vec<Spec>, CalError> {
+        todo!()
     }
 }
