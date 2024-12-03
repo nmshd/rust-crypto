@@ -1,6 +1,6 @@
 use crate::common::{
     config::{KeyPairSpec, KeySpec},
-    crypto::algorithms::encryption::{AsymmetricKeySpec, EccCurve},
+    crypto::algorithms::encryption::AsymmetricKeySpec,
     error::CalError,
     traits::key_handle::{KeyHandleImpl, KeyPairHandleImpl},
     DHExchange,

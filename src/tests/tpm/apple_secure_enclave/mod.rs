@@ -58,7 +58,6 @@ fn test_create_key_pair_sign_and_verify_data() -> Result<()> {
             .expect("Failed initializing apple secure provider.");
 
     let hashes = vec![
-        CryptoHash::Sha1,
         CryptoHash::Sha2(Sha2Bits::Sha224),
         CryptoHash::Sha2(Sha2Bits::Sha256),
         CryptoHash::Sha2(Sha2Bits::Sha384),

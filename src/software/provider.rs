@@ -304,6 +304,10 @@ impl ProviderImpl for SoftwareProvider {
         })
     }
 
+    fn get_all_keys(&self) -> Result<Vec<Spec>, CalError> {
+        self.storage_manager
+    }
+
     fn provider_name(&self) -> String {
         "SoftwareProvider".to_owned()
     }

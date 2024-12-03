@@ -3,7 +3,7 @@ use std::fmt;
 use serde::{Deserialize, Serialize};
 
 use crate::common::{
-    config::{AdditionalConfig, AllKeysFn, DeleteFn, GetFn, KeyPairSpec, KeySpec, StoreFn},
+    config::{AdditionalConfig, AllKeysFn, DeleteFn, GetFn, KeyPairSpec, KeySpec, Spec, StoreFn},
     error::{CalError, KeyType},
     KeyHandle,
 };
@@ -216,6 +216,8 @@ impl StorageManager {
                 .delete(self.scope.clone(), id.clone())
         }
     }
+
+    fn get_all_keys(&self) -> Vec<Spec> {}
 }
 
 #[derive(Clone)]
@@ -266,6 +268,17 @@ impl KVStore {
     fn delete(&self, provider: String, key: String) {
         pollster::block_on((self.delete_fn)(format!("{}:{}", provider, key)));
     }
+
+    fn get_all_keys(&self, scope: String) -> Vec<Spec> {
+        let keys = pollster::block_on((self.all_keys_fn)());
+        keys.into_iter()
+            .filter(|k| k.starts_with(&format!("{}:", scope)))
+            .filter_map(|k| {
+                let spec = pollster::block_on((self.get_fn)(k))?;
+                serde_json::from_slice(&spec).ok()
+            })
+            .collect()
+    }
 }
 
 #[allow(dead_code)]
@@ -293,12 +306,6 @@ impl FileStore {
     fn delete(&self, _provider: String, _key: String) {
         todo!()
     }
-}
-
-#[derive(Serialize, Deserialize, Clone)]
-pub(crate) enum Spec {
-    KeySpec(KeySpec),
-    KeyPairSpec(KeyPairSpec),
 }
 
 #[derive(Serialize, Deserialize, Clone)]

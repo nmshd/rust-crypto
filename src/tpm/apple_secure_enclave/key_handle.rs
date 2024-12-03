@@ -18,7 +18,6 @@ use crate::storage::StorageManager;
 #[instrument(level = "trace")]
 fn hash_kind(hash: CryptoHash) -> Result<Algorithm, CalError> {
     match hash {
-        CryptoHash::Sha1 => Ok(Algorithm::ECDSASignatureMessageX962SHA1),
         CryptoHash::Sha2(bits) => match bits {
             Sha2Bits::Sha224 => Ok(Algorithm::ECDSASignatureMessageX962SHA224),
             Sha2Bits::Sha256 => Ok(Algorithm::ECDSASignatureMessageX962SHA256),

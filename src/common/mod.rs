@@ -1,5 +1,5 @@
 use crate::common::traits::key_handle::DHKeyExchangeImpl;
-use config::{KeyPairSpec, KeySpec, ProviderConfig};
+use config::{KeyPairSpec, KeySpec, ProviderConfig, Spec};
 use error::CalError;
 use tracing::error;
 use traits::key_handle::DHKeyExchangeImplEnum;
@@ -128,6 +128,10 @@ impl Provider {
             &mut self,
             spec: KeyPairSpec,
         ) -> Result<DHExchange, CalError>;
+    }
+
+    delegate_enum! {
+        pub fn get_all_keys(&self) -> Result<Vec<Spec>, CalError>;
     }
 
     delegate_enum_bare! {
