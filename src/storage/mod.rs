@@ -217,7 +217,9 @@ impl StorageManager {
         }
     }
 
-    fn get_all_keys(&self) -> Vec<Spec> {}
+    fn get_all_keys(&self) -> Vec<Spec> {
+        todo!()
+    }
 }
 
 #[derive(Clone)]

@@ -12,16 +12,13 @@ use tracing::instrument;
 
 use crate::{
     common::{
-        config::{KeyPairSpec, KeySpec, ProviderConfig, ProviderImplConfig, SecurityLevel},
-        crypto::algorithms::{
-            encryption::{AsymmetricKeySpec, EccCurve, EccSigningScheme},
-            hashes::{CryptoHash, Sha2Bits},
-        },
+        config::{KeyPairSpec, KeySpec, ProviderConfig, ProviderImplConfig, SecurityLevel, Spec},
+        crypto::algorithms::{encryption::AsymmetricKeySpec, hashes::CryptoHash},
         error::CalError,
         traits::module_provider::{ProviderFactory, ProviderImpl, ProviderImplEnum},
         DHExchange, KeyHandle, KeyPairHandle,
     },
-    storage::{KeyData, Spec, StorageManager},
+    storage::{KeyData, StorageManager},
 };
 
 use crate::tpm::apple_secure_enclave::{key_handle::AppleSecureEnclaveKeyPair, *};
@@ -30,16 +27,12 @@ static CAPABILITIES: LazyLock<ProviderConfig> = LazyLock::new(|| ProviderConfig 
     max_security_level: SecurityLevel::Hardware,
     min_security_level: SecurityLevel::Hardware,
     supported_ciphers: HashSet::new(),
-    supported_asym_spec: HashSet::from([AsymmetricKeySpec::Ecc {
-        scheme: EccSigningScheme::EcDsa,
-        curve: EccCurve::P256,
-    }]),
+    supported_asym_spec: HashSet::from([AsymmetricKeySpec::P256]),
     supported_hashes: HashSet::from([
-        CryptoHash::Sha1,
-        CryptoHash::Sha2(Sha2Bits::Sha224),
-        CryptoHash::Sha2(Sha2Bits::Sha256),
-        CryptoHash::Sha2(Sha2Bits::Sha384),
-        CryptoHash::Sha2(Sha2Bits::Sha512),
+        CryptoHash::Sha2_224,
+        CryptoHash::Sha2_256,
+        CryptoHash::Sha2_384,
+        CryptoHash::Sha2_512,
     ]),
 });
 
@@ -269,5 +262,9 @@ impl ProviderImpl for AppleSecureEnclaveProvider {
 
     fn get_capabilities(&self) -> Option<ProviderConfig> {
         Some(CAPABILITIES.clone())
+    }
+
+    fn get_all_keys(&self) -> Result<Vec<Spec>, CalError> {
+        todo!()
     }
 }

@@ -4,10 +4,7 @@ use color_eyre::eyre::Result;
 
 use crate::common::{
     config::KeyPairSpec,
-    crypto::algorithms::{
-        encryption::{AsymmetricKeySpec, EccCurve, EccSigningScheme},
-        hashes::{CryptoHash, Sha2Bits},
-    },
+    crypto::algorithms::{encryption::AsymmetricKeySpec, hashes::CryptoHash},
     factory::create_provider_from_name,
 };
 use crate::tests::{setup, CleanupKeyPair, TestStore};
@@ -34,12 +31,9 @@ fn test_create_key_with_provider() -> Result<()> {
             .expect("Failed initializing apple secure provider.");
 
     let key_spec = KeyPairSpec {
-        asym_spec: AsymmetricKeySpec::Ecc {
-            scheme: EccSigningScheme::EcDsa,
-            curve: EccCurve::P256,
-        },
+        asym_spec: AsymmetricKeySpec::P256,
         cipher: None,
-        signing_hash: CryptoHash::Sha2(Sha2Bits::Sha256),
+        signing_hash: CryptoHash::Sha2_256,
     };
 
     let _key = provider.create_key_pair(key_spec)?;
@@ -58,18 +52,15 @@ fn test_create_key_pair_sign_and_verify_data() -> Result<()> {
             .expect("Failed initializing apple secure provider.");
 
     let hashes = vec![
-        CryptoHash::Sha2(Sha2Bits::Sha224),
-        CryptoHash::Sha2(Sha2Bits::Sha256),
-        CryptoHash::Sha2(Sha2Bits::Sha384),
-        CryptoHash::Sha2(Sha2Bits::Sha512),
+        CryptoHash::Sha2_224,
+        CryptoHash::Sha2_256,
+        CryptoHash::Sha2_384,
+        CryptoHash::Sha2_512,
     ];
 
     for hash in hashes {
         let key_spec = KeyPairSpec {
-            asym_spec: AsymmetricKeySpec::Ecc {
-                scheme: EccSigningScheme::EcDsa,
-                curve: EccCurve::P256,
-            },
+            asym_spec: AsymmetricKeySpec::P256,
             cipher: None,
             signing_hash: hash,
         };
@@ -99,12 +90,9 @@ fn test_load_key_pair() -> Result<()> {
                 .expect("Failed initializing apple secure provider.");
 
         let key_spec = KeyPairSpec {
-            asym_spec: AsymmetricKeySpec::Ecc {
-                scheme: EccSigningScheme::EcDsa,
-                curve: EccCurve::P256,
-            },
+            asym_spec: AsymmetricKeySpec::P256,
             cipher: None,
-            signing_hash: CryptoHash::Sha2(Sha2Bits::Sha256),
+            signing_hash: CryptoHash::Sha2_256,
         };
 
         let key = provider.create_key_pair(key_spec)?;
