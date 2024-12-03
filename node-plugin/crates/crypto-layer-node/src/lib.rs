@@ -17,7 +17,7 @@ use tojs::*;
 type KeyHandleJs = JsBox<RefCell<KeyHandle>>;
 type KeyPairHandleJs = JsBox<RefCell<KeyPairHandle>>;
 type ProviderJs = JsBox<RefCell<Provider>>;
-type DhExchangeJs = JsBox<RefCell<DhExchange>>;
+type DhExchangeJs = JsBox<RefCell<DHExchange>>;
 
 fn export_get_all_providers(mut cx: FunctionContext) -> JsResult<JsArray> {
     wrap_string_array(&mut cx, get_all_providers())

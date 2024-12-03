@@ -1,7 +1,13 @@
+use std::boxed::Box;
+use std::future::ready;
+use std::sync::Arc;
+
 use crypto_layer::common::config::AdditionalConfigDiscriminants;
 use crypto_layer::prelude::*;
 
 use neon::prelude::*;
+use neon::types::buffer::TypedArray;
+
 use std::str::FromStr;
 
 use super::error::{js_result, match_variant_result, missing_enum_values, ConversionError};
@@ -50,7 +56,7 @@ pub fn from_wrapped_provider_impl_config<'a>(
     todo!()
 }
 
-pub fn from_wrapped_additional_config<'a>(
+pub fn from_wrapped_additional_config(
     cx: &mut FunctionContext,
     wrapped: Handle<JsObject>,
 ) -> Result<AdditionalConfig, ConversionError> {
@@ -76,16 +82,47 @@ pub fn from_wrapped_additional_config<'a>(
             }
         }
         AdditionalConfigDiscriminants::KVStoreConfig => {
-            let get_fn_js = missing_enum_values(obj.get::<JsFunction, _, _>(cx, "get_fn"))?;
-            let store_fn_js = missing_enum_values(obj.get::<JsFunction, _, _>(cx, "store_fn"))?;
-            let delete_fn_js = missing_enum_values(obj.get::<JsFunction, _, _>(cx, "delete_fn"))?;
-            let all_keys_js = missing_enum_values(obj.get::<JsFunction, _, _>(cx, "all_keys_fn"))?;
+            let get_fn_js =
+                missing_enum_values(obj.get::<JsFunction, _, _>(cx, "get_fn"))?.root(cx);
+            let store_fn_js =
+                missing_enum_values(obj.get::<JsFunction, _, _>(cx, "store_fn"))?.root(cx);
+            let delete_fn_js =
+                missing_enum_values(obj.get::<JsFunction, _, _>(cx, "delete_fn"))?.root(cx);
+            let all_keys_js =
+                missing_enum_values(obj.get::<JsFunction, _, _>(cx, "all_keys_fn"))?.root(cx);
 
             AdditionalConfig::KVStoreConfig {
-                get_fn: (),
-                store_fn: (),
-                delete_fn: (),
-                all_keys_fn: (),
+                get_fn: {
+                    let channel = cx.channel();
+                    let get_fn = Arc::new(get_fn_js);
+
+                    Arc::new(move |id| {
+                        let get_fn = get_fn.clone();
+
+                        let handle = channel.send(move |mut cx| {
+                            let res = match get_fn
+                                .to_inner(&mut cx)
+                                .call_with(&cx)
+                                .arg(cx.string(id))
+                                .apply::<JsUint8Array, _>(&mut cx)
+                            {
+                                Ok(res) => Some(res.buffer(&mut cx).as_mut_slice(&mut cx).into()),
+                                Err(_) => None,
+                            };
+                            Ok(res)
+                        });
+
+                        let res = match js_result(handle.join()) {
+                            Ok(res) => res,
+                            Err(_) => None,
+                        };
+
+                        Box::pin(ready(res))
+                    })
+                },
+                store_fn: todo!(),
+                delete_fn: todo!(),
+                all_keys_fn: todo!(),
             }
         }
         AdditionalConfigDiscriminants::StorageConfig => {
