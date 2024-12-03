@@ -106,11 +106,19 @@ pub struct ProviderImplConfig {
 }
 
 #[derive(Clone)]
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum AdditionalConfig {
     KVStoreConfig {
+        #[cfg_attr(feature = "ts-interface", ts(type = "(id: string) => Uint8Array"))]
         get_fn: GetFn,
+        #[cfg_attr(
+            feature = "ts-interface",
+            ts(type = "(id: string, data: Uint8Array) => boolean")
+        )]
         store_fn: StoreFn,
+        #[cfg_attr(feature = "ts-interface", ts(type = "(id: string) => void"))]
         delete_fn: DeleteFn,
+        #[cfg_attr(feature = "ts-interface", ts(type = "() => string[]"))]
         all_keys_fn: AllKeysFn,
     },
     FileStoreConfig {
