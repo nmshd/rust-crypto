@@ -98,10 +98,6 @@ impl ProviderImpl for StubProvider {
     fn get_capabilities(&self) -> Option<ProviderConfig> {
         StubProviderFactory {}.get_capabilities(self.impl_config.clone())
     }
-
-    fn get_all_keys(&self) -> Result<Vec<crate::common::config::Spec>, CalError> {
-        todo!()
-    }
 }
 
 #[derive(Debug, Clone)]

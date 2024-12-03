@@ -217,7 +217,7 @@ impl StorageManager {
         }
     }
 
-    fn get_all_keys(&self) -> Vec<Spec> {
+    pub fn get_all_keys(&self) -> Vec<Spec> {
         todo!()
     }
 }
