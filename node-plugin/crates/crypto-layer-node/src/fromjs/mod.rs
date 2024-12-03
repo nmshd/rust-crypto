@@ -1,7 +1,5 @@
 pub(crate) mod config;
-pub(crate) mod encryption;
 pub(crate) mod error;
-pub(crate) mod hashes;
 
 use std::cmp::Eq;
 use std::collections::HashSet;
@@ -29,6 +27,24 @@ pub(crate) fn from_wrapped_string_vec<'a>(
     Ok(res)
 }
 
+pub(crate) fn object_keys<'a>(
+    cx: &mut impl Context<'a>,
+    obj: Handle<JsObject>,
+) -> Result<Vec<String>, ConversionError> {
+    let keys = js_result(obj.get_own_property_names(cx))?;
+    let unwrapped_keys = from_wrapped_string_vec(cx, keys)?;
+    Ok(unwrapped_keys)
+}
+
+pub(crate) fn from_wrapped_simple_enum<T: FromStr>(
+    cx: &mut FunctionContext,
+    wrapped_enum: Handle<JsValue>,
+) -> Result<T, ConversionError> {
+    let wrapped_as_str = js_result(wrapped_enum.downcast::<JsString, _>(cx))?;
+    let enum_str = wrapped_as_str.value(cx);
+    Ok(match_variant_result(T::from_str(&enum_str))?)
+}
+
 pub(crate) fn from_wrapped_enum<'a, T: FromStr>(
     cx: &mut impl Context<'a>,
     wrapped_enum: Handle<JsValue>,
@@ -38,8 +54,7 @@ pub(crate) fn from_wrapped_enum<'a, T: FromStr>(
         let res = match_variant_result(T::from_str(&value))?;
         Ok((res, None))
     } else if let Ok(o) = wrapped_enum.downcast::<JsObject, _>(cx) {
-        let keys = js_result(o.get_own_property_names(cx))?;
-        let unwrapped_keys = from_wrapped_string_vec(cx, keys)?;
+        let unwrapped_keys = object_keys(cx, o)?;
         for key in unwrapped_keys {
             if let Ok(res) = T::from_str(&key) {
                 let value = js_result(o.get::<JsValue, _, _>(cx, key.as_str()))?;

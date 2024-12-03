@@ -1,3 +1,5 @@
+use std::cell::RefCell;
+
 use neon::prelude::*;
 
 use crypto_layer::prelude::*;
@@ -12,18 +14,23 @@ pub(crate) mod tojs;
 use fromjs::*;
 use tojs::*;
 
+type KeyHandleJs = JsBox<RefCell<KeyHandle>>;
+type KeyPairHandleJs = JsBox<RefCell<KeyPairHandle>>;
+type ProviderJs = JsBox<RefCell<Provider>>;
+type DhExchangeJs = JsBox<RefCell<DhExchange>>;
+
 fn export_get_all_providers(mut cx: FunctionContext) -> JsResult<JsArray> {
     wrap_string_array(&mut cx, get_all_providers())
 }
 
-/* fn export_create_provider(mut cx: FunctionContext) -> JsResult<JsObject> {
+fn export_create_provider(mut cx: FunctionContext) -> JsResult<JsBox<Provider>> {
     let config_js = cx.argument::<JsObject>(0)?;
     let impl_config_js = cx.argument::<JsObject>(1)?;
 
     /* let provider = cx.empty_object(); */
 
     todo!()
-} */
+}
 
 #[neon::main]
 fn main(mut cx: ModuleContext) -> NeonResult<()> {
