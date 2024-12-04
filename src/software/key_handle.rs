@@ -105,6 +105,14 @@ impl KeyHandleImpl for SoftwareKeyHandle {
 
         // Remove the authentication tag
         in_out.truncate(in_out.len() - 16);
+        in_out.resize(
+            in_out
+                .iter()
+                .rposition(|&x| x != 0)
+                .map_or(0, |pos| pos + 1),
+            0,
+        );
+
         Ok(in_out)
     }
 
@@ -138,7 +146,7 @@ impl KeyPairHandleImpl for SoftwareKeyPairHandle {
 
         match self.spec.asym_spec {
             AsymmetricKeySpec::Ecc { curve, .. } => match curve {
-                EccCurve::Curve25519 => ed25519_compact::SecretKey::from_slice(&signing_key)
+                EccCurve::Curve25519 => ed25519_compact::SecretKey::from_slice(signing_key)
                     .map(|key| {
                         key.sign(data, Some(ed25519_compact::Noise::generate()))
                             .to_vec()
