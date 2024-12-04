@@ -6,7 +6,7 @@ use crate::common::{
     DHExchange,
 };
 use ring::{
-    aead::{Aad, Algorithm, LessSafeKey, Nonce, UnboundKey, NONCE_LEN},
+    aead::{Aad, Algorithm, LessSafeKey, Nonce, UnboundKey, MAX_TAG_LEN, NONCE_LEN},
     rand::{SecureRandom, SystemRandom},
     signature::{EcdsaKeyPair, Signature, UnparsedPublicKey},
 };
@@ -104,14 +104,7 @@ impl KeyHandleImpl for SoftwareKeyHandle {
             .map_err(|err| CalError::failed_operation(err.to_string(), true, None))?;
 
         // Remove the authentication tag
-        in_out.truncate(in_out.len() - 16);
-        in_out.resize(
-            in_out
-                .iter()
-                .rposition(|&x| x != 0)
-                .map_or(0, |pos| pos + 1),
-            0,
-        );
+        in_out.truncate(in_out.len() - 16 - MAX_TAG_LEN);
 
         Ok(in_out)
     }
