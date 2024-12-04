@@ -315,8 +315,8 @@ mod tests {
                 .expect("Decryption failed");
 
             assert_eq!(
-                from_utf8(&decrypted_data).unwrap().replace('\0', ""),
-                from_utf8(plaintext).unwrap().replace('\0', ""),
+                from_utf8(&decrypted_data).unwrap(),
+                from_utf8(plaintext).unwrap(),
                 "Decrypted data does not match original plaintext"
             );
         }
@@ -341,8 +341,8 @@ mod tests {
                 .expect("Decryption failed");
 
             assert_eq!(
-                from_utf8(&decrypted_data).unwrap().replace('\0', ""),
-                from_utf8(plaintext).unwrap().replace('\0', ""),
+                from_utf8(&decrypted_data).unwrap(),
+                from_utf8(plaintext).unwrap(),
                 "Decrypted data does not match original plaintext"
             );
         }
@@ -430,8 +430,8 @@ mod tests {
                 .expect("Decryption failed");
 
             assert_eq!(
-                from_utf8(&plaintext).unwrap().replace('\0', ""),
-                from_utf8(&decrypted_data).unwrap().replace('\0', ""),
+                from_utf8(&plaintext).unwrap(),
+                from_utf8(&decrypted_data).unwrap(),
                 "Decrypted data does not match original plaintext"
             );
         }
@@ -469,13 +469,13 @@ mod tests {
                 .expect("Decryption failed");
 
             assert_eq!(
-                from_utf8(&decrypted_data1).unwrap().replace('\0', ""),
-                from_utf8(plaintext).unwrap().replace('\0', ""),
+                from_utf8(&decrypted_data1).unwrap(),
+                from_utf8(plaintext).unwrap(),
                 "First decrypted data does not match plaintext"
             );
             assert_eq!(
-                from_utf8(&decrypted_data2).unwrap().replace('\0', ""),
-                from_utf8(plaintext).unwrap().replace('\0', ""),
+                from_utf8(&decrypted_data2).unwrap(),
+                from_utf8(plaintext).unwrap(),
                 "Second decrypted data does not match plaintext"
             );
         }
@@ -576,8 +576,8 @@ mod tests {
                     .expect("Decryption failed");
 
                 assert_eq!(
-                    from_utf8(&decrypted_data).unwrap().replace('\0', ""),
-                    from_utf8(plaintext).unwrap().replace('\0', ""),
+                    from_utf8(&decrypted_data).unwrap(),
+                    from_utf8(plaintext).unwrap(),
                     "Decrypted data does not match plaintext"
                 );
             }
