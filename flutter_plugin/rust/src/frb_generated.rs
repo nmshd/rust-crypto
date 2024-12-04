@@ -44,7 +44,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.6.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1667022161;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 2036038745;
 
 // Section: executor
 
@@ -893,6 +893,103 @@ fn wire__crypto_layer__common__KeyPairHandle_verify_signature_impl(
         },
     )
 }
+fn wire__crypto_layer__common__config__ProviderImplConfig_auto_accessor_get_additional_config_impl(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "ProviderImplConfig_auto_accessor_get_additional_config",
+            port: None,
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <RustOpaqueMoi<
+                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ProviderImplConfig>,
+            >>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, ()>((move || {
+                let mut api_that_guard = None;
+                let decode_indices_ =
+                    flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
+                        flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                            &api_that, 0, false,
+                        ),
+                    ]);
+                for i in decode_indices_ {
+                    match i {
+                        0 => api_that_guard = Some(api_that.lockable_decode_sync_ref()),
+                        _ => unreachable!(),
+                    }
+                }
+                let api_that_guard = api_that_guard.unwrap();
+                let output_ok = Result::<_, ()>::Ok(api_that_guard.additional_config.clone())?;
+                Ok(output_ok)
+            })())
+        },
+    )
+}
+fn wire__crypto_layer__common__config__ProviderImplConfig_auto_accessor_set_additional_config_impl(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "ProviderImplConfig_auto_accessor_set_additional_config",
+            port: None,
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <RustOpaqueMoi<
+                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ProviderImplConfig>,
+            >>::sse_decode(&mut deserializer);
+            let api_additional_config = <Vec<AdditionalConfig>>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, ()>((move || {
+                let mut api_that_guard = None;
+                let decode_indices_ =
+                    flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
+                        flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                            &api_that, 0, true,
+                        ),
+                    ]);
+                for i in decode_indices_ {
+                    match i {
+                        0 => api_that_guard = Some(api_that.lockable_decode_sync_ref_mut()),
+                        _ => unreachable!(),
+                    }
+                }
+                let mut api_that_guard = api_that_guard.unwrap();
+                let output_ok = Result::<_, ()>::Ok({
+                    {
+                        api_that_guard.additional_config = api_additional_config;
+                    };
+                })?;
+                Ok(output_ok)
+            })())
+        },
+    )
+}
 fn wire__crypto_layer__common__config__ProviderImplConfig_new_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -1102,6 +1199,55 @@ fn wire__crypto_layer__common__Provider_create_key_pair_impl(
                         &mut *api_that_guard,
                         api_spec,
                     )?;
+                    Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crypto_layer__common__Provider_get_all_keys_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "Provider_get_all_keys",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <RustOpaqueMoi<
+                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Provider>,
+            >>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, CalError>((move || {
+                    let mut api_that_guard = None;
+                    let decode_indices_ =
+                        flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
+                            flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                                &api_that, 0, false,
+                            ),
+                        ]);
+                    for i in decode_indices_ {
+                        match i {
+                            0 => api_that_guard = Some(api_that.lockable_decode_sync_ref()),
+                            _ => unreachable!(),
+                        }
+                    }
+                    let api_that_guard = api_that_guard.unwrap();
+                    let output_ok = crypto_layer::common::Provider::get_all_keys(&*api_that_guard)?;
                     Ok(output_ok)
                 })())
             }
@@ -1696,55 +1842,6 @@ fn wire__crypto_layer__common__crypto__algorithms__hashes__crypto_hash_default_i
         },
     )
 }
-fn wire__crypto_layer__common__crypto__algorithms__encryption__ecc_curve_default_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "ecc_curve_default",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            deserializer.end();
-            move |context| {
-                transform_result_sse::<_, ()>((move || {
-                    let output_ok = Result::<_, ()>::Ok(
-                        crypto_layer::common::crypto::algorithms::encryption::EccCurve::default(),
-                    )?;
-                    Ok(output_ok)
-                })())
-            }
-        },
-    )
-}
-fn wire__crypto_layer__common__crypto__algorithms__encryption__ecc_signing_scheme_default_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "ecc_signing_scheme_default", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { 
-            let message = unsafe { flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_) };
-            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            deserializer.end(); move |context|  {
-                    transform_result_sse::<_, ()>((move ||  {
-                         let output_ok = Result::<_,()>::Ok(crypto_layer::common::crypto::algorithms::encryption::EccSigningScheme::default())?;   Ok(output_ok)
-                    })())
-                } })
-}
 fn wire__crypto_layer__common__factory__get_all_providers_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -1972,38 +2069,11 @@ fn wire__crypto_layer__common__crypto__pkcs__standards__oid_type_as_str_impl(
         },
     )
 }
-fn wire__crypto_layer__common__crypto__algorithms__encryption__symmetric_mode_default_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "symmetric_mode_default", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { 
-            let message = unsafe { flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_) };
-            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            deserializer.end(); move |context|  {
-                    transform_result_sse::<_, ()>((move ||  {
-                         let output_ok = Result::<_,()>::Ok(crypto_layer::common::crypto::algorithms::encryption::SymmetricMode::default())?;   Ok(output_ok)
-                    })())
-                } })
-}
 
 // Section: static_checks
 
 #[allow(clippy::unnecessary_literal_unwrap)]
 const _: fn() = || {
-    match None::<crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec>.unwrap() {
-        crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::Rsa(field0) => {
-            let _: crypto_layer::common::crypto::algorithms::KeyBits = field0;
-        }
-        crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::Ecc {
-            scheme,
-            curve,
-        } => {
-            let _: crypto_layer::common::crypto::algorithms::encryption::EccSigningScheme = scheme;
-            let _: crypto_layer::common::crypto::algorithms::encryption::EccCurve = curve;
-        }
-    }
     match None::<crypto_layer::common::error::CalErrorKind>.unwrap() {
         crypto_layer::common::error::CalErrorKind::NotImplemented => {}
         crypto_layer::common::error::CalErrorKind::BadParameter {
@@ -2043,40 +2113,6 @@ const _: fn() = || {
         }
         crypto_layer::common::error::CalErrorKind::Other => {}
     }
-    match None::<crypto_layer::common::crypto::algorithms::encryption::Cipher>.unwrap() {
-        crypto_layer::common::crypto::algorithms::encryption::Cipher::Aes(field0, field1) => {
-            let _: crypto_layer::common::crypto::algorithms::encryption::SymmetricMode = field0;
-            let _: crypto_layer::common::crypto::algorithms::KeyBits = field1;
-        }
-        crypto_layer::common::crypto::algorithms::encryption::Cipher::TripleDes(field0) => {
-            let _: crypto_layer::common::crypto::algorithms::encryption::TripleDesNumKeys = field0;
-        }
-        crypto_layer::common::crypto::algorithms::encryption::Cipher::Des => {}
-        crypto_layer::common::crypto::algorithms::encryption::Cipher::Rc2(field0) => {
-            let _: crypto_layer::common::crypto::algorithms::encryption::Rc2KeyBits = field0;
-        }
-        crypto_layer::common::crypto::algorithms::encryption::Cipher::Camellia(field0, field1) => {
-            let _: crypto_layer::common::crypto::algorithms::encryption::SymmetricMode = field0;
-            let _: crypto_layer::common::crypto::algorithms::KeyBits = field1;
-        }
-        crypto_layer::common::crypto::algorithms::encryption::Cipher::Rc4 => {}
-        crypto_layer::common::crypto::algorithms::encryption::Cipher::Chacha20(field0) => {
-            let _: crypto_layer::common::crypto::algorithms::encryption::ChCha20Mode = field0;
-        }
-    }
-    match None::<crypto_layer::common::crypto::algorithms::hashes::CryptoHash>.unwrap() {
-        crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha1 => {}
-        crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha2(field0) => {
-            let _: crypto_layer::common::crypto::algorithms::hashes::Sha2Bits = field0;
-        }
-        crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha3(field0) => {
-            let _: crypto_layer::common::crypto::algorithms::hashes::Sha3Bits = field0;
-        }
-        crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Md2 => {}
-        crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Md4 => {}
-        crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Md5 => {}
-        crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Ripemd160 => {}
-    }
     {
         let KeyPairSpec = None::<crypto_layer::common::config::KeyPairSpec>.unwrap();
         let _: crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec =
@@ -2104,6 +2140,9 @@ const _: fn() = || {
         let _: std::collections::HashSet<
             crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec,
         > = ProviderConfig.supported_asym_spec;
+    }
+    {
+        let T = None::<crypto_layer::common::T>.unwrap();
     }
 };
 
@@ -2283,6 +2322,9 @@ flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
 flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
     flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ProviderImplConfig>
 );
+flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
+    flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Spec>
+);
 
 // Section: dart2rust
 
@@ -2407,6 +2449,16 @@ impl SseDecode for ProviderImplConfig {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <RustOpaqueMoi<
             flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ProviderImplConfig>,
+        >>::sse_decode(deserializer);
+        return flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(inner);
+    }
+}
+
+impl SseDecode for Spec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <RustOpaqueMoi<
+            flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Spec>,
         >>::sse_decode(deserializer);
         return flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(inner);
     }
@@ -2546,6 +2598,14 @@ impl SseDecode
     }
 }
 
+impl SseDecode for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Spec>> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <usize>::sse_decode(deserializer);
+        return decode_rust_opaque_moi(inner);
+    }
+}
+
 impl SseDecode
     for std::collections::HashSet<
         crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec,
@@ -2597,25 +2657,26 @@ impl SseDecode for String {
 impl SseDecode for crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut tag_ = <i32>::sse_decode(deserializer);
-        match tag_ {
-            0 => {
-                let mut var_field0 =
-                    <crypto_layer::common::crypto::algorithms::KeyBits>::sse_decode(deserializer);
-                return crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::Rsa(var_field0);
-            }
-            1 => {
-                let mut var_scheme = <crypto_layer::common::crypto::algorithms::encryption::EccSigningScheme>::sse_decode(deserializer);
-                let mut var_curve =
-                    <crypto_layer::common::crypto::algorithms::encryption::EccCurve>::sse_decode(
-                        deserializer,
-                    );
-                return crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::Ecc{scheme: var_scheme, curve: var_curve};
-            }
-            _ => {
-                unimplemented!("");
-            }
-        }
+        let mut inner = <i32>::sse_decode(deserializer);
+        return match inner {
+            0 => crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::RSA1024,
+1 => crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::RSA2048,
+2 => crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::RSA3072,
+3 => crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::RSA4096,
+4 => crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::RSA8192,
+5 => crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::P256,
+6 => crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::P384,
+7 => crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::P521,
+8 => crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::Secp256k1,
+9 => crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::BrainpoolP256r1,
+10 => crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::BrainpoolP384r1,
+11 => crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::BrainpoolP512r1,
+12 => crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::BrainpoolP638,
+13 => crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::Curve25519,
+14 => crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::Curve448,
+15 => crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::Frp256v1,
+            _ => unreachable!("Invalid variant for AsymmetricKeySpec: {}", inner),
+        };
     }
 }
 
@@ -2689,155 +2750,38 @@ impl SseDecode for crypto_layer::common::error::CalErrorKind {
     }
 }
 
-impl SseDecode for crypto_layer::common::crypto::algorithms::encryption::ChCha20Mode {
+impl SseDecode for crypto_layer::common::crypto::algorithms::encryption::Cipher {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <i32>::sse_decode(deserializer);
         return match inner {
-            0 => {
-                crypto_layer::common::crypto::algorithms::encryption::ChCha20Mode::ChaCha20Poly1305
-            }
-            1 => {
-                crypto_layer::common::crypto::algorithms::encryption::ChCha20Mode::XChaCha20Poly1305
-            }
-            _ => unreachable!("Invalid variant for ChCha20Mode: {}", inner),
+            0 => crypto_layer::common::crypto::algorithms::encryption::Cipher::AesGcm128,
+            1 => crypto_layer::common::crypto::algorithms::encryption::Cipher::AesGcm256,
+            2 => crypto_layer::common::crypto::algorithms::encryption::Cipher::AesCbc128,
+            3 => crypto_layer::common::crypto::algorithms::encryption::Cipher::AesCbc256,
+            4 => crypto_layer::common::crypto::algorithms::encryption::Cipher::ChaCha20Poly1305,
+            5 => crypto_layer::common::crypto::algorithms::encryption::Cipher::XChaCha20Poly1305,
+            _ => unreachable!("Invalid variant for Cipher: {}", inner),
         };
-    }
-}
-
-impl SseDecode for crypto_layer::common::crypto::algorithms::encryption::Cipher {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut tag_ = <i32>::sse_decode(deserializer);
-        match tag_ {
-            0 => {
-                let mut var_field0 = <crypto_layer::common::crypto::algorithms::encryption::SymmetricMode>::sse_decode(deserializer);
-                let mut var_field1 =
-                    <crypto_layer::common::crypto::algorithms::KeyBits>::sse_decode(deserializer);
-                return crypto_layer::common::crypto::algorithms::encryption::Cipher::Aes(
-                    var_field0, var_field1,
-                );
-            }
-            1 => {
-                let mut var_field0 = <crypto_layer::common::crypto::algorithms::encryption::TripleDesNumKeys>::sse_decode(deserializer);
-                return crypto_layer::common::crypto::algorithms::encryption::Cipher::TripleDes(
-                    var_field0,
-                );
-            }
-            2 => {
-                return crypto_layer::common::crypto::algorithms::encryption::Cipher::Des;
-            }
-            3 => {
-                let mut var_field0 =
-                    <crypto_layer::common::crypto::algorithms::encryption::Rc2KeyBits>::sse_decode(
-                        deserializer,
-                    );
-                return crypto_layer::common::crypto::algorithms::encryption::Cipher::Rc2(
-                    var_field0,
-                );
-            }
-            4 => {
-                let mut var_field0 = <crypto_layer::common::crypto::algorithms::encryption::SymmetricMode>::sse_decode(deserializer);
-                let mut var_field1 =
-                    <crypto_layer::common::crypto::algorithms::KeyBits>::sse_decode(deserializer);
-                return crypto_layer::common::crypto::algorithms::encryption::Cipher::Camellia(
-                    var_field0, var_field1,
-                );
-            }
-            5 => {
-                return crypto_layer::common::crypto::algorithms::encryption::Cipher::Rc4;
-            }
-            6 => {
-                let mut var_field0 =
-                    <crypto_layer::common::crypto::algorithms::encryption::ChCha20Mode>::sse_decode(
-                        deserializer,
-                    );
-                return crypto_layer::common::crypto::algorithms::encryption::Cipher::Chacha20(
-                    var_field0,
-                );
-            }
-            _ => {
-                unimplemented!("");
-            }
-        }
     }
 }
 
 impl SseDecode for crypto_layer::common::crypto::algorithms::hashes::CryptoHash {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut tag_ = <i32>::sse_decode(deserializer);
-        match tag_ {
-            0 => {
-                return crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha1;
-            }
-            1 => {
-                let mut var_field0 =
-                    <crypto_layer::common::crypto::algorithms::hashes::Sha2Bits>::sse_decode(
-                        deserializer,
-                    );
-                return crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha2(
-                    var_field0,
-                );
-            }
-            2 => {
-                let mut var_field0 =
-                    <crypto_layer::common::crypto::algorithms::hashes::Sha3Bits>::sse_decode(
-                        deserializer,
-                    );
-                return crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha3(
-                    var_field0,
-                );
-            }
-            3 => {
-                return crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Md2;
-            }
-            4 => {
-                return crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Md4;
-            }
-            5 => {
-                return crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Md5;
-            }
-            6 => {
-                return crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Ripemd160;
-            }
-            _ => {
-                unimplemented!("");
-            }
-        }
-    }
-}
-
-impl SseDecode for crypto_layer::common::crypto::algorithms::encryption::EccCurve {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <i32>::sse_decode(deserializer);
         return match inner {
-            0 => crypto_layer::common::crypto::algorithms::encryption::EccCurve::P256,
-            1 => crypto_layer::common::crypto::algorithms::encryption::EccCurve::P384,
-            2 => crypto_layer::common::crypto::algorithms::encryption::EccCurve::P521,
-            3 => crypto_layer::common::crypto::algorithms::encryption::EccCurve::Secp256k1,
-            4 => crypto_layer::common::crypto::algorithms::encryption::EccCurve::BrainpoolP256r1,
-            5 => crypto_layer::common::crypto::algorithms::encryption::EccCurve::BrainpoolP384r1,
-            6 => crypto_layer::common::crypto::algorithms::encryption::EccCurve::BrainpoolP512r1,
-            7 => crypto_layer::common::crypto::algorithms::encryption::EccCurve::BrainpoolP638,
-            8 => crypto_layer::common::crypto::algorithms::encryption::EccCurve::Curve25519,
-            9 => crypto_layer::common::crypto::algorithms::encryption::EccCurve::Curve448,
-            10 => crypto_layer::common::crypto::algorithms::encryption::EccCurve::Frp256v1,
-            _ => unreachable!("Invalid variant for EccCurve: {}", inner),
-        };
-    }
-}
-
-impl SseDecode for crypto_layer::common::crypto::algorithms::encryption::EccSigningScheme {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <i32>::sse_decode(deserializer);
-        return match inner {
-            0 => crypto_layer::common::crypto::algorithms::encryption::EccSigningScheme::EcDsa,
-            1 => crypto_layer::common::crypto::algorithms::encryption::EccSigningScheme::EcDaa,
-            2 => crypto_layer::common::crypto::algorithms::encryption::EccSigningScheme::EcSchnorr,
-            _ => unreachable!("Invalid variant for EccSigningScheme: {}", inner),
+            0 => crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha2_224,
+            1 => crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha2_256,
+            2 => crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha2_384,
+            3 => crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha2_512,
+            4 => crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha2_512_224,
+            5 => crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha2_512_256,
+            6 => crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha3_224,
+            7 => crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha3_256,
+            8 => crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha3_384,
+            9 => crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha3_512,
+            _ => unreachable!("Invalid variant for CryptoHash: {}", inner),
         };
     }
 }
@@ -2853,25 +2797,6 @@ impl SseDecode for isize {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         deserializer.cursor.read_i64::<NativeEndian>().unwrap() as _
-    }
-}
-
-impl SseDecode for crypto_layer::common::crypto::algorithms::KeyBits {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <i32>::sse_decode(deserializer);
-        return match inner {
-            0 => crypto_layer::common::crypto::algorithms::KeyBits::Bits128,
-            1 => crypto_layer::common::crypto::algorithms::KeyBits::Bits192,
-            2 => crypto_layer::common::crypto::algorithms::KeyBits::Bits256,
-            3 => crypto_layer::common::crypto::algorithms::KeyBits::Bits512,
-            4 => crypto_layer::common::crypto::algorithms::KeyBits::Bits1024,
-            5 => crypto_layer::common::crypto::algorithms::KeyBits::Bits2048,
-            6 => crypto_layer::common::crypto::algorithms::KeyBits::Bits3072,
-            7 => crypto_layer::common::crypto::algorithms::KeyBits::Bits4096,
-            8 => crypto_layer::common::crypto::algorithms::KeyBits::Bits8192,
-            _ => unreachable!("Invalid variant for KeyBits: {}", inner),
-        };
     }
 }
 
@@ -2937,6 +2862,18 @@ impl SseDecode for Vec<AdditionalConfig> {
         let mut ans_ = vec![];
         for idx_ in 0..len_ {
             ans_.push(<AdditionalConfig>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<Spec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = vec![];
+        for idx_ in 0..len_ {
+            ans_.push(<Spec>::sse_decode(deserializer));
         }
         return ans_;
     }
@@ -3146,19 +3083,6 @@ impl SseDecode for crypto_layer::common::config::ProviderConfig {
     }
 }
 
-impl SseDecode for crypto_layer::common::crypto::algorithms::encryption::Rc2KeyBits {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <i32>::sse_decode(deserializer);
-        return match inner {
-            0 => crypto_layer::common::crypto::algorithms::encryption::Rc2KeyBits::Rc2_40,
-            1 => crypto_layer::common::crypto::algorithms::encryption::Rc2KeyBits::Rc2_64,
-            2 => crypto_layer::common::crypto::algorithms::encryption::Rc2KeyBits::Rc2_128,
-            _ => unreachable!("Invalid variant for Rc2KeyBits: {}", inner),
-        };
-    }
-}
-
 impl SseDecode for (Vec<u8>, Vec<u8>) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3182,62 +3106,10 @@ impl SseDecode for crypto_layer::common::config::SecurityLevel {
     }
 }
 
-impl SseDecode for crypto_layer::common::crypto::algorithms::hashes::Sha2Bits {
+impl SseDecode for crypto_layer::common::T {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <i32>::sse_decode(deserializer);
-        return match inner {
-            0 => crypto_layer::common::crypto::algorithms::hashes::Sha2Bits::Sha224,
-            1 => crypto_layer::common::crypto::algorithms::hashes::Sha2Bits::Sha256,
-            2 => crypto_layer::common::crypto::algorithms::hashes::Sha2Bits::Sha384,
-            3 => crypto_layer::common::crypto::algorithms::hashes::Sha2Bits::Sha512,
-            4 => crypto_layer::common::crypto::algorithms::hashes::Sha2Bits::Sha512_224,
-            5 => crypto_layer::common::crypto::algorithms::hashes::Sha2Bits::Sha512_256,
-            _ => unreachable!("Invalid variant for Sha2Bits: {}", inner),
-        };
-    }
-}
-
-impl SseDecode for crypto_layer::common::crypto::algorithms::hashes::Sha3Bits {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <i32>::sse_decode(deserializer);
-        return match inner {
-            0 => crypto_layer::common::crypto::algorithms::hashes::Sha3Bits::Sha3_224,
-            1 => crypto_layer::common::crypto::algorithms::hashes::Sha3Bits::Sha3_256,
-            2 => crypto_layer::common::crypto::algorithms::hashes::Sha3Bits::Sha3_384,
-            3 => crypto_layer::common::crypto::algorithms::hashes::Sha3Bits::Sha3_512,
-            _ => unreachable!("Invalid variant for Sha3Bits: {}", inner),
-        };
-    }
-}
-
-impl SseDecode for crypto_layer::common::crypto::algorithms::encryption::SymmetricMode {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <i32>::sse_decode(deserializer);
-        return match inner {
-            0 => crypto_layer::common::crypto::algorithms::encryption::SymmetricMode::Gcm,
-            1 => crypto_layer::common::crypto::algorithms::encryption::SymmetricMode::Ccm,
-            2 => crypto_layer::common::crypto::algorithms::encryption::SymmetricMode::Ecb,
-            3 => crypto_layer::common::crypto::algorithms::encryption::SymmetricMode::Cbc,
-            4 => crypto_layer::common::crypto::algorithms::encryption::SymmetricMode::Cfb,
-            5 => crypto_layer::common::crypto::algorithms::encryption::SymmetricMode::Ofb,
-            6 => crypto_layer::common::crypto::algorithms::encryption::SymmetricMode::Ctr,
-            _ => unreachable!("Invalid variant for SymmetricMode: {}", inner),
-        };
-    }
-}
-
-impl SseDecode for crypto_layer::common::crypto::algorithms::encryption::TripleDesNumKeys {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <i32>::sse_decode(deserializer);
-        return match inner {
-            0 => crypto_layer::common::crypto::algorithms::encryption::TripleDesNumKeys::Tdes2,
-            1 => crypto_layer::common::crypto::algorithms::encryption::TripleDesNumKeys::Tdes3,
-            _ => unreachable!("Invalid variant for TripleDesNumKeys: {}", inner),
-        };
+        return crypto_layer::common::T {};
     }
 }
 
@@ -3286,32 +3158,30 @@ fn pde_ffi_dispatcher_primary_impl(
 15 => wire__crypto_layer__common__KeyPairHandle_id_impl(port, ptr, rust_vec_len, data_len),
 16 => wire__crypto_layer__common__KeyPairHandle_sign_data_impl(port, ptr, rust_vec_len, data_len),
 17 => wire__crypto_layer__common__KeyPairHandle_verify_signature_impl(port, ptr, rust_vec_len, data_len),
-18 => wire__crypto_layer__common__config__ProviderImplConfig_new_impl(port, ptr, rust_vec_len, data_len),
-19 => wire__crypto_layer__common__config__ProviderImplConfig_new_stub_impl(port, ptr, rust_vec_len, data_len),
-20 => wire__crypto_layer__common__Provider_create_key_impl(port, ptr, rust_vec_len, data_len),
-21 => wire__crypto_layer__common__Provider_create_key_pair_impl(port, ptr, rust_vec_len, data_len),
-22 => wire__crypto_layer__common__Provider_get_capabilities_impl(port, ptr, rust_vec_len, data_len),
-23 => wire__crypto_layer__common__Provider_import_key_impl(port, ptr, rust_vec_len, data_len),
-24 => wire__crypto_layer__common__Provider_import_key_pair_impl(port, ptr, rust_vec_len, data_len),
-25 => wire__crypto_layer__common__Provider_import_public_key_impl(port, ptr, rust_vec_len, data_len),
-26 => wire__crypto_layer__common__Provider_load_key_impl(port, ptr, rust_vec_len, data_len),
-27 => wire__crypto_layer__common__Provider_load_key_pair_impl(port, ptr, rust_vec_len, data_len),
-28 => wire__crypto_layer__common__Provider_provider_name_impl(port, ptr, rust_vec_len, data_len),
-29 => wire__crypto_layer__common__Provider_start_ephemeral_dh_exchange_impl(port, ptr, rust_vec_len, data_len),
-31 => wire__crypto_layer__common__crypto__algorithms__encryption__asymmetric_key_spec_default_impl(port, ptr, rust_vec_len, data_len),
-32 => wire__crypto_layer__common__crypto__algorithms__encryption__cipher_default_impl(port, ptr, rust_vec_len, data_len),
-33 => wire__crypto_layer__common__factory__create_provider_impl(port, ptr, rust_vec_len, data_len),
-34 => wire__crypto_layer__common__factory__create_provider_from_name_impl(port, ptr, rust_vec_len, data_len),
-35 => wire__crypto_layer__common__crypto__algorithms__hashes__crypto_hash_default_impl(port, ptr, rust_vec_len, data_len),
-36 => wire__crypto_layer__common__crypto__algorithms__encryption__ecc_curve_default_impl(port, ptr, rust_vec_len, data_len),
-37 => wire__crypto_layer__common__crypto__algorithms__encryption__ecc_signing_scheme_default_impl(port, ptr, rust_vec_len, data_len),
-38 => wire__crypto_layer__common__factory__get_all_providers_impl(port, ptr, rust_vec_len, data_len),
-39 => wire__crate__api__crypto__get_default_config_impl(port, ptr, rust_vec_len, data_len),
-40 => wire__crate__api__simple__init_app_impl(port, ptr, rust_vec_len, data_len),
-41 => wire__crypto_layer__common__config__key_pair_spec_default_impl(port, ptr, rust_vec_len, data_len),
-42 => wire__crypto_layer__common__config__key_spec_default_impl(port, ptr, rust_vec_len, data_len),
-43 => wire__crypto_layer__common__crypto__pkcs__standards__oid_type_as_str_impl(port, ptr, rust_vec_len, data_len),
-44 => wire__crypto_layer__common__crypto__algorithms__encryption__symmetric_mode_default_impl(port, ptr, rust_vec_len, data_len),
+20 => wire__crypto_layer__common__config__ProviderImplConfig_new_impl(port, ptr, rust_vec_len, data_len),
+21 => wire__crypto_layer__common__config__ProviderImplConfig_new_stub_impl(port, ptr, rust_vec_len, data_len),
+22 => wire__crypto_layer__common__Provider_create_key_impl(port, ptr, rust_vec_len, data_len),
+23 => wire__crypto_layer__common__Provider_create_key_pair_impl(port, ptr, rust_vec_len, data_len),
+24 => wire__crypto_layer__common__Provider_get_all_keys_impl(port, ptr, rust_vec_len, data_len),
+25 => wire__crypto_layer__common__Provider_get_capabilities_impl(port, ptr, rust_vec_len, data_len),
+26 => wire__crypto_layer__common__Provider_import_key_impl(port, ptr, rust_vec_len, data_len),
+27 => wire__crypto_layer__common__Provider_import_key_pair_impl(port, ptr, rust_vec_len, data_len),
+28 => wire__crypto_layer__common__Provider_import_public_key_impl(port, ptr, rust_vec_len, data_len),
+29 => wire__crypto_layer__common__Provider_load_key_impl(port, ptr, rust_vec_len, data_len),
+30 => wire__crypto_layer__common__Provider_load_key_pair_impl(port, ptr, rust_vec_len, data_len),
+31 => wire__crypto_layer__common__Provider_provider_name_impl(port, ptr, rust_vec_len, data_len),
+32 => wire__crypto_layer__common__Provider_start_ephemeral_dh_exchange_impl(port, ptr, rust_vec_len, data_len),
+34 => wire__crypto_layer__common__crypto__algorithms__encryption__asymmetric_key_spec_default_impl(port, ptr, rust_vec_len, data_len),
+35 => wire__crypto_layer__common__crypto__algorithms__encryption__cipher_default_impl(port, ptr, rust_vec_len, data_len),
+36 => wire__crypto_layer__common__factory__create_provider_impl(port, ptr, rust_vec_len, data_len),
+37 => wire__crypto_layer__common__factory__create_provider_from_name_impl(port, ptr, rust_vec_len, data_len),
+38 => wire__crypto_layer__common__crypto__algorithms__hashes__crypto_hash_default_impl(port, ptr, rust_vec_len, data_len),
+39 => wire__crypto_layer__common__factory__get_all_providers_impl(port, ptr, rust_vec_len, data_len),
+40 => wire__crate__api__crypto__get_default_config_impl(port, ptr, rust_vec_len, data_len),
+41 => wire__crate__api__simple__init_app_impl(port, ptr, rust_vec_len, data_len),
+42 => wire__crypto_layer__common__config__key_pair_spec_default_impl(port, ptr, rust_vec_len, data_len),
+43 => wire__crypto_layer__common__config__key_spec_default_impl(port, ptr, rust_vec_len, data_len),
+44 => wire__crypto_layer__common__crypto__pkcs__standards__oid_type_as_str_impl(port, ptr, rust_vec_len, data_len),
                         _ => unreachable!(),
                     }
 }
@@ -3324,8 +3194,10 @@ fn pde_ffi_dispatcher_sync_impl(
 ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
     // Codec=Pde (Serialization + dispatch), see doc to use other codecs
     match func_id {
-        _ => unreachable!(),
-    }
+                        18 => wire__crypto_layer__common__config__ProviderImplConfig_auto_accessor_get_additional_config_impl(ptr, rust_vec_len, data_len),
+19 => wire__crypto_layer__common__config__ProviderImplConfig_auto_accessor_set_additional_config_impl(ptr, rust_vec_len, data_len),
+                        _ => unreachable!(),
+                    }
 }
 
 // Section: rust2dart
@@ -3542,27 +3414,44 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<ProviderImplConfig>> for Provi
 }
 
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<Spec> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self.0)
+            .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<Spec> {}
+
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<Spec>> for Spec {
+    fn into_into_dart(self) -> FrbWrapper<Spec> {
+        self.into()
+    }
+}
+
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart
     for FrbWrapper<crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec>
 {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self.0 {
-            crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::Rsa(
-                field0,
-            ) => [0.into_dart(), field0.into_into_dart().into_dart()].into_dart(),
-            crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::Ecc {
-                scheme,
-                curve,
-            } => [
-                1.into_dart(),
-                scheme.into_into_dart().into_dart(),
-                curve.into_into_dart().into_dart(),
-            ]
-            .into_dart(),
-            _ => {
-                unimplemented!("");
-            }
-        }
+                    crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::RSA1024 => 0.into_dart(),
+crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::RSA2048 => 1.into_dart(),
+crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::RSA3072 => 2.into_dart(),
+crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::RSA4096 => 3.into_dart(),
+crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::RSA8192 => 4.into_dart(),
+crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::P256 => 5.into_dart(),
+crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::P384 => 6.into_dart(),
+crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::P521 => 7.into_dart(),
+crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::Secp256k1 => 8.into_dart(),
+crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::BrainpoolP256r1 => 9.into_dart(),
+crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::BrainpoolP384r1 => 10.into_dart(),
+crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::BrainpoolP512r1 => 11.into_dart(),
+crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::BrainpoolP638 => 12.into_dart(),
+crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::Curve25519 => 13.into_dart(),
+crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::Curve448 => 14.into_dart(),
+crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::Frp256v1 => 15.into_dart(),
+                    _ => unreachable!(),
+                }
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
@@ -3652,70 +3541,29 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crypto_layer::common::error::C
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart
-    for FrbWrapper<crypto_layer::common::crypto::algorithms::encryption::ChCha20Mode>
-{
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        match self.0 {
-                    crypto_layer::common::crypto::algorithms::encryption::ChCha20Mode::ChaCha20Poly1305 => 0.into_dart(),
-crypto_layer::common::crypto::algorithms::encryption::ChCha20Mode::XChaCha20Poly1305 => 1.into_dart(),
-                    _ => unreachable!(),
-                }
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for FrbWrapper<crypto_layer::common::crypto::algorithms::encryption::ChCha20Mode>
-{
-}
-impl
-    flutter_rust_bridge::IntoIntoDart<
-        FrbWrapper<crypto_layer::common::crypto::algorithms::encryption::ChCha20Mode>,
-    > for crypto_layer::common::crypto::algorithms::encryption::ChCha20Mode
-{
-    fn into_into_dart(
-        self,
-    ) -> FrbWrapper<crypto_layer::common::crypto::algorithms::encryption::ChCha20Mode> {
-        self.into()
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart
     for FrbWrapper<crypto_layer::common::crypto::algorithms::encryption::Cipher>
 {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self.0 {
-            crypto_layer::common::crypto::algorithms::encryption::Cipher::Aes(field0, field1) => [
-                0.into_dart(),
-                field0.into_into_dart().into_dart(),
-                field1.into_into_dart().into_dart(),
-            ]
-            .into_dart(),
-            crypto_layer::common::crypto::algorithms::encryption::Cipher::TripleDes(field0) => {
-                [1.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            crypto_layer::common::crypto::algorithms::encryption::Cipher::AesGcm128 => {
+                0.into_dart()
             }
-            crypto_layer::common::crypto::algorithms::encryption::Cipher::Des => {
-                [2.into_dart()].into_dart()
+            crypto_layer::common::crypto::algorithms::encryption::Cipher::AesGcm256 => {
+                1.into_dart()
             }
-            crypto_layer::common::crypto::algorithms::encryption::Cipher::Rc2(field0) => {
-                [3.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            crypto_layer::common::crypto::algorithms::encryption::Cipher::AesCbc128 => {
+                2.into_dart()
             }
-            crypto_layer::common::crypto::algorithms::encryption::Cipher::Camellia(
-                field0,
-                field1,
-            ) => [
-                4.into_dart(),
-                field0.into_into_dart().into_dart(),
-                field1.into_into_dart().into_dart(),
-            ]
-            .into_dart(),
-            crypto_layer::common::crypto::algorithms::encryption::Cipher::Rc4 => {
-                [5.into_dart()].into_dart()
+            crypto_layer::common::crypto::algorithms::encryption::Cipher::AesCbc256 => {
+                3.into_dart()
             }
-            crypto_layer::common::crypto::algorithms::encryption::Cipher::Chacha20(field0) => {
-                [6.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            crypto_layer::common::crypto::algorithms::encryption::Cipher::ChaCha20Poly1305 => {
+                4.into_dart()
             }
-            _ => {
-                unimplemented!("");
+            crypto_layer::common::crypto::algorithms::encryption::Cipher::XChaCha20Poly1305 => {
+                5.into_dart()
             }
+            _ => unreachable!(),
         }
     }
 }
@@ -3740,30 +3588,21 @@ impl flutter_rust_bridge::IntoDart
 {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self.0 {
-            crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha1 => {
-                [0.into_dart()].into_dart()
+            crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha2_224 => 0.into_dart(),
+            crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha2_256 => 1.into_dart(),
+            crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha2_384 => 2.into_dart(),
+            crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha2_512 => 3.into_dart(),
+            crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha2_512_224 => {
+                4.into_dart()
             }
-            crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha2(field0) => {
-                [1.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha2_512_256 => {
+                5.into_dart()
             }
-            crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha3(field0) => {
-                [2.into_dart(), field0.into_into_dart().into_dart()].into_dart()
-            }
-            crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Md2 => {
-                [3.into_dart()].into_dart()
-            }
-            crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Md4 => {
-                [4.into_dart()].into_dart()
-            }
-            crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Md5 => {
-                [5.into_dart()].into_dart()
-            }
-            crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Ripemd160 => {
-                [6.into_dart()].into_dart()
-            }
-            _ => {
-                unimplemented!("");
-            }
+            crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha3_224 => 6.into_dart(),
+            crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha3_256 => 7.into_dart(),
+            crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha3_384 => 8.into_dart(),
+            crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha3_512 => 9.into_dart(),
+            _ => unreachable!(),
         }
     }
 }
@@ -3779,123 +3618,6 @@ impl
     fn into_into_dart(
         self,
     ) -> FrbWrapper<crypto_layer::common::crypto::algorithms::hashes::CryptoHash> {
-        self.into()
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart
-    for FrbWrapper<crypto_layer::common::crypto::algorithms::encryption::EccCurve>
-{
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        match self.0 {
-            crypto_layer::common::crypto::algorithms::encryption::EccCurve::P256 => 0.into_dart(),
-            crypto_layer::common::crypto::algorithms::encryption::EccCurve::P384 => 1.into_dart(),
-            crypto_layer::common::crypto::algorithms::encryption::EccCurve::P521 => 2.into_dart(),
-            crypto_layer::common::crypto::algorithms::encryption::EccCurve::Secp256k1 => {
-                3.into_dart()
-            }
-            crypto_layer::common::crypto::algorithms::encryption::EccCurve::BrainpoolP256r1 => {
-                4.into_dart()
-            }
-            crypto_layer::common::crypto::algorithms::encryption::EccCurve::BrainpoolP384r1 => {
-                5.into_dart()
-            }
-            crypto_layer::common::crypto::algorithms::encryption::EccCurve::BrainpoolP512r1 => {
-                6.into_dart()
-            }
-            crypto_layer::common::crypto::algorithms::encryption::EccCurve::BrainpoolP638 => {
-                7.into_dart()
-            }
-            crypto_layer::common::crypto::algorithms::encryption::EccCurve::Curve25519 => {
-                8.into_dart()
-            }
-            crypto_layer::common::crypto::algorithms::encryption::EccCurve::Curve448 => {
-                9.into_dart()
-            }
-            crypto_layer::common::crypto::algorithms::encryption::EccCurve::Frp256v1 => {
-                10.into_dart()
-            }
-            _ => unreachable!(),
-        }
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for FrbWrapper<crypto_layer::common::crypto::algorithms::encryption::EccCurve>
-{
-}
-impl
-    flutter_rust_bridge::IntoIntoDart<
-        FrbWrapper<crypto_layer::common::crypto::algorithms::encryption::EccCurve>,
-    > for crypto_layer::common::crypto::algorithms::encryption::EccCurve
-{
-    fn into_into_dart(
-        self,
-    ) -> FrbWrapper<crypto_layer::common::crypto::algorithms::encryption::EccCurve> {
-        self.into()
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart
-    for FrbWrapper<crypto_layer::common::crypto::algorithms::encryption::EccSigningScheme>
-{
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        match self.0 {
-            crypto_layer::common::crypto::algorithms::encryption::EccSigningScheme::EcDsa => {
-                0.into_dart()
-            }
-            crypto_layer::common::crypto::algorithms::encryption::EccSigningScheme::EcDaa => {
-                1.into_dart()
-            }
-            crypto_layer::common::crypto::algorithms::encryption::EccSigningScheme::EcSchnorr => {
-                2.into_dart()
-            }
-            _ => unreachable!(),
-        }
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for FrbWrapper<crypto_layer::common::crypto::algorithms::encryption::EccSigningScheme>
-{
-}
-impl
-    flutter_rust_bridge::IntoIntoDart<
-        FrbWrapper<crypto_layer::common::crypto::algorithms::encryption::EccSigningScheme>,
-    > for crypto_layer::common::crypto::algorithms::encryption::EccSigningScheme
-{
-    fn into_into_dart(
-        self,
-    ) -> FrbWrapper<crypto_layer::common::crypto::algorithms::encryption::EccSigningScheme> {
-        self.into()
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart
-    for FrbWrapper<crypto_layer::common::crypto::algorithms::KeyBits>
-{
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        match self.0 {
-            crypto_layer::common::crypto::algorithms::KeyBits::Bits128 => 0.into_dart(),
-            crypto_layer::common::crypto::algorithms::KeyBits::Bits192 => 1.into_dart(),
-            crypto_layer::common::crypto::algorithms::KeyBits::Bits256 => 2.into_dart(),
-            crypto_layer::common::crypto::algorithms::KeyBits::Bits512 => 3.into_dart(),
-            crypto_layer::common::crypto::algorithms::KeyBits::Bits1024 => 4.into_dart(),
-            crypto_layer::common::crypto::algorithms::KeyBits::Bits2048 => 5.into_dart(),
-            crypto_layer::common::crypto::algorithms::KeyBits::Bits3072 => 6.into_dart(),
-            crypto_layer::common::crypto::algorithms::KeyBits::Bits4096 => 7.into_dart(),
-            crypto_layer::common::crypto::algorithms::KeyBits::Bits8192 => 8.into_dart(),
-            _ => unreachable!(),
-        }
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for FrbWrapper<crypto_layer::common::crypto::algorithms::KeyBits>
-{
-}
-impl
-    flutter_rust_bridge::IntoIntoDart<FrbWrapper<crypto_layer::common::crypto::algorithms::KeyBits>>
-    for crypto_layer::common::crypto::algorithms::KeyBits
-{
-    fn into_into_dart(self) -> FrbWrapper<crypto_layer::common::crypto::algorithms::KeyBits> {
         self.into()
     }
 }
@@ -4113,40 +3835,6 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crypto_layer::common::config::
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart
-    for FrbWrapper<crypto_layer::common::crypto::algorithms::encryption::Rc2KeyBits>
-{
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        match self.0 {
-            crypto_layer::common::crypto::algorithms::encryption::Rc2KeyBits::Rc2_40 => {
-                0.into_dart()
-            }
-            crypto_layer::common::crypto::algorithms::encryption::Rc2KeyBits::Rc2_64 => {
-                1.into_dart()
-            }
-            crypto_layer::common::crypto::algorithms::encryption::Rc2KeyBits::Rc2_128 => {
-                2.into_dart()
-            }
-            _ => unreachable!(),
-        }
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for FrbWrapper<crypto_layer::common::crypto::algorithms::encryption::Rc2KeyBits>
-{
-}
-impl
-    flutter_rust_bridge::IntoIntoDart<
-        FrbWrapper<crypto_layer::common::crypto::algorithms::encryption::Rc2KeyBits>,
-    > for crypto_layer::common::crypto::algorithms::encryption::Rc2KeyBits
-{
-    fn into_into_dart(
-        self,
-    ) -> FrbWrapper<crypto_layer::common::crypto::algorithms::encryption::Rc2KeyBits> {
-        self.into()
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for FrbWrapper<crypto_layer::common::config::SecurityLevel> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self.0 {
@@ -4170,139 +3858,19 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crypto_layer::common::config::
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart
-    for FrbWrapper<crypto_layer::common::crypto::algorithms::hashes::Sha2Bits>
-{
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crypto_layer::common::T> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        match self.0 {
-            crypto_layer::common::crypto::algorithms::hashes::Sha2Bits::Sha224 => 0.into_dart(),
-            crypto_layer::common::crypto::algorithms::hashes::Sha2Bits::Sha256 => 1.into_dart(),
-            crypto_layer::common::crypto::algorithms::hashes::Sha2Bits::Sha384 => 2.into_dart(),
-            crypto_layer::common::crypto::algorithms::hashes::Sha2Bits::Sha512 => 3.into_dart(),
-            crypto_layer::common::crypto::algorithms::hashes::Sha2Bits::Sha512_224 => 4.into_dart(),
-            crypto_layer::common::crypto::algorithms::hashes::Sha2Bits::Sha512_256 => 5.into_dart(),
-            _ => unreachable!(),
-        }
+        Vec::<u8>::new().into_dart()
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for FrbWrapper<crypto_layer::common::crypto::algorithms::hashes::Sha2Bits>
+    for FrbWrapper<crypto_layer::common::T>
 {
 }
-impl
-    flutter_rust_bridge::IntoIntoDart<
-        FrbWrapper<crypto_layer::common::crypto::algorithms::hashes::Sha2Bits>,
-    > for crypto_layer::common::crypto::algorithms::hashes::Sha2Bits
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crypto_layer::common::T>>
+    for crypto_layer::common::T
 {
-    fn into_into_dart(
-        self,
-    ) -> FrbWrapper<crypto_layer::common::crypto::algorithms::hashes::Sha2Bits> {
-        self.into()
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart
-    for FrbWrapper<crypto_layer::common::crypto::algorithms::hashes::Sha3Bits>
-{
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        match self.0 {
-            crypto_layer::common::crypto::algorithms::hashes::Sha3Bits::Sha3_224 => 0.into_dart(),
-            crypto_layer::common::crypto::algorithms::hashes::Sha3Bits::Sha3_256 => 1.into_dart(),
-            crypto_layer::common::crypto::algorithms::hashes::Sha3Bits::Sha3_384 => 2.into_dart(),
-            crypto_layer::common::crypto::algorithms::hashes::Sha3Bits::Sha3_512 => 3.into_dart(),
-            _ => unreachable!(),
-        }
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for FrbWrapper<crypto_layer::common::crypto::algorithms::hashes::Sha3Bits>
-{
-}
-impl
-    flutter_rust_bridge::IntoIntoDart<
-        FrbWrapper<crypto_layer::common::crypto::algorithms::hashes::Sha3Bits>,
-    > for crypto_layer::common::crypto::algorithms::hashes::Sha3Bits
-{
-    fn into_into_dart(
-        self,
-    ) -> FrbWrapper<crypto_layer::common::crypto::algorithms::hashes::Sha3Bits> {
-        self.into()
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart
-    for FrbWrapper<crypto_layer::common::crypto::algorithms::encryption::SymmetricMode>
-{
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        match self.0 {
-            crypto_layer::common::crypto::algorithms::encryption::SymmetricMode::Gcm => {
-                0.into_dart()
-            }
-            crypto_layer::common::crypto::algorithms::encryption::SymmetricMode::Ccm => {
-                1.into_dart()
-            }
-            crypto_layer::common::crypto::algorithms::encryption::SymmetricMode::Ecb => {
-                2.into_dart()
-            }
-            crypto_layer::common::crypto::algorithms::encryption::SymmetricMode::Cbc => {
-                3.into_dart()
-            }
-            crypto_layer::common::crypto::algorithms::encryption::SymmetricMode::Cfb => {
-                4.into_dart()
-            }
-            crypto_layer::common::crypto::algorithms::encryption::SymmetricMode::Ofb => {
-                5.into_dart()
-            }
-            crypto_layer::common::crypto::algorithms::encryption::SymmetricMode::Ctr => {
-                6.into_dart()
-            }
-            _ => unreachable!(),
-        }
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for FrbWrapper<crypto_layer::common::crypto::algorithms::encryption::SymmetricMode>
-{
-}
-impl
-    flutter_rust_bridge::IntoIntoDart<
-        FrbWrapper<crypto_layer::common::crypto::algorithms::encryption::SymmetricMode>,
-    > for crypto_layer::common::crypto::algorithms::encryption::SymmetricMode
-{
-    fn into_into_dart(
-        self,
-    ) -> FrbWrapper<crypto_layer::common::crypto::algorithms::encryption::SymmetricMode> {
-        self.into()
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart
-    for FrbWrapper<crypto_layer::common::crypto::algorithms::encryption::TripleDesNumKeys>
-{
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        match self.0 {
-            crypto_layer::common::crypto::algorithms::encryption::TripleDesNumKeys::Tdes2 => {
-                0.into_dart()
-            }
-            crypto_layer::common::crypto::algorithms::encryption::TripleDesNumKeys::Tdes3 => {
-                1.into_dart()
-            }
-            _ => unreachable!(),
-        }
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for FrbWrapper<crypto_layer::common::crypto::algorithms::encryption::TripleDesNumKeys>
-{
-}
-impl
-    flutter_rust_bridge::IntoIntoDart<
-        FrbWrapper<crypto_layer::common::crypto::algorithms::encryption::TripleDesNumKeys>,
-    > for crypto_layer::common::crypto::algorithms::encryption::TripleDesNumKeys
-{
-    fn into_into_dart(
-        self,
-    ) -> FrbWrapper<crypto_layer::common::crypto::algorithms::encryption::TripleDesNumKeys> {
+    fn into_into_dart(self) -> FrbWrapper<crypto_layer::common::T> {
         self.into()
     }
 }
@@ -4416,6 +3984,16 @@ impl SseEncode for ProviderImplConfig {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ProviderImplConfig>>>::sse_encode(flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self), serializer);
+    }
+}
+
+impl SseEncode for Spec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Spec>>>::sse_encode(
+            flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self),
+            serializer,
+        );
     }
 }
 
@@ -4563,6 +4141,15 @@ impl SseEncode
     }
 }
 
+impl SseEncode for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Spec>> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        let (ptr, size) = self.sse_encode_raw();
+        <usize>::sse_encode(ptr, serializer);
+        <i32>::sse_encode(size, serializer);
+    }
+}
+
 impl SseEncode
     for std::collections::HashSet<
         crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec,
@@ -4611,27 +4198,23 @@ impl SseEncode for String {
 impl SseEncode for crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        match self {
-            crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::Rsa(
-                field0,
-            ) => {
-                <i32>::sse_encode(0, serializer);
-                <crypto_layer::common::crypto::algorithms::KeyBits>::sse_encode(field0, serializer);
-            }
-            crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::Ecc {
-                scheme,
-                curve,
-            } => {
-                <i32>::sse_encode(1, serializer);
-                <crypto_layer::common::crypto::algorithms::encryption::EccSigningScheme>::sse_encode(scheme, serializer);
-                <crypto_layer::common::crypto::algorithms::encryption::EccCurve>::sse_encode(
-                    curve, serializer,
-                );
-            }
-            _ => {
-                unimplemented!("");
-            }
-        }
+        <i32>::sse_encode(match self {crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::RSA1024 => { 0 }
+crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::RSA2048 => { 1 }
+crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::RSA3072 => { 2 }
+crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::RSA4096 => { 3 }
+crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::RSA8192 => { 4 }
+crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::P256 => { 5 }
+crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::P384 => { 6 }
+crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::P521 => { 7 }
+crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::Secp256k1 => { 8 }
+crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::BrainpoolP256r1 => { 9 }
+crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::BrainpoolP384r1 => { 10 }
+crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::BrainpoolP512r1 => { 11 }
+crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::BrainpoolP638 => { 12 }
+crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::Curve25519 => { 13 }
+crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::Curve448 => { 14 }
+crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::Frp256v1 => { 15 }
+ _ => { unimplemented!(""); }}, serializer);
     }
 }
 
@@ -4700,125 +4283,19 @@ impl SseEncode for crypto_layer::common::error::CalErrorKind {
     }
 }
 
-impl SseEncode for crypto_layer::common::crypto::algorithms::encryption::ChCha20Mode {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <i32>::sse_encode(match self {crypto_layer::common::crypto::algorithms::encryption::ChCha20Mode::ChaCha20Poly1305 => { 0 }
-crypto_layer::common::crypto::algorithms::encryption::ChCha20Mode::XChaCha20Poly1305 => { 1 }
- _ => { unimplemented!(""); }}, serializer);
-    }
-}
-
 impl SseEncode for crypto_layer::common::crypto::algorithms::encryption::Cipher {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        match self {
-            crypto_layer::common::crypto::algorithms::encryption::Cipher::Aes(field0, field1) => {
-                <i32>::sse_encode(0, serializer);
-                <crypto_layer::common::crypto::algorithms::encryption::SymmetricMode>::sse_encode(
-                    field0, serializer,
-                );
-                <crypto_layer::common::crypto::algorithms::KeyBits>::sse_encode(field1, serializer);
-            }
-            crypto_layer::common::crypto::algorithms::encryption::Cipher::TripleDes(field0) => {
-                <i32>::sse_encode(1, serializer);
-                <crypto_layer::common::crypto::algorithms::encryption::TripleDesNumKeys>::sse_encode(field0, serializer);
-            }
-            crypto_layer::common::crypto::algorithms::encryption::Cipher::Des => {
-                <i32>::sse_encode(2, serializer);
-            }
-            crypto_layer::common::crypto::algorithms::encryption::Cipher::Rc2(field0) => {
-                <i32>::sse_encode(3, serializer);
-                <crypto_layer::common::crypto::algorithms::encryption::Rc2KeyBits>::sse_encode(
-                    field0, serializer,
-                );
-            }
-            crypto_layer::common::crypto::algorithms::encryption::Cipher::Camellia(
-                field0,
-                field1,
-            ) => {
-                <i32>::sse_encode(4, serializer);
-                <crypto_layer::common::crypto::algorithms::encryption::SymmetricMode>::sse_encode(
-                    field0, serializer,
-                );
-                <crypto_layer::common::crypto::algorithms::KeyBits>::sse_encode(field1, serializer);
-            }
-            crypto_layer::common::crypto::algorithms::encryption::Cipher::Rc4 => {
-                <i32>::sse_encode(5, serializer);
-            }
-            crypto_layer::common::crypto::algorithms::encryption::Cipher::Chacha20(field0) => {
-                <i32>::sse_encode(6, serializer);
-                <crypto_layer::common::crypto::algorithms::encryption::ChCha20Mode>::sse_encode(
-                    field0, serializer,
-                );
-            }
-            _ => {
-                unimplemented!("");
-            }
-        }
-    }
-}
-
-impl SseEncode for crypto_layer::common::crypto::algorithms::hashes::CryptoHash {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        match self {
-            crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha1 => {
-                <i32>::sse_encode(0, serializer);
-            }
-            crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha2(field0) => {
-                <i32>::sse_encode(1, serializer);
-                <crypto_layer::common::crypto::algorithms::hashes::Sha2Bits>::sse_encode(
-                    field0, serializer,
-                );
-            }
-            crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha3(field0) => {
-                <i32>::sse_encode(2, serializer);
-                <crypto_layer::common::crypto::algorithms::hashes::Sha3Bits>::sse_encode(
-                    field0, serializer,
-                );
-            }
-            crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Md2 => {
-                <i32>::sse_encode(3, serializer);
-            }
-            crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Md4 => {
-                <i32>::sse_encode(4, serializer);
-            }
-            crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Md5 => {
-                <i32>::sse_encode(5, serializer);
-            }
-            crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Ripemd160 => {
-                <i32>::sse_encode(6, serializer);
-            }
-            _ => {
-                unimplemented!("");
-            }
-        }
-    }
-}
-
-impl SseEncode for crypto_layer::common::crypto::algorithms::encryption::EccCurve {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <i32>::sse_encode(
             match self {
-                crypto_layer::common::crypto::algorithms::encryption::EccCurve::P256 => 0,
-                crypto_layer::common::crypto::algorithms::encryption::EccCurve::P384 => 1,
-                crypto_layer::common::crypto::algorithms::encryption::EccCurve::P521 => 2,
-                crypto_layer::common::crypto::algorithms::encryption::EccCurve::Secp256k1 => 3,
-                crypto_layer::common::crypto::algorithms::encryption::EccCurve::BrainpoolP256r1 => {
-                    4
-                }
-                crypto_layer::common::crypto::algorithms::encryption::EccCurve::BrainpoolP384r1 => {
+                crypto_layer::common::crypto::algorithms::encryption::Cipher::AesGcm128 => 0,
+                crypto_layer::common::crypto::algorithms::encryption::Cipher::AesGcm256 => 1,
+                crypto_layer::common::crypto::algorithms::encryption::Cipher::AesCbc128 => 2,
+                crypto_layer::common::crypto::algorithms::encryption::Cipher::AesCbc256 => 3,
+                crypto_layer::common::crypto::algorithms::encryption::Cipher::ChaCha20Poly1305 => 4,
+                crypto_layer::common::crypto::algorithms::encryption::Cipher::XChaCha20Poly1305 => {
                     5
                 }
-                crypto_layer::common::crypto::algorithms::encryption::EccCurve::BrainpoolP512r1 => {
-                    6
-                }
-                crypto_layer::common::crypto::algorithms::encryption::EccCurve::BrainpoolP638 => 7,
-                crypto_layer::common::crypto::algorithms::encryption::EccCurve::Curve25519 => 8,
-                crypto_layer::common::crypto::algorithms::encryption::EccCurve::Curve448 => 9,
-                crypto_layer::common::crypto::algorithms::encryption::EccCurve::Frp256v1 => 10,
                 _ => {
                     unimplemented!("");
                 }
@@ -4828,13 +4305,27 @@ impl SseEncode for crypto_layer::common::crypto::algorithms::encryption::EccCurv
     }
 }
 
-impl SseEncode for crypto_layer::common::crypto::algorithms::encryption::EccSigningScheme {
+impl SseEncode for crypto_layer::common::crypto::algorithms::hashes::CryptoHash {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <i32>::sse_encode(match self {crypto_layer::common::crypto::algorithms::encryption::EccSigningScheme::EcDsa => { 0 }
-crypto_layer::common::crypto::algorithms::encryption::EccSigningScheme::EcDaa => { 1 }
-crypto_layer::common::crypto::algorithms::encryption::EccSigningScheme::EcSchnorr => { 2 }
- _ => { unimplemented!(""); }}, serializer);
+        <i32>::sse_encode(
+            match self {
+                crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha2_224 => 0,
+                crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha2_256 => 1,
+                crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha2_384 => 2,
+                crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha2_512 => 3,
+                crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha2_512_224 => 4,
+                crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha2_512_256 => 5,
+                crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha3_224 => 6,
+                crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha3_256 => 7,
+                crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha3_384 => 8,
+                crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha3_512 => 9,
+                _ => {
+                    unimplemented!("");
+                }
+            },
+            serializer,
+        );
     }
 }
 
@@ -4852,29 +4343,6 @@ impl SseEncode for isize {
             .cursor
             .write_i64::<NativeEndian>(self as _)
             .unwrap();
-    }
-}
-
-impl SseEncode for crypto_layer::common::crypto::algorithms::KeyBits {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <i32>::sse_encode(
-            match self {
-                crypto_layer::common::crypto::algorithms::KeyBits::Bits128 => 0,
-                crypto_layer::common::crypto::algorithms::KeyBits::Bits192 => 1,
-                crypto_layer::common::crypto::algorithms::KeyBits::Bits256 => 2,
-                crypto_layer::common::crypto::algorithms::KeyBits::Bits512 => 3,
-                crypto_layer::common::crypto::algorithms::KeyBits::Bits1024 => 4,
-                crypto_layer::common::crypto::algorithms::KeyBits::Bits2048 => 5,
-                crypto_layer::common::crypto::algorithms::KeyBits::Bits3072 => 6,
-                crypto_layer::common::crypto::algorithms::KeyBits::Bits4096 => 7,
-                crypto_layer::common::crypto::algorithms::KeyBits::Bits8192 => 8,
-                _ => {
-                    unimplemented!("");
-                }
-            },
-            serializer,
-        );
     }
 }
 
@@ -4934,6 +4402,16 @@ impl SseEncode for Vec<AdditionalConfig> {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
             <AdditionalConfig>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<Spec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <Spec>::sse_encode(item, serializer);
         }
     }
 }
@@ -5110,23 +4588,6 @@ impl SseEncode for crypto_layer::common::config::ProviderConfig {
     }
 }
 
-impl SseEncode for crypto_layer::common::crypto::algorithms::encryption::Rc2KeyBits {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <i32>::sse_encode(
-            match self {
-                crypto_layer::common::crypto::algorithms::encryption::Rc2KeyBits::Rc2_40 => 0,
-                crypto_layer::common::crypto::algorithms::encryption::Rc2KeyBits::Rc2_64 => 1,
-                crypto_layer::common::crypto::algorithms::encryption::Rc2KeyBits::Rc2_128 => 2,
-                _ => {
-                    unimplemented!("");
-                }
-            },
-            serializer,
-        );
-    }
-}
-
 impl SseEncode for (Vec<u8>, Vec<u8>) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -5153,79 +4614,9 @@ impl SseEncode for crypto_layer::common::config::SecurityLevel {
     }
 }
 
-impl SseEncode for crypto_layer::common::crypto::algorithms::hashes::Sha2Bits {
+impl SseEncode for crypto_layer::common::T {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <i32>::sse_encode(
-            match self {
-                crypto_layer::common::crypto::algorithms::hashes::Sha2Bits::Sha224 => 0,
-                crypto_layer::common::crypto::algorithms::hashes::Sha2Bits::Sha256 => 1,
-                crypto_layer::common::crypto::algorithms::hashes::Sha2Bits::Sha384 => 2,
-                crypto_layer::common::crypto::algorithms::hashes::Sha2Bits::Sha512 => 3,
-                crypto_layer::common::crypto::algorithms::hashes::Sha2Bits::Sha512_224 => 4,
-                crypto_layer::common::crypto::algorithms::hashes::Sha2Bits::Sha512_256 => 5,
-                _ => {
-                    unimplemented!("");
-                }
-            },
-            serializer,
-        );
-    }
-}
-
-impl SseEncode for crypto_layer::common::crypto::algorithms::hashes::Sha3Bits {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <i32>::sse_encode(
-            match self {
-                crypto_layer::common::crypto::algorithms::hashes::Sha3Bits::Sha3_224 => 0,
-                crypto_layer::common::crypto::algorithms::hashes::Sha3Bits::Sha3_256 => 1,
-                crypto_layer::common::crypto::algorithms::hashes::Sha3Bits::Sha3_384 => 2,
-                crypto_layer::common::crypto::algorithms::hashes::Sha3Bits::Sha3_512 => 3,
-                _ => {
-                    unimplemented!("");
-                }
-            },
-            serializer,
-        );
-    }
-}
-
-impl SseEncode for crypto_layer::common::crypto::algorithms::encryption::SymmetricMode {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <i32>::sse_encode(
-            match self {
-                crypto_layer::common::crypto::algorithms::encryption::SymmetricMode::Gcm => 0,
-                crypto_layer::common::crypto::algorithms::encryption::SymmetricMode::Ccm => 1,
-                crypto_layer::common::crypto::algorithms::encryption::SymmetricMode::Ecb => 2,
-                crypto_layer::common::crypto::algorithms::encryption::SymmetricMode::Cbc => 3,
-                crypto_layer::common::crypto::algorithms::encryption::SymmetricMode::Cfb => 4,
-                crypto_layer::common::crypto::algorithms::encryption::SymmetricMode::Ofb => 5,
-                crypto_layer::common::crypto::algorithms::encryption::SymmetricMode::Ctr => 6,
-                _ => {
-                    unimplemented!("");
-                }
-            },
-            serializer,
-        );
-    }
-}
-
-impl SseEncode for crypto_layer::common::crypto::algorithms::encryption::TripleDesNumKeys {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <i32>::sse_encode(
-            match self {
-                crypto_layer::common::crypto::algorithms::encryption::TripleDesNumKeys::Tdes2 => 0,
-                crypto_layer::common::crypto::algorithms::encryption::TripleDesNumKeys::Tdes3 => 1,
-                _ => {
-                    unimplemented!("");
-                }
-            },
-            serializer,
-        );
-    }
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {}
 }
 
 impl SseEncode for u8 {
@@ -5457,6 +4848,20 @@ mod io {
     ) {
         MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ProviderImplConfig>>::decrement_strong_count(ptr as _);
     }
+
+    #[no_mangle]
+    pub extern "C" fn frbgen_cal_flutter_plugin_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSpec(
+        ptr: *const std::ffi::c_void,
+    ) {
+        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Spec>>::increment_strong_count(ptr as _);
+    }
+
+    #[no_mangle]
+    pub extern "C" fn frbgen_cal_flutter_plugin_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSpec(
+        ptr: *const std::ffi::c_void,
+    ) {
+        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Spec>>::decrement_strong_count(ptr as _);
+    }
 }
 #[cfg(not(target_family = "wasm"))]
 pub use io::*;
@@ -5673,17 +5078,17 @@ mod web {
     }
 
     #[wasm_bindgen]
-    pub fn rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerT(
+    pub fn rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSpec(
         ptr: *const std::ffi::c_void,
     ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<T>>::increment_strong_count(ptr as _);
+        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Spec>>::increment_strong_count(ptr as _);
     }
 
     #[wasm_bindgen]
-    pub fn rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerT(
+    pub fn rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSpec(
         ptr: *const std::ffi::c_void,
     ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<T>>::decrement_strong_count(ptr as _);
+        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Spec>>::decrement_strong_count(ptr as _);
     }
 }
 #[cfg(target_family = "wasm")]

@@ -5,7 +5,6 @@
 
 import '../../frb_generated.dart';
 import 'common/config.dart';
-import 'common/crypto/algorithms.dart';
 import 'common/crypto/algorithms/encryption.dart';
 import 'common/crypto/algorithms/hashes.dart';
 import 'common/error.dart';
@@ -67,6 +66,8 @@ abstract class Provider implements RustOpaqueInterface {
 
   Future<KeyPairHandle> createKeyPair({required KeyPairSpec spec});
 
+  Future<List<Spec>> getAllKeys();
+
   Future<ProviderConfig?> getCapabilities();
 
   Future<KeyHandle> importKey({required KeySpec spec, required List<int> data});
@@ -86,4 +87,15 @@ abstract class Provider implements RustOpaqueInterface {
   Future<String> providerName();
 
   Future<DhExchange> startEphemeralDhExchange({required KeyPairSpec spec});
+}
+
+class T {
+  const T();
+
+  @override
+  int get hashCode => 0;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || other is T && runtimeType == other.runtimeType;
 }

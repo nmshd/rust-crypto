@@ -45,8 +45,7 @@ class _SigningPageState extends State<SigningPage> {
   void generateKey() async {
     if (_algoChoice != null) {
       var spec = cal.KeyPairSpec(
-          asymSpec: _algoChoice!,
-          signingHash: const cal.CryptoHash.sha2(cal.Sha2Bits.sha256));
+          asymSpec: _algoChoice!, signingHash: cal.CryptoHash.sha2256);
 
       cal.KeyPairHandle keyPair;
       try {

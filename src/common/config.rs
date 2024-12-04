@@ -62,7 +62,7 @@ pub enum SecurityLevel {
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug)]
-pub(crate) enum Spec {
+pub enum Spec {
     KeySpec(KeySpec),
     KeyPairSpec(KeyPairSpec),
 }

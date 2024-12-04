@@ -6,7 +6,6 @@
 import '../../../frb_generated.dart';
 import '../common.dart';
 import 'config.dart';
-import 'crypto/algorithms.dart';
 import 'crypto/algorithms/encryption.dart';
 import 'crypto/algorithms/hashes.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
@@ -27,7 +26,7 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 ///     factory::*,
 /// };
 ///
-/// let specific_provider_config = vec![ProviderImplConfig::Stub {}];
+/// let specific_provider_config = ProviderImplConfig{additional_config: vec![]};
 /// let provider_config = ProviderConfig {
 ///     min_security_level: SecurityLevel::Software,
 ///     max_security_level: SecurityLevel::Hardware,

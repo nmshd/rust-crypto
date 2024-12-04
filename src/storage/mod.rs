@@ -3,7 +3,7 @@ use std::fmt;
 use serde::{Deserialize, Serialize};
 
 use crate::common::{
-    config::{AdditionalConfig, AllKeysFn, DeleteFn, GetFn, KeyPairSpec, KeySpec, Spec, StoreFn},
+    config::{AdditionalConfig, AllKeysFn, DeleteFn, GetFn, Spec, StoreFn},
     error::{CalError, KeyType},
     KeyHandle,
 };
@@ -218,7 +218,18 @@ impl StorageManager {
     }
 
     pub fn get_all_keys(&self) -> Vec<Spec> {
-        todo!()
+        // get keys from all available storage methods
+        let mut keys = Vec::new();
+
+        self.db_store.as_ref().map(|store| {
+            keys.append(&mut store.get_all_keys(self.scope.clone()));
+        });
+
+        self.kv_store.as_ref().map(|store| {
+            keys.append(&mut store.get_all_keys(self.scope.clone()));
+        });
+
+        keys
     }
 }
 
@@ -302,11 +313,17 @@ impl FileStore {
     }
 
     fn get(&self, _provider: String, _key: String) -> Result<KeyDataEncrypted, CalError> {
-        todo!()
+        // TODO: implement
+        Err(CalError::not_implemented())
     }
 
     fn delete(&self, _provider: String, _key: String) {
-        todo!()
+        // TODO: implement
+    }
+
+    fn get_all_keys(&self, _scope: String) -> Vec<Spec> {
+        // TODO: implement
+        Vec::new()
     }
 }
 

@@ -14,6 +14,9 @@ pub mod error;
 pub mod factory;
 pub(crate) mod traits;
 
+// Do not delete this struct, it is a workaround for a bug in the code generation
+pub struct T {}
+
 macro_rules! delegate_enum {
     ($(pub fn $method:ident(self $(,$arg:ident: $type:ty)* $(,)?) $(-> $ret:ty)?;)+) => {
         $(
