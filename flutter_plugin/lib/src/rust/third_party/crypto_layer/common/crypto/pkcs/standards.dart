@@ -42,7 +42,7 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 /// ```rust
 /// use crypto_layer::common::crypto::pkcs::standards::OidType;
 ///
-/// oid_type = OidType::Aes256Cbc;
+/// let oid_type = OidType::Aes256Cbc;
 /// ```
 ///
 /// # Note

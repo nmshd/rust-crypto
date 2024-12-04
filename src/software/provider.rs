@@ -4,8 +4,8 @@ use super::{
 };
 use crate::{
     common::{
-        config::{KeyPairSpec, KeySpec, ProviderConfig},
-        crypto::algorithms::encryption::{AsymmetricKeySpec, EccCurve},
+        config::{KeyPairSpec, KeySpec, ProviderConfig, Spec},
+        crypto::algorithms::encryption::AsymmetricKeySpec,
         error::CalError,
         traits::{
             key_handle::{DHKeyExchangeImpl, KeyHandleImplEnum},
@@ -13,7 +13,7 @@ use crate::{
         },
         DHExchange, KeyHandle, KeyPairHandle,
     },
-    storage::{KeyData, Spec},
+    storage::KeyData,
 };
 use nanoid::nanoid;
 use ring::{
@@ -114,11 +114,7 @@ impl ProviderImpl for SoftwareProvider {
     fn create_key_pair(&mut self, spec: KeyPairSpec) -> Result<KeyPairHandle, CalError> {
         let key_id = nanoid!(10);
 
-        let storage_data = if let AsymmetricKeySpec::Ecc {
-            scheme: _,
-            curve: EccCurve::Curve25519,
-        } = spec.asym_spec
-        {
+        let storage_data = if let AsymmetricKeySpec::Curve25519 = spec.asym_spec {
             let keypair = ed25519_compact::KeyPair::from_seed(ed25519_compact::Seed::default());
             KeyData {
                 id: key_id.clone(),
@@ -302,6 +298,10 @@ impl ProviderImpl for SoftwareProvider {
         Ok(DHExchange {
             implementation: dh_exchange.into(),
         })
+    }
+
+    fn get_all_keys(&self) -> Result<Vec<Spec>, CalError> {
+        Ok(self.storage_manager.get_all_keys())
     }
 
     fn provider_name(&self) -> String {

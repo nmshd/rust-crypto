@@ -1,6 +1,6 @@
 use crate::common::{
     config::{KeyPairSpec, KeySpec},
-    crypto::algorithms::encryption::{AsymmetricKeySpec, EccCurve},
+    crypto::algorithms::encryption::AsymmetricKeySpec,
     error::CalError,
     traits::key_handle::{KeyHandleImpl, KeyPairHandleImpl},
     DHExchange,
@@ -145,49 +145,34 @@ impl KeyPairHandleImpl for SoftwareKeyPairHandle {
         };
 
         match self.spec.asym_spec {
-            AsymmetricKeySpec::Ecc { curve, .. } => match curve {
-                EccCurve::Curve25519 => ed25519_compact::SecretKey::from_slice(signing_key)
-                    .map(|key| {
-                        key.sign(data, Some(ed25519_compact::Noise::generate()))
-                            .to_vec()
-                    })
-                    .map_err(|_| {
-                        CalError::failed_operation(
-                            "Failed to use signing key".to_string(),
-                            true,
-                            None,
-                        )
-                    }),
-                EccCurve::P256 | EccCurve::P384 => {
-                    // Secure random generator for signing
-                    let rng = SystemRandom::new();
+            AsymmetricKeySpec::Curve25519 => ed25519_compact::SecretKey::from_slice(&signing_key)
+                .map(|key| {
+                    key.sign(data, Some(ed25519_compact::Noise::generate()))
+                        .to_vec()
+                })
+                .map_err(|_| {
+                    CalError::failed_operation("Failed to use signing key".to_string(), true, None)
+                }),
+            AsymmetricKeySpec::P256 | AsymmetricKeySpec::P384 => {
+                // Secure random generator for signing
+                let rng = SystemRandom::new();
 
-                    let signing_key = EcdsaKeyPair::from_pkcs8(
-                        self.spec.asym_spec.into(),
-                        signing_key.as_slice(),
-                        &rng,
-                    )
-                    .map_err(|_| {
-                        CalError::failed_operation(
-                            "Failed to use signing key".to_string(),
-                            true,
-                            None,
-                        )
-                    })?;
+                let signing_key = EcdsaKeyPair::from_pkcs8(
+                    self.spec.asym_spec.into(),
+                    signing_key.as_slice(),
+                    &rng,
+                )
+                .map_err(|_| {
+                    CalError::failed_operation("Failed to use signing key".to_string(), true, None)
+                })?;
 
-                    // Sign the data
-                    let signature: Signature = signing_key.sign(&rng, data).map_err(|_| {
-                        CalError::failed_operation(
-                            "Failed to use signing key".to_string(),
-                            true,
-                            None,
-                        )
-                    })?;
+                // Sign the data
+                let signature: Signature = signing_key.sign(&rng, data).map_err(|_| {
+                    CalError::failed_operation("Failed to use signing key".to_string(), true, None)
+                })?;
 
-                    Ok(signature.as_ref().to_vec())
-                }
-                _ => todo!(),
-            },
+                Ok(signature.as_ref().to_vec())
+            }
             _ => todo!(),
         }
     }
@@ -195,33 +180,30 @@ impl KeyPairHandleImpl for SoftwareKeyPairHandle {
     fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, CalError> {
         warn!("Verifying signature");
         match self.spec.asym_spec {
-            AsymmetricKeySpec::Ecc { curve, .. } => match curve {
-                EccCurve::Curve25519 => {
-                    ed25519_compact::PublicKey::from_slice(self.public_key.as_slice())
-                        .and_then(|key| {
-                            ed25519_compact::Signature::from_slice(signature)
-                                .map(|signature| (key, signature))
-                        })
-                        .map(|(key, signature)| key.verify(data, &signature).is_ok())
-                        .map_err(|_| {
-                            CalError::failed_operation(
-                                "Failed to use public key".to_string(),
-                                true,
-                                None,
-                            )
-                        })
-                }
-                EccCurve::P256 | EccCurve::P384 => {
-                    // Create an UnparsedPublicKey using the algorithm and the public key bytes
-                    Ok(
-                        UnparsedPublicKey::new(self.spec.asym_spec.into(), &self.public_key)
-                            .verify(data, signature)
-                            .inspect_err(|e| warn!("Failed to verify signature: {e:?}"))
-                            .is_ok(),
-                    )
-                }
-                _ => todo!(),
-            },
+            AsymmetricKeySpec::Curve25519 => {
+                ed25519_compact::PublicKey::from_slice(self.public_key.as_slice())
+                    .and_then(|key| {
+                        ed25519_compact::Signature::from_slice(signature)
+                            .map(|signature| (key, signature))
+                    })
+                    .map(|(key, signature)| key.verify(data, &signature).is_ok())
+                    .map_err(|_| {
+                        CalError::failed_operation(
+                            "Failed to use public key".to_string(),
+                            true,
+                            None,
+                        )
+                    })
+            }
+            AsymmetricKeySpec::P256 | AsymmetricKeySpec::P384 => {
+                // Create an UnparsedPublicKey using the algorithm and the public key bytes
+                Ok(
+                    UnparsedPublicKey::new(self.spec.asym_spec.into(), &self.public_key)
+                        .verify(data, signature)
+                        .inspect_err(|e| warn!("Failed to verify signature: {e:?}"))
+                        .is_ok(),
+                )
+            }
             _ => todo!(),
         }
     }

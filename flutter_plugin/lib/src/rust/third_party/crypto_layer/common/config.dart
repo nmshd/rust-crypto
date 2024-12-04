@@ -5,18 +5,21 @@
 
 import '../../../frb_generated.dart';
 import '../../../lib.dart';
-import 'crypto/algorithms.dart';
 import 'crypto/algorithms/encryption.dart';
 import 'crypto/algorithms/hashes.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_receiver_is_total_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `cmp`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `partial_cmp`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_receiver_is_total_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `cmp`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `partial_cmp`
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AdditionalConfig>>
 abstract class AdditionalConfig implements RustOpaqueInterface {}
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ProviderImplConfig>>
 abstract class ProviderImplConfig implements RustOpaqueInterface {
+  List<AdditionalConfig> get additionalConfig;
+
+  set additionalConfig(List<AdditionalConfig> additionalConfig);
+
   // HINT: Make it `#[frb(sync)]` to let it become the default constructor of Dart class.
   /// Creates a new `ProviderImplConfig` instance.
   static Future<ProviderImplConfig> newInstance(
@@ -44,6 +47,9 @@ abstract class ProviderImplConfig implements RustOpaqueInterface {
           deleteFn: deleteFn,
           allKeysFn: allKeysFn);
 }
+
+// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Spec>>
+abstract class Spec implements RustOpaqueInterface {}
 
 /// flutter_rust_bridge:non_opaque
 class KeyPairSpec {
