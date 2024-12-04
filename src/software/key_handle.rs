@@ -105,6 +105,14 @@ impl KeyHandleImpl for SoftwareKeyHandle {
 
         // Remove the authentication tag
         in_out.truncate(in_out.len() - 16);
+        in_out.resize(
+            in_out
+                .iter()
+                .rposition(|&x| x != 0)
+                .map_or(0, |pos| pos + 1),
+            0,
+        );
+
         Ok(in_out)
     }
 
