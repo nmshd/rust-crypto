@@ -8,7 +8,7 @@ use crate::tpm::apple_secure_enclave::provider::{
 };
 use crate::{
     common::{
-        config::{KeyPairSpec, KeySpec, ProviderConfig, ProviderImplConfig},
+        config::{KeyPairSpec, KeySpec, ProviderConfig, ProviderImplConfig, Spec},
         error::CalError,
         DHExchange, KeyHandle, KeyPairHandle,
     },
@@ -123,6 +123,8 @@ pub(crate) trait ProviderImpl: Send + Sync {
     /// A `Result` that, on success, contains a `DHExchange`, allowing further operations with this key pair.
     /// On failure, it returns a `CalError`.
     fn start_ephemeral_dh_exchange(&mut self, spec: KeyPairSpec) -> Result<DHExchange, CalError>;
+
+    fn get_all_keys(&self) -> Result<Vec<Spec>, CalError>;
 
     fn provider_name(&self) -> String;
 

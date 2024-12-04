@@ -3,7 +3,7 @@ use std::fmt;
 use serde::{Deserialize, Serialize};
 
 use crate::common::{
-    config::{AdditionalConfig, AllKeysFn, DeleteFn, GetFn, KeyPairSpec, KeySpec, StoreFn},
+    config::{AdditionalConfig, AllKeysFn, DeleteFn, GetFn, Spec, StoreFn},
     error::{CalError, KeyType},
     KeyHandle,
 };
@@ -216,6 +216,21 @@ impl StorageManager {
                 .delete(self.scope.clone(), id.clone())
         }
     }
+
+    pub fn get_all_keys(&self) -> Vec<Spec> {
+        // get keys from all available storage methods
+        let mut keys = Vec::new();
+
+        self.db_store.as_ref().map(|store| {
+            keys.append(&mut store.get_all_keys(self.scope.clone()));
+        });
+
+        self.kv_store.as_ref().map(|store| {
+            keys.append(&mut store.get_all_keys(self.scope.clone()));
+        });
+
+        keys
+    }
 }
 
 #[derive(Clone)]
@@ -266,6 +281,17 @@ impl KVStore {
     fn delete(&self, provider: String, key: String) {
         pollster::block_on((self.delete_fn)(format!("{}:{}", provider, key)));
     }
+
+    fn get_all_keys(&self, scope: String) -> Vec<Spec> {
+        let keys = pollster::block_on((self.all_keys_fn)());
+        keys.into_iter()
+            .filter(|k| k.starts_with(&format!("{}:", scope)))
+            .filter_map(|k| {
+                let spec = pollster::block_on((self.get_fn)(k))?;
+                serde_json::from_slice(&spec).ok()
+            })
+            .collect()
+    }
 }
 
 #[allow(dead_code)]
@@ -287,18 +313,18 @@ impl FileStore {
     }
 
     fn get(&self, _provider: String, _key: String) -> Result<KeyDataEncrypted, CalError> {
-        todo!()
+        // TODO: implement
+        Err(CalError::not_implemented())
     }
 
     fn delete(&self, _provider: String, _key: String) {
-        todo!()
+        // TODO: implement
     }
-}
 
-#[derive(Serialize, Deserialize, Clone)]
-pub(crate) enum Spec {
-    KeySpec(KeySpec),
-    KeyPairSpec(KeyPairSpec),
+    fn get_all_keys(&self, _scope: String) -> Vec<Spec> {
+        // TODO: implement
+        Vec::new()
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone)]

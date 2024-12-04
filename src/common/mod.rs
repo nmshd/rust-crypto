@@ -1,5 +1,5 @@
 use crate::common::traits::key_handle::DHKeyExchangeImpl;
-use config::{KeyPairSpec, KeySpec, ProviderConfig};
+use config::{KeyPairSpec, KeySpec, ProviderConfig, Spec};
 use error::CalError;
 use tracing::error;
 use traits::key_handle::DHKeyExchangeImplEnum;
@@ -13,6 +13,9 @@ pub mod crypto;
 pub mod error;
 pub mod factory;
 pub(crate) mod traits;
+
+// Do not delete this struct, it is a workaround for a bug in the code generation
+pub struct T {}
 
 macro_rules! delegate_enum {
     ($(pub fn $method:ident(self $(,$arg:ident: $type:ty)* $(,)?) $(-> $ret:ty)?;)+) => {
@@ -128,6 +131,10 @@ impl Provider {
             &mut self,
             spec: KeyPairSpec,
         ) -> Result<DHExchange, CalError>;
+    }
+
+    delegate_enum! {
+        pub fn get_all_keys(&self) -> Result<Vec<Spec>, CalError>;
     }
 
     delegate_enum_bare! {

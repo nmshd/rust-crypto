@@ -1,18 +1,18 @@
 use crate::{
     common::{
-        config::{KeyPairSpec, KeySpec, ProviderConfig, ProviderImplConfig, SecurityLevel},
-        crypto::algorithms::{
-            encryption::{AsymmetricKeySpec, Cipher, EccCurve, EccSigningScheme, SymmetricMode},
-            KeyBits,
-        },
+        config::{KeyPairSpec, KeySpec, ProviderConfig, ProviderImplConfig, SecurityLevel, Spec},
+        crypto::algorithms::encryption::{AsymmetricKeySpec, Cipher},
         error::{CalError, ToCalError},
         traits::module_provider::{ProviderFactory, ProviderImpl, ProviderImplEnum},
         DHExchange, KeyHandle, KeyPairHandle,
     },
-    storage::{KeyData, Spec, StorageManager},
+    storage::{KeyData, StorageManager},
     tpm::android::{
         key_handle::{AndroidKeyHandle, AndroidKeyPairHandle},
-        utils::{get_cipher_name, get_cipher_padding, get_mode_name, Padding},
+        utils::{
+            get_asym_key_size, get_cipher_name, get_cipher_padding, get_key_size, get_mode_name,
+            is_rsa, Padding,
+        },
         wrapper::{self},
         ANDROID_KEYSTORE,
     },
@@ -46,18 +46,13 @@ impl ProviderFactory for AndroidProviderFactory {
             min_security_level: SecurityLevel::Hardware,
             max_security_level: SecurityLevel::Hardware,
             supported_asym_spec: vec![
-                AsymmetricKeySpec::Rsa(KeyBits::Bits2048),
-                AsymmetricKeySpec::Rsa(KeyBits::Bits1024),
-                AsymmetricKeySpec::Ecc {
-                    scheme: EccSigningScheme::EcDsa,
-                    curve: EccCurve::Secp256k1,
-                },
+                AsymmetricKeySpec::RSA2048,
+                AsymmetricKeySpec::RSA1024,
+                AsymmetricKeySpec::Secp256k1,
             ]
             .into_iter()
             .collect(),
-            supported_ciphers: vec![Cipher::Aes(SymmetricMode::Cbc, KeyBits::Bits256)]
-                .into_iter()
-                .collect(),
+            supported_ciphers: vec![Cipher::AesCbc256].into_iter().collect(),
             supported_hashes: HashSet::new(),
         })
     }
@@ -115,37 +110,13 @@ impl ProviderImpl for AndroidProvider {
             wrapper::key_generation::builder::Builder::new(&env, key_id.to_owned(), 1 | 2 | 4 | 8)
                 .err_internal()?;
 
-        match spec.cipher {
-            Cipher::Aes(mode, size) => {
-                kps_builder = kps_builder
-                    .set_block_modes(&env, vec![get_mode_name(mode)?])
-                    .err_internal()?
-                    .set_encryption_paddings(&env, vec![get_cipher_padding(spec.cipher)])
-                    .err_internal()?
-                    .set_key_size(&env, Into::<u32>::into(size) as i32)
-                    .err_internal()?;
-            }
-            Cipher::Des => {
-                kps_builder = kps_builder
-                    .set_block_modes(&env, vec!["CBC".to_owned()])
-                    .err_internal()?
-                    .set_encryption_paddings(&env, vec![get_cipher_padding(spec.cipher)])
-                    .err_internal()?;
-            }
-            Cipher::TripleDes(_) => {
-                kps_builder = kps_builder
-                    .set_block_modes(&env, vec!["CBC".to_owned()])
-                    .err_internal()?
-                    .set_encryption_paddings(&env, vec![get_cipher_padding(spec.cipher)])
-                    .err_internal()?;
-            }
-            Cipher::Rc2(_) | Cipher::Camellia(_, _) | Cipher::Rc4 | Cipher::Chacha20(_) => {
-                return Err(CalError::unsupported_algorithm(format!(
-                    "{:?}",
-                    spec.cipher
-                )))?;
-            }
-        }
+        kps_builder = kps_builder
+            .set_block_modes(&env, vec![get_mode_name(spec.cipher)?])
+            .err_internal()?
+            .set_encryption_paddings(&env, vec![get_cipher_padding(spec.cipher)?.into()])
+            .err_internal()?
+            .set_key_size(&env, get_key_size(spec.cipher)?)
+            .err_internal()?;
 
         kps_builder = kps_builder
             .set_is_strongbox_backed(&env, self.used_factory.secure_element)
@@ -197,8 +168,8 @@ impl ProviderImpl for AndroidProvider {
             wrapper::key_generation::builder::Builder::new(&env, key_id.to_owned(), 1 | 2 | 4 | 8)
                 .err_internal()?;
 
-        match spec.asym_spec {
-            AsymmetricKeySpec::Rsa(_key_bits) => {
+        match is_rsa(spec.asym_spec) {
+            true => {
                 kps_builder = kps_builder
                     .set_digests(&env, vec![spec.signing_hash.into()])
                     .err_internal()?
@@ -206,13 +177,10 @@ impl ProviderImpl for AndroidProvider {
                     .err_internal()?
                     .set_encryption_paddings(&env, vec![Padding::PKCS1.into()])
                     .err_internal()?
-                    .set_key_size(&env, _key_bits.into())
+                    .set_key_size(&env, get_asym_key_size(spec.asym_spec)?)
                     .err_internal()?;
             }
-            AsymmetricKeySpec::Ecc {
-                scheme: _,
-                curve: _,
-            } => {
+            false => {
                 kps_builder = kps_builder
                     .set_digests(&env, vec![spec.signing_hash.into()])
                     .err_internal()?;
@@ -368,6 +336,11 @@ impl ProviderImpl for AndroidProvider {
     fn start_ephemeral_dh_exchange(&mut self, spec: KeyPairSpec) -> Result<DHExchange, CalError> {
         // TODO: start ephemeral dh exchange
         todo!("start ephemeral dh exchange")
+    }
+
+    #[instrument]
+    fn get_all_keys(&self) -> Result<Vec<Spec>, CalError> {
+        Ok(self.storage_manager.get_all_keys())
     }
 
     fn provider_name(&self) -> String {

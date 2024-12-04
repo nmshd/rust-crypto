@@ -6,7 +6,7 @@ use std::{collections::HashSet, hash::Hash};
 use serde_json::error;
 
 use crate::common::{
-    config::{KeyPairSpec, KeySpec, ProviderConfig, ProviderImplConfig, SecurityLevel},
+    config::{KeyPairSpec, KeySpec, ProviderConfig, ProviderImplConfig, SecurityLevel, Spec},
     error::CalError,
     traits::{
         key_handle::{DHKeyExchangeImpl, KeyHandleImpl, KeyPairHandleImpl},
@@ -84,6 +84,10 @@ impl ProviderImpl for StubProvider {
     }
 
     fn start_ephemeral_dh_exchange(&mut self, spec: KeyPairSpec) -> Result<DHExchange, CalError> {
+        todo!()
+    }
+
+    fn get_all_keys(&self) -> Result<Vec<Spec>, CalError> {
         todo!()
     }
 

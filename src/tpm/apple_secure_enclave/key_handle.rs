@@ -8,7 +8,7 @@ use tracing::instrument;
 use crate::common::config::KeyPairSpec;
 use crate::common::error::ToCalError;
 use crate::common::{
-    crypto::algorithms::hashes::{CryptoHash, Sha2Bits},
+    crypto::algorithms::hashes::CryptoHash,
     error::{CalError, KeyType},
     traits::key_handle::KeyPairHandleImpl,
     DHExchange,
@@ -18,16 +18,12 @@ use crate::storage::StorageManager;
 #[instrument(level = "trace")]
 fn hash_kind(hash: CryptoHash) -> Result<Algorithm, CalError> {
     match hash {
-        CryptoHash::Sha1 => Ok(Algorithm::ECDSASignatureMessageX962SHA1),
-        CryptoHash::Sha2(bits) => match bits {
-            Sha2Bits::Sha224 => Ok(Algorithm::ECDSASignatureMessageX962SHA224),
-            Sha2Bits::Sha256 => Ok(Algorithm::ECDSASignatureMessageX962SHA256),
-            Sha2Bits::Sha384 => Ok(Algorithm::ECDSASignatureMessageX962SHA384),
-            Sha2Bits::Sha512 => Ok(Algorithm::ECDSASignatureMessageX962SHA512),
-            _ => Err(CalError::bad_parameter(format!("{:#?}", bits), true, None)),
-        },
+        CryptoHash::Sha2_224 => Ok(Algorithm::ECDSASignatureMessageX962SHA224),
+        CryptoHash::Sha2_256 => Ok(Algorithm::ECDSASignatureMessageX962SHA256),
+        CryptoHash::Sha2_384 => Ok(Algorithm::ECDSASignatureMessageX962SHA384),
+        CryptoHash::Sha2_512 => Ok(Algorithm::ECDSASignatureMessageX962SHA512),
         _ => Err(CalError::bad_parameter(
-            "Only Sha1 and Sha2 are supported.".to_owned(),
+            "Only Sha2 is supported.".to_owned(),
             true,
             None,
         )),
