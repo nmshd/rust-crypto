@@ -224,7 +224,7 @@ impl KeyHandle {
 }
 
 #[allow(dead_code)]
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub struct DHExchange {
     #[cfg_attr(feature = "ts-interface", ts(skip))]

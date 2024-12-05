@@ -127,7 +127,7 @@ pub enum KeyPairHandleImplEnum {
 }
 
 #[enum_dispatch]
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub(crate) enum DHKeyExchangeImplEnum {
     StubDHKeyExchange,
     #[cfg(feature = "software")]
