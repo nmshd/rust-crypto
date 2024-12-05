@@ -316,7 +316,7 @@ impl ProviderImpl for SoftwareProvider {
         let rng = SystemRandom::new();
         let mut random_bytes = Vec::with_capacity(len);
         rng.fill(&mut random_bytes)
-            .expect("Failed to generate nonce");
+            .expect("Failed to generate random bytes");
         random_bytes
     }
 }
