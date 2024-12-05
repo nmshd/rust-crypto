@@ -1,5 +1,6 @@
-import { createProvider, getAllProviders } from "crypto-layer-node";
+import { createProvider, getAllProviders, providerName } from "crypto-layer-node";
 import { type ProviderConfig, type ProviderImplConfig } from "crypto-layer-ts-types";
+import { exit } from "process";
 
 
 
@@ -31,4 +32,11 @@ let providerImplConfig: ProviderImplConfig = {
 
 let provider = createProvider(providerConfig, providerImplConfig);
 
-console.log(provider)
+if (!provider) {
+    console.log("Failed creating provider.");
+    exit(1);
+}
+
+console.log(providerName(provider))
+
+exit(0)

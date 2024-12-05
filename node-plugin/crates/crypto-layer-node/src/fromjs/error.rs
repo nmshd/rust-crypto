@@ -48,3 +48,18 @@ pub fn missing_enum_values<R, E>(res: Result<R, E>) -> Result<R, ConversionError
         Err(_) => Err(ConversionError::MissingEnumValues),
     }
 }
+
+macro_rules! unwrap_or_throw {
+    ($cx:ident, $e:expr) => {
+        match $e {
+            Ok(res) => res,
+            Err(err) => {
+                let msg = format!("{}", err);
+                let jserr = $cx.error(msg)?;
+                $cx.throw(jserr)?
+            }
+        }
+    };
+}
+
+pub(crate) use unwrap_or_throw;

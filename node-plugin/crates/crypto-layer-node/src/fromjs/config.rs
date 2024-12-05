@@ -13,7 +13,7 @@ use super::error::{js_result, missing_enum_values, ConversionError};
 use super::{
     from_wrapped_enum, from_wrapped_simple_enum, from_wrapped_string_vec, wrapped_array_to_hash_set,
 };
-use crate::KeyHandleJs;
+use crate::JsKeyHandle;
 
 pub fn from_wrapped_provider_config<'a>(
     cx: &mut FunctionContext,
@@ -233,7 +233,7 @@ pub fn from_wrapped_additional_config(
         }
         AdditionalConfigDiscriminants::StorageConfig => {
             let key_handle_js =
-                missing_enum_values(obj.get::<KeyHandleJs, _, _>(cx, "key_handle"))?;
+                missing_enum_values(obj.get::<JsKeyHandle, _, _>(cx, "key_handle"))?;
 
             let key_handle = key_handle_js.borrow();
 
@@ -244,4 +244,38 @@ pub fn from_wrapped_additional_config(
     };
 
     Ok(result)
+}
+
+pub(crate) fn from_wrapped_key_spec(
+    cx: &mut FunctionContext,
+    wrapped: Handle<JsObject>,
+) -> Result<KeySpec, ConversionError> {
+    let cipher_js = js_result(wrapped.get(cx, "cipher"))?;
+    let signing_hash_js = js_result(wrapped.get(cx, "signing_hash"))?;
+
+    Ok(KeySpec {
+        cipher: from_wrapped_simple_enum(cx, cipher_js)?,
+        signing_hash: from_wrapped_simple_enum(cx, signing_hash_js)?,
+    })
+}
+
+pub(crate) fn from_wrapped_key_pair_spec(
+    cx: &mut FunctionContext,
+    wrapped: Handle<JsObject>,
+) -> Result<KeyPairSpec, ConversionError> {
+    let asymc_spec_js = js_result(wrapped.get(cx, "asym_spec"))?;
+    let cipher_js = js_result(wrapped.get::<JsValue, _, _>(cx, "cipher"))?;
+    let signing_hash_js = js_result(wrapped.get(cx, "signing_hash"))?;
+
+    let cipher = if let Ok(cipher_js_str) = cipher_js.downcast::<JsString, _>(cx) {
+        Some(from_wrapped_simple_enum(cx, cipher_js_str.upcast())?)
+    } else {
+        None
+    };
+
+    Ok(KeyPairSpec {
+        asym_spec: from_wrapped_simple_enum(cx, asymc_spec_js)?,
+        cipher: cipher,
+        signing_hash: from_wrapped_simple_enum(cx, signing_hash_js)?,
+    })
 }
