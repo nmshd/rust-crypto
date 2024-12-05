@@ -1,3 +1,4 @@
+#[allow(static_mut_refs)]
 #[cfg(test)]
 mod tests {
     use crate::{
@@ -13,7 +14,7 @@ mod tests {
 
         use super::*;
 
-        static mut STORE: LazyLock<TestStore> = LazyLock::new(|| TestStore::new());
+        static mut STORE: LazyLock<TestStore> = LazyLock::new(TestStore::new);
 
         #[test]
         fn test_dh_exchange_success() {
