@@ -44,9 +44,26 @@ fn export_create_provider(mut cx: FunctionContext) -> JsResult<JsValue> {
     }
 }
 
+fn export_create_provider_from_name(mut cx: FunctionContext) -> JsResult<JsValue> {
+    let name_js = cx.argument::<JsString>(0)?;
+    let impl_config_js = cx.argument::<JsObject>(1)?;
+
+    let name = name_js.value(&mut cx);
+    let impl_config = match from_wrapped_provider_impl_config(&mut cx, impl_config_js) {
+        Ok(res) => res,
+        Err(e) => e.js_throw(&mut cx)?,
+    };
+
+    match create_provider_from_name(name, impl_config) {
+        Some(prov) => Ok(cx.boxed(RefCell::new(WrappedProvider::new(prov))).upcast()),
+        None => Ok(cx.undefined().upcast()),
+    }
+}
+
 #[neon::main]
 fn main(mut cx: ModuleContext) -> NeonResult<()> {
     cx.export_function("getAllProviders", export_get_all_providers)?;
     cx.export_function("createProvider", export_create_provider)?;
+    cx.export_function("createProviderFromName", export_create_provider_from_name)?;
     Ok(())
 }

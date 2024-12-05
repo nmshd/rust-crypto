@@ -12,5 +12,6 @@ import { type ProviderConfig, type ProviderImplConfig, type Provider, CreateProv
 declare module "./load.cjs" {
   export function getAllProviders(): string[];
   export function createProvider(config: ProviderConfig, impl_config: ProviderImplConfig): Provider | undefined;
+  export function createProviderFromName(name: string, impl_config: ProviderImplConfig): Provider | undefined;
 }
 
