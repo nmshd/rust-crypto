@@ -311,6 +311,14 @@ impl ProviderImpl for SoftwareProvider {
     fn get_capabilities(&self) -> Option<ProviderConfig> {
         SoftwareProviderFactory::default().get_capabilities(self.impl_config.clone())
     }
+
+    fn get_random(&self, len: usize) -> Vec<u8> {
+        let rng = SystemRandom::new();
+        let mut random_bytes = Vec::with_capacity(len);
+        rng.fill(&mut random_bytes)
+            .expect("Failed to generate nonce");
+        random_bytes
+    }
 }
 
 #[derive(Debug)]

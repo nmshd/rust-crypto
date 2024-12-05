@@ -129,6 +129,10 @@ pub(crate) trait ProviderImpl: Send + Sync {
     fn provider_name(&self) -> String;
 
     fn get_capabilities(&self) -> Option<ProviderConfig>;
+
+    fn get_random(&self, len: usize) -> Vec<u8> {
+        unimplemented!()
+    }
 }
 
 #[enum_dispatch]

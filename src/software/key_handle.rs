@@ -138,7 +138,7 @@ impl KeyPairHandleImpl for SoftwareKeyPairHandle {
         };
 
         match self.spec.asym_spec {
-            AsymmetricKeySpec::Curve25519 => ed25519_compact::SecretKey::from_slice(&signing_key)
+            AsymmetricKeySpec::Curve25519 => ed25519_compact::SecretKey::from_slice(signing_key)
                 .map(|key| {
                     key.sign(data, Some(ed25519_compact::Noise::generate()))
                         .to_vec()

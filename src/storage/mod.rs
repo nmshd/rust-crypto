@@ -86,45 +86,39 @@ impl StorageManager {
 
         let encrypted_data = KeyDataEncrypted {
             id: data.id.clone(),
-            secret_data: invert(
-                data.secret_data
-                    .map(|secret| {
-                        self.key_handle.as_ref().and_then(|key| {
-                            let (v, iv) = match key.encrypt_data(&secret) {
-                                Ok(v) => v,
-                                Err(e) => return Some(Err(e)),
-                            };
-                            Some(Ok(StorageField::Encryped { data: v, iv }))
-                        })
-                    })
-                    .flatten(),
-            )?,
+            secret_data: invert(data.secret_data.and_then(|secret| {
+                self.key_handle.as_ref().map(|key| {
+                    let (v, iv) = match key.encrypt_data(&secret) {
+                        Ok(v) => v,
+                        Err(e) => return Err(e),
+                    };
+                    Ok(StorageField::Encryped { data: v, iv })
+                })
+            }))?,
             public_data: data.public_data,
             additional_data: data.additional_data,
             spec: data.spec,
         };
 
         // choose storage Strategy
-        match self {
-            &StorageManager {
+        match *self {
+            StorageManager {
                 key_handle: _,
                 db_store: Some(ref db_store),
                 kv_store: _,
                 ref scope,
             } => db_store.store(scope.clone(), id, encrypted_data),
-            &StorageManager {
+            StorageManager {
                 key_handle: _,
                 db_store: _,
                 kv_store: Some(ref kv_store),
                 ref scope,
             } => kv_store.store(scope.clone(), id, encrypted_data),
-            _ => {
-                return Err(CalError::failed_operation(
-                    "neither KV Store nor DB store were initialised".to_owned(),
-                    true,
-                    None,
-                ))
-            }
+            _ => Err(CalError::failed_operation(
+                "neither KV Store nor DB store were initialised".to_owned(),
+                true,
+                None,
+            )),
         }
     }
 
@@ -139,21 +133,17 @@ impl StorageManager {
             {
                 let decrypted = KeyData {
                     id: v.id.clone(),
-                    secret_data: invert(
-                        v.secret_data
-                            .map(|secret| {
-                                self.key_handle.as_ref().and_then(|key| match secret {
-                                    StorageField::Encryped { data, iv } => {
-                                        match key.decrypt_data(&data, &iv) {
-                                            Ok(v) => Some(Ok(v)),
-                                            Err(e) => Some(Err(e)),
-                                        }
-                                    }
-                                    StorageField::Raw(data) => Some(Ok(data)),
-                                })
-                            })
-                            .flatten(),
-                    )?,
+                    secret_data: invert(v.secret_data.and_then(|secret| {
+                        self.key_handle.as_ref().map(|key| match secret {
+                            StorageField::Encryped { data, iv } => {
+                                match key.decrypt_data(&data, &iv) {
+                                    Ok(v) => Ok(v),
+                                    Err(e) => Err(e),
+                                }
+                            }
+                            StorageField::Raw(data) => Ok(data),
+                        })
+                    }))?,
                     public_data: v.public_data,
                     additional_data: v.additional_data,
                     spec: v.spec,
@@ -171,21 +161,17 @@ impl StorageManager {
             {
                 let decrypted = KeyData {
                     id: v.id.clone(),
-                    secret_data: invert(
-                        v.secret_data
-                            .map(|secret| {
-                                self.key_handle.as_ref().and_then(|key| match secret {
-                                    StorageField::Encryped { data, iv } => {
-                                        match key.decrypt_data(&data, &iv) {
-                                            Ok(v) => Some(Ok(v)),
-                                            Err(e) => Some(Err(e)),
-                                        }
-                                    }
-                                    StorageField::Raw(data) => Some(Ok(data)),
-                                })
-                            })
-                            .flatten(),
-                    )?,
+                    secret_data: invert(v.secret_data.and_then(|secret| {
+                        self.key_handle.as_ref().map(|key| match secret {
+                            StorageField::Encryped { data, iv } => {
+                                match key.decrypt_data(&data, &iv) {
+                                    Ok(v) => Ok(v),
+                                    Err(e) => Err(e),
+                                }
+                            }
+                            StorageField::Raw(data) => Ok(data),
+                        })
+                    }))?,
                     public_data: v.public_data,
                     additional_data: v.additional_data,
                     spec: v.spec,
@@ -221,13 +207,13 @@ impl StorageManager {
         // get keys from all available storage methods
         let mut keys = Vec::new();
 
-        self.db_store.as_ref().map(|store| {
+        if let Some(store) = self.db_store.as_ref() {
             keys.append(&mut store.get_all_keys(self.scope.clone()));
-        });
+        }
 
-        self.kv_store.as_ref().map(|store| {
+        if let Some(store) = self.kv_store.as_ref() {
             keys.append(&mut store.get_all_keys(self.scope.clone()));
-        });
+        }
 
         keys
     }
