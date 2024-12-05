@@ -1,11 +1,11 @@
 {
   "extends": "@tsconfig/node20/tsconfig.json",
   "compilerOptions": {
-    "allowImportingTsExtensions": true,
-    "noEmit": true,
+    "allowImportingTsExtensions": false,
+    "noEmit": false,
     "module": "node16",
     "declaration": true,
     "outDir": "lib",
   },
-  "exclude": ["lib"]
+  "exclude": ["lib", "example"]
 }

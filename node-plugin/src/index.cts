@@ -3,7 +3,7 @@
 // The Rust addon.
 export * from './load.cjs';
 
-export * from "crypto-layer-ts-types";
+//export * from "crypto-layer-ts-types";
 
 import { type ProviderConfig, type ProviderImplConfig, type Provider, CreateProviderFunc, GetAllProvidersFunc } from "crypto-layer-ts-types";
 
@@ -11,6 +11,6 @@ import { type ProviderConfig, type ProviderImplConfig, type Provider, CreateProv
 // which otherwise by default are `any`.
 declare module "./load.cjs" {
   export function getAllProviders(): string[];
-  //export function createProvider(conf: ProviderConfig, impl_conf: ProviderImplConfig): Provider | null;
+  export function createProvider(config: ProviderConfig, impl_config: ProviderImplConfig): Provider | undefined;
 }
 

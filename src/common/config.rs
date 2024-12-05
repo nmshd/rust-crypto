@@ -110,7 +110,10 @@ pub struct ProviderImplConfig {
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum AdditionalConfig {
     KVStoreConfig {
-        #[cfg_attr(feature = "ts-interface", ts(type = "(id: string) => Uint8Array"))]
+        #[cfg_attr(
+            feature = "ts-interface",
+            ts(type = "(id: string) => Uint8Array | undefined")
+        )]
         get_fn: GetFn,
         #[cfg_attr(
             feature = "ts-interface",

@@ -1,6 +1,6 @@
 use std::convert::From;
-use std::str::FromStr;
 
+use neon::prelude::*;
 use thiserror;
 
 #[derive(thiserror::Error, Debug)]
@@ -15,6 +15,17 @@ pub(crate) enum ConversionError {
     BadParameter,
     #[error("Unexpected error while executing js component.")]
     JsError,
+}
+
+impl ConversionError {
+    pub fn to_js_error<'a>(&self, cx: &mut FunctionContext<'a>) -> JsResult<'a, JsError> {
+        cx.error(format!("{}", self))
+    }
+
+    pub fn js_throw<T>(&self, cx: &mut FunctionContext) -> NeonResult<T> {
+        let err = self.to_js_error(cx)?;
+        cx.throw(err)
+    }
 }
 
 pub fn match_variant_result<R, E>(res: Result<R, E>) -> Result<R, ConversionError> {

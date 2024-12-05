@@ -11,6 +11,8 @@ pub(crate) mod keypairhandle;
 pub(crate) mod provider;
 pub(crate) mod tojs;
 
+use crate::provider::WrappedProvider;
+use fromjs::config::*;
 use fromjs::*;
 use tojs::*;
 
@@ -23,17 +25,28 @@ fn export_get_all_providers(mut cx: FunctionContext) -> JsResult<JsArray> {
     wrap_string_array(&mut cx, get_all_providers())
 }
 
-fn export_create_provider(mut cx: FunctionContext) -> JsResult<JsBox<Provider>> {
+fn export_create_provider(mut cx: FunctionContext) -> JsResult<JsValue> {
     let config_js = cx.argument::<JsObject>(0)?;
     let impl_config_js = cx.argument::<JsObject>(1)?;
 
-    /* let provider = cx.empty_object(); */
+    let config = match from_wrapped_provider_config(&mut cx, config_js) {
+        Ok(res) => res,
+        Err(e) => e.js_throw(&mut cx)?,
+    };
+    let impl_config = match from_wrapped_provider_impl_config(&mut cx, impl_config_js) {
+        Ok(res) => res,
+        Err(e) => e.js_throw(&mut cx)?,
+    };
 
-    todo!()
+    match create_provider(config, impl_config) {
+        Some(prov) => Ok(cx.boxed(RefCell::new(WrappedProvider::new(prov))).upcast()),
+        None => Ok(cx.undefined().upcast()),
+    }
 }
 
 #[neon::main]
 fn main(mut cx: ModuleContext) -> NeonResult<()> {
     cx.export_function("getAllProviders", export_get_all_providers)?;
+    cx.export_function("createProvider", export_create_provider)?;
     Ok(())
 }

@@ -3,7 +3,7 @@ import type { KeyHandle } from "./KeyHandle";
 
 export type AdditionalConfig = {
   "KVStoreConfig": {
-    get_fn: (id: string) => Uint8Array;
+    get_fn: (id: string) => Uint8Array | undefined;
     store_fn: (id: string, data: Uint8Array) => boolean;
     delete_fn: (id: string) => void;
     all_keys_fn: () => string[];
