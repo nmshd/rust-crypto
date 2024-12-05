@@ -339,7 +339,7 @@ impl ProviderImpl for AndroidProvider {
     }
 
     #[instrument]
-    fn get_all_keys(&self) -> Result<Vec<Spec>, CalError> {
+    fn get_all_keys(&self) -> Result<Vec<(String, Spec)>, CalError> {
         Ok(self.storage_manager.get_all_keys())
     }
 

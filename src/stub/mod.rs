@@ -5,14 +5,17 @@ use std::{collections::HashSet, hash::Hash};
 
 use serde_json::error;
 
-use crate::common::{
-    config::{KeyPairSpec, KeySpec, ProviderConfig, ProviderImplConfig, SecurityLevel, Spec},
-    error::CalError,
-    traits::{
-        key_handle::{DHKeyExchangeImpl, KeyHandleImpl, KeyPairHandleImpl},
-        module_provider::{ProviderFactory, ProviderImpl, ProviderImplEnum},
+use crate::{
+    common::{
+        config::{KeyPairSpec, KeySpec, ProviderConfig, ProviderImplConfig, SecurityLevel, Spec},
+        error::CalError,
+        traits::{
+            key_handle::{DHKeyExchangeImpl, KeyHandleImpl, KeyPairHandleImpl},
+            module_provider::{ProviderFactory, ProviderImpl, ProviderImplEnum},
+        },
+        DHExchange, KeyHandle, KeyPairHandle,
     },
-    DHExchange, KeyHandle, KeyPairHandle,
+    storage::KeyData,
 };
 
 const PROVIDER_NAME: &str = "STUB_PROVIDER";
@@ -87,7 +90,7 @@ impl ProviderImpl for StubProvider {
         todo!()
     }
 
-    fn get_all_keys(&self) -> Result<Vec<Spec>, CalError> {
+    fn get_all_keys(&self) -> Result<Vec<(String, Spec)>, CalError> {
         todo!()
     }
 

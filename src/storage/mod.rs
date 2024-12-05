@@ -1,6 +1,7 @@
 use std::fmt;
 
 use serde::{Deserialize, Serialize};
+use tracing::trace;
 
 use crate::common::{
     config::{AdditionalConfig, AllKeysFn, DeleteFn, GetFn, Spec, StoreFn},
@@ -217,7 +218,7 @@ impl StorageManager {
         }
     }
 
-    pub fn get_all_keys(&self) -> Vec<Spec> {
+    pub fn get_all_keys(&self) -> Vec<(String, Spec)> {
         // get keys from all available storage methods
         let mut keys = Vec::new();
 
@@ -282,14 +283,14 @@ impl KVStore {
         pollster::block_on((self.delete_fn)(format!("{}:{}", provider, key)));
     }
 
-    fn get_all_keys(&self, scope: String) -> Vec<Spec> {
+    fn get_all_keys(&self, scope: String) -> Vec<(String, Spec)> {
         let keys = pollster::block_on((self.all_keys_fn)());
+        trace!("get_all_keys_kv: {:?}", keys);
         keys.into_iter()
-            .filter(|k| k.starts_with(&format!("{}:", scope)))
-            .filter_map(|k| {
-                let spec = pollster::block_on((self.get_fn)(k))?;
-                serde_json::from_slice(&spec).ok()
-            })
+            .filter(|k| k.starts_with(&format!("{}:", scope.clone())))
+            .map(|k| k.split(':').last().unwrap().to_owned())
+            .filter_map(|k| Some(self.get(scope.clone(), k).ok()?))
+            .map(|key_data_enc| (key_data_enc.id.clone(), key_data_enc.spec))
             .collect()
     }
 }
@@ -321,7 +322,7 @@ impl FileStore {
         // TODO: implement
     }
 
-    fn get_all_keys(&self, _scope: String) -> Vec<Spec> {
+    fn get_all_keys(&self, _scope: String) -> Vec<(String, Spec)> {
         // TODO: implement
         Vec::new()
     }
