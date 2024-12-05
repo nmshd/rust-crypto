@@ -16,13 +16,16 @@ class SigningPage extends StatefulWidget {
 class _SigningPageState extends State<SigningPage> {
   cal.KeyPairHandle? _keyPairHandle;
   List<cal.AsymmetricKeySpec> _algos = [];
+  List<(String, cal.Spec)> _keyIds = [];
   cal.AsymmetricKeySpec? _algoChoice;
+  String? _keyChoice;
   String? _signature;
   bool? _isVerified;
   final TextEditingController _dataToVerifyController = TextEditingController();
   final TextEditingController _dataToSignController = TextEditingController();
   final TextEditingController _signatureToVerifyController =
       TextEditingController();
+  final TextEditingController _publicKeyController = TextEditingController();
 
   @override
   void initState() {
@@ -39,6 +42,11 @@ class _SigningPageState extends State<SigningPage> {
                   }
                 })
               });
+      widget.provider!.then((provider) => provider.getAllKeys()).then((e) => {
+            setState(() {
+              _keyIds = e.toList();
+            })
+          });
     }
   }
 
@@ -50,6 +58,18 @@ class _SigningPageState extends State<SigningPage> {
       cal.KeyPairHandle keyPair;
       try {
         keyPair = await (await widget.provider!).createKeyPair(spec: spec);
+        var publicKey = base64Encode(await keyPair.getPublicKey());
+
+        setState(() {
+          _keyPairHandle = keyPair;
+          _publicKeyController.text = publicKey;
+        });
+        widget.provider!.then((provider) => provider.getAllKeys()).then((e) => {
+              print(e),
+              setState(() {
+                _keyIds = e.toList();
+              }),
+            });
       } on cal.CalErrorImpl catch (e) {
         debugPrint('Exception:\n$e');
         var errorKind = await e.errorKind();
@@ -58,10 +78,28 @@ class _SigningPageState extends State<SigningPage> {
         debugPrint('Back trace:\n $backtrace');
         rethrow;
       }
+    }
+  }
 
-      setState(() {
-        _keyPairHandle = keyPair;
-      });
+  void loadKey() async {
+    if (_keyChoice != null) {
+      try {
+        var keyPair =
+            await (await widget.provider!).loadKeyPair(id: _keyChoice!);
+        var publicKey = base64Encode(await keyPair.getPublicKey());
+
+        setState(() {
+          _keyPairHandle = keyPair;
+          _publicKeyController.text = publicKey;
+        });
+      } on cal.CalErrorImpl catch (e) {
+        debugPrint('Exception:\n$e');
+        var errorKind = await e.errorKind();
+        debugPrint("Error Kind: $errorKind");
+        var backtrace = await e.backtrace();
+        debugPrint('Back trace:\n $backtrace');
+        rethrow;
+      }
     }
   }
 
@@ -131,6 +169,40 @@ class _SigningPageState extends State<SigningPage> {
             ),
           ),
         ),
+        Container(
+          margin: const EdgeInsets.only(left: 20.0, right: 20.0, bottom: 20.0),
+          child: InputDecorator(
+            decoration: InputDecoration(
+              labelText: 'load Key',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10.0),
+              ),
+            ),
+            child: Column(
+              children: [
+                DropdownMenu(
+                  onSelected: (value) {
+                    setState(() {
+                      _keyChoice = value;
+                    });
+                  },
+                  dropdownMenuEntries:
+                      _keyIds.map<DropdownMenuEntry<String>>((id) {
+                    return DropdownMenuEntry<String>(
+                      value: id.$1,
+                      label: id.$1,
+                      enabled: true,
+                    );
+                  }).toList(),
+                ),
+                ElevatedButton(
+                  onPressed: loadKey,
+                  child: const Text('Load'),
+                ),
+              ],
+            ),
+          ),
+        ),
         Visibility(
           visible: _keyPairHandle != null,
           child: Container(
@@ -145,6 +217,15 @@ class _SigningPageState extends State<SigningPage> {
               ),
               child: Column(
                 children: [
+                  TextField(
+                    controller: _publicKeyController,
+                    decoration: InputDecoration(
+                      labelText: 'public key',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                    ),
+                  ),
                   TextField(
                     controller: _dataToSignController,
                     decoration: InputDecoration(
@@ -163,7 +244,7 @@ class _SigningPageState extends State<SigningPage> {
                           borderRadius: BorderRadius.circular(10.0),
                         ),
                       ),
-                      child: Text(
+                      child: SelectableText(
                         _signature ?? 'N/A',
                       ),
                     ),
