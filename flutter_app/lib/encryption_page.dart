@@ -46,8 +46,7 @@ class _EncryptionPageState extends State<EncryptionPage> {
   void generateKey() async {
     if (_cipherChoice != null) {
       var spec = cal.KeySpec(
-          cipher: _cipherChoice!,
-          signingHash: const cal.CryptoHash.sha2(cal.Sha2Bits.sha256));
+          cipher: _cipherChoice!, signingHash: cal.CryptoHash.sha2256);
       var key = await (await widget.provider!).createKey(spec: spec);
       setState(() {
         _keyHandle = key;
@@ -56,6 +55,8 @@ class _EncryptionPageState extends State<EncryptionPage> {
   }
 
   Future<void> encryptData() async {
+    print(
+        "Encrypting data: ${Uint8List.fromList(_dataToEncryptController.text.codeUnits)}");
     var (data, iv) = await _keyHandle!.encryptData(
         data: Uint8List.fromList(_dataToEncryptController.text.codeUnits));
 
@@ -76,6 +77,7 @@ class _EncryptionPageState extends State<EncryptionPage> {
         encryptedData:
             Uint8List.fromList(base64Decode(_dataToDecryptController.text)),
         iv: Uint8List.fromList(base64Decode(_iv!)));
+    print("Decrypted data: $decryptedData");
     setState(() {
       _decryptedData = String.fromCharCodes(decryptedData);
     });

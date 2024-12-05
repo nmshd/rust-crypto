@@ -116,8 +116,8 @@ mod tests {
 
             // The decrypted data should match the original plaintext
             assert_eq!(
-                from_utf8(&decrypted_data).unwrap().replace("\0", ""),
-                from_utf8(plaintext).unwrap().replace("\0", ""),
+                from_utf8(&decrypted_data).unwrap(),
+                from_utf8(plaintext).unwrap(),
                 "Decrypted data does not match plaintext"
             );
         }
