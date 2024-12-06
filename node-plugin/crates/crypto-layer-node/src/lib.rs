@@ -4,6 +4,7 @@ use neon::prelude::*;
 
 use crypto_layer::prelude::*;
 
+pub(crate) mod common;
 pub(crate) mod dhexchange;
 pub(crate) mod fromjs;
 pub(crate) mod keyhandle;
@@ -11,19 +12,16 @@ pub(crate) mod keypairhandle;
 pub(crate) mod provider;
 pub(crate) mod tojs;
 
-use crate::dhexchange::WrappedDHExchange;
+use crate::common::Finalized;
 use crate::fromjs::error::unwrap_or_throw;
-use crate::keyhandle::WrappedKeyHandle;
-use crate::keypairhandle::WrappedKeyPairHandle;
-use crate::provider::WrappedProvider;
 use fromjs::config::*;
 use fromjs::*;
 use tojs::*;
 
-type JsKeyHandle = JsBox<RefCell<WrappedKeyHandle>>;
-type JsKeyPairHandle = JsBox<RefCell<WrappedKeyPairHandle>>;
-type JsProvider = JsBox<RefCell<WrappedProvider>>;
-type JsDhExchange = JsBox<RefCell<WrappedDHExchange>>;
+type JsKeyHandle = JsBox<RefCell<Finalized<KeyHandle>>>;
+type JsKeyPairHandle = JsBox<RefCell<Finalized<KeyPairHandle>>>;
+type JsProvider = JsBox<RefCell<Finalized<Provider>>>;
+type JsDhExchange = JsBox<RefCell<Finalized<DHExchange>>>;
 
 fn export_get_all_providers(mut cx: FunctionContext) -> JsResult<JsArray> {
     wrap_string_array(&mut cx, get_all_providers())
@@ -40,7 +38,7 @@ fn export_create_provider(mut cx: FunctionContext) -> JsResult<JsValue> {
     );
 
     match create_provider(config, impl_config) {
-        Some(prov) => Ok(cx.boxed(RefCell::new(WrappedProvider::new(prov))).upcast()),
+        Some(prov) => Ok(cx.boxed(RefCell::new(Finalized::new(prov))).upcast()),
         None => Ok(cx.undefined().upcast()),
     }
 }
@@ -56,7 +54,7 @@ fn export_create_provider_from_name(mut cx: FunctionContext) -> JsResult<JsValue
     );
 
     match create_provider_from_name(name, impl_config) {
-        Some(prov) => Ok(cx.boxed(RefCell::new(WrappedProvider::new(prov))).upcast()),
+        Some(prov) => Ok(cx.boxed(RefCell::new(Finalized::new(prov))).upcast()),
         None => Ok(cx.undefined().upcast()),
     }
 }

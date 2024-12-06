@@ -37,6 +37,6 @@ if (!provider) {
     exit(1);
 }
 
-console.log(providerName(provider))
+console.log("Provider initialized: ", providerName(provider))
 
 exit(0)
