@@ -16,6 +16,8 @@ class EncryptionPage extends StatefulWidget {
 class _EncryptionPageState extends State<EncryptionPage> {
   cal.KeyHandle? _keyHandle;
   List<cal.Cipher> _ciphers = [];
+  List<(String, cal.Spec)> _keyIds = [];
+  String? _keyChoice;
   cal.Cipher? _cipherChoice;
   String? _encryptedData;
   String? _iv;
@@ -51,6 +53,30 @@ class _EncryptionPageState extends State<EncryptionPage> {
       setState(() {
         _keyHandle = key;
       });
+      widget.provider!.then((provider) => provider.getAllKeys()).then((e) => {
+            print(e),
+            setState(() {
+              _keyIds = e.toList();
+            }),
+          });
+    }
+  }
+
+  void loadKey() async {
+    if (_keyChoice != null) {
+      try {
+        var key = await (await widget.provider!).loadKey(id: _keyChoice!);
+        setState(() {
+          _keyHandle = key;
+        });
+      } on cal.CalErrorImpl catch (e) {
+        debugPrint('Exception:\n$e');
+        var errorKind = await e.errorKind();
+        debugPrint("Error Kind: $errorKind");
+        var backtrace = await e.backtrace();
+        debugPrint('Back trace:\n $backtrace');
+        rethrow;
+      }
     }
   }
 
@@ -118,6 +144,44 @@ class _EncryptionPageState extends State<EncryptionPage> {
                 ElevatedButton(
                   onPressed: generateKey,
                   child: const Text('Generate'),
+                ),
+              ],
+            ),
+          ),
+        ),
+        Container(
+          margin: const EdgeInsets.only(left: 20.0, right: 20.0, bottom: 20.0),
+          child: InputDecorator(
+            decoration: InputDecoration(
+              labelText: 'load Key',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10.0),
+              ),
+            ),
+            child: Column(
+              children: [
+                DropdownMenu(
+                  onSelected: (value) {
+                    setState(() {
+                      _keyChoice = value;
+                    });
+                  },
+                  dropdownMenuEntries: _keyIds.where((id) {
+                    return id.$2.when(
+                      keySpec: (keySpec) => true,
+                      keyPairSpec: (keyPairSpec) => false,
+                    );
+                  }).map<DropdownMenuEntry<String>>((id) {
+                    return DropdownMenuEntry<String>(
+                      value: id.$1,
+                      label: id.$1,
+                      enabled: true,
+                    );
+                  }).toList(),
+                ),
+                ElevatedButton(
+                  onPressed: loadKey,
+                  child: const Text('Load'),
                 ),
               ],
             ),

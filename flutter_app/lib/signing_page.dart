@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:cal_flutter_plugin/cal_flutter_plugin.dart' as cal;
+import 'package:cal_flutter_plugin/src/rust/third_party/crypto_layer/common/config.dart';
 import 'package:flutter/material.dart';
 
 class SigningPage extends StatefulWidget {
@@ -104,12 +105,21 @@ class _SigningPageState extends State<SigningPage> {
   }
 
   Future<void> signData() async {
-    Uint8List signature = await _keyPairHandle!.signData(
-        data: Uint8List.fromList(_dataToSignController.text.codeUnits));
+    try {
+      Uint8List signature = await _keyPairHandle!.signData(
+          data: Uint8List.fromList(_dataToSignController.text.codeUnits));
 
-    setState(() {
-      _signature = base64Encode(signature);
-    });
+      setState(() {
+        _signature = base64Encode(signature);
+      });
+    } on cal.CalErrorImpl catch (e) {
+      debugPrint('Exception:\n$e');
+      var errorKind = await e.errorKind();
+      debugPrint("Error Kind: $errorKind");
+      var backtrace = await e.backtrace();
+      debugPrint('Back trace:\n $backtrace');
+      rethrow;
+    }
   }
 
   void moveDataToVerify() {
@@ -186,8 +196,12 @@ class _SigningPageState extends State<SigningPage> {
                       _keyChoice = value;
                     });
                   },
-                  dropdownMenuEntries:
-                      _keyIds.map<DropdownMenuEntry<String>>((id) {
+                  dropdownMenuEntries: _keyIds.where((id) {
+                    return id.$2.when(
+                      keySpec: (keySpec) => false,
+                      keyPairSpec: (keyPairSpec) => true,
+                    );
+                  }).map<DropdownMenuEntry<String>>((id) {
                     return DropdownMenuEntry<String>(
                       value: id.$1,
                       label: id.$1,
