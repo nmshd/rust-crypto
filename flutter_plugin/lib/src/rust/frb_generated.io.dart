@@ -66,9 +66,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       get rust_arc_decrement_strong_count_ProviderImplConfigPtr => wire
           ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplConfigPtr;
 
-  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_SpecPtr => wire
-      ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSpecPtr;
-
   @protected
   AnyhowException dco_decode_AnyhowException(dynamic raw);
 
@@ -125,11 +122,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   ProviderImplConfig
       dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplConfig(
-          dynamic raw);
-
-  @protected
-  Spec
-      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSpec(
           dynamic raw);
 
   @protected
@@ -254,11 +246,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
           dynamic raw);
 
   @protected
-  Spec
-      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSpec(
-          dynamic raw);
-
-  @protected
   Set<AsymmetricKeySpec> dco_decode_Set_asymmetric_key_spec(dynamic raw);
 
   @protected
@@ -344,9 +331,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
 
   @protected
-  List<(String, Spec)>
-      dco_decode_list_record_string_auto_owned_rust_opaque_flutter_rust_bridgefor_generated_rust_auto_opaque_inner_spec(
-          dynamic raw);
+  List<(String, Spec)> dco_decode_list_record_string_spec(dynamic raw);
 
   @protected
   OidType dco_decode_oid_type(dynamic raw);
@@ -373,14 +358,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       dco_decode_record_list_prim_u_8_strict_list_prim_u_8_strict(dynamic raw);
 
   @protected
-  (
-    String,
-    Spec
-  ) dco_decode_record_string_auto_owned_rust_opaque_flutter_rust_bridgefor_generated_rust_auto_opaque_inner_spec(
-      dynamic raw);
+  (String, Spec) dco_decode_record_string_spec(dynamic raw);
 
   @protected
   SecurityLevel dco_decode_security_level(dynamic raw);
+
+  @protected
+  Spec dco_decode_spec(dynamic raw);
 
   @protected
   T dco_decode_t(dynamic raw);
@@ -450,11 +434,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   ProviderImplConfig
       sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplConfig(
-          SseDeserializer deserializer);
-
-  @protected
-  Spec
-      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSpec(
           SseDeserializer deserializer);
 
   @protected
@@ -561,11 +540,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
           SseDeserializer deserializer);
 
   @protected
-  Spec
-      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSpec(
-          SseDeserializer deserializer);
-
-  @protected
   Set<AsymmetricKeySpec> sse_decode_Set_asymmetric_key_spec(
       SseDeserializer deserializer);
 
@@ -653,9 +627,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
 
   @protected
-  List<(String, Spec)>
-      sse_decode_list_record_string_auto_owned_rust_opaque_flutter_rust_bridgefor_generated_rust_auto_opaque_inner_spec(
-          SseDeserializer deserializer);
+  List<(String, Spec)> sse_decode_list_record_string_spec(
+      SseDeserializer deserializer);
 
   @protected
   OidType sse_decode_oid_type(SseDeserializer deserializer);
@@ -684,14 +657,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
           SseDeserializer deserializer);
 
   @protected
-  (
-    String,
-    Spec
-  ) sse_decode_record_string_auto_owned_rust_opaque_flutter_rust_bridgefor_generated_rust_auto_opaque_inner_spec(
-      SseDeserializer deserializer);
+  (String, Spec) sse_decode_record_string_spec(SseDeserializer deserializer);
 
   @protected
   SecurityLevel sse_decode_security_level(SseDeserializer deserializer);
+
+  @protected
+  Spec sse_decode_spec(SseDeserializer deserializer);
 
   @protected
   T sse_decode_t(SseDeserializer deserializer);
@@ -763,11 +735,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void
       sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplConfig(
           ProviderImplConfig self, SseSerializer serializer);
-
-  @protected
-  void
-      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSpec(
-          Spec self, SseSerializer serializer);
 
   @protected
   void
@@ -892,11 +859,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
           ProviderImplConfig self, SseSerializer serializer);
 
   @protected
-  void
-      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSpec(
-          Spec self, SseSerializer serializer);
-
-  @protected
   void sse_encode_Set_asymmetric_key_spec(
       Set<AsymmetricKeySpec> self, SseSerializer serializer);
 
@@ -987,9 +949,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       Uint8List self, SseSerializer serializer);
 
   @protected
-  void
-      sse_encode_list_record_string_auto_owned_rust_opaque_flutter_rust_bridgefor_generated_rust_auto_opaque_inner_spec(
-          List<(String, Spec)> self, SseSerializer serializer);
+  void sse_encode_list_record_string_spec(
+      List<(String, Spec)> self, SseSerializer serializer);
 
   @protected
   void sse_encode_oid_type(OidType self, SseSerializer serializer);
@@ -1020,12 +981,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       (Uint8List, Uint8List) self, SseSerializer serializer);
 
   @protected
-  void
-      sse_encode_record_string_auto_owned_rust_opaque_flutter_rust_bridgefor_generated_rust_auto_opaque_inner_spec(
-          (String, Spec) self, SseSerializer serializer);
+  void sse_encode_record_string_spec(
+      (String, Spec) self, SseSerializer serializer);
 
   @protected
   void sse_encode_security_level(SecurityLevel self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_spec(Spec self, SseSerializer serializer);
 
   @protected
   void sse_encode_t(T self, SseSerializer serializer);
@@ -1404,37 +1367,5 @@ class RustLibWire implements BaseWire {
           'frbgen_cal_flutter_plugin_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplConfig');
   late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplConfig =
       _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplConfigPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
-
-  void
-      rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSpec(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSpec(
-      ptr,
-    );
-  }
-
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSpecPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-          'frbgen_cal_flutter_plugin_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSpec');
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSpec =
-      _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSpecPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
-
-  void
-      rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSpec(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSpec(
-      ptr,
-    );
-  }
-
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSpecPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-          'frbgen_cal_flutter_plugin_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSpec');
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSpec =
-      _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSpecPtr
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 }

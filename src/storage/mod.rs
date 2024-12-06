@@ -90,13 +90,16 @@ impl StorageManager {
             secret_data: invert(
                 data.secret_data
                     .map(|secret| {
-                        self.key_handle.as_ref().and_then(|key| {
-                            let (v, iv) = match key.encrypt_data(&secret) {
-                                Ok(v) => v,
-                                Err(e) => return Some(Err(e)),
-                            };
-                            Some(Ok(StorageField::Encryped { data: v, iv }))
-                        })
+                        self.key_handle
+                            .as_ref()
+                            .and_then(|key| {
+                                let (v, iv) = match key.encrypt_data(&secret) {
+                                    Ok(v) => v,
+                                    Err(e) => return Some(Err(e)),
+                                };
+                                Some(Ok(StorageField::Encryped { data: v, iv }))
+                            })
+                            .or_else(|| Some(Ok(StorageField::Raw(secret))))
                     })
                     .flatten(),
             )?,
@@ -174,16 +177,15 @@ impl StorageManager {
                     id: v.id.clone(),
                     secret_data: invert(
                         v.secret_data
-                            .map(|secret| {
-                                self.key_handle.as_ref().and_then(|key| match secret {
-                                    StorageField::Encryped { data, iv } => {
-                                        match key.decrypt_data(&data, &iv) {
-                                            Ok(v) => Some(Ok(v)),
-                                            Err(e) => Some(Err(e)),
-                                        }
-                                    }
-                                    StorageField::Raw(data) => Some(Ok(data)),
-                                })
+                            .map(|secret| match secret {
+                                StorageField::Encryped { data, iv } => self
+                                    .key_handle
+                                    .as_ref()
+                                    .and_then(|key| match key.decrypt_data(&data, &iv) {
+                                        Ok(v) => Some(Ok(v)),
+                                        Err(e) => Some(Err(e)),
+                                    }),
+                                StorageField::Raw(data) => Some(Ok(data)),
                             })
                             .flatten(),
                     )?,

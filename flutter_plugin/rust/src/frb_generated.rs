@@ -2141,6 +2141,14 @@ const _: fn() = || {
             crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec,
         > = ProviderConfig.supported_asym_spec;
     }
+    match None::<crypto_layer::common::config::Spec>.unwrap() {
+        crypto_layer::common::config::Spec::KeySpec(field0) => {
+            let _: crypto_layer::common::config::KeySpec = field0;
+        }
+        crypto_layer::common::config::Spec::KeyPairSpec(field0) => {
+            let _: crypto_layer::common::config::KeyPairSpec = field0;
+        }
+    }
     {
         let T = None::<crypto_layer::common::T>.unwrap();
     }
@@ -2322,9 +2330,6 @@ flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
 flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
     flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ProviderImplConfig>
 );
-flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
-    flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Spec>
-);
 
 // Section: dart2rust
 
@@ -2449,16 +2454,6 @@ impl SseDecode for ProviderImplConfig {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <RustOpaqueMoi<
             flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ProviderImplConfig>,
-        >>::sse_decode(deserializer);
-        return flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(inner);
-    }
-}
-
-impl SseDecode for Spec {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <RustOpaqueMoi<
-            flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Spec>,
         >>::sse_decode(deserializer);
         return flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(inner);
     }
@@ -2591,14 +2586,6 @@ impl SseDecode
 impl SseDecode
     for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ProviderImplConfig>>
 {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <usize>::sse_decode(deserializer);
-        return decode_rust_opaque_moi(inner);
-    }
-}
-
-impl SseDecode for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Spec>> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <usize>::sse_decode(deserializer);
@@ -2935,13 +2922,15 @@ impl SseDecode for Vec<u8> {
     }
 }
 
-impl SseDecode for Vec<(String, Spec)> {
+impl SseDecode for Vec<(String, crypto_layer::common::config::Spec)> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut len_ = <i32>::sse_decode(deserializer);
         let mut ans_ = vec![];
         for idx_ in 0..len_ {
-            ans_.push(<(String, Spec)>::sse_decode(deserializer));
+            ans_.push(<(String, crypto_layer::common::config::Spec)>::sse_decode(
+                deserializer,
+            ));
         }
         return ans_;
     }
@@ -3092,11 +3081,11 @@ impl SseDecode for (Vec<u8>, Vec<u8>) {
     }
 }
 
-impl SseDecode for (String, Spec) {
+impl SseDecode for (String, crypto_layer::common::config::Spec) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_field0 = <String>::sse_decode(deserializer);
-        let mut var_field1 = <Spec>::sse_decode(deserializer);
+        let mut var_field1 = <crypto_layer::common::config::Spec>::sse_decode(deserializer);
         return (var_field0, var_field1);
     }
 }
@@ -3112,6 +3101,28 @@ impl SseDecode for crypto_layer::common::config::SecurityLevel {
             3 => crypto_layer::common::config::SecurityLevel::Unsafe,
             _ => unreachable!("Invalid variant for SecurityLevel: {}", inner),
         };
+    }
+}
+
+impl SseDecode for crypto_layer::common::config::Spec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut tag_ = <i32>::sse_decode(deserializer);
+        match tag_ {
+            0 => {
+                let mut var_field0 =
+                    <crypto_layer::common::config::KeySpec>::sse_decode(deserializer);
+                return crypto_layer::common::config::Spec::KeySpec(var_field0);
+            }
+            1 => {
+                let mut var_field0 =
+                    <crypto_layer::common::config::KeyPairSpec>::sse_decode(deserializer);
+                return crypto_layer::common::config::Spec::KeyPairSpec(var_field0);
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
     }
 }
 
@@ -3418,21 +3429,6 @@ impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
 
 impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<ProviderImplConfig>> for ProviderImplConfig {
     fn into_into_dart(self) -> FrbWrapper<ProviderImplConfig> {
-        self.into()
-    }
-}
-
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<Spec> {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self.0)
-            .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<Spec> {}
-
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<Spec>> for Spec {
-    fn into_into_dart(self) -> FrbWrapper<Spec> {
         self.into()
     }
 }
@@ -3867,6 +3863,33 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crypto_layer::common::config::
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crypto_layer::common::config::Spec> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self.0 {
+            crypto_layer::common::config::Spec::KeySpec(field0) => {
+                [0.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
+            crypto_layer::common::config::Spec::KeyPairSpec(field0) => {
+                [1.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<crypto_layer::common::config::Spec>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crypto_layer::common::config::Spec>>
+    for crypto_layer::common::config::Spec
+{
+    fn into_into_dart(self) -> FrbWrapper<crypto_layer::common::config::Spec> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for FrbWrapper<crypto_layer::common::T> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         Vec::<u8>::new().into_dart()
@@ -3993,16 +4016,6 @@ impl SseEncode for ProviderImplConfig {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ProviderImplConfig>>>::sse_encode(flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self), serializer);
-    }
-}
-
-impl SseEncode for Spec {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Spec>>>::sse_encode(
-            flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self),
-            serializer,
-        );
     }
 }
 
@@ -4142,15 +4155,6 @@ impl SseEncode
 impl SseEncode
     for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ProviderImplConfig>>
 {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        let (ptr, size) = self.sse_encode_raw();
-        <usize>::sse_encode(ptr, serializer);
-        <i32>::sse_encode(size, serializer);
-    }
-}
-
-impl SseEncode for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Spec>> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         let (ptr, size) = self.sse_encode_raw();
@@ -4471,12 +4475,12 @@ impl SseEncode for Vec<u8> {
     }
 }
 
-impl SseEncode for Vec<(String, Spec)> {
+impl SseEncode for Vec<(String, crypto_layer::common::config::Spec)> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
-            <(String, Spec)>::sse_encode(item, serializer);
+            <(String, crypto_layer::common::config::Spec)>::sse_encode(item, serializer);
         }
     }
 }
@@ -4605,11 +4609,11 @@ impl SseEncode for (Vec<u8>, Vec<u8>) {
     }
 }
 
-impl SseEncode for (String, Spec) {
+impl SseEncode for (String, crypto_layer::common::config::Spec) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.0, serializer);
-        <Spec>::sse_encode(self.1, serializer);
+        <crypto_layer::common::config::Spec>::sse_encode(self.1, serializer);
     }
 }
 
@@ -4628,6 +4632,25 @@ impl SseEncode for crypto_layer::common::config::SecurityLevel {
             },
             serializer,
         );
+    }
+}
+
+impl SseEncode for crypto_layer::common::config::Spec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        match self {
+            crypto_layer::common::config::Spec::KeySpec(field0) => {
+                <i32>::sse_encode(0, serializer);
+                <crypto_layer::common::config::KeySpec>::sse_encode(field0, serializer);
+            }
+            crypto_layer::common::config::Spec::KeyPairSpec(field0) => {
+                <i32>::sse_encode(1, serializer);
+                <crypto_layer::common::config::KeyPairSpec>::sse_encode(field0, serializer);
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
     }
 }
 
@@ -4865,20 +4888,6 @@ mod io {
     ) {
         MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ProviderImplConfig>>::decrement_strong_count(ptr as _);
     }
-
-    #[no_mangle]
-    pub extern "C" fn frbgen_cal_flutter_plugin_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSpec(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Spec>>::increment_strong_count(ptr as _);
-    }
-
-    #[no_mangle]
-    pub extern "C" fn frbgen_cal_flutter_plugin_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSpec(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Spec>>::decrement_strong_count(ptr as _);
-    }
 }
 #[cfg(not(target_family = "wasm"))]
 pub use io::*;
@@ -5092,20 +5101,6 @@ mod web {
         ptr: *const std::ffi::c_void,
     ) {
         MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ProviderImplConfig>>::decrement_strong_count(ptr as _);
-    }
-
-    #[wasm_bindgen]
-    pub fn rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSpec(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Spec>>::increment_strong_count(ptr as _);
-    }
-
-    #[wasm_bindgen]
-    pub fn rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSpec(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Spec>>::decrement_strong_count(ptr as _);
     }
 }
 #[cfg(target_family = "wasm")]
