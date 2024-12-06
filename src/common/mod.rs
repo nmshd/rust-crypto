@@ -134,7 +134,7 @@ impl Provider {
     }
 
     delegate_enum! {
-        pub fn get_all_keys(&self) -> Result<Vec<Spec>, CalError>;
+        pub fn get_all_keys(&self) -> Result<Vec<(String, Spec)>, CalError>;
     }
 
     delegate_enum_bare! {

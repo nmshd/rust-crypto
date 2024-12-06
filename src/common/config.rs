@@ -61,6 +61,7 @@ pub enum SecurityLevel {
     Unsafe = 1,
 }
 
+/// flutter_rust_bridge:non_opaque
 #[derive(Serialize, Deserialize, Clone, Copy, Debug)]
 pub enum Spec {
     KeySpec(KeySpec),
