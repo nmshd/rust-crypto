@@ -67,5 +67,13 @@ fn main(mut cx: ModuleContext) -> NeonResult<()> {
     cx.export_function("providerName", crate::provider::export_provider_name)?;
     cx.export_function("createKey", crate::provider::export_create_key)?;
     cx.export_function("createKeyPair", crate::provider::export_create_key_pair)?;
+    cx.export_function(
+        "signDataWithKeyPairHandle",
+        crate::keypairhandle::export_sign_data,
+    )?;
+    cx.export_function(
+        "verifyDataWithKeyPairHandle",
+        crate::keypairhandle::export_verify_data,
+    )?;
     Ok(())
 }

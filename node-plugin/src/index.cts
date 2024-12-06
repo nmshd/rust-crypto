@@ -16,5 +16,7 @@ declare module "./load.cjs" {
   export function providerName(provider: Provider): string;
   export function createKey(provider: Provider, spec: KeySpec): KeyHandle;
   export function createKeyPair(provider: Provider, spec: KeyPairSpec): KeyPairHandle;
+  export function signDataWithKeyPairHandle(handle: KeyPairHandle, data: Uint8Array): Uint8Array;
+  export function verifyDataWithKeyPairHandle(handle: KeyPairHandle, data: Uint8Array, signature: Uint8Array): boolean;
 }
 
