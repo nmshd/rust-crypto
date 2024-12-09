@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:cal_flutter_plugin/cal_flutter_plugin.dart' as cal;
-import 'package:cal_flutter_plugin/src/rust/third_party/crypto_layer/common/config.dart';
 import 'package:flutter/material.dart';
 
 class SigningPage extends StatefulWidget {
@@ -54,7 +53,9 @@ class _SigningPageState extends State<SigningPage> {
   void generateKey() async {
     if (_algoChoice != null) {
       var spec = cal.KeyPairSpec(
-          asymSpec: _algoChoice!, signingHash: cal.CryptoHash.sha2256);
+          asymSpec: _algoChoice!,
+          signingHash: cal.CryptoHash.sha2256,
+          ephemeral: false);
 
       cal.KeyPairHandle keyPair;
       try {

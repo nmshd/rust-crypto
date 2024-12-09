@@ -67,6 +67,10 @@ pub enum CalErrorKind {
     #[error("Unsupported Algorithm: {0}")]
     UnsupportedAlgorithm(String),
 
+    /// Tried to create a non-ephermal key with an ephermal provider.
+    #[error("Ephermal Key Error")]
+    EphermalKeyError,
+
     /// Errors that do not fall into the above classes.
     #[error("Other Error")]
     Other,
@@ -155,6 +159,13 @@ impl CalError {
         Self {
             error_kind: CalErrorKind::UnsupportedAlgorithm(algorithm),
             source: anyhow!("Unsupported Algorithm Error"),
+        }
+    }
+
+    pub(crate) fn ephemeral_key_required() -> Self {
+        Self {
+            error_kind: CalErrorKind::EphermalKeyError,
+            source: anyhow!("Ephermal Key Error"),
         }
     }
 

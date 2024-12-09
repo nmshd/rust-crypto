@@ -57,7 +57,14 @@ impl ProviderFactory for SoftwareProviderFactory {
     }
 
     fn create_provider(&self, impl_config: ProviderImplConfig) -> ProviderImplEnum {
-        let storage_manager = StorageManager::new(self.get_name(), &impl_config.additional_config);
+        let storage_manager = if impl_config.ephemeral_keys {
+            None
+        } else {
+            Some(StorageManager::new(
+                self.get_name(),
+                &impl_config.additional_config,
+            ))
+        };
         Into::into(SoftwareProvider {
             impl_config,
             storage_manager,
@@ -67,7 +74,7 @@ impl ProviderFactory for SoftwareProviderFactory {
 
 pub(crate) struct SoftwareProvider {
     impl_config: ProviderImplConfig,
-    storage_manager: StorageManager,
+    storage_manager: Option<StorageManager>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

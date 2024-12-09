@@ -21,14 +21,14 @@ pub(crate) struct SoftwareKeyPairHandle {
     pub(crate) spec: KeyPairSpec,
     pub(crate) signing_key: Option<Vec<u8>>,
     pub(crate) public_key: Vec<u8>,
-    pub(crate) storage_manager: StorageManager,
+    pub(crate) storage_manager: Option<StorageManager>,
 }
 
 #[derive(Debug, Clone)]
 pub(crate) struct SoftwareKeyHandle {
     pub(crate) key_id: String,
     pub(crate) key: Arc<LessSafeKey>,
-    pub(crate) storage_manager: StorageManager,
+    pub(crate) storage_manager: Option<StorageManager>,
 }
 
 impl SoftwareKeyHandle {
@@ -36,7 +36,7 @@ impl SoftwareKeyHandle {
         key_id: String,
         spec: Option<KeySpec>,
         key_data: Vec<u8>,
-        storage_manager: StorageManager,
+        storage_manager: Option<StorageManager>,
     ) -> Result<Self, CalError> {
         // Create the AES key for encryption and decryption
         let algo: &Algorithm = spec.as_ref().unwrap().cipher.into();
@@ -119,7 +119,7 @@ impl KeyHandleImpl for SoftwareKeyHandle {
 
     #[doc = " Delete this key."]
     fn delete(self) -> Result<(), CalError> {
-        self.storage_manager.delete(self.key_id);
+        self.storage_manager.map(|s| s.delete(self.key_id));
         Ok(())
     }
 }
@@ -227,7 +227,7 @@ impl KeyPairHandleImpl for SoftwareKeyPairHandle {
 
     #[doc = " Delete this key pair."]
     fn delete(self) -> Result<(), CalError> {
-        self.storage_manager.delete(self.key_id);
+        self.storage_manager.map(|s| s.delete(self.key_id));
         Ok(())
     }
 }
