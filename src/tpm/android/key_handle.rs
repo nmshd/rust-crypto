@@ -24,14 +24,14 @@ use tracing::{debug, info};
 pub(crate) struct AndroidKeyHandle {
     pub(crate) key_id: String,
     pub(crate) spec: KeySpec,
-    pub(crate) storage_manager: StorageManager,
+    pub(crate) storage_manager: Option<StorageManager>,
 }
 
 #[derive(Clone, Debug)]
 pub(crate) struct AndroidKeyPairHandle {
     pub(crate) key_id: String,
     pub(crate) spec: KeyPairSpec,
-    pub(crate) storage_manager: StorageManager,
+    pub(crate) storage_manager: Option<StorageManager>,
 }
 
 impl KeyHandleImpl for AndroidKeyHandle {
@@ -106,7 +106,9 @@ impl KeyHandleImpl for AndroidKeyHandle {
             .deleteEntry(&env, self.key_id.clone())
             .err_internal()?;
 
-        self.storage_manager.delete(self.key_id);
+        if let Some(storage_manager) = &self.storage_manager {
+            storage_manager.delete(self.key_id.clone());
+        }
 
         Ok(())
     }
@@ -272,12 +274,65 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
             .deleteEntry(&env, self.key_id.clone())
             .err_internal()?;
 
-        self.storage_manager.delete(self.key_id);
+        if let Some(storage_manager) = &self.storage_manager {
+            storage_manager.delete(self.key_id.clone());
+        }
 
         Ok(())
     }
 
     fn id(&self) -> Result<String, CalError> {
         Ok(self.key_id.clone())
+    }
+}
+
+impl AndroidKeyHandle {
+    fn delete_internal(&mut self) -> Result<(), CalError> {
+        let vm = ndk_context::android_context().vm();
+        let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
+        let env = vm.attach_current_thread().err_internal()?;
+
+        let keystore = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_owned()).err_internal()?;
+        keystore.load(&env, None).err_internal()?;
+        keystore
+            .deleteEntry(&env, self.key_id.clone())
+            .err_internal()?;
+        Ok(())
+    }
+}
+
+impl AndroidKeyPairHandle {
+    fn delete_internal(&mut self) -> Result<(), CalError> {
+        let vm = ndk_context::android_context().vm();
+        let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
+        let env = vm.attach_current_thread().err_internal()?;
+
+        let keystore = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_owned()).err_internal()?;
+        keystore.load(&env, None).err_internal()?;
+        keystore
+            .deleteEntry(&env, self.key_id.clone())
+            .err_internal()?;
+        Ok(())
+    }
+}
+
+/// remove ephemeral key from keystore when the handle is dropped
+impl Drop for AndroidKeyHandle {
+    fn drop(&mut self) {
+        if self.storage_manager.is_none() {
+            if let Err(e) = self.delete_internal() {
+                tracing::warn!("Failed to delete ephemeral key on device: {:?}", e);
+            }
+        }
+    }
+}
+
+impl Drop for AndroidKeyPairHandle {
+    fn drop(&mut self) {
+        if self.storage_manager.is_none() {
+            if let Err(e) = self.delete_internal() {
+                tracing::warn!("Failed to delete ephemeral key on device: {:?}", e);
+            }
+        }
     }
 }

@@ -76,7 +76,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.6.0';
 
   @override
-  int get rustContentHash => -1716808817;
+  int get rustContentHash => 957023475;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -213,13 +213,8 @@ abstract class RustLibApi extends BaseApi {
       required ArcFnStringVecU8DynFutureBool storeFn,
       required ArcFnStringPinBoxFutureOutput deleteFn,
       required ArcFnDynFutureVecString allKeysFn,
-      required List<AdditionalConfig> additionalConfig});
-
-  Future<ProviderImplConfig> cryptoLayerCommonConfigProviderImplConfigNewStub(
-      {required ArcFnStringDynFutureOptionVecU8 getFn,
-      required ArcFnStringVecU8DynFutureBool storeFn,
-      required ArcFnStringPinBoxFutureOutput deleteFn,
-      required ArcFnDynFutureVecString allKeysFn});
+      required List<AdditionalConfig> additionalConfig,
+      required bool ephemeralKeys});
 
   RustArcIncrementStrongCountFnType
       get rust_arc_increment_strong_count_ArcFnDynFutureVecString;
@@ -1429,7 +1424,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       required ArcFnStringVecU8DynFutureBool storeFn,
       required ArcFnStringPinBoxFutureOutput deleteFn,
       required ArcFnDynFutureVecString allKeysFn,
-      required List<AdditionalConfig> additionalConfig}) {
+      required List<AdditionalConfig> additionalConfig,
+      required bool ephemeralKeys}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
@@ -1442,6 +1438,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynFnDynFutureVecStringSendSync(
             allKeysFn, serializer);
         sse_encode_list_additional_config(additionalConfig, serializer);
+        sse_encode_bool(ephemeralKeys, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
             funcId: 41, port: port_);
       },
@@ -1450,7 +1447,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeErrorData: null,
       ),
       constMeta: kCryptoLayerCommonConfigProviderImplConfigNewConstMeta,
-      argValues: [getFn, storeFn, deleteFn, allKeysFn, additionalConfig],
+      argValues: [
+        getFn,
+        storeFn,
+        deleteFn,
+        allKeysFn,
+        additionalConfig,
+        ephemeralKeys
+      ],
       apiImpl: this,
     ));
   }
@@ -1463,46 +1467,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           "storeFn",
           "deleteFn",
           "allKeysFn",
-          "additionalConfig"
+          "additionalConfig",
+          "ephemeralKeys"
         ],
       );
-
-  @override
-  Future<ProviderImplConfig> cryptoLayerCommonConfigProviderImplConfigNewStub(
-      {required ArcFnStringDynFutureOptionVecU8 getFn,
-      required ArcFnStringVecU8DynFutureBool storeFn,
-      required ArcFnStringPinBoxFutureOutput deleteFn,
-      required ArcFnDynFutureVecString allKeysFn}) {
-    return handler.executeNormal(NormalTask(
-      callFfi: (port_) {
-        final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynFnStringDynFutureOptionVecu8SendSync(
-            getFn, serializer);
-        sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynFnStringVecu8DynFutureboolSendSync(
-            storeFn, serializer);
-        sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynFnStringPinBoxdynFutureOutputSendSendSync(
-            deleteFn, serializer);
-        sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynFnDynFutureVecStringSendSync(
-            allKeysFn, serializer);
-        pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 42, port: port_);
-      },
-      codec: SseCodec(
-        decodeSuccessData: sse_decode_provider_impl_config,
-        decodeErrorData: null,
-      ),
-      constMeta: kCryptoLayerCommonConfigProviderImplConfigNewStubConstMeta,
-      argValues: [getFn, storeFn, deleteFn, allKeysFn],
-      apiImpl: this,
-    ));
-  }
-
-  TaskConstMeta
-      get kCryptoLayerCommonConfigProviderImplConfigNewStubConstMeta =>
-          const TaskConstMeta(
-            debugName: "provider_impl_config_new_stub",
-            argNames: ["getFn", "storeFn", "deleteFn", "allKeysFn"],
-          );
 
   Future<void> Function(int, dynamic)
       encode_DartFn_Inputs_String_Output_opt_list_prim_u_8_strict_AnyhowException(
@@ -2122,6 +2090,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           dco_decode_String(raw[1]),
         );
       case 7:
+        return CalErrorKind_EphermalKeyError();
+      case 8:
         return CalErrorKind_Other();
       default:
         throw Exception("unreachable");
@@ -2156,12 +2126,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   KeyPairSpec dco_decode_key_pair_spec(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 3)
-      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    if (arr.length != 4)
+      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
     return KeyPairSpec(
       asymSpec: dco_decode_asymmetric_key_spec(arr[0]),
       cipher: dco_decode_opt_box_autoadd_cipher(arr[1]),
       signingHash: dco_decode_crypto_hash(arr[2]),
+      ephemeral: dco_decode_bool(arr[3]),
     );
   }
 
@@ -2169,11 +2140,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   KeySpec dco_decode_key_spec(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    if (arr.length != 3)
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return KeySpec(
       cipher: dco_decode_cipher(arr[0]),
       signingHash: dco_decode_crypto_hash(arr[1]),
+      ephemeral: dco_decode_bool(arr[2]),
     );
   }
 
@@ -2285,10 +2257,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ProviderImplConfig dco_decode_provider_impl_config(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 1)
-      throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return ProviderImplConfig(
       additionalConfig: dco_decode_list_additional_config(arr[0]),
+      ephemeralKeys: dco_decode_bool(arr[1]),
     );
   }
 
@@ -2777,6 +2750,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         var var_field0 = sse_decode_String(deserializer);
         return CalErrorKind_UnsupportedAlgorithm(var_field0);
       case 7:
+        return CalErrorKind_EphermalKeyError();
+      case 8:
         return CalErrorKind_Other();
       default:
         throw UnimplementedError('');
@@ -2815,10 +2790,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_asymSpec = sse_decode_asymmetric_key_spec(deserializer);
     var var_cipher = sse_decode_opt_box_autoadd_cipher(deserializer);
     var var_signingHash = sse_decode_crypto_hash(deserializer);
+    var var_ephemeral = sse_decode_bool(deserializer);
     return KeyPairSpec(
         asymSpec: var_asymSpec,
         cipher: var_cipher,
-        signingHash: var_signingHash);
+        signingHash: var_signingHash,
+        ephemeral: var_ephemeral);
   }
 
   @protected
@@ -2826,7 +2803,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_cipher = sse_decode_cipher(deserializer);
     var var_signingHash = sse_decode_crypto_hash(deserializer);
-    return KeySpec(cipher: var_cipher, signingHash: var_signingHash);
+    var var_ephemeral = sse_decode_bool(deserializer);
+    return KeySpec(
+        cipher: var_cipher,
+        signingHash: var_signingHash,
+        ephemeral: var_ephemeral);
   }
 
   @protected
@@ -3002,7 +2983,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_additionalConfig = sse_decode_list_additional_config(deserializer);
-    return ProviderImplConfig(additionalConfig: var_additionalConfig);
+    var var_ephemeralKeys = sse_decode_bool(deserializer);
+    return ProviderImplConfig(
+        additionalConfig: var_additionalConfig,
+        ephemeralKeys: var_ephemeralKeys);
   }
 
   @protected
@@ -3537,8 +3521,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case CalErrorKind_UnsupportedAlgorithm(field0: final field0):
         sse_encode_i_32(6, serializer);
         sse_encode_String(field0, serializer);
-      case CalErrorKind_Other():
+      case CalErrorKind_EphermalKeyError():
         sse_encode_i_32(7, serializer);
+      case CalErrorKind_Other():
+        sse_encode_i_32(8, serializer);
       default:
         throw UnimplementedError('');
     }
@@ -3574,6 +3560,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_asymmetric_key_spec(self.asymSpec, serializer);
     sse_encode_opt_box_autoadd_cipher(self.cipher, serializer);
     sse_encode_crypto_hash(self.signingHash, serializer);
+    sse_encode_bool(self.ephemeral, serializer);
   }
 
   @protected
@@ -3581,6 +3568,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_cipher(self.cipher, serializer);
     sse_encode_crypto_hash(self.signingHash, serializer);
+    sse_encode_bool(self.ephemeral, serializer);
   }
 
   @protected
@@ -3732,6 +3720,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       ProviderImplConfig self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_list_additional_config(self.additionalConfig, serializer);
+    sse_encode_bool(self.ephemeralKeys, serializer);
   }
 
   @protected

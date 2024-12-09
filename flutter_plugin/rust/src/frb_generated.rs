@@ -44,7 +44,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.6.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -1716808817;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 957023475;
 
 // Section: executor
 
@@ -1905,6 +1905,7 @@ fn wire__crypto_layer__common__config__provider_impl_config_new_impl(
                 <Vec<crypto_layer::common::config::AdditionalConfig>>::sse_decode(
                     &mut deserializer,
                 );
+            let api_ephemeral_keys = <bool>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
                 transform_result_sse::<_, ()>((move || {
@@ -1915,60 +1916,7 @@ fn wire__crypto_layer__common__config__provider_impl_config_new_impl(
                             api_delete_fn,
                             api_all_keys_fn,
                             api_additional_config,
-                        ),
-                    )?;
-                    Ok(output_ok)
-                })())
-            }
-        },
-    )
-}
-fn wire__crypto_layer__common__config__provider_impl_config_new_stub_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "provider_impl_config_new_stub",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_get_fn =
-                <Arc<dyn Fn(String) -> DynFuture<Option<Vec<u8>>> + Send + Sync>>::sse_decode(
-                    &mut deserializer,
-                );
-            let api_store_fn =
-                <Arc<dyn Fn(String, Vec<u8>) -> DynFuture<bool> + Send + Sync>>::sse_decode(
-                    &mut deserializer,
-                );
-            let api_delete_fn = <Arc<
-                dyn Fn(String) -> Pin<Box<dyn Future<Output = ()> + Send>> + Send + Sync,
-            >>::sse_decode(&mut deserializer);
-            let api_all_keys_fn =
-                <Arc<dyn Fn() -> DynFuture<Vec<String>> + Send + Sync>>::sse_decode(
-                    &mut deserializer,
-                );
-            deserializer.end();
-            move |context| {
-                transform_result_sse::<_, ()>((move || {
-                    let output_ok = Result::<_, ()>::Ok(
-                        crypto_layer::common::config::ProviderImplConfig::new_stub(
-                            api_get_fn,
-                            api_store_fn,
-                            api_delete_fn,
-                            api_all_keys_fn,
+                            api_ephemeral_keys,
                         ),
                     )?;
                     Ok(output_ok)
@@ -2051,6 +1999,7 @@ const _: fn() = || {
         crypto_layer::common::error::CalErrorKind::UnsupportedAlgorithm(field0) => {
             let _: String = field0;
         }
+        crypto_layer::common::error::CalErrorKind::EphermalKeyError => {}
         crypto_layer::common::error::CalErrorKind::Other => {}
     }
     {
@@ -2061,11 +2010,13 @@ const _: fn() = || {
             KeyPairSpec.cipher;
         let _: crypto_layer::common::crypto::algorithms::hashes::CryptoHash =
             KeyPairSpec.signing_hash;
+        let _: bool = KeyPairSpec.ephemeral;
     }
     {
         let KeySpec = None::<crypto_layer::common::config::KeySpec>.unwrap();
         let _: crypto_layer::common::crypto::algorithms::encryption::Cipher = KeySpec.cipher;
         let _: crypto_layer::common::crypto::algorithms::hashes::CryptoHash = KeySpec.signing_hash;
+        let _: bool = KeySpec.ephemeral;
     }
     {
         let ProviderConfig = None::<crypto_layer::common::config::ProviderConfig>.unwrap();
@@ -2085,6 +2036,7 @@ const _: fn() = || {
         let ProviderImplConfig = None::<crypto_layer::common::config::ProviderImplConfig>.unwrap();
         let _: Vec<crypto_layer::common::config::AdditionalConfig> =
             ProviderImplConfig.additional_config;
+        let _: bool = ProviderImplConfig.ephemeral_keys;
     }
     match None::<crypto_layer::common::config::Spec>.unwrap() {
         crypto_layer::common::config::Spec::KeySpec(field0) => {
@@ -2690,6 +2642,9 @@ impl SseDecode for crypto_layer::common::error::CalErrorKind {
                 return crypto_layer::common::error::CalErrorKind::UnsupportedAlgorithm(var_field0);
             }
             7 => {
+                return crypto_layer::common::error::CalErrorKind::EphermalKeyError;
+            }
+            8 => {
                 return crypto_layer::common::error::CalErrorKind::Other;
             }
             _ => {
@@ -2764,10 +2719,12 @@ impl SseDecode for crypto_layer::common::config::KeyPairSpec {
             <crypto_layer::common::crypto::algorithms::hashes::CryptoHash>::sse_decode(
                 deserializer,
             );
+        let mut var_ephemeral = <bool>::sse_decode(deserializer);
         return crypto_layer::common::config::KeyPairSpec {
             asym_spec: var_asymSpec,
             cipher: var_cipher,
             signing_hash: var_signingHash,
+            ephemeral: var_ephemeral,
         };
     }
 }
@@ -2783,9 +2740,11 @@ impl SseDecode for crypto_layer::common::config::KeySpec {
             <crypto_layer::common::crypto::algorithms::hashes::CryptoHash>::sse_decode(
                 deserializer,
             );
+        let mut var_ephemeral = <bool>::sse_decode(deserializer);
         return crypto_layer::common::config::KeySpec {
             cipher: var_cipher,
             signing_hash: var_signingHash,
+            ephemeral: var_ephemeral,
         };
     }
 }
@@ -3039,8 +2998,10 @@ impl SseDecode for crypto_layer::common::config::ProviderImplConfig {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_additionalConfig =
             <Vec<crypto_layer::common::config::AdditionalConfig>>::sse_decode(deserializer);
+        let mut var_ephemeralKeys = <bool>::sse_decode(deserializer);
         return crypto_layer::common::config::ProviderImplConfig {
             additional_config: var_additionalConfig,
+            ephemeral_keys: var_ephemeralKeys,
         };
     }
 }
@@ -3174,7 +3135,6 @@ fn pde_ffi_dispatcher_primary_impl(
 39 => wire__crypto_layer__common__config__key_spec_default_impl(port, ptr, rust_vec_len, data_len),
 40 => wire__crypto_layer__common__crypto__pkcs__standards__oid_type_as_str_impl(port, ptr, rust_vec_len, data_len),
 41 => wire__crypto_layer__common__config__provider_impl_config_new_impl(port, ptr, rust_vec_len, data_len),
-42 => wire__crypto_layer__common__config__provider_impl_config_new_stub_impl(port, ptr, rust_vec_len, data_len),
                         _ => unreachable!(),
                     }
 }
@@ -3518,7 +3478,10 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crypto_layer::common::error::C
             crypto_layer::common::error::CalErrorKind::UnsupportedAlgorithm(field0) => {
                 [6.into_dart(), field0.into_into_dart().into_dart()].into_dart()
             }
-            crypto_layer::common::error::CalErrorKind::Other => [7.into_dart()].into_dart(),
+            crypto_layer::common::error::CalErrorKind::EphermalKeyError => {
+                [7.into_dart()].into_dart()
+            }
+            crypto_layer::common::error::CalErrorKind::Other => [8.into_dart()].into_dart(),
             _ => {
                 unimplemented!("");
             }
@@ -3625,6 +3588,7 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crypto_layer::common::config::
             self.0.asym_spec.into_into_dart().into_dart(),
             self.0.cipher.into_into_dart().into_dart(),
             self.0.signing_hash.into_into_dart().into_dart(),
+            self.0.ephemeral.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -3646,6 +3610,7 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crypto_layer::common::config::
         [
             self.0.cipher.into_into_dart().into_dart(),
             self.0.signing_hash.into_into_dart().into_dart(),
+            self.0.ephemeral.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -3836,7 +3801,11 @@ impl flutter_rust_bridge::IntoDart
     for FrbWrapper<crypto_layer::common::config::ProviderImplConfig>
 {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [self.0.additional_config.into_into_dart().into_dart()].into_dart()
+        [
+            self.0.additional_config.into_into_dart().into_dart(),
+            self.0.ephemeral_keys.into_into_dart().into_dart(),
+        ]
+        .into_dart()
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
@@ -4313,8 +4282,11 @@ impl SseEncode for crypto_layer::common::error::CalErrorKind {
                 <i32>::sse_encode(6, serializer);
                 <String>::sse_encode(field0, serializer);
             }
-            crypto_layer::common::error::CalErrorKind::Other => {
+            crypto_layer::common::error::CalErrorKind::EphermalKeyError => {
                 <i32>::sse_encode(7, serializer);
+            }
+            crypto_layer::common::error::CalErrorKind::Other => {
+                <i32>::sse_encode(8, serializer);
             }
             _ => {
                 unimplemented!("");
@@ -4401,6 +4373,7 @@ impl SseEncode for crypto_layer::common::config::KeyPairSpec {
             self.signing_hash,
             serializer,
         );
+        <bool>::sse_encode(self.ephemeral, serializer);
     }
 }
 
@@ -4415,6 +4388,7 @@ impl SseEncode for crypto_layer::common::config::KeySpec {
             self.signing_hash,
             serializer,
         );
+        <bool>::sse_encode(self.ephemeral, serializer);
     }
 }
 
@@ -4635,6 +4609,7 @@ impl SseEncode for crypto_layer::common::config::ProviderImplConfig {
             self.additional_config,
             serializer,
         );
+        <bool>::sse_encode(self.ephemeral_keys, serializer);
     }
 }
 

@@ -73,6 +73,7 @@ pub enum Spec {
 pub struct KeySpec {
     pub cipher: Cipher,
     pub signing_hash: CryptoHash,
+    pub ephemeral: bool,
 }
 
 /// flutter_rust_bridge:non_opaque
@@ -81,6 +82,7 @@ pub struct KeyPairSpec {
     pub asym_spec: AsymmetricKeySpec,
     pub cipher: Option<Cipher>,
     pub signing_hash: CryptoHash,
+    pub ephemeral: bool,
 }
 
 /// flutter_rust_bridge:non_opaque
@@ -97,6 +99,7 @@ pub struct ProviderConfig {
 #[derive(Clone)]
 pub struct ProviderImplConfig {
     pub additional_config: Vec<AdditionalConfig>,
+    pub ephemeral_keys: bool, // when this is set, provider will reject all keys not marked as ephemeral
 }
 
 /// flutter_rust_bridge:non_opaque
@@ -132,6 +135,7 @@ impl ProviderImplConfig {
         delete_fn: DeleteFn,
         all_keys_fn: AllKeysFn,
         mut additional_config: Vec<AdditionalConfig>,
+        ephemeral_keys: bool,
     ) -> Self {
         let kv_config = AdditionalConfig::KVStoreConfig {
             get_fn,
@@ -140,17 +144,10 @@ impl ProviderImplConfig {
             all_keys_fn,
         };
         additional_config.push(kv_config);
-        Self { additional_config }
-    }
-
-    /// Creates a new stubbed `ProviderImplConfig` instance for testing or default purposes.
-    pub fn new_stub(
-        get_fn: GetFn,
-        store_fn: StoreFn,
-        delete_fn: DeleteFn,
-        all_keys_fn: AllKeysFn,
-    ) -> Self {
-        Self::new(get_fn, store_fn, delete_fn, all_keys_fn, vec![])
+        Self {
+            additional_config,
+            ephemeral_keys,
+        }
     }
 }
 

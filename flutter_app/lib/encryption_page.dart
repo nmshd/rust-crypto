@@ -48,7 +48,9 @@ class _EncryptionPageState extends State<EncryptionPage> {
   void generateKey() async {
     if (_cipherChoice != null) {
       var spec = cal.KeySpec(
-          cipher: _cipherChoice!, signingHash: cal.CryptoHash.sha2256);
+          cipher: _cipherChoice!,
+          signingHash: cal.CryptoHash.sha2256,
+          ephemeral: false);
       var key = await (await widget.provider!).createKey(spec: spec);
       setState(() {
         _keyHandle = key;

@@ -45,11 +45,13 @@ class KeyPairSpec {
   final AsymmetricKeySpec asymSpec;
   final Cipher? cipher;
   final CryptoHash signingHash;
+  final bool ephemeral;
 
   const KeyPairSpec({
     required this.asymSpec,
     this.cipher,
     required this.signingHash,
+    required this.ephemeral,
   });
 
   static Future<KeyPairSpec> default_() =>
@@ -57,7 +59,10 @@ class KeyPairSpec {
 
   @override
   int get hashCode =>
-      asymSpec.hashCode ^ cipher.hashCode ^ signingHash.hashCode;
+      asymSpec.hashCode ^
+      cipher.hashCode ^
+      signingHash.hashCode ^
+      ephemeral.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -66,24 +71,28 @@ class KeyPairSpec {
           runtimeType == other.runtimeType &&
           asymSpec == other.asymSpec &&
           cipher == other.cipher &&
-          signingHash == other.signingHash;
+          signingHash == other.signingHash &&
+          ephemeral == other.ephemeral;
 }
 
 /// flutter_rust_bridge:non_opaque
 class KeySpec {
   final Cipher cipher;
   final CryptoHash signingHash;
+  final bool ephemeral;
 
   const KeySpec({
     required this.cipher,
     required this.signingHash,
+    required this.ephemeral,
   });
 
   static Future<KeySpec> default_() =>
       RustLib.instance.api.cryptoLayerCommonConfigKeySpecDefault();
 
   @override
-  int get hashCode => cipher.hashCode ^ signingHash.hashCode;
+  int get hashCode =>
+      cipher.hashCode ^ signingHash.hashCode ^ ephemeral.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -91,7 +100,8 @@ class KeySpec {
       other is KeySpec &&
           runtimeType == other.runtimeType &&
           cipher == other.cipher &&
-          signingHash == other.signingHash;
+          signingHash == other.signingHash &&
+          ephemeral == other.ephemeral;
 }
 
 /// flutter_rust_bridge:non_opaque
@@ -133,9 +143,11 @@ class ProviderConfig {
 /// flutter_rust_bridge:non_opaque
 class ProviderImplConfig {
   final List<AdditionalConfig> additionalConfig;
+  final bool ephemeralKeys;
 
   const ProviderImplConfig({
     required this.additionalConfig,
+    required this.ephemeralKeys,
   });
 
   // HINT: Make it `#[frb(sync)]` to let it become the default constructor of Dart class.
@@ -145,35 +157,26 @@ class ProviderImplConfig {
           required ArcFnStringVecU8DynFutureBool storeFn,
           required ArcFnStringPinBoxFutureOutput deleteFn,
           required ArcFnDynFutureVecString allKeysFn,
-          required List<AdditionalConfig> additionalConfig}) =>
+          required List<AdditionalConfig> additionalConfig,
+          required bool ephemeralKeys}) =>
       RustLib.instance.api.cryptoLayerCommonConfigProviderImplConfigNew(
           getFn: getFn,
           storeFn: storeFn,
           deleteFn: deleteFn,
           allKeysFn: allKeysFn,
-          additionalConfig: additionalConfig);
-
-  /// Creates a new stubbed `ProviderImplConfig` instance for testing or default purposes.
-  static Future<ProviderImplConfig> newStub(
-          {required ArcFnStringDynFutureOptionVecU8 getFn,
-          required ArcFnStringVecU8DynFutureBool storeFn,
-          required ArcFnStringPinBoxFutureOutput deleteFn,
-          required ArcFnDynFutureVecString allKeysFn}) =>
-      RustLib.instance.api.cryptoLayerCommonConfigProviderImplConfigNewStub(
-          getFn: getFn,
-          storeFn: storeFn,
-          deleteFn: deleteFn,
-          allKeysFn: allKeysFn);
+          additionalConfig: additionalConfig,
+          ephemeralKeys: ephemeralKeys);
 
   @override
-  int get hashCode => additionalConfig.hashCode;
+  int get hashCode => additionalConfig.hashCode ^ ephemeralKeys.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is ProviderImplConfig &&
           runtimeType == other.runtimeType &&
-          additionalConfig == other.additionalConfig;
+          additionalConfig == other.additionalConfig &&
+          ephemeralKeys == other.ephemeralKeys;
 }
 
 /// Enum describing the security level of a provider.
