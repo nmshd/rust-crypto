@@ -14,7 +14,7 @@ use super::crypto::algorithms::{
     encryption::{AsymmetricKeySpec, Cipher},
     hashes::CryptoHash,
 };
-use super::KeyHandle;
+use super::{KeyHandle, KeyPairHandle};
 
 /// A type alias for a pinned, heap-allocated, dynamically dispatched future that is `Send`.
 ///
@@ -93,12 +93,13 @@ pub struct ProviderConfig {
     pub supported_asym_spec: HashSet<AsymmetricKeySpec>,
 }
 
-/// flutter_rust_bridge:opaque
+/// flutter_rust_bridge:non_opaque
 #[derive(Clone)]
 pub struct ProviderImplConfig {
     pub additional_config: Vec<AdditionalConfig>,
 }
 
+/// flutter_rust_bridge:non_opaque
 #[derive(Clone)]
 pub enum AdditionalConfig {
     KVStoreConfig {
@@ -112,9 +113,9 @@ pub enum AdditionalConfig {
         secure_path: String,
         pass: String,
     },
-    StorageConfig {
-        key_handle: KeyHandle,
-    },
+    StorageConfigHMAC(KeyHandle),
+    StorageConfigDSA(KeyPairHandle),
+    StorageConfigPass(String),
 }
 
 impl std::fmt::Debug for ProviderImplConfig {
