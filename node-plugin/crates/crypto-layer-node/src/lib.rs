@@ -32,6 +32,8 @@ fn export_get_all_providers(mut cx: FunctionContext) -> JsResult<JsArray> {
 }
 
 fn export_create_provider(mut cx: FunctionContext) -> JsResult<JsValue> {
+    let _span = tracing::trace_span!("createProvider").entered();
+
     let config_js = cx.argument::<JsObject>(0)?;
     let impl_config_js = cx.argument::<JsObject>(1)?;
 
@@ -48,6 +50,8 @@ fn export_create_provider(mut cx: FunctionContext) -> JsResult<JsValue> {
 }
 
 fn export_create_provider_from_name(mut cx: FunctionContext) -> JsResult<JsValue> {
+    let _span = tracing::trace_span!("createProviderFromName").entered();
+
     let name_js = cx.argument::<JsString>(0)?;
     let impl_config_js = cx.argument::<JsObject>(1)?;
 
@@ -73,6 +77,8 @@ fn main(mut cx: ModuleContext) -> NeonResult<()> {
         .with_env_filter(EnvFilter::from_default_env())
         .init();
 
+    let load_function_span = tracing::trace_span!("Loading module functions.").entered();
+
     cx.export_function("getAllProviders", export_get_all_providers)?;
     cx.export_function("createProvider", export_create_provider)?;
     cx.export_function("createProviderFromName", export_create_provider_from_name)?;
@@ -87,5 +93,9 @@ fn main(mut cx: ModuleContext) -> NeonResult<()> {
         "verifyDataWithKeyPairHandle",
         crate::keypairhandle::export_verify_data,
     )?;
+
+    load_function_span.exit();
+    tracing::trace!("crypto-layer loaded.");
+
     Ok(())
 }

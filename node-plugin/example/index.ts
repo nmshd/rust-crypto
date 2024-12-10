@@ -10,7 +10,7 @@ console.log("Providers: ", getAllProviders())
 let kvStore: Map<string, Uint8Array> = new Map();
 
 let providerConfig: ProviderConfig = {
-    max_security_level: "Hardware",
+    max_security_level: "Software",
     min_security_level: "Software",
     supported_asym_spec: ["P256"],
     supported_ciphers: [],

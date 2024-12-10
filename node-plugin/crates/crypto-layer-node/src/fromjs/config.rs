@@ -103,13 +103,13 @@ pub fn from_wrapped_additional_config(
                 let get_fn = Arc::new(get_fn_js);
 
                 Arc::new(move |id| {
-                    let _span = trace_span!("GetFn Closure", id);
+                    let _span = trace_span!("GetFn Closure", id).entered();
 
                     let get_fn = get_fn.clone();
                     let cloned_id = id.clone();
 
                     let handle = channel.send(move |mut cx| {
-                        let _inner_span = trace_span!("GetFn Node Executed", id);
+                        let _inner_span = trace_span!("GetFn Node Executed", id).entered();
                         let res = match get_fn
                             .to_inner(&mut cx)
                             .call_with(&cx)
@@ -131,7 +131,7 @@ pub fn from_wrapped_additional_config(
                         Ok(res)
                     });
 
-                    let _join_span = trace_span!("Joining node executed GetFn.");
+                    let _join_span = trace_span!("Joining node executed GetFn.").entered();
                     let res: Option<Vec<u8>> = match js_result(handle.join()) {
                         Ok(res) => res,
                         Err(e) => {
@@ -151,13 +151,13 @@ pub fn from_wrapped_additional_config(
                 let store_fn = Arc::new(store_fn_js);
 
                 Arc::new(move |id, data| {
-                    let _span = trace_span!("StoreFn Closure", id);
+                    let _span = trace_span!("StoreFn Closure", id).entered();
 
                     let store_fn = store_fn.clone();
                     let cloned_id = id.clone();
 
                     let handle = channel.send(move |mut cx| {
-                        let _inner_span = trace_span!("GetFn Node Executed", id);
+                        let _inner_span = trace_span!("GetFn Node Executed", id).entered();
                         let res = match store_fn
                             .to_inner(&mut cx)
                             .call_with(&cx)
@@ -171,7 +171,7 @@ pub fn from_wrapped_additional_config(
                         Ok(res)
                     });
 
-                    let _join_span = trace_span!("Joining node executed GetFn.");
+                    let _join_span = trace_span!("Joining node executed GetFn.").entered();
                     let res = match js_result(handle.join()) {
                         Ok(res) => res,
                         Err(e) => {
@@ -191,12 +191,12 @@ pub fn from_wrapped_additional_config(
                 let delete_fn = Arc::new(delete_fn_js);
 
                 Arc::new(move |id| {
-                    let _span = trace_span!("DeleteKeyFn Closure", id);
+                    let _span = trace_span!("DeleteKeyFn Closure", id).entered();
                     let delete_fn = delete_fn.clone();
                     let cloned_id = id.clone();
 
                     let handle = channel.send(move |mut cx| {
-                        let _inner_span = trace_span!("DeleteFn Node Executed", id);
+                        let _inner_span = trace_span!("DeleteFn Node Executed", id).entered();
                         delete_fn
                             .to_inner(&mut cx)
                             .call_with(&cx)
@@ -216,15 +216,15 @@ pub fn from_wrapped_additional_config(
             let all_keys_js =
                 missing_enum_values(obj.get::<JsFunction, _, _>(cx, "all_keys_fn"))?.root(cx);
             let all_keys_fn: AllKeysFn = {
-                let _span = trace_span!("AllKeysFn Closure");
                 let channel = cx.channel();
                 let all_keys_fn = Arc::new(all_keys_js);
 
                 Arc::new(move || {
-                    let _inner_span = trace_span!("AllKeysFn Closure");
+                    let _span = trace_span!("AllKeysFn Closure").entered();
                     let all_keys_fn = all_keys_fn.clone();
 
                     let handle = channel.send(move |mut cx| {
+                        let _inner_span = trace_span!("AllKeysFn Node Executed").entered();
                         let res = match all_keys_fn
                             .to_inner(&mut cx)
                             .call_with(&cx)
