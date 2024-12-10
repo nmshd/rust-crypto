@@ -5,6 +5,7 @@ use robusta_jni::bridge;
 pub(crate) mod jni {
     use robusta_jni::{
         convert::{IntoJavaValue, Signature, TryFromJavaValue, TryIntoJavaValue},
+        jni::sys::jbyteArray,
         jni::{errors::Result as JniResult, objects::AutoLocal, JNIEnv},
     };
 
@@ -37,6 +38,16 @@ pub(crate) mod jni {
 
         /// Retrieves the algorithm used by the public key.
         pub(crate) extern "java" fn getAlgorithm(&self, _env: &JNIEnv) -> JniResult<String> {}
+
+        /// Retrieves the encoded public key in unknown format.
+        pub(crate) fn getEncoded(&self, env: &JNIEnv) -> JniResult<Vec<u8>> {
+            let output = env.call_method(self.raw.as_obj(), "getEncoded", "()[B", &[])?;
+
+            let output_array = output.l()?.into_inner() as jbyteArray;
+            let output_vec = env.convert_byte_array(output_array)?;
+
+            Ok(output_vec)
+        }
     }
 
     /// Represents a private key in Java's `java.security` package.

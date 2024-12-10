@@ -64,7 +64,7 @@ fn provider_supports_capabilities(
 ///     factory::*,
 /// };
 ///
-/// let specific_provider_config = ProviderImplConfig{additional_config: vec![]};
+/// let specific_provider_config = ProviderImplConfig{additional_config: vec![], ephemeral_keys: false};
 /// let provider_config = ProviderConfig {
 ///     min_security_level: SecurityLevel::Software,
 ///     max_security_level: SecurityLevel::Hardware,

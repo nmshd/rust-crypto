@@ -45,6 +45,10 @@ pub(crate) trait KeyHandleImpl: Send + Sync {
     /// A `Result` containing the decrypted data as a `Vec<u8>` on success, or a `CalError` on failure.
     fn decrypt_data(&self, encrypted_data: &[u8], iv: &[u8]) -> Result<Vec<u8>, CalError>;
 
+    fn hmac(&self, data: &[u8]) -> Result<Vec<u8>, CalError>;
+
+    fn verify_hmac(&self, data: &[u8], hmac: &[u8]) -> Result<bool, CalError>;
+
     fn extract_key(&self) -> Result<Vec<u8>, CalError>;
 
     /// Returns the id of the key, which can be used with `load_key`.

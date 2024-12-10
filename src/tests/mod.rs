@@ -84,8 +84,11 @@ impl TestStore {
             all_keys_fn: Arc::new(|| Box::pin(self.keys())),
         };
 
+        let hmac = AdditionalConfig::StorageConfigPass("TestHMAC".to_owned());
+
         ProviderImplConfig {
-            additional_config: vec![kv_store],
+            additional_config: vec![kv_store, hmac],
+            ephemeral_keys: false,
         }
     }
 

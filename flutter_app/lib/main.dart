@@ -1,11 +1,11 @@
-import 'package:flutter/foundation.dart';
-
-import 'encryption_page.dart';
-import 'crypto.dart';
-import 'signing_page.dart';
-import 'provider_page.dart';
 import 'package:cal_flutter_plugin/cal_flutter_plugin.dart' as cal;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+
+import 'crypto.dart';
+import 'encryption_page.dart';
+import 'provider_page.dart';
+import 'signing_page.dart';
 
 void main() async {
   await cal.RustLib.init();
@@ -56,7 +56,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   void setProvider(String name) {
     setState(() {
       _selectedProvider = name;
-      _cryptoProvider = getNamedProvider(name);
+      _cryptoProvider = getNamedProvider(name, "pass");
     });
   }
 

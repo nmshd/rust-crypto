@@ -70,6 +70,9 @@ sealed class CalErrorKind with _$CalErrorKind {
     String field0,
   ) = CalErrorKind_UnsupportedAlgorithm;
 
+  /// Tried to create a non-ephermal key with an ephermal provider.
+  const factory CalErrorKind.ephermalKeyError() = CalErrorKind_EphermalKeyError;
+
   /// Errors that do not fall into the above classes.
   const factory CalErrorKind.other() = CalErrorKind_Other;
 }
