@@ -14,7 +14,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 crypto-layer = { version = "0.1.0", path = "../../..", features = [] }
-neon = "1"
+neon = {version = "1", features = ["futures"]}
 strum = "0.26.3"
 thiserror = "2.0.3"
 tracing = { version = "0.1.41", features = ["release_max_level_info"]}

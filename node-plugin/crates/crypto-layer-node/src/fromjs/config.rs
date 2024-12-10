@@ -1,5 +1,6 @@
 use std::boxed::Box;
 use std::future::ready;
+use std::future::Future;
 use std::sync::Arc;
 
 use crypto_layer::common::config::AdditionalConfigDiscriminants;
@@ -70,6 +71,19 @@ pub fn from_wrapped_provider_impl_config<'a>(
     })
 }
 
+async fn unwrap_join_handle_result_or<T, E: std::fmt::Display>(
+    handle: impl Future<Output = Result<T, E>>,
+    on_error: T,
+) -> T {
+    match handle.await {
+        Ok(res) => res,
+        Err(e) => {
+            error!(error = %e, "Failed execution of future.");
+            on_error
+        }
+    }
+}
+
 pub fn from_wrapped_additional_config(
     cx: &mut FunctionContext,
     wrapped: Handle<JsObject>,
@@ -131,16 +145,7 @@ pub fn from_wrapped_additional_config(
                         Ok(res)
                     });
 
-                    let _join_span = trace_span!("Joining node executed GetFn.").entered();
-                    let res: Option<Vec<u8>> = match js_result(handle.join()) {
-                        Ok(res) => res,
-                        Err(e) => {
-                            error!(error = %e, id = cloned_id, "Unsuccessfull join of GetFn.");
-                            None
-                        }
-                    };
-
-                    Box::pin(ready(res))
+                    Box::pin(unwrap_join_handle_result_or(handle, None))
                 })
             };
 
@@ -171,16 +176,7 @@ pub fn from_wrapped_additional_config(
                         Ok(res)
                     });
 
-                    let _join_span = trace_span!("Joining node executed StoreFn.").entered();
-                    let res = match js_result(handle.join()) {
-                        Ok(res) => res,
-                        Err(e) => {
-                            error!(id = cloned_id, error = %e, "Unsuccessfull join of StoreFn.");
-                            false
-                        }
-                    };
-
-                    Box::pin(ready(res))
+                    Box::pin(unwrap_join_handle_result_or(handle, false))
                 })
             };
 
@@ -205,11 +201,7 @@ pub fn from_wrapped_additional_config(
                         Ok(())
                     });
 
-                    if let Err(e) = handle.join() {
-                        error!(id = cloned_id, error = %e, "DeleteKeyFn Failure");
-                    }
-
-                    Box::pin(ready(()))
+                    Box::pin(unwrap_join_handle_result_or(handle, ()))
                 })
             };
 
@@ -245,15 +237,7 @@ pub fn from_wrapped_additional_config(
                         Ok(res)
                     });
 
-                    let res = match handle.join() {
-                        Ok(res) => res,
-                        Err(e) => {
-                            error!(error = %e, "Unsuccessfull join of GetAllKeysFn.");
-                            vec![]
-                        }
-                    };
-
-                    Box::pin(ready(res))
+                    Box::pin(unwrap_join_handle_result_or(handle, vec![]))
                 })
             };
 
