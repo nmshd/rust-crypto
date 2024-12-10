@@ -157,7 +157,7 @@ pub fn from_wrapped_additional_config(
                     let cloned_id = id.clone();
 
                     let handle = channel.send(move |mut cx| {
-                        let _inner_span = trace_span!("GetFn Node Executed", id).entered();
+                        let _inner_span = trace_span!("StoreFn Node Executed", id).entered();
                         let res = match store_fn
                             .to_inner(&mut cx)
                             .call_with(&cx)
@@ -171,7 +171,7 @@ pub fn from_wrapped_additional_config(
                         Ok(res)
                     });
 
-                    let _join_span = trace_span!("Joining node executed GetFn.").entered();
+                    let _join_span = trace_span!("Joining node executed StoreFn.").entered();
                     let res = match js_result(handle.join()) {
                         Ok(res) => res,
                         Err(e) => {

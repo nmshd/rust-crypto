@@ -71,7 +71,6 @@ fn export_create_provider_from_name(mut cx: FunctionContext) -> JsResult<JsValue
 fn main(mut cx: ModuleContext) -> NeonResult<()> {
     fmt()
         .with_max_level(LevelFilter::DEBUG)
-        .compact()
         .with_span_events(FmtSpan::ACTIVE)
         .with_writer(std::io::stderr)
         .with_env_filter(EnvFilter::from_default_env())
