@@ -5,7 +5,10 @@ use super::{
 use crate::{
     common::{
         config::{KeyPairSpec, KeySpec, ProviderConfig, Spec},
-        crypto::algorithms::encryption::AsymmetricKeySpec,
+        crypto::algorithms::{
+            encryption::{AsymmetricKeySpec, Cipher},
+            hashes::CryptoHash,
+        },
         error::CalError,
         traits::{
             key_handle::{DHKeyExchangeImpl, KeyHandleImplEnum},
@@ -17,12 +20,11 @@ use crate::{
 };
 use nanoid::nanoid;
 use ring::{
-    aead::{Algorithm, LessSafeKey, UnboundKey, AES_256_GCM},
+    aead::Algorithm,
     agreement::{self, EphemeralPrivateKey, PublicKey, UnparsedPublicKey, X25519},
     rand::{SecureRandom, SystemRandom},
     signature::{EcdsaKeyPair, EcdsaSigningAlgorithm, KeyPair},
 };
-use std::sync::Arc;
 
 impl ProviderImpl for SoftwareProvider {
     fn create_key(&mut self, spec: KeySpec) -> Result<KeyHandle, CalError> {
@@ -38,6 +40,7 @@ impl ProviderImpl for SoftwareProvider {
 
         // Initialize the system random generator
         let rng = SystemRandom::new();
+
         let algo: &Algorithm = spec.cipher.into();
 
         // Generate the symmetric key data
@@ -45,14 +48,9 @@ impl ProviderImpl for SoftwareProvider {
         rng.fill(&mut key_data)
             .expect("Failed to generate symmetric key");
 
-        // Create an UnboundKey for the AES-GCM encryption
-        let unbound_key = UnboundKey::new(algo, &key_data).map_err(|_| {
-            CalError::failed_operation("Failed to create unbound AES key".to_owned(), true, None)
-        })?;
-
         let storage_data = KeyData {
             id: key_id.clone(),
-            secret_data: Some(key_data),
+            secret_data: Some(key_data.clone()),
             public_data: None,
             additional_data: None,
             spec: Spec::KeySpec(spec),
@@ -65,9 +63,6 @@ impl ProviderImpl for SoftwareProvider {
                 .store(key_id.clone(), storage_data)?;
         }
 
-        // Wrap it in a LessSafeKey for easier encryption/decryption
-        let less_safe_key = Arc::new(LessSafeKey::new(unbound_key));
-
         // If the key is ephemeral, don't even pass the storage manager
         let storage_manager = if spec.ephemeral {
             None
@@ -78,8 +73,9 @@ impl ProviderImpl for SoftwareProvider {
         // Initialize SoftwareKeyHandle with the LessSafeKey
         let handle = SoftwareKeyHandle {
             key_id,
-            key: less_safe_key,
+            key: key_data,
             storage_manager: storage_manager.clone(),
+            spec,
         };
 
         Ok(KeyHandle {
@@ -119,19 +115,12 @@ impl ProviderImpl for SoftwareProvider {
             }
         };
 
-        // Create an UnboundKey for the AES-GCM encryption
-        let unbound_key = UnboundKey::new(spec.cipher.into(), &key_data).map_err(|_| {
-            CalError::failed_operation("Failed to create unbound AES key".to_owned(), true, None)
-        })?;
-
-        // Wrap it in a LessSafeKey for easier encryption/decryption
-        let less_safe_key = Arc::new(LessSafeKey::new(unbound_key));
-
         // Initialize SoftwareKeyHandle with the LessSafeKey
         let handle = SoftwareKeyHandle {
             key_id,
-            key: less_safe_key,
+            key: key_data,
             storage_manager: self.storage_manager.clone(),
+            spec,
         };
 
         Ok(KeyHandle {
@@ -271,12 +260,8 @@ impl ProviderImpl for SoftwareProvider {
         };
 
         // Initialize SoftwareKeyHandle with the raw key data
-        let handle = SoftwareKeyHandle::new(
-            key_id.clone(),
-            Some(spec),
-            data.to_vec(),
-            storage_manager.clone(),
-        )?;
+        let handle =
+            SoftwareKeyHandle::new(key_id.clone(), spec, data.to_vec(), storage_manager.clone())?;
 
         // store key
         let storage_data = KeyData {
@@ -511,16 +496,18 @@ impl DHKeyExchangeImpl for SoftwareDHExchange {
 
         // Derive a symmetric key (AES-256) from the shared secret
         let key_material = &shared_secret[0..32]; // Use the first 32 bytes as AES-256 key
-        let unbound_key = UnboundKey::new(&AES_256_GCM, key_material)
-            .map_err(|err| CalError::failed_operation(err.to_string(), true, None))?;
-        let symmetric_key = Arc::new(LessSafeKey::new(unbound_key));
 
         // Return the symmetric key wrapped in KeyHandleImplEnum
         Ok(KeyHandle {
             implementation: KeyHandleImplEnum::SoftwareKeyHandle(SoftwareKeyHandle {
                 key_id: self.key_id.clone(),
-                key: symmetric_key,
+                key: key_material.to_vec(),
                 storage_manager: self.storage_manager.clone(),
+                spec: KeySpec {
+                    cipher: Cipher::AesGcm256,
+                    ephemeral: true,
+                    signing_hash: CryptoHash::Sha2_256,
+                },
             }),
         })
     }

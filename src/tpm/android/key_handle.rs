@@ -91,6 +91,14 @@ impl KeyHandleImpl for AndroidKeyHandle {
         Ok(decrypted)
     }
 
+    fn hmac(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
+        todo!()
+    }
+
+    fn verify_hmac(&self, _data: &[u8], _hmac: &[u8]) -> Result<bool, CalError> {
+        todo!()
+    }
+
     fn extract_key(&self) -> Result<Vec<u8>, CalError> {
         todo!()
     }

@@ -156,6 +156,14 @@ impl KeyHandleImpl for StubKeyHandle {
         todo!()
     }
 
+    fn hmac(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
+        todo!()
+    }
+
+    fn verify_hmac(&self, data: &[u8], hmac: &[u8]) -> Result<bool, CalError> {
+        todo!()
+    }
+
     fn extract_key(&self) -> Result<Vec<u8>, CalError> {
         todo!()
     }
