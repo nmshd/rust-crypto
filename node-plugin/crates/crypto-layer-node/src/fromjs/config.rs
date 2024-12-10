@@ -123,7 +123,6 @@ pub fn from_wrapped_additional_config(
                     let cloned_id = id.clone();
 
                     let handle = channel.send(move |mut cx| {
-                        let _inner_span = trace_span!("GetFn Node Executed", id).entered();
                         let res = match get_fn
                             .to_inner(&mut cx)
                             .call_with(&cx)
@@ -162,7 +161,6 @@ pub fn from_wrapped_additional_config(
                     let cloned_id = id.clone();
 
                     let handle = channel.send(move |mut cx| {
-                        let _inner_span = trace_span!("StoreFn Node Executed", id).entered();
                         let res = match store_fn
                             .to_inner(&mut cx)
                             .call_with(&cx)
@@ -192,7 +190,6 @@ pub fn from_wrapped_additional_config(
                     let cloned_id = id.clone();
 
                     let handle = channel.send(move |mut cx| {
-                        let _inner_span = trace_span!("DeleteFn Node Executed", id).entered();
                         delete_fn
                             .to_inner(&mut cx)
                             .call_with(&cx)
@@ -216,7 +213,6 @@ pub fn from_wrapped_additional_config(
                     let all_keys_fn = all_keys_fn.clone();
 
                     let handle = channel.send(move |mut cx| {
-                        let _inner_span = trace_span!("AllKeysFn Node Executed").entered();
                         let res = match all_keys_fn
                             .to_inner(&mut cx)
                             .call_with(&cx)
