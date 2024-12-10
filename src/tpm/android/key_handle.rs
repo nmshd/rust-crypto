@@ -95,16 +95,10 @@ impl KeyHandleImpl for AndroidKeyHandle {
         todo!()
     }
 
-    fn delete(self) -> Result<(), CalError> {
-        let vm = ndk_context::android_context().vm();
-        let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
-        let env = vm.attach_current_thread().err_internal()?;
-
-        let keystore = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_owned()).err_internal()?;
-        keystore.load(&env, None).err_internal()?;
-        keystore
-            .deleteEntry(&env, self.key_id.clone())
-            .err_internal()?;
+    fn delete(mut self) -> Result<(), CalError> {
+        if let Err(e) = self.delete_internal() {
+            tracing::warn!("Failed to delete key on device: {:?}", e);
+        }
 
         if let Some(storage_manager) = &self.storage_manager {
             storage_manager.delete(self.key_id.clone());
@@ -250,9 +244,11 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
             .getCertificate(&env, self.key_id.to_owned())
             .err_internal()?;
 
-        let _public_key = key.getPublicKey(&env).err_internal()?;
+        let public_key = key.getPublicKey(&env).err_internal()?;
 
-        todo!("turn public key into bytes");
+        let encoded = public_key.getEncoded(&env).err_internal()?;
+
+        Ok(encoded)
     }
 
     fn extract_key(&self) -> Result<Vec<u8>, CalError> {
@@ -263,16 +259,10 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
         todo!()
     }
 
-    fn delete(self) -> Result<(), CalError> {
-        let vm = ndk_context::android_context().vm();
-        let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
-        let env = vm.attach_current_thread().err_internal()?;
-
-        let keystore = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_owned()).err_internal()?;
-        keystore.load(&env, None).err_internal()?;
-        keystore
-            .deleteEntry(&env, self.key_id.clone())
-            .err_internal()?;
+    fn delete(mut self) -> Result<(), CalError> {
+        if let Err(e) = self.delete_internal() {
+            tracing::warn!("Failed to delete key on device: {:?}", e);
+        }
 
         if let Some(storage_manager) = &self.storage_manager {
             storage_manager.delete(self.key_id.clone());
