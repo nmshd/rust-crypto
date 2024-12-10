@@ -1,8 +1,12 @@
 use std::cell::RefCell;
 
-use neon::prelude::*;
-
 use crypto_layer::prelude::*;
+use neon::prelude::*;
+use tracing_subscriber::{
+    filter::{EnvFilter, LevelFilter},
+    fmt,
+    fmt::format::FmtSpan,
+};
 
 pub(crate) mod common;
 pub(crate) mod dhexchange;
@@ -61,6 +65,14 @@ fn export_create_provider_from_name(mut cx: FunctionContext) -> JsResult<JsValue
 
 #[neon::main]
 fn main(mut cx: ModuleContext) -> NeonResult<()> {
+    fmt()
+        .with_max_level(LevelFilter::DEBUG)
+        .compact()
+        .with_span_events(FmtSpan::ACTIVE)
+        .with_writer(std::io::stderr)
+        .with_env_filter(EnvFilter::from_default_env())
+        .init();
+
     cx.export_function("getAllProviders", export_get_all_providers)?;
     cx.export_function("createProvider", export_create_provider)?;
     cx.export_function("createProviderFromName", export_create_provider_from_name)?;

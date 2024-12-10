@@ -13,13 +13,18 @@ crate-type = ["cdylib"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-crypto-layer = { version = "0.1.0", path = "../../..", features = ["software"] }
+crypto-layer = { version = "0.1.0", path = "../../..", features = [] }
 neon = "1"
 strum = "0.26.3"
 thiserror = "2.0.3"
+tracing = { version = "0.1.41", features = ["release_max_level_info"]}
+tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 
 [target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies]
 crypto-layer = { path = "../../..", features = ["apple-secure-enclave", "software"] }
 
 [target.'cfg(target_os = "android")'.dependencies]
 crypto-layer = { path = "../../..", features = ["android", "software"] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+crypto-layer = { path = "../../..", features = ["linux", "software"] }
