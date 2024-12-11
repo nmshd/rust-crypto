@@ -99,7 +99,8 @@ pub struct ProviderConfig {
 #[derive(Clone)]
 pub struct ProviderImplConfig {
     pub additional_config: Vec<AdditionalConfig>,
-    pub ephemeral_keys: bool, // when this is set, provider will reject all keys not marked as ephemeral
+    /// when this is set true, provider will reject all keys not marked as ephemeral.
+    pub ephemeral_keys: bool,
 }
 
 /// flutter_rust_bridge:non_opaque
