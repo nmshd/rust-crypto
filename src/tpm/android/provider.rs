@@ -153,7 +153,9 @@ impl ProviderImpl for AndroidProvider {
             spec: Spec::KeySpec(spec),
         };
 
-        if self.storage_manager.is_some() && !spec.ephemeral {
+        let storage_manager = self.storage_manager.clone().filter(|_| !spec.ephemeral);
+
+        if storage_manager.is_some() {
             self.storage_manager
                 .as_ref()
                 .unwrap()
@@ -166,7 +168,7 @@ impl ProviderImpl for AndroidProvider {
             implementation: Into::into(AndroidKeyHandle {
                 key_id,
                 spec,
-                storage_manager: self.storage_manager.clone(),
+                storage_manager: storage_manager.clone(),
             }),
         })
     }
@@ -231,7 +233,9 @@ impl ProviderImpl for AndroidProvider {
             spec: Spec::KeyPairSpec(spec),
         };
 
-        if self.storage_manager.is_some() && !spec.ephemeral {
+        let storage_manager = self.storage_manager.clone().filter(|_| !spec.ephemeral);
+
+        if storage_manager.is_some() {
             self.storage_manager
                 .as_ref()
                 .unwrap()
@@ -242,7 +246,7 @@ impl ProviderImpl for AndroidProvider {
             implementation: Into::into(AndroidKeyPairHandle {
                 key_id,
                 spec,
-                storage_manager: self.storage_manager.clone(),
+                storage_manager: storage_manager.clone(),
             }),
         })
     }
@@ -337,7 +341,9 @@ impl ProviderImpl for AndroidProvider {
             spec: Spec::KeySpec(spec),
         };
 
-        if self.storage_manager.is_some() && !spec.ephemeral {
+        let storage_manager = self.storage_manager.clone().filter(|_| !spec.ephemeral);
+
+        if storage_manager.is_some() {
             self.storage_manager
                 .as_ref()
                 .unwrap()
@@ -348,7 +354,7 @@ impl ProviderImpl for AndroidProvider {
             implementation: Into::into(AndroidKeyHandle {
                 key_id: id,
                 spec,
-                storage_manager: self.storage_manager.clone(),
+                storage_manager: storage_manager.clone(),
             }),
         })
     }
