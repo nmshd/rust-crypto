@@ -10,5 +10,5 @@ pub async fn get_default_config(
     all_keys_fn: impl Fn() -> DartFnFuture<Vec<String>> + 'static + Send + Sync,
 ) -> ProviderImplConfig {
 
-    ProviderImplConfig::new(Arc::new(get_fn), Arc::new(store_fn), Arc::new(delete_fn), Arc::new(all_keys_fn), vec![], false)
+    ProviderImplConfig::new(Arc::new(get_fn), Arc::new(store_fn), Arc::new(delete_fn), Arc::new(all_keys_fn), vec![])
 }

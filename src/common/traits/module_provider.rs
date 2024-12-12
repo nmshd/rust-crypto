@@ -24,7 +24,10 @@ pub(crate) trait ProviderFactory: Send + Sync {
     ///
     /// [ProviderConfig] returned stores in HashSets all Hashes, Ciphers and AsymmetricKeySpecs a provider supports.
     fn get_capabilities(&self, impl_config: ProviderImplConfig) -> Option<ProviderConfig>;
-    fn create_provider(&self, impl_config: ProviderImplConfig) -> ProviderImplEnum;
+    fn create_provider(
+        &self,
+        impl_config: ProviderImplConfig,
+    ) -> Result<ProviderImplEnum, CalError>;
 }
 
 #[enum_dispatch]

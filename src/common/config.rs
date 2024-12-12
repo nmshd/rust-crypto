@@ -99,8 +99,6 @@ pub struct ProviderConfig {
 #[derive(Clone)]
 pub struct ProviderImplConfig {
     pub additional_config: Vec<AdditionalConfig>,
-    /// when this is set true, provider will reject all keys not marked as ephemeral.
-    pub ephemeral_keys: bool,
 }
 
 /// flutter_rust_bridge:non_opaque
@@ -136,7 +134,6 @@ impl ProviderImplConfig {
         delete_fn: DeleteFn,
         all_keys_fn: AllKeysFn,
         mut additional_config: Vec<AdditionalConfig>,
-        ephemeral_keys: bool,
     ) -> Self {
         let kv_config = AdditionalConfig::KVStoreConfig {
             get_fn,
@@ -145,10 +142,7 @@ impl ProviderImplConfig {
             all_keys_fn,
         };
         additional_config.push(kv_config);
-        Self {
-            additional_config,
-            ephemeral_keys,
-        }
+        Self { additional_config }
     }
 }
 

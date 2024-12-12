@@ -2011,7 +2011,6 @@ fn wire__crypto_layer__common__config__provider_impl_config_new_impl(
                 <Vec<crypto_layer::common::config::AdditionalConfig>>::sse_decode(
                     &mut deserializer,
                 );
-            let api_ephemeral_keys = <bool>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
                 transform_result_sse::<_, ()>((move || {
@@ -2022,7 +2021,6 @@ fn wire__crypto_layer__common__config__provider_impl_config_new_impl(
                             api_delete_fn,
                             api_all_keys_fn,
                             api_additional_config,
-                            api_ephemeral_keys,
                         ),
                     )?;
                     Ok(output_ok)
@@ -2142,7 +2140,6 @@ const _: fn() = || {
         let ProviderImplConfig = None::<crypto_layer::common::config::ProviderImplConfig>.unwrap();
         let _: Vec<crypto_layer::common::config::AdditionalConfig> =
             ProviderImplConfig.additional_config;
-        let _: bool = ProviderImplConfig.ephemeral_keys;
     }
     match None::<crypto_layer::common::config::Spec>.unwrap() {
         crypto_layer::common::config::Spec::KeySpec(field0) => {
@@ -3104,10 +3101,8 @@ impl SseDecode for crypto_layer::common::config::ProviderImplConfig {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_additionalConfig =
             <Vec<crypto_layer::common::config::AdditionalConfig>>::sse_decode(deserializer);
-        let mut var_ephemeralKeys = <bool>::sse_decode(deserializer);
         return crypto_layer::common::config::ProviderImplConfig {
             additional_config: var_additionalConfig,
-            ephemeral_keys: var_ephemeralKeys,
         };
     }
 }
@@ -3909,11 +3904,7 @@ impl flutter_rust_bridge::IntoDart
     for FrbWrapper<crypto_layer::common::config::ProviderImplConfig>
 {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [
-            self.0.additional_config.into_into_dart().into_dart(),
-            self.0.ephemeral_keys.into_into_dart().into_dart(),
-        ]
-        .into_dart()
+        [self.0.additional_config.into_into_dart().into_dart()].into_dart()
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
@@ -4717,7 +4708,6 @@ impl SseEncode for crypto_layer::common::config::ProviderImplConfig {
             self.additional_config,
             serializer,
         );
-        <bool>::sse_encode(self.ephemeral_keys, serializer);
     }
 }
 

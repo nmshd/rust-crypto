@@ -143,11 +143,9 @@ class ProviderConfig {
 /// flutter_rust_bridge:non_opaque
 class ProviderImplConfig {
   final List<AdditionalConfig> additionalConfig;
-  final bool ephemeralKeys;
 
   const ProviderImplConfig({
     required this.additionalConfig,
-    required this.ephemeralKeys,
   });
 
   // HINT: Make it `#[frb(sync)]` to let it become the default constructor of Dart class.
@@ -157,26 +155,23 @@ class ProviderImplConfig {
           required ArcFnStringVecU8DynFutureBool storeFn,
           required ArcFnStringPinBoxFutureOutput deleteFn,
           required ArcFnDynFutureVecString allKeysFn,
-          required List<AdditionalConfig> additionalConfig,
-          required bool ephemeralKeys}) =>
+          required List<AdditionalConfig> additionalConfig}) =>
       RustLib.instance.api.cryptoLayerCommonConfigProviderImplConfigNew(
           getFn: getFn,
           storeFn: storeFn,
           deleteFn: deleteFn,
           allKeysFn: allKeysFn,
-          additionalConfig: additionalConfig,
-          ephemeralKeys: ephemeralKeys);
+          additionalConfig: additionalConfig);
 
   @override
-  int get hashCode => additionalConfig.hashCode ^ ephemeralKeys.hashCode;
+  int get hashCode => additionalConfig.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is ProviderImplConfig &&
           runtimeType == other.runtimeType &&
-          additionalConfig == other.additionalConfig &&
-          ephemeralKeys == other.ephemeralKeys;
+          additionalConfig == other.additionalConfig;
 }
 
 /// Enum describing the security level of a provider.

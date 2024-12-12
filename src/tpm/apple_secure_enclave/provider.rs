@@ -84,17 +84,13 @@ impl ProviderFactory for AppleSecureEnclaveFactory {
         Some(CAPABILITIES.clone())
     }
 
-    fn create_provider(&self, impl_config: ProviderImplConfig) -> ProviderImplEnum {
-        let storage_manager = if impl_config.ephemeral_keys {
-            None
-        } else {
-            Some(StorageManager::new(
-                self.get_name(),
-                &impl_config.additional_config,
-            ))
-        };
+    fn create_provider(
+        &self,
+        impl_config: ProviderImplConfig,
+    ) -> Result<ProviderImplEnum, CalError> {
+        let storage_manager = StorageManager::new(self.get_name(), &impl_config.additional_config)?;
 
-        AppleSecureEnclaveProvider { storage_manager }.into()
+        Ok(AppleSecureEnclaveProvider { storage_manager }.into())
     }
 }
 

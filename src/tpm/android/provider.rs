@@ -57,21 +57,17 @@ impl ProviderFactory for AndroidProviderFactory {
         })
     }
 
-    fn create_provider(&self, impl_config: ProviderImplConfig) -> ProviderImplEnum {
-        let storage_manager = if impl_config.ephemeral_keys {
-            None
-        } else {
-            Some(StorageManager::new(
-                self.get_name(),
-                &impl_config.additional_config,
-            ))
-        };
+    fn create_provider(
+        &self,
+        impl_config: ProviderImplConfig,
+    ) -> Result<ProviderImplEnum, CalError> {
+        let storage_manager = StorageManager::new(self.get_name(), &impl_config.additional_config)?;
 
-        ProviderImplEnum::from(AndroidProvider {
+        Ok(ProviderImplEnum::from(AndroidProvider {
             impl_config,
             used_factory: *self,
             storage_manager,
-        })
+        }))
     }
 }
 
@@ -104,7 +100,7 @@ impl Debug for AndroidProvider {
 impl ProviderImpl for AndroidProvider {
     #[instrument]
     fn create_key(&mut self, spec: KeySpec) -> Result<KeyHandle, CalError> {
-        if self.impl_config.ephemeral_keys && !spec.ephemeral {
+        if self.storage_manager.is_none() && !spec.ephemeral {
             return Err(CalError::ephemeral_key_required());
         }
 
@@ -174,7 +170,7 @@ impl ProviderImpl for AndroidProvider {
     }
 
     fn create_key_pair(&mut self, spec: KeyPairSpec) -> Result<KeyPairHandle, CalError> {
-        if self.impl_config.ephemeral_keys && !spec.ephemeral {
+        if self.storage_manager.is_none() && !spec.ephemeral {
             return Err(CalError::ephemeral_key_required());
         }
 
@@ -262,7 +258,7 @@ impl ProviderImpl for AndroidProvider {
     /// Returns `Ok(())` if the key loading is successful, otherwise returns an error of type `CalError`.
     #[instrument]
     fn load_key(&mut self, key_id: String) -> Result<KeyHandle, CalError> {
-        if self.impl_config.ephemeral_keys {
+        if self.storage_manager.is_none() {
             return Err(CalError::ephemeral_key_required());
         }
 
@@ -284,7 +280,7 @@ impl ProviderImpl for AndroidProvider {
 
     #[instrument]
     fn load_key_pair(&mut self, key_id: String) -> Result<KeyPairHandle, CalError> {
-        if self.impl_config.ephemeral_keys {
+        if self.storage_manager.is_none() {
             return Err(CalError::ephemeral_key_required());
         }
 
@@ -306,7 +302,7 @@ impl ProviderImpl for AndroidProvider {
 
     #[instrument]
     fn import_key(&mut self, spec: KeySpec, data: &[u8]) -> Result<KeyHandle, CalError> {
-        if self.impl_config.ephemeral_keys && !spec.ephemeral {
+        if self.storage_manager.is_none() && !spec.ephemeral {
             return Err(CalError::ephemeral_key_required());
         }
 
@@ -388,7 +384,7 @@ impl ProviderImpl for AndroidProvider {
 
     #[instrument]
     fn get_all_keys(&self) -> Result<Vec<(String, Spec)>, CalError> {
-        if self.impl_config.ephemeral_keys {
+        if self.storage_manager.is_none() {
             return Err(CalError::ephemeral_key_required());
         }
 

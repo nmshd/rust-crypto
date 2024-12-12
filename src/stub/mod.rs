@@ -37,8 +37,11 @@ impl ProviderFactory for StubProviderFactory {
         })
     }
 
-    fn create_provider(&self, impl_config: ProviderImplConfig) -> ProviderImplEnum {
-        (StubProvider { impl_config }).into()
+    fn create_provider(
+        &self,
+        impl_config: ProviderImplConfig,
+    ) -> Result<ProviderImplEnum, CalError> {
+        Ok((StubProvider { impl_config }).into())
     }
 }
 

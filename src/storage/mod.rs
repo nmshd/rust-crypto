@@ -35,7 +35,7 @@ pub(crate) struct StorageManager {
     scope: String,
 }
 
-fn extract_storage_method(config: &[AdditionalConfig]) -> Result<Storage, CalError> {
+fn extract_storage_method(config: &[AdditionalConfig]) -> Result<Option<Storage>, CalError> {
     let db_store = config
         .iter()
         .filter_map(|c| {
@@ -78,13 +78,9 @@ fn extract_storage_method(config: &[AdditionalConfig]) -> Result<Storage, CalErr
         .last();
 
     match (db_store, kv_store) {
-        (Some(db_store), None) => Ok(Storage::FileStore(db_store)),
-        (None, Some(kv_store)) => Ok(Storage::KVStore(kv_store)),
-        (None, None) => Err(CalError::failed_operation(
-            "neither KV Store nor DB store were initialised".to_owned(),
-            true,
-            None,
-        )),
+        (Some(db_store), None) => Ok(Some(Storage::FileStore(db_store))),
+        (None, Some(kv_store)) => Ok(Some(Storage::KVStore(kv_store))),
+        (None, None) => Ok(None),
         _ => Err(CalError::failed_operation(
             "both KV Store and DB store were initialised".to_owned(),
             true,
@@ -115,21 +111,25 @@ fn extract_security_method(config: &[AdditionalConfig]) -> Result<ChecksumProvid
 }
 
 impl StorageManager {
-    pub(crate) fn new(scope: String, config: &[AdditionalConfig]) -> Self {
-        let storage = extract_storage_method(config).expect("Failed to extract storage method");
-        let key_handle = config.iter().find_map(|c| match c {
-            AdditionalConfig::StorageConfigHMAC(key_handle) => Some(key_handle.clone()),
-            _ => None,
-        });
-        let checksum_provider =
-            extract_security_method(config).expect("Failed to extract security method");
+    pub(crate) fn new(
+        scope: String,
+        config: &[AdditionalConfig],
+    ) -> Result<Option<Self>, CalError> {
+        let storage = extract_storage_method(config)?;
+        let checksum_provider = extract_security_method(config)?;
+        Ok(storage.map(|storage| {
+            let key_handle = config.iter().find_map(|c| match c {
+                AdditionalConfig::StorageConfigHMAC(key_handle) => Some(key_handle.clone()),
+                _ => None,
+            });
 
-        StorageManager {
-            checksum_provider,
-            key_handle: key_handle.map(Box::new),
-            storage,
-            scope,
-        }
+            StorageManager {
+                checksum_provider,
+                key_handle: key_handle.map(Box::new),
+                storage,
+                scope,
+            }
+        }))
     }
 
     pub(crate) fn store(&self, id: String, data: KeyData) -> Result<(), CalError> {
