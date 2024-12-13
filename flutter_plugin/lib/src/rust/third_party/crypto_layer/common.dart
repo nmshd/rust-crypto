@@ -32,7 +32,11 @@ abstract class KeyHandle implements RustOpaqueInterface {
 
   Future<Uint8List> extractKey();
 
+  Future<Uint8List> hmac({required List<int> data});
+
   Future<String> id();
+
+  Future<bool> verifyHmac({required List<int> data, required List<int> hmac});
 }
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<KeyPairHandle>>

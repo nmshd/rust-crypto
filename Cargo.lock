@@ -304,6 +304,7 @@ dependencies = [
  "ed25519-compact",
  "ed25519-dalek",
  "enum_dispatch",
+ "hmac",
  "lazy_static",
  "libloading",
  "nanoid",

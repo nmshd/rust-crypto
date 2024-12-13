@@ -3,7 +3,7 @@ use std::sync::LazyLock;
 use color_eyre::eyre::Result;
 
 use crate::common::{
-    config::KeyPairSpec,
+    config::{KeyPairSpec, ProviderImplConfig},
     crypto::algorithms::{encryption::AsymmetricKeySpec, hashes::CryptoHash},
     factory::create_provider_from_name,
 };
@@ -34,6 +34,7 @@ fn test_create_key_with_provider() -> Result<()> {
         asym_spec: AsymmetricKeySpec::P256,
         cipher: None,
         signing_hash: CryptoHash::Sha2_256,
+        ephemeral: false,
     };
 
     let _key = provider.create_key_pair(key_spec)?;
@@ -63,6 +64,7 @@ fn test_create_key_pair_sign_and_verify_data() -> Result<()> {
             asym_spec: AsymmetricKeySpec::P256,
             cipher: None,
             signing_hash: hash,
+            ephemeral: false,
         };
 
         let key = provider.create_key_pair(key_spec)?;
@@ -74,6 +76,39 @@ fn test_create_key_pair_sign_and_verify_data() -> Result<()> {
 
         assert!(key.verify_signature(&test_data, &signature)?);
     }
+
+    Ok(())
+}
+
+#[test]
+fn test_create_ephemeral_key_pair_sign_and_verify_data() -> Result<()> {
+    setup();
+
+    let mut provider = create_provider_from_name(
+        "APPLE_SECURE_ENCLAVE".to_owned(),
+        ProviderImplConfig {
+            additional_config: vec![],
+            ephemeral_keys: true,
+        },
+    )
+    .expect("Failed initializing apple secure provider.");
+
+    let hash = CryptoHash::Sha2_512;
+
+    let key_spec = KeyPairSpec {
+        asym_spec: AsymmetricKeySpec::P256,
+        cipher: None,
+        signing_hash: hash,
+        ephemeral: true,
+    };
+
+    let key = provider.create_key_pair(key_spec)?;
+
+    let test_data = Vec::from(b"Hello World!");
+
+    let signature = key.sign_data(&test_data)?;
+
+    assert!(key.verify_signature(&test_data, &signature)?);
 
     Ok(())
 }
@@ -93,6 +128,7 @@ fn test_load_key_pair() -> Result<()> {
             asym_spec: AsymmetricKeySpec::P256,
             cipher: None,
             signing_hash: CryptoHash::Sha2_256,
+            ephemeral: false,
         };
 
         let key = provider.create_key_pair(key_spec)?;

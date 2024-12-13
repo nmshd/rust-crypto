@@ -14,7 +14,7 @@ use super::crypto::algorithms::{
     encryption::{AsymmetricKeySpec, Cipher},
     hashes::CryptoHash,
 };
-use super::KeyHandle;
+use super::{KeyHandle, KeyPairHandle};
 
 /// A type alias for a pinned, heap-allocated, dynamically dispatched future that is `Send`.
 ///
@@ -73,6 +73,7 @@ pub enum Spec {
 pub struct KeySpec {
     pub cipher: Cipher,
     pub signing_hash: CryptoHash,
+    pub ephemeral: bool,
 }
 
 /// flutter_rust_bridge:non_opaque
@@ -81,6 +82,7 @@ pub struct KeyPairSpec {
     pub asym_spec: AsymmetricKeySpec,
     pub cipher: Option<Cipher>,
     pub signing_hash: CryptoHash,
+    pub ephemeral: bool,
 }
 
 /// flutter_rust_bridge:non_opaque
@@ -93,12 +95,13 @@ pub struct ProviderConfig {
     pub supported_asym_spec: HashSet<AsymmetricKeySpec>,
 }
 
-/// flutter_rust_bridge:opaque
+/// flutter_rust_bridge:non_opaque
 #[derive(Clone)]
 pub struct ProviderImplConfig {
     pub additional_config: Vec<AdditionalConfig>,
 }
 
+/// flutter_rust_bridge:non_opaque
 #[derive(Clone)]
 pub enum AdditionalConfig {
     KVStoreConfig {
@@ -112,9 +115,9 @@ pub enum AdditionalConfig {
         secure_path: String,
         pass: String,
     },
-    StorageConfig {
-        key_handle: KeyHandle,
-    },
+    StorageConfigHMAC(KeyHandle),
+    StorageConfigDSA(KeyPairHandle),
+    StorageConfigPass(String),
 }
 
 impl std::fmt::Debug for ProviderImplConfig {
@@ -140,16 +143,6 @@ impl ProviderImplConfig {
         };
         additional_config.push(kv_config);
         Self { additional_config }
-    }
-
-    /// Creates a new stubbed `ProviderImplConfig` instance for testing or default purposes.
-    pub fn new_stub(
-        get_fn: GetFn,
-        store_fn: StoreFn,
-        delete_fn: DeleteFn,
-        all_keys_fn: AllKeysFn,
-    ) -> Self {
-        Self::new(get_fn, store_fn, delete_fn, all_keys_fn, vec![])
     }
 }
 

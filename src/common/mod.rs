@@ -209,6 +209,13 @@ impl KeyHandle {
     }
 
     delegate_enum! {
+        pub fn hmac(&self, data: &[u8]) -> Result<Vec<u8>, CalError>;
+    }
+    delegate_enum! {
+        pub fn verify_hmac(&self, data: &[u8], hmac: &[u8]) -> Result<bool, CalError>;
+    }
+
+    delegate_enum! {
         pub fn id(&self) -> Result<String, CalError>;
     }
 

@@ -37,8 +37,11 @@ impl ProviderFactory for StubProviderFactory {
         })
     }
 
-    fn create_provider(&self, impl_config: ProviderImplConfig) -> ProviderImplEnum {
-        (StubProvider { impl_config }).into()
+    fn create_provider(
+        &self,
+        impl_config: ProviderImplConfig,
+    ) -> Result<ProviderImplEnum, CalError> {
+        Ok((StubProvider { impl_config }).into())
     }
 }
 
@@ -153,6 +156,14 @@ impl KeyHandleImpl for StubKeyHandle {
     }
 
     fn decrypt_data(&self, encrypted_data: &[u8], iv: &[u8]) -> Result<Vec<u8>, CalError> {
+        todo!()
+    }
+
+    fn hmac(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
+        todo!()
+    }
+
+    fn verify_hmac(&self, data: &[u8], hmac: &[u8]) -> Result<bool, CalError> {
         todo!()
     }
 
