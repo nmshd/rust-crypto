@@ -19,14 +19,7 @@ let providerConfig: ProviderConfig = {
 
 let providerImplConfig: ProviderImplConfig = {
     additional_config: [
-        {
-            "KVStoreConfig": {
-                get_fn: (id: string): Uint8Array | undefined => { return kvStore.get(id); },
-                store_fn: (id: string, data: Uint8Array): boolean => { kvStore.set(id, data); return true; },
-                all_keys_fn: (): string[] => { return Array.from(kvStore.keys()); },
-                delete_fn: (id: string): undefined => { kvStore.delete(id) }
-            }
-        }
+        
     ]
 }
 
