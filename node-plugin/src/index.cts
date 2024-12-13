@@ -14,11 +14,18 @@ declare module "./load.cjs" {
   export function getAllProviders(): string[];
   export function createBareProvider(config: ProviderConfig, impl_config: ProviderImplConfig): {} | undefined;
   export function createProviderFromName(name: string, impl_config: ProviderImplConfig): Provider | undefined;
+
   export function providerName(this: Provider): string;
   export function createBareKey(this: Provider, spec: KeySpec): {};
   export function createBareKeyPair(this: Provider, spec: KeyPairSpec): {};
+
   export function signData(this: KeyPairHandle, data: Uint8Array): Uint8Array;
   export function verifyData(this: KeyPairHandle, data: Uint8Array, signature: Uint8Array): boolean;
+  export function idForKeyPair(this: KeyPairHandle): string;
+  export function deleteForKeyPair(this: KeyPairHandle): undefined;
+  export function getPublicKey(this: KeyPairHandle): Uint8Array;
+  export function encryptDataForKeyPairHandle(this: KeyPairHandle, data: Uint8Array): Uint8Array;
+  export function decryptDataForKeyPairHandle(this: KeyPairHandle, data: Uint8Array): Uint8Array;
 }
 
 
@@ -37,13 +44,10 @@ export function createProvider(config: ProviderConfig, impl_config: ProviderImpl
   return provider;
 }
 
-
-const sharedKeyFunctions = {};
 const keyHandleFunctions = {};
 
 export function createKey(this: Provider, spec: KeySpec): KeyHandle {
   let keyHandle = this.createBareKey(spec);
-  Object.assign(keyHandle, sharedKeyFunctions);
   Object.assign(keyHandle, keyHandleFunctions);
   return keyHandle;
 }
@@ -52,11 +56,15 @@ export function createKey(this: Provider, spec: KeySpec): KeyHandle {
 const keyPairHandleFunctions = {
   signData: signData,
   verifyData: verifyData,
+  id: idForKeyPair,
+  delete: deleteForKeyPair,
+  getPublicKey: getPublicKey,
+  encryptData: encryptDataForKeyPairHandle,
+  decryptData: decryptDataForKeyPairHandle,
 };
 
 export function createKeyPair(this: Provider, spec: KeyPairSpec): KeyPairHandle {
   let keyPairHandle = this.createBareKeyPair(spec);
-  Object.assign(keyPairHandle, sharedKeyFunctions);
   Object.assign(keyPairHandle, keyHandleFunctions);
   return keyPairHandle;
 }
