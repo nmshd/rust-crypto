@@ -29,7 +29,7 @@ use std::future::Future;
 use std::pin::Pin;
 
 use crate::*;
-use crypto_layer::common::config::*;
+use config::DynFuture;
 use crypto_layer::common::error::*;
 use crypto_layer::common::*;
 use flutter_rust_bridge::for_generated::byteorder::{NativeEndian, ReadBytesExt, WriteBytesExt};
@@ -44,7 +44,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.6.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 2036038745;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -1187666256;
 
 // Section: executor
 
@@ -498,6 +498,57 @@ fn wire__crypto_layer__common__KeyHandle_extract_key_impl(
         },
     )
 }
+fn wire__crypto_layer__common__KeyHandle_hmac_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "KeyHandle_hmac",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <RustOpaqueMoi<
+                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<KeyHandle>,
+            >>::sse_decode(&mut deserializer);
+            let api_data = <Vec<u8>>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, CalError>((move || {
+                    let mut api_that_guard = None;
+                    let decode_indices_ =
+                        flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
+                            flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                                &api_that, 0, false,
+                            ),
+                        ]);
+                    for i in decode_indices_ {
+                        match i {
+                            0 => api_that_guard = Some(api_that.lockable_decode_sync_ref()),
+                            _ => unreachable!(),
+                        }
+                    }
+                    let api_that_guard = api_that_guard.unwrap();
+                    let output_ok =
+                        crypto_layer::common::KeyHandle::hmac(&*api_that_guard, &api_data)?;
+                    Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
 fn wire__crypto_layer__common__KeyHandle_id_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -541,6 +592,61 @@ fn wire__crypto_layer__common__KeyHandle_id_impl(
                     }
                     let api_that_guard = api_that_guard.unwrap();
                     let output_ok = crypto_layer::common::KeyHandle::id(&*api_that_guard)?;
+                    Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crypto_layer__common__KeyHandle_verify_hmac_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "KeyHandle_verify_hmac",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <RustOpaqueMoi<
+                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<KeyHandle>,
+            >>::sse_decode(&mut deserializer);
+            let api_data = <Vec<u8>>::sse_decode(&mut deserializer);
+            let api_hmac = <Vec<u8>>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, CalError>((move || {
+                    let mut api_that_guard = None;
+                    let decode_indices_ =
+                        flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
+                            flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                                &api_that, 0, false,
+                            ),
+                        ]);
+                    for i in decode_indices_ {
+                        match i {
+                            0 => api_that_guard = Some(api_that.lockable_decode_sync_ref()),
+                            _ => unreachable!(),
+                        }
+                    }
+                    let api_that_guard = api_that_guard.unwrap();
+                    let output_ok = crypto_layer::common::KeyHandle::verify_hmac(
+                        &*api_that_guard,
+                        &api_data,
+                        &api_hmac,
+                    )?;
                     Ok(output_ok)
                 })())
             }
@@ -886,213 +992,6 @@ fn wire__crypto_layer__common__KeyPairHandle_verify_signature_impl(
                         &*api_that_guard,
                         &api_data,
                         &api_signature,
-                    )?;
-                    Ok(output_ok)
-                })())
-            }
-        },
-    )
-}
-fn wire__crypto_layer__common__config__ProviderImplConfig_auto_accessor_get_additional_config_impl(
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "ProviderImplConfig_auto_accessor_get_additional_config",
-            port: None,
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_that = <RustOpaqueMoi<
-                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ProviderImplConfig>,
-            >>::sse_decode(&mut deserializer);
-            deserializer.end();
-            transform_result_sse::<_, ()>((move || {
-                let mut api_that_guard = None;
-                let decode_indices_ =
-                    flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
-                        flutter_rust_bridge::for_generated::LockableOrderInfo::new(
-                            &api_that, 0, false,
-                        ),
-                    ]);
-                for i in decode_indices_ {
-                    match i {
-                        0 => api_that_guard = Some(api_that.lockable_decode_sync_ref()),
-                        _ => unreachable!(),
-                    }
-                }
-                let api_that_guard = api_that_guard.unwrap();
-                let output_ok = Result::<_, ()>::Ok(api_that_guard.additional_config.clone())?;
-                Ok(output_ok)
-            })())
-        },
-    )
-}
-fn wire__crypto_layer__common__config__ProviderImplConfig_auto_accessor_set_additional_config_impl(
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "ProviderImplConfig_auto_accessor_set_additional_config",
-            port: None,
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_that = <RustOpaqueMoi<
-                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ProviderImplConfig>,
-            >>::sse_decode(&mut deserializer);
-            let api_additional_config = <Vec<AdditionalConfig>>::sse_decode(&mut deserializer);
-            deserializer.end();
-            transform_result_sse::<_, ()>((move || {
-                let mut api_that_guard = None;
-                let decode_indices_ =
-                    flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
-                        flutter_rust_bridge::for_generated::LockableOrderInfo::new(
-                            &api_that, 0, true,
-                        ),
-                    ]);
-                for i in decode_indices_ {
-                    match i {
-                        0 => api_that_guard = Some(api_that.lockable_decode_sync_ref_mut()),
-                        _ => unreachable!(),
-                    }
-                }
-                let mut api_that_guard = api_that_guard.unwrap();
-                let output_ok = Result::<_, ()>::Ok({
-                    {
-                        api_that_guard.additional_config = api_additional_config;
-                    };
-                })?;
-                Ok(output_ok)
-            })())
-        },
-    )
-}
-fn wire__crypto_layer__common__config__ProviderImplConfig_new_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "ProviderImplConfig_new",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_get_fn =
-                <Arc<dyn Fn(String) -> DynFuture<Option<Vec<u8>>> + Send + Sync>>::sse_decode(
-                    &mut deserializer,
-                );
-            let api_store_fn =
-                <Arc<dyn Fn(String, Vec<u8>) -> DynFuture<bool> + Send + Sync>>::sse_decode(
-                    &mut deserializer,
-                );
-            let api_delete_fn = <Arc<
-                dyn Fn(String) -> Pin<Box<dyn Future<Output = ()> + Send>> + Send + Sync,
-            >>::sse_decode(&mut deserializer);
-            let api_all_keys_fn =
-                <Arc<dyn Fn() -> DynFuture<Vec<String>> + Send + Sync>>::sse_decode(
-                    &mut deserializer,
-                );
-            let api_additional_config = <Vec<AdditionalConfig>>::sse_decode(&mut deserializer);
-            deserializer.end();
-            move |context| {
-                transform_result_sse::<_, ()>((move || {
-                    let output_ok = Result::<_, ()>::Ok(
-                        crypto_layer::common::config::ProviderImplConfig::new(
-                            api_get_fn,
-                            api_store_fn,
-                            api_delete_fn,
-                            api_all_keys_fn,
-                            api_additional_config,
-                        ),
-                    )?;
-                    Ok(output_ok)
-                })())
-            }
-        },
-    )
-}
-fn wire__crypto_layer__common__config__ProviderImplConfig_new_stub_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "ProviderImplConfig_new_stub",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_get_fn =
-                <Arc<dyn Fn(String) -> DynFuture<Option<Vec<u8>>> + Send + Sync>>::sse_decode(
-                    &mut deserializer,
-                );
-            let api_store_fn =
-                <Arc<dyn Fn(String, Vec<u8>) -> DynFuture<bool> + Send + Sync>>::sse_decode(
-                    &mut deserializer,
-                );
-            let api_delete_fn = <Arc<
-                dyn Fn(String) -> Pin<Box<dyn Future<Output = ()> + Send>> + Send + Sync,
-            >>::sse_decode(&mut deserializer);
-            let api_all_keys_fn =
-                <Arc<dyn Fn() -> DynFuture<Vec<String>> + Send + Sync>>::sse_decode(
-                    &mut deserializer,
-                );
-            deserializer.end();
-            move |context| {
-                transform_result_sse::<_, ()>((move || {
-                    let output_ok = Result::<_, ()>::Ok(
-                        crypto_layer::common::config::ProviderImplConfig::new_stub(
-                            api_get_fn,
-                            api_store_fn,
-                            api_delete_fn,
-                            api_all_keys_fn,
-                        ),
                     )?;
                     Ok(output_ok)
                 })())
@@ -1756,7 +1655,8 @@ fn wire__crypto_layer__common__factory__create_provider_impl(
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             let api_conf =
                 <crypto_layer::common::config::ProviderConfig>::sse_decode(&mut deserializer);
-            let api_impl_conf = <ProviderImplConfig>::sse_decode(&mut deserializer);
+            let api_impl_conf =
+                <crypto_layer::common::config::ProviderImplConfig>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
                 transform_result_sse::<_, ()>((move || {
@@ -1792,7 +1692,8 @@ fn wire__crypto_layer__common__factory__create_provider_from_name_impl(
             let mut deserializer =
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             let api_name = <String>::sse_decode(&mut deserializer);
-            let api_impl_conf = <ProviderImplConfig>::sse_decode(&mut deserializer);
+            let api_impl_conf =
+                <crypto_layer::common::config::ProviderImplConfig>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
                 transform_result_sse::<_, ()>((move || {
@@ -2069,11 +1970,102 @@ fn wire__crypto_layer__common__crypto__pkcs__standards__oid_type_as_str_impl(
         },
     )
 }
+fn wire__crypto_layer__common__config__provider_impl_config_new_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "provider_impl_config_new",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_get_fn =
+                <Arc<dyn Fn(String) -> DynFuture<Option<Vec<u8>>> + Send + Sync>>::sse_decode(
+                    &mut deserializer,
+                );
+            let api_store_fn =
+                <Arc<dyn Fn(String, Vec<u8>) -> DynFuture<bool> + Send + Sync>>::sse_decode(
+                    &mut deserializer,
+                );
+            let api_delete_fn = <Arc<
+                dyn Fn(String) -> Pin<Box<dyn Future<Output = ()> + Send>> + Send + Sync,
+            >>::sse_decode(&mut deserializer);
+            let api_all_keys_fn =
+                <Arc<dyn Fn() -> DynFuture<Vec<String>> + Send + Sync>>::sse_decode(
+                    &mut deserializer,
+                );
+            let api_additional_config =
+                <Vec<crypto_layer::common::config::AdditionalConfig>>::sse_decode(
+                    &mut deserializer,
+                );
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok = Result::<_, ()>::Ok(
+                        crypto_layer::common::config::ProviderImplConfig::new(
+                            api_get_fn,
+                            api_store_fn,
+                            api_delete_fn,
+                            api_all_keys_fn,
+                            api_additional_config,
+                        ),
+                    )?;
+                    Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
 
 // Section: static_checks
 
 #[allow(clippy::unnecessary_literal_unwrap)]
 const _: fn() = || {
+    match None::<crypto_layer::common::config::AdditionalConfig>.unwrap() {
+        crypto_layer::common::config::AdditionalConfig::KVStoreConfig {
+            get_fn,
+            store_fn,
+            delete_fn,
+            all_keys_fn,
+        } => {
+            let _: Arc<dyn Fn(String) -> DynFuture<Option<Vec<u8>>> + Send + Sync> = get_fn;
+            let _: Arc<dyn Fn(String, Vec<u8>) -> DynFuture<bool> + Send + Sync> = store_fn;
+            let _: Arc<dyn Fn(String) -> Pin<Box<dyn Future<Output = ()> + Send>> + Send + Sync> =
+                delete_fn;
+            let _: Arc<dyn Fn() -> DynFuture<Vec<String>> + Send + Sync> = all_keys_fn;
+        }
+        crypto_layer::common::config::AdditionalConfig::FileStoreConfig {
+            db_path,
+            secure_path,
+            pass,
+        } => {
+            let _: String = db_path;
+            let _: String = secure_path;
+            let _: String = pass;
+        }
+        crypto_layer::common::config::AdditionalConfig::StorageConfigHMAC(field0) => {
+            let _: KeyHandle = field0;
+        }
+        crypto_layer::common::config::AdditionalConfig::StorageConfigDSA(field0) => {
+            let _: KeyPairHandle = field0;
+        }
+        crypto_layer::common::config::AdditionalConfig::StorageConfigPass(field0) => {
+            let _: String = field0;
+        }
+    }
     match None::<crypto_layer::common::error::CalErrorKind>.unwrap() {
         crypto_layer::common::error::CalErrorKind::NotImplemented => {}
         crypto_layer::common::error::CalErrorKind::BadParameter {
@@ -2111,6 +2103,7 @@ const _: fn() = || {
         crypto_layer::common::error::CalErrorKind::UnsupportedAlgorithm(field0) => {
             let _: String = field0;
         }
+        crypto_layer::common::error::CalErrorKind::EphermalKeyError => {}
         crypto_layer::common::error::CalErrorKind::Other => {}
     }
     {
@@ -2121,11 +2114,13 @@ const _: fn() = || {
             KeyPairSpec.cipher;
         let _: crypto_layer::common::crypto::algorithms::hashes::CryptoHash =
             KeyPairSpec.signing_hash;
+        let _: bool = KeyPairSpec.ephemeral;
     }
     {
         let KeySpec = None::<crypto_layer::common::config::KeySpec>.unwrap();
         let _: crypto_layer::common::crypto::algorithms::encryption::Cipher = KeySpec.cipher;
         let _: crypto_layer::common::crypto::algorithms::hashes::CryptoHash = KeySpec.signing_hash;
+        let _: bool = KeySpec.ephemeral;
     }
     {
         let ProviderConfig = None::<crypto_layer::common::config::ProviderConfig>.unwrap();
@@ -2140,6 +2135,11 @@ const _: fn() = || {
         let _: std::collections::HashSet<
             crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec,
         > = ProviderConfig.supported_asym_spec;
+    }
+    {
+        let ProviderImplConfig = None::<crypto_layer::common::config::ProviderImplConfig>.unwrap();
+        let _: Vec<crypto_layer::common::config::AdditionalConfig> =
+            ProviderImplConfig.additional_config;
     }
     match None::<crypto_layer::common::config::Spec>.unwrap() {
         crypto_layer::common::config::Spec::KeySpec(field0) => {
@@ -2290,9 +2290,6 @@ fn decode_DartFn_Inputs__Output_list_String_AnyhowException(
     }
 }
 flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
-    flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AdditionalConfig>
-);
-flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
     flutter_rust_bridge::for_generated::RustAutoOpaqueInner<
         Arc<dyn Fn() -> DynFuture<Vec<String>> + Send + Sync>,
     >
@@ -2327,9 +2324,6 @@ flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
 flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
     flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Provider>
 );
-flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
-    flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ProviderImplConfig>
-);
 
 // Section: dart2rust
 
@@ -2338,16 +2332,6 @@ impl SseDecode for flutter_rust_bridge::for_generated::anyhow::Error {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <String>::sse_decode(deserializer);
         return flutter_rust_bridge::for_generated::anyhow::anyhow!("{}", inner);
-    }
-}
-
-impl SseDecode for AdditionalConfig {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <RustOpaqueMoi<
-            flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AdditionalConfig>,
-        >>::sse_decode(deserializer);
-        return flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(inner);
     }
 }
 
@@ -2449,31 +2433,11 @@ impl SseDecode for Provider {
     }
 }
 
-impl SseDecode for ProviderImplConfig {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <RustOpaqueMoi<
-            flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ProviderImplConfig>,
-        >>::sse_decode(deserializer);
-        return flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(inner);
-    }
-}
-
 impl SseDecode for flutter_rust_bridge::DartOpaque {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <usize>::sse_decode(deserializer);
         return unsafe { flutter_rust_bridge::for_generated::sse_decode_dart_opaque(inner) };
-    }
-}
-
-impl SseDecode
-    for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AdditionalConfig>>
-{
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <usize>::sse_decode(deserializer);
-        return decode_rust_opaque_moi(inner);
     }
 }
 
@@ -2584,16 +2548,6 @@ impl SseDecode
 }
 
 impl SseDecode
-    for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ProviderImplConfig>>
-{
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <usize>::sse_decode(deserializer);
-        return decode_rust_opaque_moi(inner);
-    }
-}
-
-impl SseDecode
     for std::collections::HashSet<
         crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec,
     >
@@ -2638,6 +2592,69 @@ impl SseDecode for String {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <Vec<u8>>::sse_decode(deserializer);
         return String::from_utf8(inner).unwrap();
+    }
+}
+
+impl SseDecode for crypto_layer::common::config::AdditionalConfig {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut tag_ = <i32>::sse_decode(deserializer);
+        match tag_ {
+            0 => {
+                let mut var_getFn =
+                    <Arc<dyn Fn(String) -> DynFuture<Option<Vec<u8>>> + Send + Sync>>::sse_decode(
+                        deserializer,
+                    );
+                let mut var_storeFn =
+                    <Arc<dyn Fn(String, Vec<u8>) -> DynFuture<bool> + Send + Sync>>::sse_decode(
+                        deserializer,
+                    );
+                let mut var_deleteFn = <Arc<
+                    dyn Fn(String) -> Pin<Box<dyn Future<Output = ()> + Send>> + Send + Sync,
+                >>::sse_decode(deserializer);
+                let mut var_allKeysFn =
+                    <Arc<dyn Fn() -> DynFuture<Vec<String>> + Send + Sync>>::sse_decode(
+                        deserializer,
+                    );
+                return crypto_layer::common::config::AdditionalConfig::KVStoreConfig {
+                    get_fn: var_getFn,
+                    store_fn: var_storeFn,
+                    delete_fn: var_deleteFn,
+                    all_keys_fn: var_allKeysFn,
+                };
+            }
+            1 => {
+                let mut var_dbPath = <String>::sse_decode(deserializer);
+                let mut var_securePath = <String>::sse_decode(deserializer);
+                let mut var_pass = <String>::sse_decode(deserializer);
+                return crypto_layer::common::config::AdditionalConfig::FileStoreConfig {
+                    db_path: var_dbPath,
+                    secure_path: var_securePath,
+                    pass: var_pass,
+                };
+            }
+            2 => {
+                let mut var_field0 = <KeyHandle>::sse_decode(deserializer);
+                return crypto_layer::common::config::AdditionalConfig::StorageConfigHMAC(
+                    var_field0,
+                );
+            }
+            3 => {
+                let mut var_field0 = <KeyPairHandle>::sse_decode(deserializer);
+                return crypto_layer::common::config::AdditionalConfig::StorageConfigDSA(
+                    var_field0,
+                );
+            }
+            4 => {
+                let mut var_field0 = <String>::sse_decode(deserializer);
+                return crypto_layer::common::config::AdditionalConfig::StorageConfigPass(
+                    var_field0,
+                );
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
     }
 }
 
@@ -2728,6 +2745,9 @@ impl SseDecode for crypto_layer::common::error::CalErrorKind {
                 return crypto_layer::common::error::CalErrorKind::UnsupportedAlgorithm(var_field0);
             }
             7 => {
+                return crypto_layer::common::error::CalErrorKind::EphermalKeyError;
+            }
+            8 => {
                 return crypto_layer::common::error::CalErrorKind::Other;
             }
             _ => {
@@ -2802,10 +2822,12 @@ impl SseDecode for crypto_layer::common::config::KeyPairSpec {
             <crypto_layer::common::crypto::algorithms::hashes::CryptoHash>::sse_decode(
                 deserializer,
             );
+        let mut var_ephemeral = <bool>::sse_decode(deserializer);
         return crypto_layer::common::config::KeyPairSpec {
             asym_spec: var_asymSpec,
             cipher: var_cipher,
             signing_hash: var_signingHash,
+            ephemeral: var_ephemeral,
         };
     }
 }
@@ -2821,9 +2843,11 @@ impl SseDecode for crypto_layer::common::config::KeySpec {
             <crypto_layer::common::crypto::algorithms::hashes::CryptoHash>::sse_decode(
                 deserializer,
             );
+        let mut var_ephemeral = <bool>::sse_decode(deserializer);
         return crypto_layer::common::config::KeySpec {
             cipher: var_cipher,
             signing_hash: var_signingHash,
+            ephemeral: var_ephemeral,
         };
     }
 }
@@ -2842,18 +2866,6 @@ impl SseDecode for crypto_layer::common::error::KeyType {
     }
 }
 
-impl SseDecode for Vec<AdditionalConfig> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut len_ = <i32>::sse_decode(deserializer);
-        let mut ans_ = vec![];
-        for idx_ in 0..len_ {
-            ans_.push(<AdditionalConfig>::sse_decode(deserializer));
-        }
-        return ans_;
-    }
-}
-
 impl SseDecode for Vec<String> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -2861,6 +2873,18 @@ impl SseDecode for Vec<String> {
         let mut ans_ = vec![];
         for idx_ in 0..len_ {
             ans_.push(<String>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crypto_layer::common::config::AdditionalConfig> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = vec![];
+        for idx_ in 0..len_ {
+            ans_.push(<crypto_layer::common::config::AdditionalConfig>::sse_decode(deserializer));
         }
         return ans_;
     }
@@ -3072,6 +3096,17 @@ impl SseDecode for crypto_layer::common::config::ProviderConfig {
     }
 }
 
+impl SseDecode for crypto_layer::common::config::ProviderImplConfig {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_additionalConfig =
+            <Vec<crypto_layer::common::config::AdditionalConfig>>::sse_decode(deserializer);
+        return crypto_layer::common::config::ProviderImplConfig {
+            additional_config: var_additionalConfig,
+        };
+    }
+}
+
 impl SseDecode for (Vec<u8>, Vec<u8>) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3170,38 +3205,39 @@ fn pde_ffi_dispatcher_primary_impl(
 7 => wire__crypto_layer__common__KeyHandle_delete_impl(port, ptr, rust_vec_len, data_len),
 8 => wire__crypto_layer__common__KeyHandle_encrypt_data_impl(port, ptr, rust_vec_len, data_len),
 9 => wire__crypto_layer__common__KeyHandle_extract_key_impl(port, ptr, rust_vec_len, data_len),
-10 => wire__crypto_layer__common__KeyHandle_id_impl(port, ptr, rust_vec_len, data_len),
-11 => wire__crypto_layer__common__KeyPairHandle_decrypt_data_impl(port, ptr, rust_vec_len, data_len),
-12 => wire__crypto_layer__common__KeyPairHandle_delete_impl(port, ptr, rust_vec_len, data_len),
-13 => wire__crypto_layer__common__KeyPairHandle_encrypt_data_impl(port, ptr, rust_vec_len, data_len),
-14 => wire__crypto_layer__common__KeyPairHandle_get_public_key_impl(port, ptr, rust_vec_len, data_len),
-15 => wire__crypto_layer__common__KeyPairHandle_id_impl(port, ptr, rust_vec_len, data_len),
-16 => wire__crypto_layer__common__KeyPairHandle_sign_data_impl(port, ptr, rust_vec_len, data_len),
-17 => wire__crypto_layer__common__KeyPairHandle_verify_signature_impl(port, ptr, rust_vec_len, data_len),
-20 => wire__crypto_layer__common__config__ProviderImplConfig_new_impl(port, ptr, rust_vec_len, data_len),
-21 => wire__crypto_layer__common__config__ProviderImplConfig_new_stub_impl(port, ptr, rust_vec_len, data_len),
-22 => wire__crypto_layer__common__Provider_create_key_impl(port, ptr, rust_vec_len, data_len),
-23 => wire__crypto_layer__common__Provider_create_key_pair_impl(port, ptr, rust_vec_len, data_len),
-24 => wire__crypto_layer__common__Provider_get_all_keys_impl(port, ptr, rust_vec_len, data_len),
-25 => wire__crypto_layer__common__Provider_get_capabilities_impl(port, ptr, rust_vec_len, data_len),
-26 => wire__crypto_layer__common__Provider_import_key_impl(port, ptr, rust_vec_len, data_len),
-27 => wire__crypto_layer__common__Provider_import_key_pair_impl(port, ptr, rust_vec_len, data_len),
-28 => wire__crypto_layer__common__Provider_import_public_key_impl(port, ptr, rust_vec_len, data_len),
-29 => wire__crypto_layer__common__Provider_load_key_impl(port, ptr, rust_vec_len, data_len),
-30 => wire__crypto_layer__common__Provider_load_key_pair_impl(port, ptr, rust_vec_len, data_len),
-31 => wire__crypto_layer__common__Provider_provider_name_impl(port, ptr, rust_vec_len, data_len),
-32 => wire__crypto_layer__common__Provider_start_ephemeral_dh_exchange_impl(port, ptr, rust_vec_len, data_len),
-34 => wire__crypto_layer__common__crypto__algorithms__encryption__asymmetric_key_spec_default_impl(port, ptr, rust_vec_len, data_len),
-35 => wire__crypto_layer__common__crypto__algorithms__encryption__cipher_default_impl(port, ptr, rust_vec_len, data_len),
-36 => wire__crypto_layer__common__factory__create_provider_impl(port, ptr, rust_vec_len, data_len),
-37 => wire__crypto_layer__common__factory__create_provider_from_name_impl(port, ptr, rust_vec_len, data_len),
-38 => wire__crypto_layer__common__crypto__algorithms__hashes__crypto_hash_default_impl(port, ptr, rust_vec_len, data_len),
-39 => wire__crypto_layer__common__factory__get_all_providers_impl(port, ptr, rust_vec_len, data_len),
-40 => wire__crate__api__crypto__get_default_config_impl(port, ptr, rust_vec_len, data_len),
-41 => wire__crate__api__simple__init_app_impl(port, ptr, rust_vec_len, data_len),
-42 => wire__crypto_layer__common__config__key_pair_spec_default_impl(port, ptr, rust_vec_len, data_len),
-43 => wire__crypto_layer__common__config__key_spec_default_impl(port, ptr, rust_vec_len, data_len),
-44 => wire__crypto_layer__common__crypto__pkcs__standards__oid_type_as_str_impl(port, ptr, rust_vec_len, data_len),
+10 => wire__crypto_layer__common__KeyHandle_hmac_impl(port, ptr, rust_vec_len, data_len),
+11 => wire__crypto_layer__common__KeyHandle_id_impl(port, ptr, rust_vec_len, data_len),
+12 => wire__crypto_layer__common__KeyHandle_verify_hmac_impl(port, ptr, rust_vec_len, data_len),
+13 => wire__crypto_layer__common__KeyPairHandle_decrypt_data_impl(port, ptr, rust_vec_len, data_len),
+14 => wire__crypto_layer__common__KeyPairHandle_delete_impl(port, ptr, rust_vec_len, data_len),
+15 => wire__crypto_layer__common__KeyPairHandle_encrypt_data_impl(port, ptr, rust_vec_len, data_len),
+16 => wire__crypto_layer__common__KeyPairHandle_get_public_key_impl(port, ptr, rust_vec_len, data_len),
+17 => wire__crypto_layer__common__KeyPairHandle_id_impl(port, ptr, rust_vec_len, data_len),
+18 => wire__crypto_layer__common__KeyPairHandle_sign_data_impl(port, ptr, rust_vec_len, data_len),
+19 => wire__crypto_layer__common__KeyPairHandle_verify_signature_impl(port, ptr, rust_vec_len, data_len),
+20 => wire__crypto_layer__common__Provider_create_key_impl(port, ptr, rust_vec_len, data_len),
+21 => wire__crypto_layer__common__Provider_create_key_pair_impl(port, ptr, rust_vec_len, data_len),
+22 => wire__crypto_layer__common__Provider_get_all_keys_impl(port, ptr, rust_vec_len, data_len),
+23 => wire__crypto_layer__common__Provider_get_capabilities_impl(port, ptr, rust_vec_len, data_len),
+24 => wire__crypto_layer__common__Provider_import_key_impl(port, ptr, rust_vec_len, data_len),
+25 => wire__crypto_layer__common__Provider_import_key_pair_impl(port, ptr, rust_vec_len, data_len),
+26 => wire__crypto_layer__common__Provider_import_public_key_impl(port, ptr, rust_vec_len, data_len),
+27 => wire__crypto_layer__common__Provider_load_key_impl(port, ptr, rust_vec_len, data_len),
+28 => wire__crypto_layer__common__Provider_load_key_pair_impl(port, ptr, rust_vec_len, data_len),
+29 => wire__crypto_layer__common__Provider_provider_name_impl(port, ptr, rust_vec_len, data_len),
+30 => wire__crypto_layer__common__Provider_start_ephemeral_dh_exchange_impl(port, ptr, rust_vec_len, data_len),
+32 => wire__crypto_layer__common__crypto__algorithms__encryption__asymmetric_key_spec_default_impl(port, ptr, rust_vec_len, data_len),
+33 => wire__crypto_layer__common__crypto__algorithms__encryption__cipher_default_impl(port, ptr, rust_vec_len, data_len),
+34 => wire__crypto_layer__common__factory__create_provider_impl(port, ptr, rust_vec_len, data_len),
+35 => wire__crypto_layer__common__factory__create_provider_from_name_impl(port, ptr, rust_vec_len, data_len),
+36 => wire__crypto_layer__common__crypto__algorithms__hashes__crypto_hash_default_impl(port, ptr, rust_vec_len, data_len),
+37 => wire__crypto_layer__common__factory__get_all_providers_impl(port, ptr, rust_vec_len, data_len),
+38 => wire__crate__api__crypto__get_default_config_impl(port, ptr, rust_vec_len, data_len),
+39 => wire__crate__api__simple__init_app_impl(port, ptr, rust_vec_len, data_len),
+40 => wire__crypto_layer__common__config__key_pair_spec_default_impl(port, ptr, rust_vec_len, data_len),
+41 => wire__crypto_layer__common__config__key_spec_default_impl(port, ptr, rust_vec_len, data_len),
+42 => wire__crypto_layer__common__crypto__pkcs__standards__oid_type_as_str_impl(port, ptr, rust_vec_len, data_len),
+43 => wire__crypto_layer__common__config__provider_impl_config_new_impl(port, ptr, rust_vec_len, data_len),
                         _ => unreachable!(),
                     }
 }
@@ -3214,28 +3250,11 @@ fn pde_ffi_dispatcher_sync_impl(
 ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
     // Codec=Pde (Serialization + dispatch), see doc to use other codecs
     match func_id {
-                        18 => wire__crypto_layer__common__config__ProviderImplConfig_auto_accessor_get_additional_config_impl(ptr, rust_vec_len, data_len),
-19 => wire__crypto_layer__common__config__ProviderImplConfig_auto_accessor_set_additional_config_impl(ptr, rust_vec_len, data_len),
-                        _ => unreachable!(),
-                    }
+        _ => unreachable!(),
+    }
 }
 
 // Section: rust2dart
-
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<AdditionalConfig> {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self.0)
-            .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<AdditionalConfig> {}
-
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<AdditionalConfig>> for AdditionalConfig {
-    fn into_into_dart(self) -> FrbWrapper<AdditionalConfig> {
-        self.into()
-    }
-}
 
 // Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart
@@ -3416,23 +3435,59 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<Provider>> for Provider {
 }
 
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<ProviderImplConfig> {
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crypto_layer::common::config::AdditionalConfig> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self.0)
-            .into_dart()
+        match self.0 {
+            crypto_layer::common::config::AdditionalConfig::KVStoreConfig {
+                get_fn,
+                store_fn,
+                delete_fn,
+                all_keys_fn,
+            } => [
+                0.into_dart(),
+                get_fn.into_into_dart().into_dart(),
+                store_fn.into_into_dart().into_dart(),
+                delete_fn.into_into_dart().into_dart(),
+                all_keys_fn.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
+            crypto_layer::common::config::AdditionalConfig::FileStoreConfig {
+                db_path,
+                secure_path,
+                pass,
+            } => [
+                1.into_dart(),
+                db_path.into_into_dart().into_dart(),
+                secure_path.into_into_dart().into_dart(),
+                pass.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
+            crypto_layer::common::config::AdditionalConfig::StorageConfigHMAC(field0) => {
+                [2.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
+            crypto_layer::common::config::AdditionalConfig::StorageConfigDSA(field0) => {
+                [3.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
+            crypto_layer::common::config::AdditionalConfig::StorageConfigPass(field0) => {
+                [4.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for FrbWrapper<ProviderImplConfig>
+    for FrbWrapper<crypto_layer::common::config::AdditionalConfig>
 {
 }
-
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<ProviderImplConfig>> for ProviderImplConfig {
-    fn into_into_dart(self) -> FrbWrapper<ProviderImplConfig> {
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crypto_layer::common::config::AdditionalConfig>>
+    for crypto_layer::common::config::AdditionalConfig
+{
+    fn into_into_dart(self) -> FrbWrapper<crypto_layer::common::config::AdditionalConfig> {
         self.into()
     }
 }
-
 // Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart
     for FrbWrapper<crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec>
@@ -3526,7 +3581,10 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crypto_layer::common::error::C
             crypto_layer::common::error::CalErrorKind::UnsupportedAlgorithm(field0) => {
                 [6.into_dart(), field0.into_into_dart().into_dart()].into_dart()
             }
-            crypto_layer::common::error::CalErrorKind::Other => [7.into_dart()].into_dart(),
+            crypto_layer::common::error::CalErrorKind::EphermalKeyError => {
+                [7.into_dart()].into_dart()
+            }
+            crypto_layer::common::error::CalErrorKind::Other => [8.into_dart()].into_dart(),
             _ => {
                 unimplemented!("");
             }
@@ -3633,6 +3691,7 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crypto_layer::common::config::
             self.0.asym_spec.into_into_dart().into_dart(),
             self.0.cipher.into_into_dart().into_dart(),
             self.0.signing_hash.into_into_dart().into_dart(),
+            self.0.ephemeral.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -3654,6 +3713,7 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crypto_layer::common::config::
         [
             self.0.cipher.into_into_dart().into_dart(),
             self.0.signing_hash.into_into_dart().into_dart(),
+            self.0.ephemeral.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -3840,6 +3900,25 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crypto_layer::common::config::
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart
+    for FrbWrapper<crypto_layer::common::config::ProviderImplConfig>
+{
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [self.0.additional_config.into_into_dart().into_dart()].into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<crypto_layer::common::config::ProviderImplConfig>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crypto_layer::common::config::ProviderImplConfig>>
+    for crypto_layer::common::config::ProviderImplConfig
+{
+    fn into_into_dart(self) -> FrbWrapper<crypto_layer::common::config::ProviderImplConfig> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for FrbWrapper<crypto_layer::common::config::SecurityLevel> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self.0 {
@@ -3911,13 +3990,6 @@ impl SseEncode for flutter_rust_bridge::for_generated::anyhow::Error {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(format!("{:?}", self), serializer);
-    }
-}
-
-impl SseEncode for AdditionalConfig {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AdditionalConfig>>>::sse_encode(flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self), serializer);
     }
 }
 
@@ -4012,28 +4084,10 @@ impl SseEncode for Provider {
     }
 }
 
-impl SseEncode for ProviderImplConfig {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ProviderImplConfig>>>::sse_encode(flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self), serializer);
-    }
-}
-
 impl SseEncode for flutter_rust_bridge::DartOpaque {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <usize>::sse_encode(self.encode(), serializer);
-    }
-}
-
-impl SseEncode
-    for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AdditionalConfig>>
-{
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        let (ptr, size) = self.sse_encode_raw();
-        <usize>::sse_encode(ptr, serializer);
-        <i32>::sse_encode(size, serializer);
     }
 }
 
@@ -4153,17 +4207,6 @@ impl SseEncode
 }
 
 impl SseEncode
-    for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ProviderImplConfig>>
-{
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        let (ptr, size) = self.sse_encode_raw();
-        <usize>::sse_encode(ptr, serializer);
-        <i32>::sse_encode(size, serializer);
-    }
-}
-
-impl SseEncode
     for std::collections::HashSet<
         crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec,
     >
@@ -4205,6 +4248,58 @@ impl SseEncode for String {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <Vec<u8>>::sse_encode(self.into_bytes(), serializer);
+    }
+}
+
+impl SseEncode for crypto_layer::common::config::AdditionalConfig {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        match self {
+            crypto_layer::common::config::AdditionalConfig::KVStoreConfig {
+                get_fn,
+                store_fn,
+                delete_fn,
+                all_keys_fn,
+            } => {
+                <i32>::sse_encode(0, serializer);
+                <Arc<dyn Fn(String) -> DynFuture<Option<Vec<u8>>> + Send + Sync>>::sse_encode(
+                    get_fn, serializer,
+                );
+                <Arc<dyn Fn(String, Vec<u8>) -> DynFuture<bool> + Send + Sync>>::sse_encode(
+                    store_fn, serializer,
+                );
+                <Arc < dyn Fn (String) -> Pin < Box < dyn Future < Output = () > + Send > > + Send + Sync >>::sse_encode(delete_fn, serializer);
+                <Arc<dyn Fn() -> DynFuture<Vec<String>> + Send + Sync>>::sse_encode(
+                    all_keys_fn,
+                    serializer,
+                );
+            }
+            crypto_layer::common::config::AdditionalConfig::FileStoreConfig {
+                db_path,
+                secure_path,
+                pass,
+            } => {
+                <i32>::sse_encode(1, serializer);
+                <String>::sse_encode(db_path, serializer);
+                <String>::sse_encode(secure_path, serializer);
+                <String>::sse_encode(pass, serializer);
+            }
+            crypto_layer::common::config::AdditionalConfig::StorageConfigHMAC(field0) => {
+                <i32>::sse_encode(2, serializer);
+                <KeyHandle>::sse_encode(field0, serializer);
+            }
+            crypto_layer::common::config::AdditionalConfig::StorageConfigDSA(field0) => {
+                <i32>::sse_encode(3, serializer);
+                <KeyPairHandle>::sse_encode(field0, serializer);
+            }
+            crypto_layer::common::config::AdditionalConfig::StorageConfigPass(field0) => {
+                <i32>::sse_encode(4, serializer);
+                <String>::sse_encode(field0, serializer);
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
     }
 }
 
@@ -4286,8 +4381,11 @@ impl SseEncode for crypto_layer::common::error::CalErrorKind {
                 <i32>::sse_encode(6, serializer);
                 <String>::sse_encode(field0, serializer);
             }
-            crypto_layer::common::error::CalErrorKind::Other => {
+            crypto_layer::common::error::CalErrorKind::EphermalKeyError => {
                 <i32>::sse_encode(7, serializer);
+            }
+            crypto_layer::common::error::CalErrorKind::Other => {
+                <i32>::sse_encode(8, serializer);
             }
             _ => {
                 unimplemented!("");
@@ -4374,6 +4472,7 @@ impl SseEncode for crypto_layer::common::config::KeyPairSpec {
             self.signing_hash,
             serializer,
         );
+        <bool>::sse_encode(self.ephemeral, serializer);
     }
 }
 
@@ -4388,6 +4487,7 @@ impl SseEncode for crypto_layer::common::config::KeySpec {
             self.signing_hash,
             serializer,
         );
+        <bool>::sse_encode(self.ephemeral, serializer);
     }
 }
 
@@ -4409,22 +4509,22 @@ impl SseEncode for crypto_layer::common::error::KeyType {
     }
 }
 
-impl SseEncode for Vec<AdditionalConfig> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <i32>::sse_encode(self.len() as _, serializer);
-        for item in self {
-            <AdditionalConfig>::sse_encode(item, serializer);
-        }
-    }
-}
-
 impl SseEncode for Vec<String> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
             <String>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crypto_layer::common::config::AdditionalConfig> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crypto_layer::common::config::AdditionalConfig>::sse_encode(item, serializer);
         }
     }
 }
@@ -4601,6 +4701,16 @@ impl SseEncode for crypto_layer::common::config::ProviderConfig {
     }
 }
 
+impl SseEncode for crypto_layer::common::config::ProviderImplConfig {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Vec<crypto_layer::common::config::AdditionalConfig>>::sse_encode(
+            self.additional_config,
+            serializer,
+        );
+    }
+}
+
 impl SseEncode for (Vec<u8>, Vec<u8>) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -4690,7 +4800,6 @@ mod io {
 
     use super::*;
     use crate::*;
-    use crypto_layer::common::config::*;
     use crypto_layer::common::error::*;
     use crypto_layer::common::*;
     use flutter_rust_bridge::for_generated::byteorder::{
@@ -4702,20 +4811,6 @@ mod io {
     // Section: boilerplate
 
     flutter_rust_bridge::frb_generated_boilerplate_io!();
-
-    #[no_mangle]
-    pub extern "C" fn frbgen_cal_flutter_plugin_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAdditionalConfig(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AdditionalConfig>>::increment_strong_count(ptr as _);
-    }
-
-    #[no_mangle]
-    pub extern "C" fn frbgen_cal_flutter_plugin_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAdditionalConfig(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AdditionalConfig>>::decrement_strong_count(ptr as _);
-    }
 
     #[no_mangle]
     pub extern "C" fn frbgen_cal_flutter_plugin_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynFnDynFutureVecStringSendSync(
@@ -4874,20 +4969,6 @@ mod io {
     ) {
         MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Provider>>::decrement_strong_count(ptr as _);
     }
-
-    #[no_mangle]
-    pub extern "C" fn frbgen_cal_flutter_plugin_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplConfig(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ProviderImplConfig>>::increment_strong_count(ptr as _);
-    }
-
-    #[no_mangle]
-    pub extern "C" fn frbgen_cal_flutter_plugin_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplConfig(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ProviderImplConfig>>::decrement_strong_count(ptr as _);
-    }
 }
 #[cfg(not(target_family = "wasm"))]
 pub use io::*;
@@ -4902,7 +4983,6 @@ mod web {
 
     use super::*;
     use crate::*;
-    use crypto_layer::common::config::*;
     use crypto_layer::common::error::*;
     use crypto_layer::common::*;
     use flutter_rust_bridge::for_generated::byteorder::{
@@ -4916,20 +4996,6 @@ mod web {
     // Section: boilerplate
 
     flutter_rust_bridge::frb_generated_boilerplate_web!();
-
-    #[wasm_bindgen]
-    pub fn rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAdditionalConfig(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AdditionalConfig>>::increment_strong_count(ptr as _);
-    }
-
-    #[wasm_bindgen]
-    pub fn rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAdditionalConfig(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AdditionalConfig>>::decrement_strong_count(ptr as _);
-    }
 
     #[wasm_bindgen]
     pub fn rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynFnDynFutureVecStringSendSync(
@@ -5087,20 +5153,6 @@ mod web {
         ptr: *const std::ffi::c_void,
     ) {
         MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Provider>>::decrement_strong_count(ptr as _);
-    }
-
-    #[wasm_bindgen]
-    pub fn rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplConfig(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ProviderImplConfig>>::increment_strong_count(ptr as _);
-    }
-
-    #[wasm_bindgen]
-    pub fn rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplConfig(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ProviderImplConfig>>::decrement_strong_count(ptr as _);
     }
 }
 #[cfg(target_family = "wasm")]
