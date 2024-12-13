@@ -10,8 +10,8 @@ use crate::{from_wrapped_key_pair_spec, from_wrapped_key_spec};
 use crate::{JsKeyHandle, JsKeyPairHandle, JsProvider};
 
 pub fn export_create_key(mut cx: FunctionContext) -> JsResult<JsKeyHandle> {
-    let provider_js = cx.argument::<JsProvider>(0)?;
-    let spec_js = cx.argument::<JsObject>(1)?;
+    let provider_js = cx.this::<JsProvider>()?;
+    let spec_js = cx.argument::<JsObject>(0)?;
 
     let spec = unwrap_or_throw!(cx, from_wrapped_key_spec(&mut cx, spec_js));
 
@@ -25,8 +25,8 @@ pub fn export_create_key(mut cx: FunctionContext) -> JsResult<JsKeyHandle> {
 }
 
 pub fn export_create_key_pair(mut cx: FunctionContext) -> JsResult<JsKeyPairHandle> {
-    let provider_js = cx.argument::<JsProvider>(0)?;
-    let spec_js = cx.argument::<JsObject>(1)?;
+    let provider_js = cx.this::<JsProvider>()?;
+    let spec_js = cx.argument::<JsObject>(0)?;
 
     let spec = unwrap_or_throw!(cx, from_wrapped_key_pair_spec(&mut cx, spec_js));
 
@@ -40,7 +40,7 @@ pub fn export_create_key_pair(mut cx: FunctionContext) -> JsResult<JsKeyPairHand
 }
 
 pub fn export_provider_name(mut cx: FunctionContext) -> JsResult<JsString> {
-    let provider_js = cx.argument::<JsProvider>(0)?;
+    let provider_js = cx.this::<JsProvider>()?;
     let provider = provider_js.borrow();
     Ok(cx.string(provider.provider_name()))
 }

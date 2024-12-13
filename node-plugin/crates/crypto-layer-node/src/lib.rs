@@ -79,19 +79,16 @@ fn main(mut cx: ModuleContext) -> NeonResult<()> {
     let load_function_span = tracing::trace_span!("Loading module functions.").entered();
 
     cx.export_function("getAllProviders", export_get_all_providers)?;
-    cx.export_function("createProvider", export_create_provider)?;
-    cx.export_function("createProviderFromName", export_create_provider_from_name)?;
+    cx.export_function("createBareProvider", export_create_provider)?;
+    cx.export_function(
+        "createBareProviderFromName",
+        export_create_provider_from_name,
+    )?;
     cx.export_function("providerName", crate::provider::export_provider_name)?;
-    cx.export_function("createKey", crate::provider::export_create_key)?;
-    cx.export_function("createKeyPair", crate::provider::export_create_key_pair)?;
-    cx.export_function(
-        "signDataWithKeyPairHandle",
-        crate::keypairhandle::export_sign_data,
-    )?;
-    cx.export_function(
-        "verifyDataWithKeyPairHandle",
-        crate::keypairhandle::export_verify_data,
-    )?;
+    cx.export_function("createBareKey", crate::provider::export_create_key)?;
+    cx.export_function("createBareKeyPair", crate::provider::export_create_key_pair)?;
+    cx.export_function("signData", crate::keypairhandle::export_sign_data)?;
+    cx.export_function("verifyData", crate::keypairhandle::export_verify_data)?;
 
     load_function_span.exit();
     tracing::trace!("crypto-layer loaded.");

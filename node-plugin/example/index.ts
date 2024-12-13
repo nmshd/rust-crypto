@@ -1,5 +1,5 @@
-import { createKeyPair, createProvider, getAllProviders, providerName, signDataWithKeyPairHandle, verifyDataWithKeyPairHandle } from "crypto-layer-node";
-import { type KeyPairSpec, type ProviderConfig, type ProviderImplConfig } from "crypto-layer-ts-types";
+import { createProvider, getAllProviders } from "crypto-layer-node";
+import { type ProviderConfig, type ProviderImplConfig } from "crypto-layer-ts-types";
 import { exit } from "process";
 
 
@@ -30,9 +30,9 @@ if (!provider) {
     exit(1);
 }
 
-console.log("Provider initialized: ", providerName(provider))
+console.log("Provider initialized: ", provider.providerName())
 
-let keypairspec: KeyPairSpec = {
+/* let keypairspec: KeyPairSpec = {
     asym_spec: "P256",
     cipher: null,
     signing_hash: "Sha2_224",
@@ -40,7 +40,7 @@ let keypairspec: KeyPairSpec = {
 
 console.log("Creating KeyPair");
 
-let keypair = createKeyPair(provider, keypairspec);
+let keypair = provider.createKeyPair(keypairspec);
 
 console.log("Created KeyPair");
 
@@ -48,10 +48,10 @@ let data = Uint8Array.from([1, 2, 3, 4]);
 
 console.log("Data: ", data);
 
-let signature = signDataWithKeyPairHandle(keypair, data);
+let signature = keypair.signData(data);
 
 console.log("Signature: ", signature);
 
-console.log("Verified: ", verifyDataWithKeyPairHandle(keypair, data, signature) ? "OK" : "FAILURE")
+console.log("Verified: ", keypair.verifyData(data, signature) ? "OK" : "FAILURE") */
 
 exit(0)
