@@ -100,6 +100,12 @@ fn main(mut cx: ModuleContext) -> NeonResult<()> {
     cx.export_function("encryptDataForKeyPairHandle", crate::keypairhandle::export_encrypt_data)?;
     cx.export_function("decryptDataForKeyPairHandle", crate::keypairhandle::export_decrypt_data)?;
 
+    cx.export_function("idForKeyHandle", crate::keyhandle::export_id)?;
+    cx.export_function("deleteForKeyHandle", crate::keyhandle::export_delete)?;
+    cx.export_function("extractKey", crate::keyhandle::export_extract_key)?;
+    cx.export_function("encryptDataForKeyHandle", crate::keyhandle::export_encrypt_data)?;
+    cx.export_function("decryptDataForKeyHandle", crate::keyhandle::export_decrypt_data)?;
+
     load_function_span.exit();
     tracing::trace!("crypto-layer loaded.");
 

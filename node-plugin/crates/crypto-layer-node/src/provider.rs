@@ -1,7 +1,5 @@
 use std::cell::RefCell;
-use std::ops::{Deref, DerefMut};
 
-use crypto_layer::prelude::*;
 use neon::prelude::*;
 
 use crate::common::Finalized;

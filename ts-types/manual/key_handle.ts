@@ -6,7 +6,7 @@ export namespace KeyHandleNS {
     }
 
     export interface EncryptDataFunc {
-        (self: KeyHandle, data: Uint8Array): Uint8Array;
+        (self: KeyHandle, data: Uint8Array): [Uint8Array, Uint8Array];
     }
 
     export interface DecryptDataFunc {
