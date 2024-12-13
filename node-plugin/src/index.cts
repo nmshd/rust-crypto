@@ -20,7 +20,12 @@ import {
     encryptDataForKeyHandle,
     encryptDataForKeyPairHandle,
     extractKey,
-    getPublicKey
+    getPublicKey,
+    loadBareKey,
+    loadBareKeyPair,
+    importBareKey,
+    importBareKeyPair,
+    importBarePublicKey
 } from "./load.cjs";
 
 // Use this declaration to assign types to the addon's exports,
@@ -33,6 +38,11 @@ declare module "./load.cjs" {
     export function providerName(this: Provider): string;
     export function createBareKey(this: Provider, spec: KeySpec): {};
     export function createBareKeyPair(this: Provider, spec: KeyPairSpec): {};
+    export function loadBareKey(this: Provider, id: string): {};
+    export function loadBareKeyPair(this: Provider, id: string): {};
+    export function importBareKey(this: Provider, spec: KeyPairSpec, key: Uint8Array): {};
+    export function importBareKeyPair(this: Provider, spec: KeyPairSpec, publicKey: Uint8Array, privateKey: Uint8Array): {};
+    export function importBarePublicKey(this: Provider, spec: KeyPairSpec, publicKey: Uint8Array): {};
 
     export function signData(this: KeyPairHandle, data: Uint8Array): Uint8Array;
     export function verifyData(this: KeyPairHandle, data: Uint8Array, signature: Uint8Array): boolean;
@@ -52,7 +62,12 @@ declare module "./load.cjs" {
 const providerFunctions = {
     providerName: providerName,
     createKey: createKey,
-    createKeyPair: createKeyPair
+    createKeyPair: createKeyPair,
+    loadKey: loadBareKey,
+    loadKeyPair: loadBareKeyPair,
+    importKey: importBareKey,
+    importKeyPair: importBareKeyPair,
+    importPublicKey: importBarePublicKey
 };
 
 export function createProvider(config: ProviderConfig, impl_config: ProviderImplConfig): Provider | undefined {
@@ -78,6 +93,18 @@ export function createKey(this: Provider, spec: KeySpec): KeyHandle {
     return keyHandle;
 }
 
+export function loadKey(this: Provider, id: string): KeyHandle {
+    let keyHandle = this.loadBareKey(id);
+    Object.assign(keyHandle, keyHandleFunctions);
+    return keyHandle;
+}
+
+export function importKey(this: Provider, spec: KeySpec, rawKey: Uint8Array): KeyHandle {
+    let keyHandle = this.importBareKey(spec, rawKey);
+    Object.assign(keyHandle, keyHandleFunctions);
+    return keyHandle;
+}
+
 const keyPairHandleFunctions = {
     signData: signData,
     verifyData: verifyData,
@@ -90,6 +117,24 @@ const keyPairHandleFunctions = {
 
 export function createKeyPair(this: Provider, spec: KeyPairSpec): KeyPairHandle {
     let keyPairHandle = this.createBareKeyPair(spec);
+    Object.assign(keyPairHandle, keyHandleFunctions);
+    return keyPairHandle;
+}
+
+export function loadKeyPair(this: Provider, id: string): KeyPairHandle {
+    let keyPairHandle = this.loadBareKeyPair(id);
+    Object.assign(keyPairHandle, keyHandleFunctions);
+    return keyPairHandle;
+}
+
+export function importKeyPair(this: Provider, spec: KeyPairSpec, publicKey: Uint8Array, privateKey: Uint8Array): KeyPairHandle {
+    let keyPairHandle = this.importBareKeyPair(spec, publicKey, privateKey);
+    Object.assign(keyPairHandle, keyHandleFunctions);
+    return keyPairHandle;
+}
+
+export function importPublicKey(this: Provider, spec: KeyPairSpec, publicKey: Uint8Array): KeyPairHandle {
+    let keyPairHandle = this.importBarePublicKey(spec, publicKey);
     Object.assign(keyPairHandle, keyHandleFunctions);
     return keyPairHandle;
 }

@@ -90,6 +90,11 @@ fn main(mut cx: ModuleContext) -> NeonResult<()> {
     cx.export_function("providerName", crate::provider::export_provider_name)?;
     cx.export_function("createBareKey", crate::provider::export_create_key)?;
     cx.export_function("createBareKeyPair", crate::provider::export_create_key_pair)?;
+    cx.export_function("loadBareKey", crate::provider::export_load_key)?;    
+    cx.export_function("loadBareKeyPair", crate::provider::export_load_key_pair)?;
+    cx.export_function("importBareKey", crate::provider::export_import_key)?;
+    cx.export_function("importBareKeyPair", crate::provider::export_import_key_pair)?;
+    cx.export_function("importBarePublicKey", crate::provider::export_import_public_key)?;
 
     //key pair handle
     cx.export_function("signData", crate::keypairhandle::export_sign_data)?;
