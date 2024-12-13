@@ -1,6 +1,8 @@
 use std::fmt;
 
+use anyhow::anyhow;
 use serde::{Deserialize, Serialize};
+use sled::{open, Db};
 use tracing::trace;
 
 use crate::common::{
@@ -26,17 +28,15 @@ impl StorageManager {
         let db_store = config
             .iter()
             .filter_map(|c| {
-                if let AdditionalConfig::FileStoreConfig {
-                    db_path,
-                    secure_path,
-                    pass,
-                } = c.clone()
-                {
-                    Some(FileStore {
-                        db_path,
-                        secure_path,
-                        pass,
-                    })
+                if let AdditionalConfig::FileStoreConfig { db_dir } = c.clone() {
+                    // TODO: Have new function return result instead?
+                    match FileStore::new(db_dir) {
+                        Ok(db) => Some(db),
+                        Err(e) => {
+                            tracing::error!(error = %e, "Failed initializing database.");
+                            None
+                        }
+                    }
                 } else {
                     None
                 }
@@ -236,6 +236,14 @@ impl StorageManager {
     }
 }
 
+fn serialize<T: Serialize>(value: &T) -> Result<Vec<u8>, CalError> {
+    serde_json::to_vec(&value).map_err(|e| CalError::other(anyhow!(e)))
+}
+
+fn deserialize<'a, R: Deserialize<'a>>(data: &'a [u8]) -> Result<R, CalError> {
+    serde_json::from_slice(&data).map_err(|e| CalError::other(anyhow!(e)))
+}
+
 #[derive(Clone)]
 struct KVStore {
     get_fn: GetFn,
@@ -257,7 +265,7 @@ impl KVStore {
         key: String,
         value: KeyDataEncrypted,
     ) -> Result<(), CalError> {
-        let value = serde_json::to_vec(&value).unwrap();
+        let value = serialize(&value)?;
         let valid = pollster::block_on((self.store_fn)(format!("{}:{}", provider, key), value));
         if valid {
             Ok(())
@@ -274,7 +282,7 @@ impl KVStore {
         let value = pollster::block_on((self.get_fn)(format!("{}:{}", provider, key)));
         match value {
             Some(data) => {
-                let value: KeyDataEncrypted = serde_json::from_slice(&data).unwrap();
+                let value: KeyDataEncrypted = deserialize(&data)?;
                 Ok(value)
             }
             None => Err(CalError::missing_key(key, KeyType::Private)),
@@ -297,36 +305,78 @@ impl KVStore {
     }
 }
 
+fn file_store_key_id(provider: &String, key: &String) -> Vec<u8> {
+    format!("{}:{}", provider, key).as_bytes().to_vec()
+}
+
 #[allow(dead_code)]
 #[derive(Clone, Debug)]
 struct FileStore {
-    db_path: String,
-    secure_path: String,
-    pass: String,
+    db: Db,
 }
 
 impl FileStore {
+    fn new(db_dir: String) -> Result<Self, CalError> {
+        Ok(Self { db: open(db_dir)? })
+    }
+
     fn store(
         &self,
-        _provider: String,
-        _key: String,
-        _value: KeyDataEncrypted,
+        provider: String,
+        key: String,
+        value: KeyDataEncrypted,
     ) -> Result<(), CalError> {
-        todo!()
+        let id = file_store_key_id(&provider, &key);
+        let data = serialize(&value)?;
+        self.db.insert(id, data)?;
+        Ok(())
     }
 
-    fn get(&self, _provider: String, _key: String) -> Result<KeyDataEncrypted, CalError> {
-        // TODO: implement
-        Err(CalError::not_implemented())
+    fn get(&self, provider: String, key: String) -> Result<KeyDataEncrypted, CalError> {
+        let id = file_store_key_id(&provider, &key);
+        match self.db.get(id)? {
+            Some(data) => deserialize(data.as_ref()),
+            None => Err(CalError::missing_value(
+                format!("Sled (db): No data found for key: {}", key),
+                true,
+                None,
+            )),
+        }
     }
 
-    fn delete(&self, _provider: String, _key: String) {
-        // TODO: implement
+    fn delete(&self, provider: String, key: String) {
+        let id = file_store_key_id(&provider, &key);
+        match self.db.remove(id) {
+            Ok(_) => {}
+            Err(e) => {
+                // TODO: Change delete to return result?
+                tracing::error!(error = %e, "Storage Manager: Failed deletion of data for key {}", key)
+            }
+        }
     }
 
-    fn get_all_keys(&self, _scope: String) -> Vec<(String, Spec)> {
-        // TODO: implement
-        Vec::new()
+    fn get_all_keys(&self, scope: String) -> Vec<(String, Spec)> {
+        self.db
+            .scan_prefix(file_store_key_id(&scope, &"".into()))
+            .values()
+            .filter(|result| match result {
+                Ok(_) => true,
+                Err(e) => {
+                    tracing::warn!(error = %e, "Sled (db): Failed reading entry.");
+                    false
+                }
+            })
+            .map(|result| result.unwrap())
+            .map(|data| deserialize(data.as_ref()))
+            .filter(|result| match result {
+                Ok(_) => true,
+                Err(e) => {
+                    tracing::warn!(error = %e, "Sled (db): Failed deserialization of metadata.");
+                    false
+                }
+            })
+            .map(|result| result.unwrap())
+            .collect()
     }
 }
 
