@@ -29,7 +29,8 @@ pub fn export_verify_data(mut cx: FunctionContext) -> JsResult<JsBoolean> {
 pub fn export_id(mut cx: FunctionContext) -> JsResult<JsString> {
     let handle_js = cx.this::<JsKeyPairHandle>()?;
     let handle = handle_js.borrow();
-    Ok(cx.string(unwrap_or_throw!(cx, handle.id())))
+    let id = unwrap_or_throw!(cx, handle.id());
+    Ok(cx.string(id))
 }
 
 pub fn export_delete(mut cx: FunctionContext) -> JsResult<JsUndefined> {
