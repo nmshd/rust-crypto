@@ -264,7 +264,7 @@ impl ProviderImpl for AppleSecureEnclaveProvider {
         Some(CAPABILITIES.clone())
     }
 
-    fn get_all_keys(&self) -> Result<Vec<Spec>, CalError> {
+    fn get_all_keys(&self) -> Result<Vec<(String, Spec)>, CalError> {
         todo!()
     }
 }
