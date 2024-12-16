@@ -2,6 +2,7 @@ use std::fmt;
 
 use hmac::Mac;
 use serde::{Deserialize, Serialize};
+use sled::{open, Db};
 use tracing::trace;
 
 use hmac::Hmac;
@@ -39,17 +40,15 @@ fn extract_storage_method(config: &[AdditionalConfig]) -> Result<Option<Storage>
     let db_store = config
         .iter()
         .filter_map(|c| {
-            if let AdditionalConfig::FileStoreConfig {
-                db_path,
-                secure_path,
-                pass,
-            } = c.clone()
-            {
-                Some(FileStore {
-                    db_path,
-                    secure_path,
-                    pass,
-                })
+            if let AdditionalConfig::FileStoreConfig { db_dir } = c.clone() {
+                // TODO: Have new function return result instead?
+                match FileStore::new(db_dir) {
+                    Ok(db) => Some(db),
+                    Err(e) => {
+                        tracing::error!(error = %e, "Failed initializing database.");
+                        None
+                    }
+                }
             } else {
                 None
             }
@@ -339,31 +338,63 @@ impl KVStore {
     }
 }
 
+fn file_store_key_id(provider: &String, key: &String) -> Vec<u8> {
+    format!("{}:{}", provider, key).as_bytes().to_vec()
+}
+
 #[allow(dead_code)]
 #[derive(Clone, Debug)]
 struct FileStore {
-    db_path: String,
-    secure_path: String,
-    pass: String,
+    db: Db,
 }
 
 impl FileStore {
-    fn store(&self, _scope: String, _key: String, _value: Vec<u8>) -> Result<(), CalError> {
-        todo!()
+    fn new(db_dir: String) -> Result<Self, CalError> {
+        Ok(Self { db: open(db_dir)? })
     }
 
-    fn get(&self, _scope: String, _key: String) -> Result<Vec<u8>, CalError> {
-        // TODO: implement
-        Err(CalError::not_implemented())
+    fn store(&self, provider: String, key: String, value: Vec<u8>) -> Result<(), CalError> {
+        let id = file_store_key_id(&provider, &key);
+        self.db.insert(id, value)?;
+        Ok(())
     }
 
-    fn delete(&self, _scope: String, _key: String) {
-        // TODO: implement
+    fn get(&self, provider: String, key: String) -> Result<Vec<u8>, CalError> {
+        let id = file_store_key_id(&provider, &key);
+        match self.db.get(id)? {
+            Some(data) => Ok(data.as_ref().to_vec()),
+            None => Err(CalError::missing_value(
+                format!("Sled (db): No data found for key: {}", key),
+                true,
+                None,
+            )),
+        }
     }
 
-    fn get_all_keys(&self, _scope: String) -> Vec<Vec<u8>> {
-        // TODO: implement
-        Vec::new()
+    fn delete(&self, provider: String, key: String) {
+        let id = file_store_key_id(&provider, &key);
+        match self.db.remove(id) {
+            Ok(_) => {}
+            Err(e) => {
+                // TODO: Change delete to return result?
+                tracing::error!(error = %e, "Storage Manager: Failed deletion of data for key {}", key)
+            }
+        }
+    }
+
+    fn get_all_keys(&self, scope: String) -> Vec<Vec<u8>> {
+        self.db
+            .scan_prefix(file_store_key_id(&scope, &"".into()))
+            .values()
+            .filter(|result| match result {
+                Ok(_) => true,
+                Err(e) => {
+                    tracing::warn!(error = %e, "Sled (db): Failed reading entry.");
+                    false
+                }
+            })
+            .map(|result| result.unwrap().as_ref().to_vec())
+            .collect()
     }
 }
 

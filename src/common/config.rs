@@ -111,9 +111,8 @@ pub enum AdditionalConfig {
         all_keys_fn: AllKeysFn,
     },
     FileStoreConfig {
-        db_path: String,
-        secure_path: String,
-        pass: String,
+        /// Path to a directory where the database holding key metadata will be saved.
+        db_dir: String,
     },
     StorageConfigHMAC(KeyHandle),
     StorageConfigDSA(KeyPairHandle),

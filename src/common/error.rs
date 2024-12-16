@@ -1,6 +1,8 @@
+use std::convert::From;
 use std::fmt;
 
 use anyhow::anyhow;
+use sled;
 use thiserror;
 
 // Feel free to add more items to error.
@@ -201,4 +203,17 @@ impl fmt::Display for KeyType {
 #[allow(dead_code)]
 pub(crate) trait ToCalError<T> {
     fn err_internal(self) -> Result<T, CalError>;
+}
+
+impl From<sled::Error> for CalError {
+    fn from(value: sled::Error) -> Self {
+        match value {
+            sled::Error::CollectionNotFound(_) => CalError::missing_value(
+                "Sled (db): Collection not found.".to_owned(),
+                false,
+                Some(anyhow!(value)),
+            ),
+            _ => CalError::other(anyhow!(value)),
+        }
+    }
 }
