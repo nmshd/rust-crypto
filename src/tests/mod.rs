@@ -88,7 +88,6 @@ impl TestStore {
 
         ProviderImplConfig {
             additional_config: vec![kv_store, hmac],
-            ephemeral_keys: false,
         }
     }
 
