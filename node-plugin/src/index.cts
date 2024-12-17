@@ -1,9 +1,7 @@
 // This module is the CJS entry point for the library.
 
 // The Rust addon.
-export * from "./load.cjs";
-
-//export * from "crypto-layer-ts-types";
+export { getAllProviders } from "./load.cjs";
 
 import { type Provider, type ProviderConfig, type ProviderImplConfig, KeyHandle, KeyPairHandle, KeyPairSpec, KeySpec } from "crypto-layer-ts-types";
 import {
@@ -23,43 +21,43 @@ import {
     getPublicKey,
     createBareKey,
     createBareKeyPair,
-    createProviderFromName,
     loadBareKey,
     loadBareKeyPair,
     importBareKey,
     importBareKeyPair,
-    importBarePublicKey
+    importBarePublicKey,
+    createBareProviderFromName
 } from "./load.cjs";
 
 // Use this declaration to assign types to the addon's exports,
 // which otherwise by default are `any`.
 declare module "./load.cjs" {
     export function getAllProviders(): string[];
-    export function createBareProvider(config: ProviderConfig, impl_config: ProviderImplConfig): {} | undefined;
-    export function createProviderFromName(name: string, impl_config: ProviderImplConfig): Provider | undefined;
+    function createBareProvider(config: ProviderConfig, impl_config: ProviderImplConfig): {} | undefined;
+    function createBareProviderFromName(name: string, impl_config: ProviderImplConfig): Provider | undefined;
 
-    export function providerName(this: Provider): string;
-    export function createBareKey(this: Provider, spec: KeySpec): {};
-    export function createBareKeyPair(this: Provider, spec: KeyPairSpec): {};
-    export function loadBareKey(this: Provider, id: string): {};
-    export function loadBareKeyPair(this: Provider, id: string): {};
-    export function importBareKey(this: Provider, spec: KeySpec, key: Uint8Array): {};
-    export function importBareKeyPair(this: Provider, spec: KeyPairSpec, publicKey: Uint8Array, privateKey: Uint8Array): {};
-    export function importBarePublicKey(this: Provider, spec: KeyPairSpec, publicKey: Uint8Array): {};
+    function providerName(this: Provider): string;
+    function createBareKey(this: Provider, spec: KeySpec): {};
+    function createBareKeyPair(this: Provider, spec: KeyPairSpec): {};
+    function loadBareKey(this: Provider, id: string): {};
+    function loadBareKeyPair(this: Provider, id: string): {};
+    function importBareKey(this: Provider, spec: KeySpec, key: Uint8Array): {};
+    function importBareKeyPair(this: Provider, spec: KeyPairSpec, publicKey: Uint8Array, privateKey: Uint8Array): {};
+    function importBarePublicKey(this: Provider, spec: KeyPairSpec, publicKey: Uint8Array): {};
 
-    export function signData(this: KeyPairHandle, data: Uint8Array): Uint8Array;
-    export function verifyData(this: KeyPairHandle, data: Uint8Array, signature: Uint8Array): boolean;
-    export function idForKeyPair(this: KeyPairHandle): string;
-    export function deleteForKeyPair(this: KeyPairHandle): undefined;
-    export function getPublicKey(this: KeyPairHandle): Uint8Array;
-    export function encryptDataForKeyPairHandle(this: KeyPairHandle, data: Uint8Array): Uint8Array;
-    export function decryptDataForKeyPairHandle(this: KeyPairHandle, data: Uint8Array): Uint8Array;
+    function signData(this: KeyPairHandle, data: Uint8Array): Uint8Array;
+    function verifyData(this: KeyPairHandle, data: Uint8Array, signature: Uint8Array): boolean;
+    function idForKeyPair(this: KeyPairHandle): string;
+    function deleteForKeyPair(this: KeyPairHandle): undefined;
+    function getPublicKey(this: KeyPairHandle): Uint8Array;
+    function encryptDataForKeyPairHandle(this: KeyPairHandle, data: Uint8Array): Uint8Array;
+    function decryptDataForKeyPairHandle(this: KeyPairHandle, data: Uint8Array): Uint8Array;
 
-    export function idForKeyHandle(this: KeyPairHandle): string;
-    export function deleteForKeyHandle(this: KeyPairHandle): undefined;
-    export function extractKey(this: KeyPairHandle): Uint8Array;
-    export function encryptDataForKeyHandle(this: KeyPairHandle, data: Uint8Array): [Uint8Array, Uint8Array];
-    export function decryptDataForKeyHandle(this: KeyPairHandle, data: Uint8Array, iv: Uint8Array): Uint8Array;
+    function idForKeyHandle(this: KeyPairHandle): string;
+    function deleteForKeyHandle(this: KeyPairHandle): undefined;
+    function extractKey(this: KeyPairHandle): Uint8Array;
+    function encryptDataForKeyHandle(this: KeyPairHandle, data: Uint8Array): [Uint8Array, Uint8Array];
+    function decryptDataForKeyHandle(this: KeyPairHandle, data: Uint8Array, iv: Uint8Array): Uint8Array;
 }
 
 const providerFunctions = {
@@ -75,6 +73,15 @@ const providerFunctions = {
 
 export function createProvider(config: ProviderConfig, impl_config: ProviderImplConfig): Provider | undefined {
     let provider = createBareProvider(config, impl_config);
+    if (!provider) {
+        return undefined;
+    }
+    Object.assign(provider, providerFunctions);
+    return provider as Provider;
+}
+
+export function createProviderFromName(name: string, impl_config: ProviderImplConfig): Provider | undefined {
+    let provider = createBareProviderFromName(name, impl_config);
     if (!provider) {
         return undefined;
     }

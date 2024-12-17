@@ -1,5 +1,5 @@
 import { createProvider, getAllProviders } from "crypto-layer-node";
-import { type ProviderConfig, type ProviderImplConfig, type KeyPairSpec } from "crypto-layer-ts-types";
+import { type ProviderConfig, type ProviderImplConfig, type KeyPairSpec, type KeyPairHandle } from "crypto-layer-ts-types";
 import { exit } from "process";
 
 console.log("Providers: ", getAllProviders());
@@ -36,7 +36,7 @@ let keypairspec: KeyPairSpec = {
 
 console.log("Creating KeyPair");
 
-let keypair = provider.createKeyPair(keypairspec);
+let keypair = provider.createKeyPair(keypairspec) as KeyPairHandle;
 
 console.log("Created KeyPair");
 
@@ -48,6 +48,6 @@ let signature = keypair.signData(data);
 
 console.log("Signature: ", signature);
 
-console.log("Verified: ", keypair.verifyData(data, signature) ? "OK" : "FAILURE");
+console.log("Verified: ", keypair.verifySignature(data, signature) ? "OK" : "FAILURE");
 
 exit(0);
