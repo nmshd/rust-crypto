@@ -3,12 +3,13 @@ use crypto_layer::common::config::AdditionalConfigDiscriminants;
 use crypto_layer::prelude::*;
 use neon::prelude::*;
 
-use super::error::{js_result, missing_enum_values, ConversionError};
+use super::error::{js_result, ConversionError, bad_parameter};
 use super::{
     from_wrapped_enum, from_wrapped_simple_enum, wrapped_array_to_hash_set,
 };
 use crate::{JsKeyHandle, JsKeyPairHandle};
 
+#[tracing::instrument(level="trace", skip_all)]
 pub fn from_wrapped_provider_config<'a>(
     cx: &mut FunctionContext,
     wrapped: Handle<JsObject>,
@@ -42,6 +43,7 @@ pub fn from_wrapped_provider_config<'a>(
     })
 }
 
+#[tracing::instrument(level="trace", skip_all)]
 pub fn from_wrapped_provider_impl_config<'a>(
     cx: &mut FunctionContext,
     wrapped: Handle<JsObject>,
@@ -53,10 +55,10 @@ pub fn from_wrapped_provider_impl_config<'a>(
     let mut res = vec![];
     for additional_config in additional_config_arr {
         let additional_config_obj = js_result(additional_config.downcast::<JsObject, _>(cx))?;
-        res.push(js_result(from_wrapped_additional_config(
+        res.push(from_wrapped_additional_config(
             cx,
             additional_config_obj,
-        ))?);
+        )?);
     }
 
     Ok(ProviderImplConfig {
@@ -64,6 +66,7 @@ pub fn from_wrapped_provider_impl_config<'a>(
     })
 }
 
+#[tracing::instrument(level="trace", skip_all)]
 pub fn from_wrapped_additional_config(
     cx: &mut FunctionContext,
     wrapped: Handle<JsObject>,
@@ -72,14 +75,16 @@ pub fn from_wrapped_additional_config(
         from_wrapped_enum(cx, wrapped.upcast())?;
 
     if obj_option.is_none() {
-        return Err(ConversionError::MissingEnumValues);
+        tracing::error!("Value is not of type object or string.");
+        return Err(ConversionError::BadParameter);
     }
 
-    let obj = js_result(obj_option.unwrap().downcast::<JsObject, _>(cx))?;
+    let obj = obj_option.unwrap();
 
     let result = match additional_config {
         AdditionalConfigDiscriminants::FileStoreConfig => {
-            let db_path_js = missing_enum_values(obj.get::<JsString, _, _>(cx, "db_dir"))?;
+            let obj = bad_parameter(obj.downcast::<JsObject, _>(cx))?;
+            let db_path_js = bad_parameter(obj.get::<JsString, _, _>(cx, "db_dir"))?;
 
             AdditionalConfig::FileStoreConfig {
                 db_dir: db_path_js.value(cx),
@@ -94,8 +99,7 @@ pub fn from_wrapped_additional_config(
             unimplemented!()
         }
         AdditionalConfigDiscriminants::StorageConfigHMAC => {
-            let key: &'static str = AdditionalConfigDiscriminants::StorageConfigHMAC.into();
-            let key_handle_js = missing_enum_values(wrapped.get::<JsKeyHandle, _, _>(cx, key))?;
+            let key_handle_js = bad_parameter(obj.downcast::<JsKeyHandle, _>(cx))?;
 
             let key_handle = key_handle_js.borrow();
 
@@ -104,8 +108,7 @@ pub fn from_wrapped_additional_config(
             )
         }
         AdditionalConfigDiscriminants::StorageConfigDSA => {
-            let key: &'static str = AdditionalConfigDiscriminants::StorageConfigDSA.into();
-            let key_pair_handle_js = missing_enum_values(wrapped.get::<JsKeyPairHandle, _, _>(cx, key))?;
+            let key_pair_handle_js = bad_parameter(obj.downcast::<JsKeyPairHandle, _>(cx))?;
 
             let key_pair_handle = key_pair_handle_js.borrow();
 
@@ -114,8 +117,7 @@ pub fn from_wrapped_additional_config(
             )
         }
         AdditionalConfigDiscriminants::StorageConfigPass => {
-            let key: &'static str = AdditionalConfigDiscriminants::StorageConfigHMAC.into();
-            let pass_js = missing_enum_values(wrapped.get::<JsString, _, _>(cx, key))?;
+            let pass_js = bad_parameter(obj.downcast::<JsString, _>(cx))?;
             AdditionalConfig::StorageConfigPass(pass_js.value(cx))
         }
     };
@@ -123,6 +125,7 @@ pub fn from_wrapped_additional_config(
     Ok(result)
 }
 
+#[tracing::instrument(level="trace", skip_all)]
 pub(crate) fn from_wrapped_key_spec(
     cx: &mut FunctionContext,
     wrapped: Handle<JsObject>,
@@ -138,6 +141,7 @@ pub(crate) fn from_wrapped_key_spec(
     })
 }
 
+#[tracing::instrument(level="trace", skip_all)]
 pub(crate) fn from_wrapped_key_pair_spec(
     cx: &mut FunctionContext,
     wrapped: Handle<JsObject>,
