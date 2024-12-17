@@ -1,20 +1,13 @@
-use std::boxed::Box;
-use std::future::ready;
-use std::future::Future;
-use std::sync::Arc;
 
 use crypto_layer::common::config::AdditionalConfigDiscriminants;
-use crypto_layer::common::config::{AllKeysFn, DeleteFn, GetFn, StoreFn};
 use crypto_layer::prelude::*;
 use neon::prelude::*;
-use neon::types::buffer::TypedArray;
-use tracing::{error, trace, trace_span};
 
 use super::error::{js_result, missing_enum_values, ConversionError};
 use super::{
-    from_wrapped_enum, from_wrapped_simple_enum, from_wrapped_string_vec, wrapped_array_to_hash_set,
+    from_wrapped_enum, from_wrapped_simple_enum, wrapped_array_to_hash_set,
 };
-use crate::JsKeyHandle;
+use crate::{JsKeyHandle, JsKeyPairHandle};
 
 pub fn from_wrapped_provider_config<'a>(
     cx: &mut FunctionContext,
@@ -71,19 +64,6 @@ pub fn from_wrapped_provider_impl_config<'a>(
     })
 }
 
-async fn unwrap_join_handle_result_or<T, E: std::fmt::Display>(
-    handle: impl Future<Output = Result<T, E>>,
-    on_error: T,
-) -> T {
-    match handle.await {
-        Ok(res) => res,
-        Err(e) => {
-            error!(error = %e, "Failed execution of future.");
-            on_error
-        }
-    }
-}
-
 pub fn from_wrapped_additional_config(
     cx: &mut FunctionContext,
     wrapped: Handle<JsObject>,
@@ -99,28 +79,44 @@ pub fn from_wrapped_additional_config(
 
     let result = match additional_config {
         AdditionalConfigDiscriminants::FileStoreConfig => {
-            let db_path_js = missing_enum_values(obj.get::<JsString, _, _>(cx, "db_path"))?;
-            let secure_path_js = missing_enum_values(obj.get::<JsString, _, _>(cx, "secure_path"))?;
-            let pass_js = missing_enum_values(obj.get::<JsString, _, _>(cx, "pass"))?;
+            let db_path_js = missing_enum_values(obj.get::<JsString, _, _>(cx, "db_dir"))?;
 
             AdditionalConfig::FileStoreConfig {
-                db_path: db_path_js.value(cx),
-                secure_path: secure_path_js.value(cx),
-                pass: pass_js.value(cx),
+                db_dir: db_path_js.value(cx),
             }
         }
         AdditionalConfigDiscriminants::KVStoreConfig => {
+            // Implementing this is problamatic:
+            // There is only one node thread running.
+            // Meaning that to call methods given to rust, rust queues theses method calls for node to run, when the thread
+            // is available.
+            // Rust waits for the call to finish. It never does, as the call can only execute, when the thread is free.
             unimplemented!()
         }
-        AdditionalConfigDiscriminants::StorageConfig => {
-            let key_handle_js =
-                missing_enum_values(obj.get::<JsKeyHandle, _, _>(cx, "key_handle"))?;
+        AdditionalConfigDiscriminants::StorageConfigHMAC => {
+            let key: &'static str = AdditionalConfigDiscriminants::StorageConfigHMAC.into();
+            let key_handle_js = missing_enum_values(wrapped.get::<JsKeyHandle, _, _>(cx, key))?;
 
             let key_handle = key_handle_js.borrow();
 
-            AdditionalConfig::StorageConfig {
-                key_handle: key_handle.clone(),
-            }
+            AdditionalConfig::StorageConfigHMAC (
+                key_handle.clone()
+            )
+        }
+        AdditionalConfigDiscriminants::StorageConfigDSA => {
+            let key: &'static str = AdditionalConfigDiscriminants::StorageConfigDSA.into();
+            let key_pair_handle_js = missing_enum_values(wrapped.get::<JsKeyPairHandle, _, _>(cx, key))?;
+
+            let key_pair_handle = key_pair_handle_js.borrow();
+
+            AdditionalConfig::StorageConfigDSA (
+                key_pair_handle.clone()
+            )
+        }
+        AdditionalConfigDiscriminants::StorageConfigPass => {
+            let key: &'static str = AdditionalConfigDiscriminants::StorageConfigHMAC.into();
+            let pass_js = missing_enum_values(wrapped.get::<JsString, _, _>(cx, key))?;
+            AdditionalConfig::StorageConfigPass(pass_js.value(cx))
         }
     };
 
@@ -133,10 +129,12 @@ pub(crate) fn from_wrapped_key_spec(
 ) -> Result<KeySpec, ConversionError> {
     let cipher_js = js_result(wrapped.get(cx, "cipher"))?;
     let signing_hash_js = js_result(wrapped.get(cx, "signing_hash"))?;
+    let ephemeral_js = js_result(wrapped.get::<JsBoolean, _, _>(cx, "ephemeral"))?;
 
     Ok(KeySpec {
         cipher: from_wrapped_simple_enum(cx, cipher_js)?,
         signing_hash: from_wrapped_simple_enum(cx, signing_hash_js)?,
+        ephemeral: ephemeral_js.value(cx),
     })
 }
 
@@ -147,6 +145,7 @@ pub(crate) fn from_wrapped_key_pair_spec(
     let asymc_spec_js = js_result(wrapped.get(cx, "asym_spec"))?;
     let cipher_js = js_result(wrapped.get::<JsValue, _, _>(cx, "cipher"))?;
     let signing_hash_js = js_result(wrapped.get(cx, "signing_hash"))?;
+    let ephemeral_js = js_result(wrapped.get::<JsBoolean, _, _>(cx, "ephemeral"))?;
 
     let cipher = if let Ok(cipher_js_str) = cipher_js.downcast::<JsString, _>(cx) {
         Some(from_wrapped_simple_enum(cx, cipher_js_str.upcast())?)
@@ -158,5 +157,6 @@ pub(crate) fn from_wrapped_key_pair_spec(
         asym_spec: from_wrapped_simple_enum(cx, asymc_spec_js)?,
         cipher: cipher,
         signing_hash: from_wrapped_simple_enum(cx, signing_hash_js)?,
+        ephemeral: ephemeral_js.value(cx),
     })
 }

@@ -6,7 +6,6 @@ use std::collections::HashSet;
 use std::hash::Hash;
 use std::str::FromStr;
 
-use crypto_layer::prelude::*;
 use neon::prelude::*;
 
 use error::{js_result, match_variant_result, ConversionError};
@@ -65,19 +64,6 @@ pub(crate) fn from_wrapped_enum<'a, T: FromStr>(
     } else {
         Err(ConversionError::BadParameter)
     }
-}
-
-pub(crate) fn is_pair<'a>(
-    cx: &mut impl Context<'a>,
-    wrapped: Handle<JsValue>,
-) -> Result<(Handle<'a, JsValue>, Handle<'a, JsValue>), ConversionError> {
-    let arr = js_result(wrapped.downcast::<JsArray, _>(cx))?;
-    let length = arr.len(cx);
-    if length != 2 {
-        return Err(ConversionError::BadParameter);
-    }
-
-    Ok((js_result(arr.get(cx, 0))?, js_result(arr.get(cx, 1))?))
 }
 
 pub(crate) fn wrapped_array_to_hash_set<

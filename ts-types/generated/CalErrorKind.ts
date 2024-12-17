@@ -44,4 +44,5 @@ export type CalErrorKind =
     };
   }
   | { "UnsupportedAlgorithm": string }
+  | "EphermalKeyError"
   | "Other";

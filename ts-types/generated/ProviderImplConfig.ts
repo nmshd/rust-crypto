@@ -2,6 +2,6 @@
 import type { AdditionalConfig } from "./AdditionalConfig";
 
 /**
- * flutter_rust_bridge:opaque
+ * flutter_rust_bridge:non_opaque
  */
 export type ProviderImplConfig = { additional_config: Array<AdditionalConfig> };

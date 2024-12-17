@@ -1,6 +1,3 @@
-use std::convert::From;
-
-use neon::prelude::*;
 use thiserror;
 
 #[derive(thiserror::Error, Debug)]

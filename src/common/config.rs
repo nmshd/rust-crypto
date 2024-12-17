@@ -10,7 +10,7 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 
-use strum::{EnumDiscriminants, EnumIter, EnumString};
+use strum::{EnumDiscriminants, EnumIter, EnumString, IntoStaticStr};
 
 use super::crypto::algorithms::{
     encryption::{AsymmetricKeySpec, Cipher},
@@ -109,7 +109,7 @@ pub struct ProviderImplConfig {
 }
 
 #[derive(Clone, EnumDiscriminants)]
-#[strum_discriminants(derive(EnumString))]
+#[strum_discriminants(derive(EnumString, IntoStaticStr))]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum AdditionalConfig {
     KVStoreConfig {

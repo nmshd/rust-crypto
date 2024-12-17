@@ -1,6 +1,4 @@
-use std::ops::{Deref, DerefMut};
 
-use crypto_layer::prelude::*;
 use neon::prelude::*;
 use neon::types::buffer::TypedArray;
 

@@ -10,4 +10,5 @@ export type KeyPairSpec = {
   asym_spec: AsymmetricKeySpec;
   cipher: Cipher | null;
   signing_hash: CryptoHash;
+  ephemeral: boolean;
 };
