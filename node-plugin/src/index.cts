@@ -21,6 +21,9 @@ import {
     encryptDataForKeyPairHandle,
     extractKey,
     getPublicKey,
+    createBareKey,
+    createBareKeyPair,
+    createProviderFromName,
     loadBareKey,
     loadBareKeyPair,
     importBareKey,
@@ -40,7 +43,7 @@ declare module "./load.cjs" {
     export function createBareKeyPair(this: Provider, spec: KeyPairSpec): {};
     export function loadBareKey(this: Provider, id: string): {};
     export function loadBareKeyPair(this: Provider, id: string): {};
-    export function importBareKey(this: Provider, spec: KeyPairSpec, key: Uint8Array): {};
+    export function importBareKey(this: Provider, spec: KeySpec, key: Uint8Array): {};
     export function importBareKeyPair(this: Provider, spec: KeyPairSpec, publicKey: Uint8Array, privateKey: Uint8Array): {};
     export function importBarePublicKey(this: Provider, spec: KeyPairSpec, publicKey: Uint8Array): {};
 
@@ -63,11 +66,11 @@ const providerFunctions = {
     providerName: providerName,
     createKey: createKey,
     createKeyPair: createKeyPair,
-    loadKey: loadBareKey,
-    loadKeyPair: loadBareKeyPair,
-    importKey: importBareKey,
-    importKeyPair: importBareKeyPair,
-    importPublicKey: importBarePublicKey
+    loadKey: loadKey,
+    loadKeyPair: loadKeyPair,
+    importKey: importKey,
+    importKeyPair: importKeyPair,
+    importPublicKey: importPublicKey
 };
 
 export function createProvider(config: ProviderConfig, impl_config: ProviderImplConfig): Provider | undefined {
@@ -76,7 +79,7 @@ export function createProvider(config: ProviderConfig, impl_config: ProviderImpl
         return undefined;
     }
     Object.assign(provider, providerFunctions);
-    return provider;
+    return provider as Provider;
 }
 
 const keyHandleFunctions = {
@@ -88,21 +91,21 @@ const keyHandleFunctions = {
 };
 
 export function createKey(this: Provider, spec: KeySpec): KeyHandle {
-    let keyHandle = this.createBareKey(spec);
+    let keyHandle = createBareKey.call(this, spec);
     Object.assign(keyHandle, keyHandleFunctions);
-    return keyHandle;
+    return keyHandle as KeyHandle;
 }
 
 export function loadKey(this: Provider, id: string): KeyHandle {
-    let keyHandle = this.loadBareKey(id);
+    let keyHandle = loadBareKey.call(this, id);
     Object.assign(keyHandle, keyHandleFunctions);
-    return keyHandle;
+    return keyHandle as KeyHandle;
 }
 
 export function importKey(this: Provider, spec: KeySpec, rawKey: Uint8Array): KeyHandle {
-    let keyHandle = this.importBareKey(spec, rawKey);
+    let keyHandle = importBareKey.call(this, spec, rawKey);
     Object.assign(keyHandle, keyHandleFunctions);
-    return keyHandle;
+    return keyHandle as KeyHandle;
 }
 
 const keyPairHandleFunctions = {
@@ -116,25 +119,25 @@ const keyPairHandleFunctions = {
 };
 
 export function createKeyPair(this: Provider, spec: KeyPairSpec): KeyPairHandle {
-    let keyPairHandle = this.createBareKeyPair(spec);
+    let keyPairHandle = createBareKeyPair.call(this, spec);
     Object.assign(keyPairHandle, keyHandleFunctions);
-    return keyPairHandle;
+    return keyPairHandle as KeyPairHandle;
 }
 
 export function loadKeyPair(this: Provider, id: string): KeyPairHandle {
-    let keyPairHandle = this.loadBareKeyPair(id);
+    let keyPairHandle = loadBareKeyPair.call(this, id);
     Object.assign(keyPairHandle, keyHandleFunctions);
-    return keyPairHandle;
+    return keyPairHandle as KeyPairHandle;
 }
 
 export function importKeyPair(this: Provider, spec: KeyPairSpec, publicKey: Uint8Array, privateKey: Uint8Array): KeyPairHandle {
-    let keyPairHandle = this.importBareKeyPair(spec, publicKey, privateKey);
+    let keyPairHandle = importBareKeyPair.call(this, spec, publicKey, privateKey);
     Object.assign(keyPairHandle, keyHandleFunctions);
-    return keyPairHandle;
+    return keyPairHandle as KeyPairHandle;
 }
 
 export function importPublicKey(this: Provider, spec: KeyPairSpec, publicKey: Uint8Array): KeyPairHandle {
-    let keyPairHandle = this.importBarePublicKey(spec, publicKey);
+    let keyPairHandle = importBarePublicKey.call(this, spec, publicKey);
     Object.assign(keyPairHandle, keyHandleFunctions);
-    return keyPairHandle;
+    return keyPairHandle as KeyPairHandle;
 }

@@ -1,2 +1,2 @@
 export * from "./generated/index";
-export * from "./manual/index";
+export { DHExchange, KeyHandle, KeyPairHandle, Provider } from "./manual/index";

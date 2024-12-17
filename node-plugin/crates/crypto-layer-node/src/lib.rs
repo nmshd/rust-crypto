@@ -31,6 +31,7 @@ fn export_get_all_providers(mut cx: FunctionContext) -> JsResult<JsArray> {
     wrap_string_array(&mut cx, get_all_providers())
 }
 
+#[tracing::instrument(level="trace", skip(cx))]
 fn export_create_provider(mut cx: FunctionContext) -> JsResult<JsValue> {
     let _span = tracing::trace_span!("createProvider").entered();
 
@@ -49,6 +50,7 @@ fn export_create_provider(mut cx: FunctionContext) -> JsResult<JsValue> {
     }
 }
 
+#[tracing::instrument(level="trace", skip(cx))]
 fn export_create_provider_from_name(mut cx: FunctionContext) -> JsResult<JsValue> {
     let _span = tracing::trace_span!("createProviderFromName").entered();
 
@@ -70,6 +72,7 @@ fn export_create_provider_from_name(mut cx: FunctionContext) -> JsResult<JsValue
 #[neon::main]
 fn main(mut cx: ModuleContext) -> NeonResult<()> {
     fmt()
+        .with_line_number(true)
         .with_max_level(LevelFilter::DEBUG)
         .with_span_events(FmtSpan::FULL)
         .with_writer(std::io::stderr)
