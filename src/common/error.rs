@@ -1,6 +1,8 @@
+use std::convert::From;
 use std::fmt;
 
 use anyhow::anyhow;
+use sled;
 use thiserror;
 
 // Feel free to add more items to error.
@@ -70,6 +72,10 @@ pub enum CalErrorKind {
     /// Function is not implemented.
     #[error("Unsupported Algorithm: {0}")]
     UnsupportedAlgorithm(String),
+
+    /// Tried to create a non-ephermal key with an ephermal provider.
+    #[error("Ephermal Key Error")]
+    EphermalKeyError,
 
     /// Errors that do not fall into the above classes.
     #[error("Other Error")]
@@ -162,6 +168,13 @@ impl CalError {
         }
     }
 
+    pub(crate) fn ephemeral_key_required() -> Self {
+        Self {
+            error_kind: CalErrorKind::EphermalKeyError,
+            source: anyhow!("Ephermal Key Error"),
+        }
+    }
+
     pub fn error_kind(&self) -> CalErrorKind {
         self.error_kind.clone()
     }
@@ -195,4 +208,17 @@ impl fmt::Display for KeyType {
 #[allow(dead_code)]
 pub(crate) trait ToCalError<T> {
     fn err_internal(self) -> Result<T, CalError>;
+}
+
+impl From<sled::Error> for CalError {
+    fn from(value: sled::Error) -> Self {
+        match value {
+            sled::Error::CollectionNotFound(_) => CalError::missing_value(
+                "Sled (db): Collection not found.".to_owned(),
+                false,
+                Some(anyhow!(value)),
+            ),
+            _ => CalError::other(anyhow!(value)),
+        }
+    }
 }

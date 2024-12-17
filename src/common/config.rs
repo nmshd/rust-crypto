@@ -16,7 +16,7 @@ use super::crypto::algorithms::{
     encryption::{AsymmetricKeySpec, Cipher},
     hashes::CryptoHash,
 };
-use super::KeyHandle;
+use super::{KeyHandle, KeyPairHandle};
 
 /// A type alias for a pinned, heap-allocated, dynamically dispatched future that is `Send`.
 ///
@@ -64,6 +64,7 @@ pub enum SecurityLevel {
     Unsafe = 1,
 }
 
+/// flutter_rust_bridge:non_opaque
 #[derive(Serialize, Deserialize, Clone, Copy, Debug)]
 pub enum Spec {
     KeySpec(KeySpec),
@@ -76,6 +77,7 @@ pub enum Spec {
 pub struct KeySpec {
     pub cipher: Cipher,
     pub signing_hash: CryptoHash,
+    pub ephemeral: bool,
 }
 
 /// flutter_rust_bridge:non_opaque
@@ -85,6 +87,7 @@ pub struct KeyPairSpec {
     pub asym_spec: AsymmetricKeySpec,
     pub cipher: Option<Cipher>,
     pub signing_hash: CryptoHash,
+    pub ephemeral: bool,
 }
 
 /// flutter_rust_bridge:non_opaque
@@ -98,7 +101,7 @@ pub struct ProviderConfig {
     pub supported_asym_spec: HashSet<AsymmetricKeySpec>,
 }
 
-/// flutter_rust_bridge:opaque
+/// flutter_rust_bridge:non_opaque
 #[derive(Clone)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub struct ProviderImplConfig {
@@ -126,13 +129,12 @@ pub enum AdditionalConfig {
         all_keys_fn: AllKeysFn,
     },
     FileStoreConfig {
-        db_path: String,
-        secure_path: String,
-        pass: String,
+        /// Path to a directory where the database holding key metadata will be saved.
+        db_dir: String,
     },
-    StorageConfig {
-        key_handle: KeyHandle,
-    },
+    StorageConfigHMAC(KeyHandle),
+    StorageConfigDSA(KeyPairHandle),
+    StorageConfigPass(String),
 }
 
 impl std::fmt::Debug for ProviderImplConfig {
@@ -158,16 +160,6 @@ impl ProviderImplConfig {
         };
         additional_config.push(kv_config);
         Self { additional_config }
-    }
-
-    /// Creates a new stubbed `ProviderImplConfig` instance for testing or default purposes.
-    pub fn new_stub(
-        get_fn: GetFn,
-        store_fn: StoreFn,
-        delete_fn: DeleteFn,
-        all_keys_fn: AllKeysFn,
-    ) -> Self {
-        Self::new(get_fn, store_fn, delete_fn, all_keys_fn, vec![])
     }
 }
 

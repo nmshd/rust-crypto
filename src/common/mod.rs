@@ -136,7 +136,7 @@ impl Provider {
     }
 
     delegate_enum! {
-        pub fn get_all_keys(&self) -> Result<Vec<Spec>, CalError>;
+        pub fn get_all_keys(&self) -> Result<Vec<(String, Spec)>, CalError>;
     }
 
     delegate_enum_bare! {
@@ -212,6 +212,13 @@ impl KeyHandle {
             encrypted_data: &[u8],
             iv: &[u8],
         ) -> Result<Vec<u8>, CalError>;
+    }
+
+    delegate_enum! {
+        pub fn hmac(&self, data: &[u8]) -> Result<Vec<u8>, CalError>;
+    }
+    delegate_enum! {
+        pub fn verify_hmac(&self, data: &[u8], hmac: &[u8]) -> Result<bool, CalError>;
     }
 
     delegate_enum! {

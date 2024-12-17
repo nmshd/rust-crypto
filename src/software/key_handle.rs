@@ -10,7 +10,6 @@ use ring::{
     rand::{SecureRandom, SystemRandom},
     signature::{EcdsaKeyPair, Signature, UnparsedPublicKey},
 };
-use std::sync::Arc;
 use tracing::warn;
 
 use super::StorageManager;
@@ -21,32 +20,29 @@ pub(crate) struct SoftwareKeyPairHandle {
     pub(crate) spec: KeyPairSpec,
     pub(crate) signing_key: Option<Vec<u8>>,
     pub(crate) public_key: Vec<u8>,
-    pub(crate) storage_manager: StorageManager,
+    pub(crate) storage_manager: Option<StorageManager>,
 }
 
 #[derive(Debug, Clone)]
 pub(crate) struct SoftwareKeyHandle {
     pub(crate) key_id: String,
-    pub(crate) key: Arc<LessSafeKey>,
-    pub(crate) storage_manager: StorageManager,
+    pub(crate) key: Vec<u8>,
+    pub(crate) storage_manager: Option<StorageManager>,
+    pub(crate) spec: KeySpec,
 }
 
 impl SoftwareKeyHandle {
     pub fn new(
         key_id: String,
-        spec: Option<KeySpec>,
+        spec: KeySpec,
         key_data: Vec<u8>,
-        storage_manager: StorageManager,
+        storage_manager: Option<StorageManager>,
     ) -> Result<Self, CalError> {
-        // Create the AES key for encryption and decryption
-        let algo: &Algorithm = spec.as_ref().unwrap().cipher.into();
-        let unbound_key = UnboundKey::new(algo, &key_data).expect("Failed to create AES key");
-        let key = Arc::new(LessSafeKey::new(unbound_key));
-
         Ok(Self {
             key_id,
-            key,
+            key: key_data,
             storage_manager,
+            spec,
         })
     }
 }
@@ -68,9 +64,18 @@ impl KeyHandleImpl for SoftwareKeyHandle {
         let mut in_out = data.to_vec();
         in_out.extend(vec![0u8; 16]); // Reserve space for the authentication tag
 
+        let algo: &Algorithm = self.spec.cipher.into();
+
+        // Create an UnboundKey for the AES-GCM encryption
+        let unbound_key = UnboundKey::new(algo, &self.key).map_err(|_| {
+            CalError::failed_operation("Failed to create unbound AES key".to_owned(), true, None)
+        })?;
+
+        // Wrap it in a LessSafeKey for easier encryption/decryption
+        let key = LessSafeKey::new(unbound_key);
+
         // Perform encryption
-        self.key
-            .seal_in_place_append_tag(nonce, aad, &mut in_out)
+        key.seal_in_place_append_tag(nonce, aad, &mut in_out)
             .expect("Encryption failed");
 
         // Prepend the nonce to the ciphertext
@@ -98,15 +103,32 @@ impl KeyHandleImpl for SoftwareKeyHandle {
         // Copy the ciphertext for in-place decryption
         let mut in_out = ciphertext.to_vec();
 
+        let algo: &Algorithm = self.spec.cipher.into();
+
+        // Create an UnboundKey for the AES-GCM encryption
+        let unbound_key = UnboundKey::new(algo, &self.key).map_err(|_| {
+            CalError::failed_operation("Failed to create unbound AES key".to_owned(), true, None)
+        })?;
+
+        // Wrap it in a LessSafeKey for easier encryption/decryption
+        let key = LessSafeKey::new(unbound_key);
+
         // Perform decryption
-        self.key
-            .open_in_place(nonce, aad, &mut in_out)
+        key.open_in_place(nonce, aad, &mut in_out)
             .map_err(|err| CalError::failed_operation(err.to_string(), true, None))?;
 
         // Remove the authentication tag
         in_out.truncate(in_out.len() - 16 - MAX_TAG_LEN);
 
         Ok(in_out)
+    }
+
+    fn hmac(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
+        todo!("HMAC not supported for AES keys")
+    }
+
+    fn verify_hmac(&self, _data: &[u8], _hmac: &[u8]) -> Result<bool, CalError> {
+        todo!("HMAC not supported for AES keys")
     }
 
     fn extract_key(&self) -> Result<Vec<u8>, CalError> {
@@ -119,7 +141,7 @@ impl KeyHandleImpl for SoftwareKeyHandle {
 
     #[doc = " Delete this key."]
     fn delete(self) -> Result<(), CalError> {
-        self.storage_manager.delete(self.key_id);
+        self.storage_manager.map(|s| s.delete(self.key_id));
         Ok(())
     }
 }
@@ -227,7 +249,7 @@ impl KeyPairHandleImpl for SoftwareKeyPairHandle {
 
     #[doc = " Delete this key pair."]
     fn delete(self) -> Result<(), CalError> {
-        self.storage_manager.delete(self.key_id);
+        self.storage_manager.map(|s| s.delete(self.key_id));
         Ok(())
     }
 }

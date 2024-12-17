@@ -34,7 +34,7 @@ fn hash_kind(hash: CryptoHash) -> Result<Algorithm, CalError> {
 pub(crate) struct AppleSecureEnclaveKeyPair {
     pub(super) key_handle: SecKey,
     pub(super) spec: KeyPairSpec,
-    pub(super) storage_manager: StorageManager,
+    pub(super) storage_manager: Option<StorageManager>,
 }
 
 impl KeyPairHandleImpl for AppleSecureEnclaveKeyPair {
@@ -103,7 +103,9 @@ impl KeyPairHandleImpl for AppleSecureEnclaveKeyPair {
 
     #[instrument]
     fn delete(self) -> Result<(), CalError> {
-        self.storage_manager.delete(self.id()?);
+        if let Some(storage_manager) = &self.storage_manager {
+            storage_manager.delete(self.id()?);
+        }
         self.key_handle.delete().err_internal()
     }
 }
@@ -114,5 +116,15 @@ impl fmt::Debug for AppleSecureEnclaveKeyPair {
             .field("key_handle", &self.key_handle)
             .field("metadata", &self.spec)
             .finish()
+    }
+}
+
+impl Drop for AppleSecureEnclaveKeyPair {
+    fn drop(&mut self) {
+        if self.storage_manager.is_none() {
+            if let Err(e) = self.key_handle.delete() {
+                tracing::warn!("Failed to delete ephemeral key on device: {:?}", e);
+            }
+        }
     }
 }

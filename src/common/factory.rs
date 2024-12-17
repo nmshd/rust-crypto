@@ -1,5 +1,7 @@
 use std::sync::LazyLock;
 
+use tracing::warn;
+
 use super::{
     config::{ProviderConfig, ProviderImplConfig},
     traits::module_provider::{ProviderFactory, ProviderFactoryEnum},
@@ -64,7 +66,7 @@ fn provider_supports_capabilities(
 ///     factory::*,
 /// };
 ///
-/// let specific_provider_config = ProviderImplConfig{additional_config: vec![]};
+/// let specific_provider_config = ProviderImplConfig{additional_config: vec![], ephemeral_keys: false};
 /// let provider_config = ProviderConfig {
 ///     min_security_level: SecurityLevel::Software,
 ///     max_security_level: SecurityLevel::Hardware,
@@ -80,7 +82,13 @@ pub fn create_provider(conf: ProviderConfig, impl_conf: ProviderImplConfig) -> O
         let supported = provider_caps.map(|caps| provider_supports_capabilities(&caps, &conf));
         if supported.unwrap_or(false) {
             return Some(Provider {
-                implementation: provider.create_provider(impl_conf),
+                implementation: match provider.create_provider(impl_conf) {
+                    Ok(p) => p,
+                    Err(e) => {
+                        warn!("Error creating provider: {:?}", e);
+                        return None;
+                    }
+                },
             });
         }
     }
@@ -97,7 +105,13 @@ pub fn create_provider_from_name(name: String, impl_conf: ProviderImplConfig) ->
 
         if p_name == name {
             return Some(Provider {
-                implementation: provider.create_provider(impl_conf),
+                implementation: match provider.create_provider(impl_conf) {
+                    Ok(p) => p,
+                    Err(e) => {
+                        warn!("Error creating provider: {:?}", e);
+                        return None;
+                    }
+                },
             });
         }
     }

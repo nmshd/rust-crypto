@@ -37,6 +37,7 @@ mod tests {
                 asym_spec: AsymmetricKeySpec::P256,
                 cipher: None,
                 signing_hash: CryptoHash::Sha2_256,
+                ephemeral: true,
             };
 
             // Create a new key pair and get the SoftwareKeyPairHandle
@@ -64,6 +65,7 @@ mod tests {
                 asym_spec: AsymmetricKeySpec::P256,
                 cipher: None,
                 signing_hash: CryptoHash::Sha2_256,
+                ephemeral: true,
             };
 
             // Create a new key pair and get the SoftwareKeyPairHandle
@@ -95,6 +97,7 @@ mod tests {
                 asym_spec: AsymmetricKeySpec::P256,
                 cipher: None,
                 signing_hash: CryptoHash::Sha2_256,
+                ephemeral: true,
             };
 
             // Create two key pairs
@@ -126,6 +129,7 @@ mod tests {
                 asym_spec: AsymmetricKeySpec::P256,
                 cipher: None,
                 signing_hash: CryptoHash::Sha2_256,
+                ephemeral: true,
             };
 
             // Create a new key pair and get the SoftwareKeyPairHandle
@@ -146,6 +150,7 @@ mod tests {
                 asym_spec: AsymmetricKeySpec::P256,
                 cipher: None,
                 signing_hash: CryptoHash::Sha2_256,
+                ephemeral: true,
             };
 
             let impl_config = unsafe { STORE.impl_config().clone() };
@@ -185,6 +190,7 @@ mod tests {
                 asym_spec: AsymmetricKeySpec::P256,
                 cipher: None,
                 signing_hash: CryptoHash::Sha2_256,
+                ephemeral: true,
             };
 
             let impl_config = unsafe { STORE.impl_config().clone() };
@@ -224,6 +230,7 @@ mod tests {
                 asym_spec: AsymmetricKeySpec::P256,
                 cipher: None,
                 signing_hash: CryptoHash::Sha2_256,
+                ephemeral: true,
             };
 
             // Create a new key pair and get the SoftwareKeyPairHandle

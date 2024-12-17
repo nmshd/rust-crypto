@@ -5,7 +5,10 @@ use super::{
 use crate::{
     common::{
         config::{KeyPairSpec, KeySpec, ProviderConfig, Spec},
-        crypto::algorithms::encryption::AsymmetricKeySpec,
+        crypto::algorithms::{
+            encryption::{AsymmetricKeySpec, Cipher},
+            hashes::CryptoHash,
+        },
         error::CalError,
         traits::{
             key_handle::{DHKeyExchangeImpl, KeyHandleImplEnum},
@@ -17,19 +20,27 @@ use crate::{
 };
 use nanoid::nanoid;
 use ring::{
-    aead::{Algorithm, LessSafeKey, UnboundKey, AES_256_GCM},
+    aead::Algorithm,
     agreement::{self, EphemeralPrivateKey, PublicKey, UnparsedPublicKey, X25519},
     rand::{SecureRandom, SystemRandom},
     signature::{EcdsaKeyPair, EcdsaSigningAlgorithm, KeyPair},
 };
-use std::sync::Arc;
 
 impl ProviderImpl for SoftwareProvider {
     fn create_key(&mut self, spec: KeySpec) -> Result<KeyHandle, CalError> {
+        if self.storage_manager.is_none() && !spec.ephemeral {
+            return Err(CalError::failed_operation(
+                "This is an ephemeral provider, it cannot create non-ephemeral keys".to_owned(),
+                true,
+                None,
+            ));
+        }
+
         let key_id = nanoid!(10);
 
         // Initialize the system random generator
         let rng = SystemRandom::new();
+
         let algo: &Algorithm = spec.cipher.into();
 
         // Generate the symmetric key data
@@ -37,29 +48,34 @@ impl ProviderImpl for SoftwareProvider {
         rng.fill(&mut key_data)
             .expect("Failed to generate symmetric key");
 
-        // Create an UnboundKey for the AES-GCM encryption
-        let unbound_key = UnboundKey::new(algo, &key_data).map_err(|_| {
-            CalError::failed_operation("Failed to create unbound AES key".to_owned(), true, None)
-        })?;
-
         let storage_data = KeyData {
             id: key_id.clone(),
-            secret_data: Some(key_data),
+            secret_data: Some(key_data.clone()),
             public_data: None,
             additional_data: None,
             spec: Spec::KeySpec(spec),
         };
 
-        self.storage_manager.store(key_id.clone(), storage_data)?;
+        if self.storage_manager.is_some() && !spec.ephemeral {
+            self.storage_manager
+                .as_ref()
+                .unwrap()
+                .store(key_id.clone(), storage_data)?;
+        }
 
-        // Wrap it in a LessSafeKey for easier encryption/decryption
-        let less_safe_key = Arc::new(LessSafeKey::new(unbound_key));
+        // If the key is ephemeral, don't even pass the storage manager
+        let storage_manager = if spec.ephemeral {
+            None
+        } else {
+            self.storage_manager.clone()
+        };
 
         // Initialize SoftwareKeyHandle with the LessSafeKey
         let handle = SoftwareKeyHandle {
             key_id,
-            key: less_safe_key,
-            storage_manager: self.storage_manager.clone(),
+            key: key_data,
+            storage_manager: storage_manager.clone(),
+            spec,
         };
 
         Ok(KeyHandle {
@@ -68,7 +84,15 @@ impl ProviderImpl for SoftwareProvider {
     }
 
     fn load_key(&mut self, key_id: String) -> Result<KeyHandle, CalError> {
-        let storage_data = self.storage_manager.get(key_id.clone())?;
+        if self.storage_manager.is_none() {
+            return Err(CalError::failed_operation(
+                "This is an ephemeral provider, it cannot load keys".to_owned(),
+                true,
+                None,
+            ));
+        }
+
+        let storage_data = self.storage_manager.as_ref().unwrap().get(key_id.clone())?;
 
         let spec = if let Spec::KeySpec(spec) = storage_data.spec {
             spec
@@ -91,19 +115,12 @@ impl ProviderImpl for SoftwareProvider {
             }
         };
 
-        // Create an UnboundKey for the AES-GCM encryption
-        let unbound_key = UnboundKey::new(spec.cipher.into(), &key_data).map_err(|_| {
-            CalError::failed_operation("Failed to create unbound AES key".to_owned(), true, None)
-        })?;
-
-        // Wrap it in a LessSafeKey for easier encryption/decryption
-        let less_safe_key = Arc::new(LessSafeKey::new(unbound_key));
-
         // Initialize SoftwareKeyHandle with the LessSafeKey
         let handle = SoftwareKeyHandle {
             key_id,
-            key: less_safe_key,
+            key: key_data,
             storage_manager: self.storage_manager.clone(),
+            spec,
         };
 
         Ok(KeyHandle {
@@ -112,6 +129,14 @@ impl ProviderImpl for SoftwareProvider {
     }
 
     fn create_key_pair(&mut self, spec: KeyPairSpec) -> Result<KeyPairHandle, CalError> {
+        if self.storage_manager.is_none() && !spec.ephemeral {
+            return Err(CalError::failed_operation(
+                "This is an ephemeral provider, it cannot create non-ephemeral keys".to_owned(),
+                true,
+                None,
+            ));
+        }
+
         let key_id = nanoid!(10);
 
         let storage_data = if let AsymmetricKeySpec::Curve25519 = spec.asym_spec {
@@ -143,8 +168,18 @@ impl ProviderImpl for SoftwareProvider {
             }
         };
 
-        self.storage_manager
-            .store(key_id.clone(), storage_data.clone())?;
+        if self.storage_manager.is_some() && !spec.ephemeral {
+            self.storage_manager
+                .as_ref()
+                .unwrap()
+                .store(key_id.clone(), storage_data.clone())?;
+        }
+
+        let storage_manager = if spec.ephemeral {
+            None
+        } else {
+            self.storage_manager.clone()
+        };
 
         // Initialize SoftwareKeyPairHandle with the private and public key bytes
         let handle = SoftwareKeyPairHandle {
@@ -152,7 +187,7 @@ impl ProviderImpl for SoftwareProvider {
             spec,
             signing_key: storage_data.secret_data,
             public_key: storage_data.public_data.unwrap(),
-            storage_manager: self.storage_manager.clone(),
+            storage_manager: storage_manager.clone(),
         };
 
         Ok(KeyPairHandle {
@@ -161,7 +196,15 @@ impl ProviderImpl for SoftwareProvider {
     }
 
     fn load_key_pair(&mut self, key_id: String) -> Result<KeyPairHandle, CalError> {
-        let storage_data = self.storage_manager.get(key_id.clone())?;
+        if self.storage_manager.is_none() {
+            return Err(CalError::failed_operation(
+                "This is an ephemeral provider, it cannot load keys".to_owned(),
+                true,
+                None,
+            ));
+        }
+
+        let storage_data = self.storage_manager.as_ref().unwrap().get(key_id.clone())?;
 
         let spec = if let Spec::KeyPairSpec(spec) = storage_data.spec {
             spec
@@ -200,15 +243,25 @@ impl ProviderImpl for SoftwareProvider {
     }
 
     fn import_key(&mut self, spec: KeySpec, data: &[u8]) -> Result<KeyHandle, CalError> {
+        if self.storage_manager.is_none() && !spec.ephemeral {
+            return Err(CalError::failed_operation(
+                "This is an ephemeral provider, it cannot import non-ephemeral keys".to_owned(),
+                true,
+                None,
+            ));
+        }
+
         let key_id = nanoid!(10);
 
+        let storage_manager = if spec.ephemeral {
+            None
+        } else {
+            self.storage_manager.clone()
+        };
+
         // Initialize SoftwareKeyHandle with the raw key data
-        let handle = SoftwareKeyHandle::new(
-            key_id.clone(),
-            Some(spec),
-            data.to_vec(),
-            self.storage_manager.clone(),
-        )?;
+        let handle =
+            SoftwareKeyHandle::new(key_id.clone(), spec, data.to_vec(), storage_manager.clone())?;
 
         // store key
         let storage_data = KeyData {
@@ -219,7 +272,12 @@ impl ProviderImpl for SoftwareProvider {
             spec: Spec::KeySpec(spec),
         };
 
-        self.storage_manager.store(key_id.clone(), storage_data)?;
+        if self.storage_manager.is_some() && !spec.ephemeral {
+            self.storage_manager
+                .as_ref()
+                .unwrap()
+                .store(key_id.clone(), storage_data)?;
+        }
 
         Ok(KeyHandle {
             implementation: handle.into(),
@@ -232,7 +290,21 @@ impl ProviderImpl for SoftwareProvider {
         public_key: &[u8],
         private_key: &[u8],
     ) -> Result<KeyPairHandle, CalError> {
+        if self.storage_manager.is_none() && !spec.ephemeral {
+            return Err(CalError::failed_operation(
+                "This is an ephemeral provider, it cannot import non-ephemeral keys".to_owned(),
+                true,
+                None,
+            ));
+        }
+
         let key_id = nanoid!(10);
+
+        let storage_manager = if spec.ephemeral {
+            None
+        } else {
+            self.storage_manager.clone()
+        };
 
         // Initialize SoftwareKeyPairHandle with separate private and public key bytes
         let handle = SoftwareKeyPairHandle {
@@ -240,7 +312,7 @@ impl ProviderImpl for SoftwareProvider {
             spec,
             signing_key: Some(private_key.to_vec()),
             public_key: public_key.to_vec(),
-            storage_manager: self.storage_manager.clone(),
+            storage_manager: storage_manager.clone(),
         };
 
         let storage_data = KeyData {
@@ -251,7 +323,12 @@ impl ProviderImpl for SoftwareProvider {
             spec: Spec::KeyPairSpec(spec),
         };
 
-        self.storage_manager.store(key_id.clone(), storage_data)?;
+        if self.storage_manager.is_some() && !spec.ephemeral {
+            self.storage_manager
+                .as_ref()
+                .unwrap()
+                .store(key_id.clone(), storage_data)?;
+        }
 
         Ok(KeyPairHandle {
             implementation: handle.into(),
@@ -263,13 +340,28 @@ impl ProviderImpl for SoftwareProvider {
         spec: KeyPairSpec,
         public_key: &[u8],
     ) -> Result<KeyPairHandle, CalError> {
+        if self.storage_manager.is_none() && !spec.ephemeral {
+            return Err(CalError::failed_operation(
+                "This is an ephemeral provider, it cannot import non-ephemeral keys".to_owned(),
+                true,
+                None,
+            ));
+        }
+
         let key_id = nanoid!(10);
+
+        let storage_manager = if spec.ephemeral {
+            None
+        } else {
+            self.storage_manager.clone()
+        };
+
         let handle = SoftwareKeyPairHandle {
             key_id: key_id.clone(),
             spec,
             public_key: public_key.to_vec(),
             signing_key: None,
-            storage_manager: self.storage_manager.clone(),
+            storage_manager: storage_manager.clone(),
         };
 
         let storage_data = KeyData {
@@ -280,7 +372,10 @@ impl ProviderImpl for SoftwareProvider {
             spec: Spec::KeyPairSpec(spec),
         };
 
-        self.storage_manager.store(key_id.clone(), storage_data)?;
+        storage_manager
+            .as_ref()
+            .map(|s| s.store(key_id.clone(), storage_data))
+            .transpose()?;
 
         Ok(KeyPairHandle {
             implementation: handle.into(),
@@ -300,8 +395,15 @@ impl ProviderImpl for SoftwareProvider {
         })
     }
 
-    fn get_all_keys(&self) -> Result<Vec<Spec>, CalError> {
-        Ok(self.storage_manager.get_all_keys())
+    fn get_all_keys(&self) -> Result<Vec<(String, Spec)>, CalError> {
+        if self.storage_manager.is_none() {
+            return Err(CalError::failed_operation(
+                "This is an ephemeral provider, it cannot have stored keys".to_owned(),
+                true,
+                None,
+            ));
+        }
+        Ok(self.storage_manager.as_ref().unwrap().get_all_keys())
     }
 
     fn provider_name(&self) -> String {
@@ -318,11 +420,11 @@ pub(crate) struct SoftwareDHExchange {
     key_id: String,
     private_key: Option<EphemeralPrivateKey>,
     public_key: PublicKey,
-    storage_manager: StorageManager,
+    storage_manager: Option<StorageManager>,
 }
 
 impl SoftwareDHExchange {
-    pub fn new(key_id: String, storage_manager: StorageManager) -> Result<Self, CalError> {
+    pub fn new(key_id: String, storage_manager: Option<StorageManager>) -> Result<Self, CalError> {
         let rng = SystemRandom::new();
 
         // Generate an ephemeral private key for DH using X25519
@@ -394,16 +496,18 @@ impl DHKeyExchangeImpl for SoftwareDHExchange {
 
         // Derive a symmetric key (AES-256) from the shared secret
         let key_material = &shared_secret[0..32]; // Use the first 32 bytes as AES-256 key
-        let unbound_key = UnboundKey::new(&AES_256_GCM, key_material)
-            .map_err(|err| CalError::failed_operation(err.to_string(), true, None))?;
-        let symmetric_key = Arc::new(LessSafeKey::new(unbound_key));
 
         // Return the symmetric key wrapped in KeyHandleImplEnum
         Ok(KeyHandle {
             implementation: KeyHandleImplEnum::SoftwareKeyHandle(SoftwareKeyHandle {
                 key_id: self.key_id.clone(),
-                key: symmetric_key,
+                key: key_material.to_vec(),
                 storage_manager: self.storage_manager.clone(),
+                spec: KeySpec {
+                    cipher: Cipher::AesGcm256,
+                    ephemeral: true,
+                    signing_hash: CryptoHash::Sha2_256,
+                },
             }),
         })
     }

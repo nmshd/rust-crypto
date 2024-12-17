@@ -24,7 +24,10 @@ pub(crate) trait ProviderFactory: Send + Sync {
     ///
     /// [ProviderConfig] returned stores in HashSets all Hashes, Ciphers and AsymmetricKeySpecs a provider supports.
     fn get_capabilities(&self, impl_config: ProviderImplConfig) -> Option<ProviderConfig>;
-    fn create_provider(&self, impl_config: ProviderImplConfig) -> ProviderImplEnum;
+    fn create_provider(
+        &self,
+        impl_config: ProviderImplConfig,
+    ) -> Result<ProviderImplEnum, CalError>;
 }
 
 #[enum_dispatch]
@@ -124,7 +127,7 @@ pub(crate) trait ProviderImpl: Send + Sync {
     /// On failure, it returns a `CalError`.
     fn start_ephemeral_dh_exchange(&mut self, spec: KeyPairSpec) -> Result<DHExchange, CalError>;
 
-    fn get_all_keys(&self) -> Result<Vec<Spec>, CalError>;
+    fn get_all_keys(&self) -> Result<Vec<(String, Spec)>, CalError>;
 
     fn provider_name(&self) -> String;
 
