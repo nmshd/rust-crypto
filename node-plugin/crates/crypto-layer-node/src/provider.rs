@@ -7,7 +7,7 @@ use crate::common::Finalized;
 use crate::fromjs::error::unwrap_or_throw;
 use crate::tojs::config::wrap_provider_config;
 use crate::{from_wrapped_key_pair_spec, from_wrapped_key_spec};
-use crate::{JsKeyHandle, JsKeyPairHandle, JsProvider};
+use crate::{JsDhExchange, JsKeyHandle, JsKeyPairHandle, JsProvider};
 
 pub fn export_create_key(mut cx: FunctionContext) -> JsResult<JsKeyHandle> {
     let provider_js = cx.this::<JsProvider>()?;
@@ -134,4 +134,18 @@ pub fn export_get_capabilities(mut cx: FunctionContext) -> JsResult<JsValue> {
     } else {
         Ok(cx.undefined().upcast())
     }
+}
+
+pub fn export_start_ephemeral_dh_exchange(mut cx: FunctionContext) -> JsResult<JsDhExchange> {
+    let provider_js = cx.this::<JsProvider>()?;
+    let mut provider = provider_js.borrow_mut();
+    let spec_js = cx.argument::<JsObject>(0)?;
+    let spec = unwrap_or_throw!(cx, from_wrapped_key_pair_spec(&mut cx, spec_js));
+
+    let dh_exchange = unwrap_or_throw!(cx, provider.start_ephemeral_dh_exchange(spec));
+
+    Ok(JsBox::new(
+        &mut cx,
+        RefCell::new(Finalized::new(dh_exchange)),
+    ))
 }

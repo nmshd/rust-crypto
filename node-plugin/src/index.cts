@@ -27,12 +27,17 @@ import {
     importBareKeyPair,
     importBarePublicKey,
     createBareProviderFromName,
-    getCapabilities
+    getCapabilities,
+    startEphemeralDhExchange,
+    getPublicKeyForDHExchange,
+    addExternalFinalForDHExchange,
+    addExternalForDHExchange
 } from "./load.cjs";
 
 type BareProvider = {};
 type BareKeyHandle = {};
 type BareKeyPairHandle = {};
+type BareDHExchange = {};
 
 // Use this declaration to assign types to the addon's exports,
 // which otherwise by default are `any`.
@@ -50,6 +55,7 @@ declare module "./load.cjs" {
     function importBareKeyPair(this: BareProvider, spec: KeyPairSpec, publicKey: Uint8Array, privateKey: Uint8Array): BareKeyPairHandle;
     function importBarePublicKey(this: BareProvider, spec: KeyPairSpec, publicKey: Uint8Array): BareKeyPairHandle;
     function getCapabilities(this: BareProvider): ProviderConfig | undefined;
+    function startEphemeralDhExchange(this: BareProvider, spec: KeyPairSpec): BareDHExchange;
 
     function signData(this: BareKeyPairHandle, data: Uint8Array): Uint8Array;
     function verifySignature(this: BareKeyPairHandle, data: Uint8Array, signature: Uint8Array): boolean;
@@ -64,6 +70,10 @@ declare module "./load.cjs" {
     function extractKey(this: BareKeyHandle): Uint8Array;
     function encryptDataForKeyHandle(this: BareKeyHandle, data: Uint8Array): [Uint8Array, Uint8Array];
     function decryptDataForKeyHandle(this: BareKeyHandle, data: Uint8Array, iv: Uint8Array): Uint8Array;
+
+    function getPublicKeyForDHExchange(this: BareDHExchange): Uint8Array;
+    function addExternalForDHExchange(this: BareDHExchange, key: Uint8Array): Uint8Array;
+    function addExternalFinalForDHExchange(this: BareDHExchange, key: Uint8Array): BareKeyHandle;
 }
 
 class NodeProvider implements Provider {
@@ -106,7 +116,7 @@ class NodeProvider implements Provider {
     }
 
     startEphemeralDhExchange(spec: KeyPairSpec): DHExchange {
-        throw Error("Not yet implemented.");
+        return new NodeDHExchange(startEphemeralDhExchange.call(this.provider, spec));
     }
 
     getCapabilities(): ProviderConfig | undefined {
@@ -143,18 +153,18 @@ class NodeKeyHandle implements KeyHandle {
 }
 
 class NodeKeyPairHandle implements KeyPairHandle {
-    private keyPairHandle: {};
+    private keyPairHandle: BareKeyPairHandle;
 
-    constructor(bareKeyPairHandle: {}) {
+    constructor(bareKeyPairHandle: BareKeyPairHandle) {
         this.keyPairHandle = bareKeyPairHandle;
     }
 
     id(): string {
-        return idForKeyHandle.call(this.keyPairHandle);
+        return idForKeyPair.call(this.keyPairHandle);
     }
 
     delete(): undefined {
-        deleteForKeyHandle.call(this.keyPairHandle);
+        deleteForKeyPair.call(this.keyPairHandle);
     }
 
     signData(data: Uint8Array): Uint8Array {
@@ -175,6 +185,24 @@ class NodeKeyPairHandle implements KeyPairHandle {
 
     getPublicKey(): Uint8Array {
         return getPublicKey.call(this.keyPairHandle);
+    }
+}
+
+class NodeDHExchange implements DHExchange {
+    private dhExchange: BareDHExchange;
+
+    constructor(bareDHExchange: BareDHExchange) {
+        this.dhExchange = bareDHExchange;
+    }
+
+    getPublicKey(): Uint8Array {
+        return getPublicKeyForDHExchange.call(this.dhExchange);
+    }
+    addExternal(externalKey: Uint8Array): Uint8Array {
+        return addExternalForDHExchange.call(this.dhExchange, externalKey);
+    }
+    addExternalFinal(externalKey: Uint8Array): KeyHandle {
+        return new NodeKeyHandle(addExternalFinalForDHExchange.call(this.dhExchange, externalKey));
     }
 }
 

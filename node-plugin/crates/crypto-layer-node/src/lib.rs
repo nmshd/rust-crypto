@@ -102,8 +102,12 @@ fn main(mut cx: ModuleContext) -> NeonResult<()> {
         crate::provider::export_import_public_key,
     )?;
     cx.export_function("getCapabilities", crate::provider::export_get_capabilities)?;
+    cx.export_function(
+        "startEphemeralDhExchange",
+        crate::provider::export_start_ephemeral_dh_exchange,
+    )?;
 
-    //key pair handle
+    // key pair handle
     cx.export_function("signData", crate::keypairhandle::export_sign_data)?;
     cx.export_function("verifySignature", crate::keypairhandle::export_verify_data)?;
     cx.export_function("idForKeyPair", crate::keypairhandle::export_id)?;
@@ -118,6 +122,7 @@ fn main(mut cx: ModuleContext) -> NeonResult<()> {
         crate::keypairhandle::export_decrypt_data,
     )?;
 
+    // key handle
     cx.export_function("idForKeyHandle", crate::keyhandle::export_id)?;
     cx.export_function("deleteForKeyHandle", crate::keyhandle::export_delete)?;
     cx.export_function("extractKey", crate::keyhandle::export_extract_key)?;
@@ -128,6 +133,20 @@ fn main(mut cx: ModuleContext) -> NeonResult<()> {
     cx.export_function(
         "decryptDataForKeyHandle",
         crate::keyhandle::export_decrypt_data,
+    )?;
+
+    // dh exchange
+    cx.export_function(
+        "getPublicKeyForDHExchange",
+        crate::dhexchange::export_get_public_key,
+    )?;
+    cx.export_function(
+        "addExternalForDHExchange",
+        crate::dhexchange::export_add_external,
+    )?;
+    cx.export_function(
+        "addExternalFinalForDHExchange",
+        crate::dhexchange::export_add_external_final,
     )?;
 
     load_function_span.exit();
