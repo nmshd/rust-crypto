@@ -31,7 +31,7 @@ fn export_get_all_providers(mut cx: FunctionContext) -> JsResult<JsArray> {
     wrap_string_array(&mut cx, get_all_providers())
 }
 
-#[tracing::instrument(level="trace", skip(cx))]
+#[tracing::instrument(level = "trace", skip(cx))]
 fn export_create_provider(mut cx: FunctionContext) -> JsResult<JsValue> {
     let _span = tracing::trace_span!("createProvider").entered();
 
@@ -50,7 +50,7 @@ fn export_create_provider(mut cx: FunctionContext) -> JsResult<JsValue> {
     }
 }
 
-#[tracing::instrument(level="trace", skip(cx))]
+#[tracing::instrument(level = "trace", skip(cx))]
 fn export_create_provider_from_name(mut cx: FunctionContext) -> JsResult<JsValue> {
     let _span = tracing::trace_span!("createProviderFromName").entered();
 
@@ -93,11 +93,15 @@ fn main(mut cx: ModuleContext) -> NeonResult<()> {
     cx.export_function("providerName", crate::provider::export_provider_name)?;
     cx.export_function("createBareKey", crate::provider::export_create_key)?;
     cx.export_function("createBareKeyPair", crate::provider::export_create_key_pair)?;
-    cx.export_function("loadBareKey", crate::provider::export_load_key)?;    
+    cx.export_function("loadBareKey", crate::provider::export_load_key)?;
     cx.export_function("loadBareKeyPair", crate::provider::export_load_key_pair)?;
     cx.export_function("importBareKey", crate::provider::export_import_key)?;
     cx.export_function("importBareKeyPair", crate::provider::export_import_key_pair)?;
-    cx.export_function("importBarePublicKey", crate::provider::export_import_public_key)?;
+    cx.export_function(
+        "importBarePublicKey",
+        crate::provider::export_import_public_key,
+    )?;
+    cx.export_function("getCapabilities", crate::provider::export_get_capabilities)?;
 
     //key pair handle
     cx.export_function("signData", crate::keypairhandle::export_sign_data)?;
@@ -105,14 +109,26 @@ fn main(mut cx: ModuleContext) -> NeonResult<()> {
     cx.export_function("idForKeyPair", crate::keypairhandle::export_id)?;
     cx.export_function("deleteForKeyPair", crate::keypairhandle::export_delete)?;
     cx.export_function("getPublicKey", crate::keypairhandle::export_get_public_key)?;
-    cx.export_function("encryptDataForKeyPairHandle", crate::keypairhandle::export_encrypt_data)?;
-    cx.export_function("decryptDataForKeyPairHandle", crate::keypairhandle::export_decrypt_data)?;
+    cx.export_function(
+        "encryptDataForKeyPairHandle",
+        crate::keypairhandle::export_encrypt_data,
+    )?;
+    cx.export_function(
+        "decryptDataForKeyPairHandle",
+        crate::keypairhandle::export_decrypt_data,
+    )?;
 
     cx.export_function("idForKeyHandle", crate::keyhandle::export_id)?;
     cx.export_function("deleteForKeyHandle", crate::keyhandle::export_delete)?;
     cx.export_function("extractKey", crate::keyhandle::export_extract_key)?;
-    cx.export_function("encryptDataForKeyHandle", crate::keyhandle::export_encrypt_data)?;
-    cx.export_function("decryptDataForKeyHandle", crate::keyhandle::export_decrypt_data)?;
+    cx.export_function(
+        "encryptDataForKeyHandle",
+        crate::keyhandle::export_encrypt_data,
+    )?;
+    cx.export_function(
+        "decryptDataForKeyHandle",
+        crate::keyhandle::export_decrypt_data,
+    )?;
 
     load_function_span.exit();
     tracing::trace!("crypto-layer loaded.");

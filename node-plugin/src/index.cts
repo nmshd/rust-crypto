@@ -3,7 +3,7 @@
 // The Rust addon.
 export { getAllProviders } from "./load.cjs";
 
-import { type Provider, type ProviderConfig, type ProviderImplConfig, KeyHandle, KeyPairHandle, KeyPairSpec, KeySpec, DHExchange } from "crypto-layer-ts-types";
+import { type Provider, type ProviderConfig, type ProviderImplConfig, KeyHandle, type KeyPairHandle, KeyPairSpec, KeySpec, DHExchange } from "crypto-layer-ts-types";
 import {
     createBareProvider,
     providerName,
@@ -26,7 +26,8 @@ import {
     importBareKey,
     importBareKeyPair,
     importBarePublicKey,
-    createBareProviderFromName
+    createBareProviderFromName,
+    getCapabilities
 } from "./load.cjs";
 
 type BareProvider = {};
@@ -48,6 +49,7 @@ declare module "./load.cjs" {
     function importBareKey(this: BareProvider, spec: KeySpec, key: Uint8Array): BareKeyHandle;
     function importBareKeyPair(this: BareProvider, spec: KeyPairSpec, publicKey: Uint8Array, privateKey: Uint8Array): BareKeyPairHandle;
     function importBarePublicKey(this: BareProvider, spec: KeyPairSpec, publicKey: Uint8Array): BareKeyPairHandle;
+    function getCapabilities(this: BareProvider): ProviderConfig | undefined;
 
     function signData(this: BareKeyPairHandle, data: Uint8Array): Uint8Array;
     function verifySignature(this: BareKeyPairHandle, data: Uint8Array, signature: Uint8Array): boolean;
@@ -108,7 +110,7 @@ class NodeProvider implements Provider {
     }
 
     getCapabilities(): ProviderConfig | undefined {
-        throw Error("Not yet implemented.");
+        return getCapabilities.call(this.provider);
     }
 }
 

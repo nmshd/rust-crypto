@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use strum::{EnumIter, EnumString};
+use strum::{EnumString, IntoStaticStr};
 
 /// Represents the available hashing algorithms.
 ///
@@ -13,7 +13,19 @@ use strum::{EnumIter, EnumString};
 /// Prefer using more secure algorithms like SHA-2 or SHA-3 for cryptographic purposes.
 /// flutter_rust_bridge:non_opaque
 #[repr(C)]
-#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default, EnumString)]
+#[derive(
+    Clone,
+    Debug,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    Serialize,
+    Deserialize,
+    Default,
+    EnumString,
+    IntoStaticStr,
+)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum CryptoHash {
     Sha2_224,

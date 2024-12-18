@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::cmp::{Eq, PartialEq};
 use std::hash::Hash;
 
-use strum::{EnumIter, EnumString};
+use strum::{EnumString, IntoStaticStr};
 
 /// Represents the available encryption algorithms.
 ///
@@ -17,7 +17,19 @@ use strum::{EnumIter, EnumString};
 /// facilitating interfacing with C code or when ABI compatibility is required.
 /// flutter_rust_bridge:non_opaque
 #[repr(C)]
-#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default, EnumString)]
+#[derive(
+    Clone,
+    Debug,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    Serialize,
+    Deserialize,
+    Default,
+    EnumString,
+    IntoStaticStr,
+)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum AsymmetricKeySpec {
     RSA1024,
@@ -61,7 +73,19 @@ pub enum AsymmetricKeySpec {
 /// facilitating ABI compatibility and interfacing with C code.
 /// flutter_rust_bridge:non_opaque
 #[repr(C)]
-#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default, EnumString)]
+#[derive(
+    Clone,
+    Debug,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    Serialize,
+    Deserialize,
+    Default,
+    EnumString,
+    IntoStaticStr,
+)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum Cipher {
     AesGcm128,

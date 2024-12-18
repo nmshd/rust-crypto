@@ -26,6 +26,7 @@ if (!provider) {
 }
 
 console.log("Provider initialized: ", provider.providerName());
+console.log("Capabilities: ", provider.getCapabilities());
 
 let keypairspec: KeyPairSpec = {
     asym_spec: "P256",

@@ -54,7 +54,9 @@ pub type AllKeysFn = Arc<dyn Fn() -> DynFuture<Vec<String>> + Send + Sync>;
 /// * [SecurityLevel::Software]: Provder uses the systems software keystore.
 /// * [SecurityLevel::Network]: Provider uses a network key store (Hashicorp).
 /// * [SecurityLevel::Unsafe]: Provder uses software fallback.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, EnumString, EnumIter)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, EnumString, EnumIter, IntoStaticStr,
+)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum SecurityLevel {
     /// Highest security level
