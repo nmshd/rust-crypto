@@ -101,7 +101,7 @@ fn main(mut cx: ModuleContext) -> NeonResult<()> {
 
     //key pair handle
     cx.export_function("signData", crate::keypairhandle::export_sign_data)?;
-    cx.export_function("verifyData", crate::keypairhandle::export_verify_data)?;
+    cx.export_function("verifySignature", crate::keypairhandle::export_verify_data)?;
     cx.export_function("idForKeyPair", crate::keypairhandle::export_id)?;
     cx.export_function("deleteForKeyPair", crate::keypairhandle::export_delete)?;
     cx.export_function("getPublicKey", crate::keypairhandle::export_get_public_key)?;
