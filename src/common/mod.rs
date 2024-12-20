@@ -80,7 +80,9 @@ macro_rules! delegate_enum_bare {
 ///
 /// [Provider] abstracts hardware, software and network based keystores.
 /// /// flutter_rust_bridge:opaque
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub struct Provider {
+    #[cfg_attr(feature = "ts-interface", ts(skip))]
     pub(crate) implementation: ProviderImplEnum,
 }
 
@@ -147,8 +149,10 @@ impl Provider {
 }
 
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 /// flutter_rust_bridge:opaque
 pub struct KeyPairHandle {
+    #[cfg_attr(feature = "ts-interface", ts(skip))]
     pub(crate) implementation: KeyPairHandleImplEnum,
 }
 
@@ -188,8 +192,10 @@ impl KeyPairHandle {
 }
 
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 /// flutter_rust_bridge:opaque
 pub struct KeyHandle {
+    #[cfg_attr(feature = "ts-interface", ts(skip))]
     pub(crate) implementation: KeyHandleImplEnum,
 }
 
@@ -226,7 +232,9 @@ impl KeyHandle {
 
 #[allow(dead_code)]
 #[derive(Debug)]
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub struct DHExchange {
+    #[cfg_attr(feature = "ts-interface", ts(skip))]
     pub(crate) implementation: DHKeyExchangeImplEnum,
 }
 

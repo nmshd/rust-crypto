@@ -12,4 +12,5 @@ Cargo.lock
 /.idea/.gitignore
 /.idea/*
 /logs
+/bindings
 /metadata.db

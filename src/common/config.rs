@@ -10,6 +10,8 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 
+use strum::{EnumDiscriminants, EnumIter, EnumString, IntoStaticStr};
+
 use super::crypto::algorithms::{
     encryption::{AsymmetricKeySpec, Cipher},
     hashes::CryptoHash,
@@ -52,7 +54,10 @@ pub type AllKeysFn = Arc<dyn Fn() -> DynFuture<Vec<String>> + Send + Sync>;
 /// * [SecurityLevel::Software]: Provder uses the systems software keystore.
 /// * [SecurityLevel::Network]: Provider uses a network key store (Hashicorp).
 /// * [SecurityLevel::Unsafe]: Provder uses software fallback.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, EnumString, EnumIter, IntoStaticStr,
+)]
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum SecurityLevel {
     /// Highest security level
     Hardware = 4,
@@ -70,6 +75,7 @@ pub enum Spec {
 
 /// flutter_rust_bridge:non_opaque
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub struct KeySpec {
     pub cipher: Cipher,
     pub signing_hash: CryptoHash,
@@ -78,6 +84,7 @@ pub struct KeySpec {
 
 /// flutter_rust_bridge:non_opaque
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub struct KeyPairSpec {
     pub asym_spec: AsymmetricKeySpec,
     pub cipher: Option<Cipher>,
@@ -87,6 +94,7 @@ pub struct KeyPairSpec {
 
 /// flutter_rust_bridge:non_opaque
 #[derive(Clone, Debug)]
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub struct ProviderConfig {
     pub max_security_level: SecurityLevel,
     pub min_security_level: SecurityLevel,
@@ -97,13 +105,24 @@ pub struct ProviderConfig {
 
 /// flutter_rust_bridge:non_opaque
 #[derive(Clone)]
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub struct ProviderImplConfig {
     pub additional_config: Vec<AdditionalConfig>,
 }
 
-/// flutter_rust_bridge:non_opaque
-#[derive(Clone)]
+#[derive(Clone, EnumDiscriminants)]
+#[strum_discriminants(derive(EnumString, IntoStaticStr))]
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum AdditionalConfig {
+    #[cfg_attr(
+        feature = "ts-interface",
+        ts(type = "{
+            get_fn: (id: string) => Uint8Array | undefined;
+            store_fn: (id: string, data: Uint8Array) => boolean;
+            delete_fn: (id: string) => void;
+            all_keys_fn: () => string[];
+        }")
+    )]
     KVStoreConfig {
         get_fn: GetFn,
         store_fn: StoreFn,
