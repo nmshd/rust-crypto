@@ -83,6 +83,8 @@ Initiate a dry run of a patch release of this library via GitHub Actions. This p
 
 Runs the unit tests written with `jest`.
 
+The project must be compiled with `npm run debug` (recommended) or `npm run build` beforehand.
+
 Consider running the tests with logging and full backtrace:
 
 ```bash
