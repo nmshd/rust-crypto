@@ -1,5 +1,12 @@
 # crypto-layer-node
 
+> [!WARNING]
+> Currently this node plugin crashes quite ungracefully. (See [#Debugging])
+
+> [!WARNING]
+> File storage works with fs locks and closing is sluggish. 
+> Closing and reopening a provider with the same file store might result in an db lock error.
+
 **Crypto Layer TS interface for nodejs.**
 
 This project was bootstrapped by [create-neon](https://www.npmjs.com/package/create-neon).
