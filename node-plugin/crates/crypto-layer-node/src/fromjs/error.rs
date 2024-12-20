@@ -11,17 +11,6 @@ pub(crate) enum ConversionError {
     JsError,
 }
 
-/// Used for wrapping strum FromStr Result.
-pub fn match_variant_result<R, E>(res: Result<R, E>) -> Result<R, ConversionError> {
-    match res {
-        Ok(r) => Ok(r),
-        Err(_) => {
-            error!("{}", ConversionError::EnumVariantNotFound); 
-            Err(ConversionError::EnumVariantNotFound)
-        },
-    }
-}
-
 /// Used for errors which stem from internal logic (casting up and down).
 pub fn js_result<R, E: std::fmt::Display>(res: Result<R, E>) -> Result<R, ConversionError> {
     match res {
@@ -29,7 +18,7 @@ pub fn js_result<R, E: std::fmt::Display>(res: Result<R, E>) -> Result<R, Conver
         Err(e) => {
             error!(error = %e, "{}", ConversionError::JsError);
             Err(ConversionError::JsError)
-        },
+        }
     }
 }
 
@@ -40,7 +29,7 @@ pub fn bad_parameter<R, E: std::fmt::Display>(res: Result<R, E>) -> Result<R, Co
         Err(e) => {
             error!(error = %e, "{}", ConversionError::BadParameter);
             Err(ConversionError::BadParameter)
-        },
+        }
     }
 }
 

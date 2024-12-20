@@ -1,14 +1,16 @@
 pub(crate) mod config;
 pub(crate) mod error;
 
+use std::any::type_name;
 use std::cmp::Eq;
 use std::collections::HashSet;
 use std::hash::Hash;
 use std::str::FromStr;
 
 use neon::prelude::*;
+use tracing::error;
 
-use error::{js_result, match_variant_result, ConversionError};
+use error::{js_result, ConversionError};
 
 pub(crate) fn from_wrapped_string_vec<'a>(
     cx: &mut impl Context<'a>,
@@ -41,7 +43,10 @@ pub(crate) fn from_wrapped_simple_enum<T: FromStr>(
 ) -> Result<T, ConversionError> {
     let wrapped_as_str = js_result(wrapped_enum.downcast::<JsString, _>(cx))?;
     let enum_str = wrapped_as_str.value(cx);
-    Ok(match_variant_result(T::from_str(&enum_str))?)
+    Ok(T::from_str(&enum_str).map_err(|_| {
+        error!("Failed constructing {} from {}", type_name::<T>(), enum_str);
+        ConversionError::EnumVariantNotFound
+    })?)
 }
 
 pub(crate) fn from_wrapped_enum<'a, T: FromStr>(
@@ -50,7 +55,10 @@ pub(crate) fn from_wrapped_enum<'a, T: FromStr>(
 ) -> Result<(T, Option<Handle<'a, JsValue>>), ConversionError> {
     if let Ok(s) = wrapped_enum.downcast::<JsString, _>(cx) {
         let value = s.value(cx);
-        let res = match_variant_result(T::from_str(&value))?;
+        let res = T::from_str(&value).map_err(|_| {
+            error!("Failed constructing {} from {}", type_name::<T>(), value);
+            ConversionError::EnumVariantNotFound
+        })?;
         Ok((res, None))
     } else if let Ok(o) = wrapped_enum.downcast::<JsObject, _>(cx) {
         let unwrapped_keys = object_keys(cx, o)?;

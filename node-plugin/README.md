@@ -17,6 +17,38 @@ npm run build
 
 This command uses the [@neon-rs/cli](https://www.npmjs.com/package/@neon-rs/cli) utility to assemble the binary Node addon from the output of `cargo`.
 
+## Debugging
+
+* Compile the library with debug:
+
+    ```
+    npm run debug
+    ```
+
+* Activate logging:
+
+    ```bash
+    RUST_LOG=trace
+    ```
+
+    ```pwsh
+    $env:RUST_LOG="trace"
+    ```
+
+    Available levels are `trace`, `debug`, `info`, `warn` and `error`.
+
+    It is possible to filter according to modules (see the [docs](https://docs.rs/tracing-subscriber/latest/tracing_subscriber/filter/struct.EnvFilter.html)).
+
+* Activate full backtrace:
+
+    ```bash
+    RUST_BACKTRACE=full
+    ```
+
+    ```pwsh
+    $env:RUST_BACKTRACE="full"
+    ```
+
 ## Available Scripts
 
 In the project directory, you can run:
@@ -49,7 +81,13 @@ Initiate a dry run of a patch release of this library via GitHub Actions. This p
 
 #### `npm test`
 
-Runs the unit tests by calling `cargo test`. You can learn more about [adding tests to your Rust code](https://doc.rust-lang.org/book/ch11-01-writing-tests.html) from the [Rust book](https://doc.rust-lang.org/book/).
+Runs the unit tests written with `jest`.
+
+Consider running the tests with logging and full backtrace:
+
+```bash
+RUST_LOG=info RUST_BACKTRACE=full npm test
+```
 
 ## Project Layout
 

@@ -3,7 +3,16 @@
 // The Rust addon.
 export { getAllProviders } from "./load.cjs";
 
-import { type Provider, type ProviderConfig, type ProviderImplConfig, KeyHandle, type KeyPairHandle, KeyPairSpec, KeySpec, DHExchange } from "crypto-layer-ts-types";
+import {
+    type Provider,
+    type ProviderConfig,
+    type ProviderImplConfig,
+    type KeyHandle,
+    type KeyPairHandle,
+    type KeyPairSpec,
+    type KeySpec,
+    type DHExchange
+} from "crypto-layer-ts-types";
 import {
     createBareProvider,
     providerName,

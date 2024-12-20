@@ -1,15 +1,12 @@
-
 use crypto_layer::common::config::AdditionalConfigDiscriminants;
 use crypto_layer::prelude::*;
 use neon::prelude::*;
 
-use super::error::{js_result, ConversionError, bad_parameter};
-use super::{
-    from_wrapped_enum, from_wrapped_simple_enum, wrapped_array_to_hash_set,
-};
+use super::error::{bad_parameter, js_result, ConversionError};
+use super::{from_wrapped_enum, from_wrapped_simple_enum, wrapped_array_to_hash_set};
 use crate::{JsKeyHandle, JsKeyPairHandle};
 
-#[tracing::instrument(level="trace", skip_all)]
+#[tracing::instrument(level = "trace", skip_all)]
 pub fn from_wrapped_provider_config<'a>(
     cx: &mut FunctionContext,
     wrapped: Handle<JsObject>,
@@ -20,7 +17,8 @@ pub fn from_wrapped_provider_config<'a>(
         js_result(wrapped.get::<JsValue, _, _>(cx, "min_security_level"))?;
     let supported_hashes_arr = js_result(wrapped.get::<JsArray, _, _>(cx, "supported_hashes"))?;
     let supported_ciphers_arr = js_result(wrapped.get::<JsArray, _, _>(cx, "supported_ciphers"))?;
-    let supported_asym_spec_arr = js_result(wrapped.get::<JsArray, _, _>(cx, "supported_ciphers"))?;
+    let supported_asym_spec_arr =
+        js_result(wrapped.get::<JsArray, _, _>(cx, "supported_asym_spec"))?;
 
     Ok(ProviderConfig {
         max_security_level: from_wrapped_simple_enum(cx, max_security_level_string)?,
@@ -43,7 +41,7 @@ pub fn from_wrapped_provider_config<'a>(
     })
 }
 
-#[tracing::instrument(level="trace", skip_all)]
+#[tracing::instrument(level = "trace", skip_all)]
 pub fn from_wrapped_provider_impl_config<'a>(
     cx: &mut FunctionContext,
     wrapped: Handle<JsObject>,
@@ -55,10 +53,7 @@ pub fn from_wrapped_provider_impl_config<'a>(
     let mut res = vec![];
     for additional_config in additional_config_arr {
         let additional_config_obj = js_result(additional_config.downcast::<JsObject, _>(cx))?;
-        res.push(from_wrapped_additional_config(
-            cx,
-            additional_config_obj,
-        )?);
+        res.push(from_wrapped_additional_config(cx, additional_config_obj)?);
     }
 
     Ok(ProviderImplConfig {
@@ -66,7 +61,7 @@ pub fn from_wrapped_provider_impl_config<'a>(
     })
 }
 
-#[tracing::instrument(level="trace", skip_all)]
+#[tracing::instrument(level = "trace", skip_all)]
 pub fn from_wrapped_additional_config(
     cx: &mut FunctionContext,
     wrapped: Handle<JsObject>,
@@ -103,18 +98,14 @@ pub fn from_wrapped_additional_config(
 
             let key_handle = key_handle_js.borrow();
 
-            AdditionalConfig::StorageConfigHMAC (
-                key_handle.clone()
-            )
+            AdditionalConfig::StorageConfigHMAC(key_handle.clone())
         }
         AdditionalConfigDiscriminants::StorageConfigDSA => {
             let key_pair_handle_js = bad_parameter(obj.downcast::<JsKeyPairHandle, _>(cx))?;
 
             let key_pair_handle = key_pair_handle_js.borrow();
 
-            AdditionalConfig::StorageConfigDSA (
-                key_pair_handle.clone()
-            )
+            AdditionalConfig::StorageConfigDSA(key_pair_handle.clone())
         }
         AdditionalConfigDiscriminants::StorageConfigPass => {
             let pass_js = bad_parameter(obj.downcast::<JsString, _>(cx))?;
@@ -125,7 +116,7 @@ pub fn from_wrapped_additional_config(
     Ok(result)
 }
 
-#[tracing::instrument(level="trace", skip_all)]
+#[tracing::instrument(level = "trace", skip_all)]
 pub(crate) fn from_wrapped_key_spec(
     cx: &mut FunctionContext,
     wrapped: Handle<JsObject>,
@@ -141,7 +132,7 @@ pub(crate) fn from_wrapped_key_spec(
     })
 }
 
-#[tracing::instrument(level="trace", skip_all)]
+#[tracing::instrument(level = "trace", skip_all)]
 pub(crate) fn from_wrapped_key_pair_spec(
     cx: &mut FunctionContext,
     wrapped: Handle<JsObject>,

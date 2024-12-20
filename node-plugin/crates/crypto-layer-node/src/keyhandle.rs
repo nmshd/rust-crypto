@@ -1,4 +1,3 @@
-
 use neon::prelude::*;
 use neon::types::buffer::TypedArray;
 
@@ -17,7 +16,7 @@ pub fn export_delete(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let handle = handle_js.borrow();
     unwrap_or_throw!(cx, handle.clone().delete());
     Ok(cx.undefined())
-} 
+}
 
 pub fn export_encrypt_data(mut cx: FunctionContext) -> JsResult<JsArray> {
     let handle_js = cx.this::<JsKeyHandle>()?;
@@ -29,7 +28,11 @@ pub fn export_encrypt_data(mut cx: FunctionContext) -> JsResult<JsArray> {
     let arr = cx.empty_array();
     let encrypted_data_js = JsUint8Array::from_slice(&mut cx, &encrypted_data)?;
     arr.set(&mut cx, 0, encrypted_data_js)?;
-    let iv_js = JsUint8Array::from_slice(&mut cx, &iv)?;
+    let iv_js = if iv.len() == 0 {
+        JsUint8Array::new(&mut cx, 0)?
+    } else {
+        JsUint8Array::from_slice(&mut cx, &iv)?
+    };
     arr.set(&mut cx, 1, iv_js)?;
     Ok(arr)
 }

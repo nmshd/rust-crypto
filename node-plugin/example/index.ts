@@ -4,8 +4,6 @@ import { exit } from "process";
 
 console.log("Providers: ", getAllProviders());
 
-let kvStore: Map<string, Uint8Array> = new Map();
-
 let providerConfig: ProviderConfig = {
     max_security_level: "Software",
     min_security_level: "Software",

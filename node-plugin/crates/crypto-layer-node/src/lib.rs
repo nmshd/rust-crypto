@@ -1,5 +1,6 @@
 use std::cell::RefCell;
 
+use color_eyre;
 use crypto_layer::prelude::*;
 use neon::prelude::*;
 use tracing_subscriber::{
@@ -78,6 +79,8 @@ fn main(mut cx: ModuleContext) -> NeonResult<()> {
         .with_writer(std::io::stderr)
         .with_env_filter(EnvFilter::from_default_env())
         .init();
+
+    color_eyre::install().unwrap();
 
     let load_function_span = tracing::trace_span!("Loading module functions.").entered();
 
