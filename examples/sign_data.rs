@@ -15,8 +15,8 @@ fn main() {
         supported_asym_spec: HashSet::from([AsymmetricKeySpec::P256]),
     };
 
-    // Some provider need additional configuration.
-    // All providers (if not created to be ephemeral) need either `FileStoreConfig` or `KVStoreConfig` for storing key metadata.
+    // Providers need additional configuration.
+    // All providers need either `FileStoreConfig` or `KVStoreConfig` for storing key metadata.
     let implementation_config = ProviderImplConfig {
         additional_config: vec![
             AdditionalConfig::FileStoreConfig {

@@ -48,53 +48,66 @@ pub type DeleteFn = Arc<dyn Fn(String) -> Pin<Box<dyn Future<Output = ()> + Send
 /// The function returns a `DynFuture` resolving to a `Vec<String>` containing all the keys.
 pub type AllKeysFn = Arc<dyn Fn() -> DynFuture<Vec<String>> + Send + Sync>;
 
-/// Enum describing the security level of a provider.
-///
-/// * [SecurityLevel::Hardware]: Provider is hardware backed (tpm, other security chips, StrongBox KeyStore).
-/// * [SecurityLevel::Software]: Provder uses the systems software keystore.
-/// * [SecurityLevel::Network]: Provider uses a network key store (Hashicorp).
-/// * [SecurityLevel::Unsafe]: Provder uses software fallback.
 #[derive(
     Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, EnumString, EnumIter, IntoStaticStr,
 )]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
+/// Used for representing the security of a provider.
 pub enum SecurityLevel {
-    /// Highest security level
+    /// Highest security level.
+    ///
+    /// Implies running on a TPM, HSM or TEE.
+    /// The extraction of private keys is impossible.
     Hardware = 4,
+    /// Keys are stored in an encrypted database or on a native software key store.
+    ///
+    /// Extraction of private keys is possible.
     Software = 3,
+    /// NKS
+    ///
+    /// Extraction of private keys is possible.
     Network = 2,
+    /// Lowest security level.
+    ///
+    /// Keys are stored in an unencrypted, insecure database or file.
     Unsafe = 1,
 }
 
-/// flutter_rust_bridge:non_opaque
 #[derive(Serialize, Deserialize, Clone, Copy, Debug)]
 pub enum Spec {
     KeySpec(KeySpec),
     KeyPairSpec(KeyPairSpec),
 }
 
-/// flutter_rust_bridge:non_opaque
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
+/// Struct used to configure keys.
 pub struct KeySpec {
+    /// Cipher used for symmetric encryption.
     pub cipher: Cipher,
+    /// Hash function used with HMAC.
     pub signing_hash: CryptoHash,
+    /// If set to `true`, the key is going to be deleted when the handle is dropped.
     pub ephemeral: bool,
 }
 
-/// flutter_rust_bridge:non_opaque
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
+/// Struct used to configure key pairs.
 pub struct KeyPairSpec {
+    /// Asymmetric algorithm to be used.
     pub asym_spec: AsymmetricKeySpec,
+    /// Cipher used for hybrid encryption. If set to None, no hybrid encryption will be used.
     pub cipher: Option<Cipher>,
+    /// Hash function used for signing and encrypting.
     pub signing_hash: CryptoHash,
+    /// If set to true, the key pair will be discarded after the handle is dropped.
     pub ephemeral: bool,
 }
 
-/// flutter_rust_bridge:non_opaque
 #[derive(Clone, Debug)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
+/// Capabilities of a Provider
 pub struct ProviderConfig {
     pub max_security_level: SecurityLevel,
     pub min_security_level: SecurityLevel,
@@ -103,9 +116,36 @@ pub struct ProviderConfig {
     pub supported_asym_spec: HashSet<AsymmetricKeySpec>,
 }
 
-/// flutter_rust_bridge:non_opaque
 #[derive(Clone)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
+/// Configuration needed for using or initializing providers.
+///
+/// Either
+/// * [AdditionalConfig::KVStoreConfig]
+/// * [AdditionalConfig::FileStoreConfig]
+///
+/// and either
+/// * [AdditionalConfig::StorageConfigHMAC]
+/// * [AdditionalConfig::StorageConfigDSA]
+/// * [AdditionalConfig::StorageConfigPass]
+///
+/// need to be supplied.
+///
+/// ## Example
+///
+/// ```rust
+/// use crypto_layer::prelude::*;
+/// fn main() {
+///     let implementation_config = ProviderImplConfig {
+///           additional_config: vec![
+///              AdditionalConfig::FileStoreConfig {
+///                  db_dir: "./testdb".to_owned(),
+///              },
+///              AdditionalConfig::StorageConfigPass("password".to_owned()),
+///          ],
+///     };
+/// }
+/// ```
 pub struct ProviderImplConfig {
     pub additional_config: Vec<AdditionalConfig>,
 }
@@ -113,6 +153,7 @@ pub struct ProviderImplConfig {
 #[derive(Clone, EnumDiscriminants)]
 #[strum_discriminants(derive(EnumString, IntoStaticStr))]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
+/// Configuration needed for using or initializing providers.
 pub enum AdditionalConfig {
     #[cfg_attr(
         feature = "ts-interface",
@@ -123,18 +164,25 @@ pub enum AdditionalConfig {
             all_keys_fn: () => string[];
         }")
     )]
+    /// Callback functions acting like a hashmap for storing key metadata.
+    ///
+    /// Not supported by the NodeJS plugin.
     KVStoreConfig {
         get_fn: GetFn,
         store_fn: StoreFn,
         delete_fn: DeleteFn,
         all_keys_fn: AllKeysFn,
     },
+    /// Configuration for the usage of the metadata file database.
     FileStoreConfig {
         /// Path to a directory where the database holding key metadata will be saved.
         db_dir: String,
     },
+    /// Used for verifying the integrity of the key metadata.
     StorageConfigHMAC(KeyHandle),
+    /// Used for verifying the integrity of the key metadata.
     StorageConfigDSA(KeyPairHandle),
+    /// Used for verifying the integrity of the key metadata.
     StorageConfigPass(String),
 }
 

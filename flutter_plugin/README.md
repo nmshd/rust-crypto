@@ -130,4 +130,3 @@ For example, see `sumAsync` in `lib/cal_flutter_plugin.dart`.
 For help getting started with Flutter, view our
 [online documentation](https://docs.flutter.dev), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
-

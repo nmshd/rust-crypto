@@ -34,8 +34,14 @@ It offers a wide range of functionalities, including encryption, decryption, sig
 
 - **Extensibility**: The modular design of the Crypto Layer allows for easy extension and integration of additional cryptographic algorithms and security modules in the future.
 
+## Design
 
-## Usage
+### Overview
+
+- **Providers** are interfaces to native implemented secure storages like TPM, HSM, NKS and the fallback software provider.
+- **Key Pair Handles** are interfaces for interacting and operating with a native key pair (P256).
+- **Key Handles** are interfaces for interacting and operating with a native symmetric keys (AES).
+- **DH Exchanges** are interfaces for executing a DH key exchange.
 
 ```mermaid
 %% https://mermaid.js.org/syntax/classDiagram.html
@@ -62,6 +68,8 @@ classDiagram
         <<Interface>> 
     }
 ```
+
+## Usage
 
 ### Usage Rust Crate
 
