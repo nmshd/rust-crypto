@@ -1,16 +1,48 @@
-# cal_flutter_app
+# Example Flutter App integration
 
-A new Flutter project.
+This repository additionally contains a Flutter native plugin and an example Flutter app to test the Crypto Abstraction Layer, currently only supporting Android.
 
-## Getting Started
+To run this App, the following tools are reqiuired:
 
-This project is a starting point for a Flutter application.
+- Rust compiler
+- Rust aarch64-linux-android and armv7-linux-androideabi toolchains
+- cargo-ndk
+- Android Debug Bridge (adb)
+- Flutter
+- Android SDK
+- Android NDK
 
-A few resources to get you started if this is your first Flutter project:
+## Dependencies
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+```
+# rustup
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+# toolchains
+rustup target add \
+    aarch64-linux-android \
+    armv7-linux-androideabi \
+    x86_64-linux-android \
+    i686-linux-android
+
+# cargo-ndk
+cargo install cargo-ndk
+```
+
+Addidtionally install Flutter and either install Android Studio or Download the Android SDK
+Now you can install the NDK with:
+```
+sdkmanager ndk-bundle
+```
+
+## Running the App
+
+Get the id of the connected Android device with `flutter devices`, then run the App in debug mode:
+
+```
+cd flutter_app
+flutter run -d $DEVICEID
+```
+This should compile the Rust code and the plugin and start the App on the device.
+
+As Android Emulators don't contain a Secure Element, the App was only tested on real devices.
