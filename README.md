@@ -38,27 +38,6 @@ It offers a wide range of functionalities, including encryption, decryption, sig
 - **Extensibility**: The modular design of the Crypto Layer allows for easy extension and integration of additional cryptographic algorithms and security modules in the future.
 
 
-## Usage
-
-### Usage Rust Crate
-
-Add the library via `cargo` to your project:
-```
-cargo add https://github.com/nmshd/rust-crypto
-```
-
-#### Examples
-
-Examples for the rust crate can be found in the [example folder](./examples/).
-
-
-### [Usage Flutter Plugin](./flutter_plugin/README.md)
-
-### [Example Flutter App integration](./flutter_app/README.md)
-
-### [Usage NodeJS Plugin](./node-plugin/README.md)
-
-
 ## Design
 
 ### Overview
@@ -95,46 +74,64 @@ classDiagram
 ```
 
 ```mermaid
-architecture-beta
-    group cal(material-symbols:book-outline)[Crypto Layer]
-    group native(material-symbols-light:security-key-outline)[Hardware]
-    group software(carbon:cics-program)[Software]
+graph TB
+    subgraph cal[Crypto Layer]
+        provider(Provider)
+        androidprov[Android Provider]
+        linuxprov[Linux Provider]
+        windowsprov[Windows Provider]
+        appleprov[Apple Provider]
+        softwareprov[Software Provider]
+    end
 
-    service provider(flowbite:windows-solid)[Provider] in cal
-    service androidprov(icon-park-outline:connection-arrow)[Android Provider] in cal
-    service linuxprov(icon-park-outline:connection-arrow)[Linux Provider] in cal
-    service windowsprov(icon-park-outline:connection-arrow)[Windows Provider] in cal
-    service appleprov(icon-park-outline:connection-arrow)[Apple Provider] in cal
-    service softwareprov(icon-park-outline:connection-arrow)[Software Provider] in cal
+    subgraph software[Software]
+        encrypteddb[Encrypted DB]
+        metadatastore[Key Metadata Storage]
+    end
 
-    service encrypteddb(bitcoin-icons:safe-filled)[Encrypted DB] in software
-    service metadatastore(bitcoin-icons:safe-filled)[Key Metadata Storage] in software
+    subgraph hardware[Hardware]
+        android[Strongbox Keystore]
+        apple[Apple Secure Enclave]
+        linux["TPM 2.0"]
+        windows[Cryptography API Next Generation]
+    end
 
-    service android(material-symbols:android)[Strongbox Keystore] in native
-    service ios(simple-icons:ios)[Apple Secure Enclave] in native
-    service macos(simple-icons:macos)[Apple Secure Enclave] in native
-    service linux(ant-design:linux-outlined)[TPM 2] in native
-    service windows(flowbite:windows-solid)[Cryptography API Next Generation] in native
+    provider --> androidprov
+    provider --> appleprov
+    provider --> windowsprov
+    provider --> softwareprov
+    provider--> linuxprov
 
-    provider:B --> T:androidprov
-    provider:B --> T:appleprov
-    provider:B --> T:windowsprov
-    provider:B --> T:softwareprov
-    provider:B --> T:linuxprov
+    cal --> metadatastore
 
-    softwareprov:B --> T:metadatastore
-    androidprov:B --> T:metadatastore
-    appleprov:B --> T:metadatastore
-    linuxprov:B --> T:metadatastore
-    windowsprov:B --> T:metadatastore
-
-    softwareprov:B --> T:encrypteddb
-    androidprov:R --> L:android
-    appleprov:R --> L:ios
-    appleprov:R --> L:macos
-    windowsprov:R --> L:windows
-    linuxprov:R --> L:linux
+    softwareprov --> encrypteddb
+    androidprov --> android
+    appleprov --> apple
+    windowsprov --> windows
+    linuxprov --> linux
 ```
+
+
+## Usage
+
+### Usage Rust Crate
+
+Add the library via `cargo` to your project:
+```
+cargo add https://github.com/nmshd/rust-crypto
+```
+
+#### Examples
+
+Examples for the rust crate can be found in the [example folder](./examples/).
+
+
+### [Usage Flutter Plugin](./flutter_plugin/README.md)
+
+### [Example Flutter App integration](./flutter_app/README.md)
+
+### [Usage NodeJS Plugin](./node-plugin/README.md)
+
 
 ## Contributing
 
