@@ -35,19 +35,19 @@ impl SoftwareKeyHandle {
     pub fn new(
         key_id: String,
         spec: Option<KeySpec>,
-        key_data: Vec<u8>,
+        key_data: &[u8],
         storage_manager: StorageManager,
-    ) -> Result<Self, CalError> {
+    ) -> Self {
         // Create the AES key for encryption and decryption
         let algo: &Algorithm = spec.as_ref().unwrap().cipher.into();
-        let unbound_key = UnboundKey::new(algo, &key_data).expect("Failed to create AES key");
+        let unbound_key = UnboundKey::new(algo, key_data).expect("Failed to create AES key");
         let key = Arc::new(LessSafeKey::new(unbound_key));
 
-        Ok(Self {
+        Self {
             key_id,
             key,
             storage_manager,
-        })
+        }
     }
 }
 
@@ -119,26 +119,23 @@ impl KeyHandleImpl for SoftwareKeyHandle {
 
     #[doc = " Delete this key."]
     fn delete(self) -> Result<(), CalError> {
-        self.storage_manager.delete(self.key_id);
+        self.storage_manager.delete(&self.key_id);
         Ok(())
     }
 }
 
 impl KeyPairHandleImpl for SoftwareKeyPairHandle {
     fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
-        let signing_key = match self.signing_key.as_ref() {
-            Some(key) => key,
-            None => {
-                return Err(CalError::failed_operation(
-                    "No private key available for signing".to_string(),
-                    true,
-                    None,
-                ))
-            }
+        let Some(signing_key) = self.signing_key.as_ref() else {
+            return Err(CalError::failed_operation(
+                "No private key available for signing".to_string(),
+                true,
+                None,
+            ));
         };
 
         match self.spec.asym_spec {
-            AsymmetricKeySpec::Curve25519 => ed25519_compact::SecretKey::from_slice(&signing_key)
+            AsymmetricKeySpec::Curve25519 => ed25519_compact::SecretKey::from_slice(signing_key)
                 .map(|key| {
                     key.sign(data, Some(ed25519_compact::Noise::generate()))
                         .to_vec()
@@ -214,7 +211,7 @@ impl KeyPairHandleImpl for SoftwareKeyPairHandle {
     }
 
     fn extract_key(&self) -> Result<Vec<u8>, CalError> {
-        Ok(self.public_key.clone())
+        Ok(self.signing_key.clone().unwrap())
     }
 
     fn start_dh_exchange(&self) -> Result<DHExchange, CalError> {
@@ -227,7 +224,7 @@ impl KeyPairHandleImpl for SoftwareKeyPairHandle {
 
     #[doc = " Delete this key pair."]
     fn delete(self) -> Result<(), CalError> {
-        self.storage_manager.delete(self.key_id);
+        self.storage_manager.delete(&self.key_id);
         Ok(())
     }
 }

@@ -13,7 +13,7 @@ mod tests {
 
         use super::*;
 
-        static mut STORE: LazyLock<TestStore> = LazyLock::new(|| TestStore::new());
+        static mut STORE: LazyLock<TestStore> = LazyLock::new(TestStore::new);
 
         #[test]
         fn test_dh_exchange_success() {
@@ -23,13 +23,11 @@ mod tests {
 
             // Party A creates an instance of SoftwareDHExchange
             let mut dh_exchange_a =
-                SoftwareDHExchange::new("key_id_a".to_string(), storage_manager.clone())
-                    .expect("Failed to initialize DH exchange for party A");
+                SoftwareDHExchange::new("key_id_a".to_string(), storage_manager.clone());
 
             // Party B creates an instance of SoftwareDHExchange
             let mut dh_exchange_b =
-                SoftwareDHExchange::new("key_id_b".to_string(), storage_manager)
-                    .expect("Failed to initialize DH exchange for party B");
+                SoftwareDHExchange::new("key_id_b".to_string(), storage_manager);
 
             // Party A gets its public key
             let public_key_a = dh_exchange_a
@@ -72,13 +70,11 @@ mod tests {
 
             // Party A creates an instance of SoftwareDHExchange
             let mut dh_exchange_a =
-                SoftwareDHExchange::new("key_id_a".to_string(), storage_manager.clone())
-                    .expect("Failed to initialize DH exchange for party A");
+                SoftwareDHExchange::new("key_id_a".to_string(), storage_manager.clone());
 
             // Party B creates an instance of SoftwareDHExchange
             let mut dh_exchange_b =
-                SoftwareDHExchange::new("key_id_b".to_string(), storage_manager)
-                    .expect("Failed to initialize DH exchange for party B");
+                SoftwareDHExchange::new("key_id_b".to_string(), storage_manager);
 
             // Party A gets its public key
             let public_key_a = dh_exchange_a
@@ -130,8 +126,7 @@ mod tests {
 
             // Party A creates an instance of SoftwareDHExchange
             let mut dh_exchange_a =
-                SoftwareDHExchange::new("key_id_a".to_string(), storage_manager)
-                    .expect("Failed to initialize DH exchange for party A");
+                SoftwareDHExchange::new("key_id_a".to_string(), storage_manager);
 
             // Generate an invalid public key (e.g., random bytes)
             let invalid_public_key = vec![1, 2, 3, 4, 5];
@@ -147,7 +142,7 @@ mod tests {
 
             // Optionally, check the error message
             if let Err(e) = result {
-                println!("Error as expected: {}", e);
+                println!("Error as expected: {e}");
             }
         }
 
@@ -159,8 +154,7 @@ mod tests {
 
             // Party A creates an instance of SoftwareDHExchange
             let mut dh_exchange_a =
-                SoftwareDHExchange::new("key_id_a".to_string(), storage_manager)
-                    .expect("Failed to initialize DH exchange for party A");
+                SoftwareDHExchange::new("key_id_a".to_string(), storage_manager);
 
             // Party A gets its public key
             let public_key_a = dh_exchange_a
@@ -180,6 +174,106 @@ mod tests {
                 result.is_err(),
                 "Expected error when calling add_external after add_external_final"
             );
+        }
+    }
+
+    mod derive_key {
+        use std::sync::LazyLock;
+
+        use crate::{
+            common::{
+                config::KeyPairSpec,
+                crypto::algorithms::encryption::AsymmetricKeySpec,
+                error::CalError,
+                factory,
+                traits::{key_handle::KeyPairHandleImpl, module_provider::ProviderImpl},
+                KeyPairHandle, Provider,
+            },
+            tests::TestStore,
+        };
+
+        static mut STORE: LazyLock<TestStore> = LazyLock::new(TestStore::new);
+
+        #[test]
+        fn test_derive_key_method() {
+            let impl_config = unsafe { STORE.impl_config().clone() };
+            let provider: Provider =
+                factory::create_provider_from_name("SoftwareProvider", impl_config).unwrap();
+
+            let password = "test_password";
+            let salt = [0u8; 16];
+            let algorithm = KeyPairSpec {
+                asym_spec: AsymmetricKeySpec::P256,
+                cipher: Some(
+                    crate::common::crypto::algorithms::encryption::Cipher::XChaCha20Poly1305,
+                ),
+                signing_hash: crate::common::crypto::algorithms::hashes::CryptoHash::Sha2_256,
+            };
+
+            // Test successful key derivation
+            let key_handle_result: Result<KeyPairHandle, CalError> = provider
+                .implementation
+                .derive_key_from_password(password, &salt, algorithm);
+            assert!(key_handle_result.is_ok(), "Failed to derive key");
+            let key_handle: KeyPairHandle = key_handle_result.unwrap();
+            let key_impl = key_handle.implementation.clone();
+            let key = key_impl.extract_key().unwrap();
+            assert_eq!(key.len(), 32, "Derived key should be 32 bytes");
+
+            // Test different password yields different key
+            let password2 = "another_password";
+            let key_handle_result2: Result<KeyPairHandle, CalError> = provider
+                .implementation
+                .derive_key_from_password(password2, &salt, algorithm);
+            assert!(key_handle_result2.is_ok());
+            let key_handle2 = key_handle_result2.unwrap();
+            let key_impl2 = key_handle2.implementation.clone();
+            let key2 = key_impl2.extract_key().unwrap();
+            assert_ne!(key, key2, "Different passwords should yield different keys");
+
+            // Test different salt yields different key
+            let salt2 = [1u8; 16];
+            let key_handle_result3: Result<KeyPairHandle, CalError> = provider
+                .implementation
+                .derive_key_from_password(password, &salt2, algorithm);
+            assert!(key_handle_result3.is_ok());
+            let key_handle3 = key_handle_result3.unwrap();
+            let key_impl3 = key_handle3.implementation.clone();
+            let key3 = key_impl3.extract_key().unwrap();
+            assert_ne!(key, key3, "Different salts should yield different keys");
+
+            // Test incorrect salt length
+            let short_salt = [0u8; 15];
+            let key_handle_result4: Result<KeyPairHandle, CalError> = provider
+                .implementation
+                .derive_key_from_password(password, &short_salt, algorithm);
+            assert!(
+                key_handle_result4.is_err(),
+                "Deriving key with incorrect salt length should fail"
+            );
+            if let Err(e) = &key_handle_result4 {
+                assert_eq!(
+                    e.to_string(),
+                    "Failed operation: description",
+                    "Incorrect error message for short salt"
+                );
+            }
+
+            let long_salt = [0u8; 17];
+            let key_handle_result5: Result<KeyPairHandle, CalError> = provider
+                .implementation
+                .derive_key_from_password(password, &long_salt, algorithm);
+            assert!(
+                key_handle_result5.is_err(),
+                "Deriving key with incorrect salt length should fail"
+            );
+            if let Err(e) = &key_handle_result5 {
+                assert_eq!(
+                    e.to_string(),
+                    "Failed operation: description",
+                    "Incorrect error message for long salt"
+                );
+            }
         }
     }
 }

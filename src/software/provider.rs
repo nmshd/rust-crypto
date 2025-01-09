@@ -5,7 +5,7 @@ use super::{
 use crate::{
     common::{
         config::{KeyPairSpec, KeySpec, ProviderConfig, Spec},
-        crypto::algorithms::encryption::AsymmetricKeySpec,
+        crypto::algorithms::encryption::{AsymmetricKeySpec, Cipher},
         error::CalError,
         traits::{
             key_handle::{DHKeyExchangeImpl, KeyHandleImplEnum},
@@ -15,6 +15,7 @@ use crate::{
     },
     storage::KeyData,
 };
+use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
 use nanoid::nanoid;
 use ring::{
     aead::{Algorithm, LessSafeKey, UnboundKey, AES_256_GCM},
@@ -68,11 +69,9 @@ impl ProviderImpl for SoftwareProvider {
     }
 
     fn load_key(&mut self, key_id: String) -> Result<KeyHandle, CalError> {
-        let storage_data = self.storage_manager.get(key_id.clone())?;
+        let storage_data = self.storage_manager.get(&key_id)?;
 
-        let spec = if let Spec::KeySpec(spec) = storage_data.spec {
-            spec
-        } else {
+        let Spec::KeySpec(spec) = storage_data.spec else {
             return Err(CalError::failed_operation(
                 "Trying to load KeyPair as symmetric Key".to_owned(),
                 true,
@@ -80,15 +79,12 @@ impl ProviderImpl for SoftwareProvider {
             ));
         };
 
-        let key_data = match storage_data.secret_data {
-            Some(v) => v,
-            _ => {
-                return Err(CalError::failed_operation(
-                    "no sensitive data for key found".to_owned(),
-                    true,
-                    None,
-                ))
-            }
+        let Some(key_data) = storage_data.secret_data else {
+            return Err(CalError::failed_operation(
+                "no sensitive data for key found".to_owned(),
+                true,
+                None,
+            ));
         };
 
         // Create an UnboundKey for the AES-GCM encryption
@@ -161,11 +157,9 @@ impl ProviderImpl for SoftwareProvider {
     }
 
     fn load_key_pair(&mut self, key_id: String) -> Result<KeyPairHandle, CalError> {
-        let storage_data = self.storage_manager.get(key_id.clone())?;
+        let storage_data = self.storage_manager.get(&key_id)?;
 
-        let spec = if let Spec::KeyPairSpec(spec) = storage_data.spec {
-            spec
-        } else {
+        let Spec::KeyPairSpec(spec) = storage_data.spec else {
             return Err(CalError::failed_operation(
                 "Trying to load symmetric Key as KeyPair".to_owned(),
                 true,
@@ -175,15 +169,12 @@ impl ProviderImpl for SoftwareProvider {
 
         let key_data = storage_data.secret_data;
 
-        let public_key = match storage_data.public_data {
-            Some(v) => v,
-            None => {
-                return Err(CalError::failed_operation(
-                    "no public data for KeyPair found".to_owned(),
-                    true,
-                    None,
-                ))
-            }
+        let Some(public_key) = storage_data.public_data else {
+            return Err(CalError::failed_operation(
+                "no public data for KeyPair found".to_owned(),
+                true,
+                None,
+            ));
         };
 
         let handle = SoftwareKeyPairHandle {
@@ -206,9 +197,9 @@ impl ProviderImpl for SoftwareProvider {
         let handle = SoftwareKeyHandle::new(
             key_id.clone(),
             Some(spec),
-            data.to_vec(),
+            data,
             self.storage_manager.clone(),
-        )?;
+        );
 
         // store key
         let storage_data = KeyData {
@@ -291,8 +282,7 @@ impl ProviderImpl for SoftwareProvider {
         let key_id = nanoid!(10); // Generate a unique key ID
 
         // Initialize the SoftwareDHExchange instance
-        let dh_exchange = SoftwareDHExchange::new(key_id, self.storage_manager.clone())
-            .expect("Failed to initialize DH exchange");
+        let dh_exchange = SoftwareDHExchange::new(key_id, self.storage_manager.clone());
 
         // Wrap in DHExchange and return
         Ok(DHExchange {
@@ -311,6 +301,53 @@ impl ProviderImpl for SoftwareProvider {
     fn get_capabilities(&self) -> Option<ProviderConfig> {
         SoftwareProviderFactory::default().get_capabilities(self.impl_config.clone())
     }
+
+    /// Derives a high-entropy key from a low-entropy password and a unique salt
+    fn derive_key_from_password(
+        &self,
+        password: &str,
+        salt: &[u8],
+        algorithm: KeyPairSpec,
+    ) -> Result<KeyPairHandle, CalError> {
+        if salt.len() != 16 {
+            return Err(CalError::failed_operation(
+                "description".to_string(),
+                true,
+                None,
+            ));
+        }
+
+        let argon2 = Argon2::default();
+        let salt_str = SaltString::encode_b64(salt)
+            .map_err(|_| CalError::failed_operation("Failed to encode salt".into(), true, None))?;
+
+        // Perform the password hashing to derive a key
+        let password_hash = argon2
+            .hash_password(password.as_bytes(), &salt_str)
+            .map_err(|e| CalError::failed_operation(e.to_string(), false, None))?;
+
+        // Truncate or derive key material based on the selected encryption algorithm
+        let derived_key = match algorithm.cipher {
+            Some(Cipher::XChaCha20Poly1305) => {
+                // Extract the raw hash output and truncate it to 32 bytes (XChaCha20 key size)
+                password_hash.hash.unwrap().as_bytes()[..32].to_vec()
+            } // Add other algorithms here
+            _ => unimplemented!(),
+        };
+
+        let key_id = nanoid!(10);
+        let handle = SoftwareKeyPairHandle {
+            key_id: key_id.clone(),
+            spec: algorithm,
+            public_key: vec![],
+            signing_key: Some(derived_key),
+            storage_manager: self.storage_manager.clone(),
+        };
+
+        Ok(KeyPairHandle {
+            implementation: handle.into(),
+        })
+    }
 }
 
 #[derive(Debug)]
@@ -322,7 +359,7 @@ pub(crate) struct SoftwareDHExchange {
 }
 
 impl SoftwareDHExchange {
-    pub fn new(key_id: String, storage_manager: StorageManager) -> Result<Self, CalError> {
+    pub fn new(key_id: String, storage_manager: StorageManager) -> Self {
         let rng = SystemRandom::new();
 
         // Generate an ephemeral private key for DH using X25519
@@ -334,12 +371,12 @@ impl SoftwareDHExchange {
             .compute_public_key()
             .expect("Failed to compute DH public key");
 
-        Ok(Self {
+        Self {
             key_id,
             private_key: Some(private_key),
             public_key,
             storage_manager,
-        })
+        }
     }
 }
 
@@ -388,7 +425,7 @@ impl DHKeyExchangeImpl for SoftwareDHExchange {
         let shared_secret = agreement::agree_ephemeral(
             self.private_key.take().unwrap(),
             &peer_public_key,
-            |shared_secret| shared_secret.to_vec(),
+            <[u8]>::to_vec,
         )
         .map_err(|err| CalError::failed_operation(err.to_string(), true, None))?;
 

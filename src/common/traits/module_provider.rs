@@ -22,7 +22,7 @@ pub(crate) trait ProviderFactory: Send + Sync {
 
     /// Returns security level and supported algorithms of a provider.
     ///
-    /// [ProviderConfig] returned stores in HashSets all Hashes, Ciphers and AsymmetricKeySpecs a provider supports.
+    /// [`ProviderConfig`] returned stores in `HashSets` all `Hashes`, `Ciphers` and `AsymmetricKeySpecs` a provider supports.
     fn get_capabilities(&self, impl_config: ProviderImplConfig) -> Option<ProviderConfig>;
     fn create_provider(&self, impl_config: ProviderImplConfig) -> ProviderImplEnum;
 }
@@ -129,6 +129,16 @@ pub(crate) trait ProviderImpl: Send + Sync {
     fn provider_name(&self) -> String;
 
     fn get_capabilities(&self) -> Option<ProviderConfig>;
+
+    /// Derives a high-entropy key from a low-entropy password and a unique salt
+    fn derive_key_from_password(
+        &self,
+        password: &str,
+        salt: &[u8],
+        spec: KeyPairSpec,
+    ) -> Result<KeyPairHandle, CalError> {
+        unimplemented!()
+    }
 }
 
 #[enum_dispatch]

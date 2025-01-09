@@ -52,10 +52,10 @@ impl StorageManager {
                 } = c.clone()
                 {
                     Some(KVStore {
-                        get_fn,
-                        store_fn,
-                        delete_fn,
-                        all_keys_fn,
+                        get: get_fn,
+                        store: store_fn,
+                        delete: delete_fn,
+                        all_keys: all_keys_fn,
                     })
                 } else {
                     None
@@ -86,74 +86,64 @@ impl StorageManager {
 
         let encrypted_data = KeyDataEncrypted {
             id: data.id.clone(),
-            secret_data: invert(
-                data.secret_data
-                    .map(|secret| {
-                        self.key_handle.as_ref().and_then(|key| {
-                            let (v, iv) = match key.encrypt_data(&secret) {
-                                Ok(v) => v,
-                                Err(e) => return Some(Err(e)),
-                            };
-                            Some(Ok(StorageField::Encryped { data: v, iv }))
-                        })
-                    })
-                    .flatten(),
-            )?,
+            secret_data: invert(data.secret_data.and_then(|secret| {
+                self.key_handle.as_ref().map(|key| {
+                    let (v, iv) = match key.encrypt_data(&secret) {
+                        Ok(v) => v,
+                        Err(e) => return Err(e),
+                    };
+                    Ok(StorageField::Encryped { data: v, iv })
+                })
+            }))?,
             public_data: data.public_data,
             additional_data: data.additional_data,
             spec: data.spec,
         };
 
         // choose storage Strategy
-        match self {
-            &StorageManager {
+        match *self {
+            StorageManager {
                 key_handle: _,
                 db_store: Some(ref db_store),
                 kv_store: _,
                 ref scope,
             } => db_store.store(scope.clone(), id, encrypted_data),
-            &StorageManager {
+            StorageManager {
                 key_handle: _,
                 db_store: _,
                 kv_store: Some(ref kv_store),
                 ref scope,
-            } => kv_store.store(scope.clone(), id, encrypted_data),
-            _ => {
-                return Err(CalError::failed_operation(
-                    "neither KV Store nor DB store were initialised".to_owned(),
-                    true,
-                    None,
-                ))
-            }
+            } => kv_store.store(&scope.clone(), &id, &encrypted_data),
+            _ => Err(CalError::failed_operation(
+                "neither KV Store nor DB store were initialised".to_owned(),
+                true,
+                None,
+            )),
         }
     }
 
-    pub(crate) fn get(&self, id: String) -> Result<KeyData, CalError> {
+    pub(crate) fn get(&self, id: &str) -> Result<KeyData, CalError> {
         // try all available storage methods
         if self.db_store.is_some() {
             if let Ok(v) = self
                 .db_store
                 .as_ref()
                 .unwrap()
-                .get(self.scope.clone(), id.clone())
+                .get(self.scope.clone(), id.to_owned())
             {
                 let decrypted = KeyData {
                     id: v.id.clone(),
-                    secret_data: invert(
-                        v.secret_data
-                            .map(|secret| {
-                                self.key_handle.as_ref().and_then(|key| match secret {
-                                    StorageField::Encryped { data, iv } => {
-                                        match key.decrypt_data(&data, &iv) {
-                                            Ok(v) => Some(Ok(v)),
-                                            Err(e) => Some(Err(e)),
-                                        }
-                                    }
-                                    StorageField::Raw(data) => Some(Ok(data)),
-                                })
-                            })
-                            .flatten(),
-                    )?,
+                    secret_data: invert(v.secret_data.and_then(|secret| {
+                        self.key_handle.as_ref().map(|key| match secret {
+                            StorageField::Encryped { data, iv } => {
+                                match key.decrypt_data(&data, &iv) {
+                                    Ok(v) => Ok(v),
+                                    Err(e) => Err(e),
+                                }
+                            }
+                            StorageField::Raw(data) => Ok(data),
+                        })
+                    }))?,
                     public_data: v.public_data,
                     additional_data: v.additional_data,
                     spec: v.spec,
@@ -163,29 +153,20 @@ impl StorageManager {
         }
 
         if self.kv_store.is_some() {
-            if let Ok(v) = self
-                .kv_store
-                .as_ref()
-                .unwrap()
-                .get(self.scope.clone(), id.clone())
-            {
+            if let Ok(v) = self.kv_store.as_ref().unwrap().get(&self.scope, id) {
                 let decrypted = KeyData {
                     id: v.id.clone(),
-                    secret_data: invert(
-                        v.secret_data
-                            .map(|secret| {
-                                self.key_handle.as_ref().and_then(|key| match secret {
-                                    StorageField::Encryped { data, iv } => {
-                                        match key.decrypt_data(&data, &iv) {
-                                            Ok(v) => Some(Ok(v)),
-                                            Err(e) => Some(Err(e)),
-                                        }
-                                    }
-                                    StorageField::Raw(data) => Some(Ok(data)),
-                                })
-                            })
-                            .flatten(),
-                    )?,
+                    secret_data: invert(v.secret_data.and_then(|secret| {
+                        self.key_handle.as_ref().map(|key| match secret {
+                            StorageField::Encryped { data, iv } => {
+                                match key.decrypt_data(&data, &iv) {
+                                    Ok(v) => Ok(v),
+                                    Err(e) => Err(e),
+                                }
+                            }
+                            StorageField::Raw(data) => Ok(data),
+                        })
+                    }))?,
                     public_data: v.public_data,
                     additional_data: v.additional_data,
                     spec: v.spec,
@@ -200,20 +181,17 @@ impl StorageManager {
         ))
     }
 
-    pub(crate) fn delete(&self, id: String) {
+    pub(crate) fn delete(&self, id: &str) {
         // try all available storage methods
         if self.db_store.is_some() {
             self.db_store
                 .as_ref()
                 .unwrap()
-                .delete(self.scope.clone(), id.clone())
+                .delete(self.scope.clone(), id.to_owned());
         }
 
         if self.kv_store.is_some() {
-            self.kv_store
-                .as_ref()
-                .unwrap()
-                .delete(self.scope.clone(), id.clone())
+            self.kv_store.as_ref().unwrap().delete(&self.scope, id);
         }
     }
 
@@ -221,13 +199,13 @@ impl StorageManager {
         // get keys from all available storage methods
         let mut keys = Vec::new();
 
-        self.db_store.as_ref().map(|store| {
+        if let Some(store) = self.db_store.as_ref() {
             keys.append(&mut store.get_all_keys(self.scope.clone()));
-        });
+        }
 
-        self.kv_store.as_ref().map(|store| {
-            keys.append(&mut store.get_all_keys(self.scope.clone()));
-        });
+        if let Some(store) = self.kv_store.as_ref() {
+            keys.append(&mut store.get_all_keys(&self.scope));
+        }
 
         keys
     }
@@ -235,10 +213,10 @@ impl StorageManager {
 
 #[derive(Clone)]
 struct KVStore {
-    get_fn: GetFn,
-    store_fn: StoreFn,
-    delete_fn: DeleteFn,
-    all_keys_fn: AllKeysFn,
+    get: GetFn,
+    store: StoreFn,
+    delete: DeleteFn,
+    all_keys: AllKeysFn,
 }
 
 impl fmt::Debug for KVStore {
@@ -248,14 +226,9 @@ impl fmt::Debug for KVStore {
 }
 
 impl KVStore {
-    fn store(
-        &self,
-        provider: String,
-        key: String,
-        value: KeyDataEncrypted,
-    ) -> Result<(), CalError> {
-        let value = serde_json::to_vec(&value).unwrap();
-        let valid = pollster::block_on((self.store_fn)(format!("{}:{}", provider, key), value));
+    fn store(&self, provider: &str, key: &str, value: &KeyDataEncrypted) -> Result<(), CalError> {
+        let value = serde_json::to_vec(value).unwrap();
+        let valid = pollster::block_on((self.store)(format!("{provider}:{key}"), value));
         if valid {
             Ok(())
         } else {
@@ -267,27 +240,27 @@ impl KVStore {
         }
     }
 
-    fn get(&self, provider: String, key: String) -> Result<KeyDataEncrypted, CalError> {
-        let value = pollster::block_on((self.get_fn)(format!("{}:{}", provider, key)));
+    fn get(&self, provider: &str, key: &str) -> Result<KeyDataEncrypted, CalError> {
+        let value = pollster::block_on((self.get)(format!("{provider}:{key}")));
         match value {
             Some(data) => {
                 let value: KeyDataEncrypted = serde_json::from_slice(&data).unwrap();
                 Ok(value)
             }
-            None => Err(CalError::missing_key(key, KeyType::Private)),
+            None => Err(CalError::missing_key(key.to_owned(), KeyType::Private)),
         }
     }
 
-    fn delete(&self, provider: String, key: String) {
-        pollster::block_on((self.delete_fn)(format!("{}:{}", provider, key)));
+    fn delete(&self, provider: &str, key: &str) {
+        pollster::block_on((self.delete)(format!("{provider}:{key}")));
     }
 
-    fn get_all_keys(&self, scope: String) -> Vec<Spec> {
-        let keys = pollster::block_on((self.all_keys_fn)());
+    fn get_all_keys(&self, scope: &str) -> Vec<Spec> {
+        let keys = pollster::block_on((self.all_keys)());
         keys.into_iter()
-            .filter(|k| k.starts_with(&format!("{}:", scope)))
+            .filter(|k| k.starts_with(&format!("{scope}:")))
             .filter_map(|k| {
-                let spec = pollster::block_on((self.get_fn)(k))?;
+                let spec = pollster::block_on((self.get)(k))?;
                 serde_json::from_slice(&spec).ok()
             })
             .collect()

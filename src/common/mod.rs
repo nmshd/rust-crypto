@@ -62,7 +62,7 @@ macro_rules! delegate_enum {
 macro_rules! delegate_enum_bare {
     ($(pub fn $method:ident(&self $(,$arg:ident: $type:ty)* $(,)?) $(-> $ret:ty)?;)+) => {
         $(
-            pub fn $method(&self $(,$arg: $type)*) $(-> $ret)? {
+            #[must_use] pub fn $method(&self $(,$arg: $type)*) $(-> $ret)? {
                 self.implementation.$method($($arg),*)
             }
         )+
@@ -79,7 +79,7 @@ macro_rules! delegate_enum_bare {
 /// Abstraction of cryptographic providers.
 ///
 /// [Provider] abstracts hardware, software and network based keystores.
-/// /// flutter_rust_bridge:opaque
+/// flutter_rust_bridge:opaque
 pub struct Provider {
     pub(crate) implementation: ProviderImplEnum,
 }

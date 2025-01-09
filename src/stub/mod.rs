@@ -98,6 +98,16 @@ impl ProviderImpl for StubProvider {
     fn get_capabilities(&self) -> Option<ProviderConfig> {
         StubProviderFactory {}.get_capabilities(self.impl_config.clone())
     }
+
+    #[doc = " Derives a high-entropy key from a low-entropy password and a unique salt"]
+    fn derive_key_from_password(
+        &self,
+        password: &str,
+        salt: &[u8],
+        spec: KeyPairSpec,
+    ) -> Result<KeyPairHandle, CalError> {
+        todo!()
+    }
 }
 
 #[derive(Debug, Clone)]

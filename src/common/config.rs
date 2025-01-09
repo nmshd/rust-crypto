@@ -48,10 +48,10 @@ pub type AllKeysFn = Arc<dyn Fn() -> DynFuture<Vec<String>> + Send + Sync>;
 
 /// Enum describing the security level of a provider.
 ///
-/// * [SecurityLevel::Hardware]: Provider is hardware backed (tpm, other security chips, StrongBox KeyStore).
-/// * [SecurityLevel::Software]: Provder uses the systems software keystore.
-/// * [SecurityLevel::Network]: Provider uses a network key store (Hashicorp).
-/// * [SecurityLevel::Unsafe]: Provder uses software fallback.
+/// * [`SecurityLevel::Hardware`]: Provider is hardware backed (`TPM`, `StrongBox KeyStore`, other security chips).
+/// * [`SecurityLevel::Software`]: Provder uses the systems software keystore.
+/// * [`SecurityLevel::Network`]: Provider uses a network key store (Hashicorp).
+/// * [`SecurityLevel::Unsafe`]: Provder uses software fallback.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum SecurityLevel {
     /// Highest security level

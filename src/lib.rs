@@ -1,3 +1,5 @@
+// #![warn(clippy::pedantic)]
+
 pub mod common;
 #[cfg(feature = "ffi")]
 pub mod ffi;
