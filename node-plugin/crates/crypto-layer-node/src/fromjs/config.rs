@@ -6,6 +6,7 @@ use super::error::{bad_parameter, js_result, ConversionError};
 use super::{from_wrapped_enum, from_wrapped_simple_enum, wrapped_array_to_hash_set};
 use crate::{JsKeyHandle, JsKeyPairHandle};
 
+/// Converts `ProviderConfig` from `crypto-layer-ts-types` to `ProviderConfig` from `crypto-layer`.
 #[tracing::instrument(level = "trace", skip_all)]
 pub fn from_wrapped_provider_config<'a>(
     cx: &mut FunctionContext,
@@ -41,6 +42,7 @@ pub fn from_wrapped_provider_config<'a>(
     })
 }
 
+/// Converts `ProviderImplConfig` from `crypto-layer-ts-types` to `ProviderImplConfig` from `crypto-layer`.
 #[tracing::instrument(level = "trace", skip_all)]
 pub fn from_wrapped_provider_impl_config<'a>(
     cx: &mut FunctionContext,
@@ -61,6 +63,10 @@ pub fn from_wrapped_provider_impl_config<'a>(
     })
 }
 
+/// Converts `AdditionalConfig` from `crypto-layer-ts-types` to `AdditionalConfig` from `crypto-layer`.
+///
+/// # Errors
+/// * `KVStoreConfig` is currently not supported and will crash the program with `unimplemented!()`.
 #[tracing::instrument(level = "trace", skip_all)]
 pub fn from_wrapped_additional_config(
     cx: &mut FunctionContext,
@@ -116,6 +122,7 @@ pub fn from_wrapped_additional_config(
     Ok(result)
 }
 
+/// Converts `KeySpec` from `crypto-layer-ts-types` to `KeySpec` from `crypto-layer`.
 #[tracing::instrument(level = "trace", skip_all)]
 pub(crate) fn from_wrapped_key_spec(
     cx: &mut FunctionContext,
@@ -132,6 +139,7 @@ pub(crate) fn from_wrapped_key_spec(
     })
 }
 
+/// Converts `KeyPairSpec` from `crypto-layer-ts-types` to `KeyPairSpec` from `crypto-layer`.
 #[tracing::instrument(level = "trace", skip_all)]
 pub(crate) fn from_wrapped_key_pair_spec(
     cx: &mut FunctionContext,

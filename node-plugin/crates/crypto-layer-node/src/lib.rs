@@ -28,14 +28,30 @@ type JsKeyPairHandle = JsBox<RefCell<Finalized<KeyPairHandle>>>;
 type JsProvider = JsBox<RefCell<Finalized<Provider>>>;
 type JsDhExchange = JsBox<RefCell<Finalized<DHExchange>>>;
 
+/// Wraps `get_all_providers` function.
+///
+/// # Arguments
+///
+/// # Returns
+/// * `string[]`
 fn export_get_all_providers(mut cx: FunctionContext) -> JsResult<JsArray> {
     wrap_string_array(&mut cx, get_all_providers())
 }
 
+/// Wraps `create_provider` function.
+///
+/// # Arguments
+/// * **config**: `ProviderConfig`
+/// * **impl_config**: `ProviderImplConfig`
+///
+/// # Returns
+/// * `{}` - bare provider on success
+/// * `undefined` - None on failure
+///
+/// # Throws
+/// * When one of the inputs is incorrect.
 #[tracing::instrument(level = "trace", skip(cx))]
 fn export_create_provider(mut cx: FunctionContext) -> JsResult<JsValue> {
-    let _span = tracing::trace_span!("createProvider").entered();
-
     let config_js = cx.argument::<JsObject>(0)?;
     let impl_config_js = cx.argument::<JsObject>(1)?;
 
@@ -51,10 +67,20 @@ fn export_create_provider(mut cx: FunctionContext) -> JsResult<JsValue> {
     }
 }
 
+/// Wraps `create_provider_from_name` function.
+///
+/// # Arguments
+/// * **name**: `string`
+/// * **impl_config**: `ProviderImplConfig`
+///
+/// # Returns
+/// * `{}` - bare provider on success
+/// * `undefined` - None on failure
+///
+/// # Throws
+/// * When one of the inputs is incorrect.
 #[tracing::instrument(level = "trace", skip(cx))]
 fn export_create_provider_from_name(mut cx: FunctionContext) -> JsResult<JsValue> {
-    let _span = tracing::trace_span!("createProviderFromName").entered();
-
     let name_js = cx.argument::<JsString>(0)?;
     let impl_config_js = cx.argument::<JsObject>(1)?;
 

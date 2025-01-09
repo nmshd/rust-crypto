@@ -4,6 +4,15 @@ use neon::types::buffer::TypedArray;
 use crate::fromjs::error::unwrap_or_throw;
 use crate::JsKeyHandle;
 
+/// Wraps `id` function.
+///
+/// # Arguments
+///
+/// # Returns
+/// * `string` - id of key
+///
+/// # Throws
+/// * When failing to execute.
 pub fn export_id(mut cx: FunctionContext) -> JsResult<JsString> {
     let handle_js = cx.this::<JsKeyHandle>()?;
     let handle = handle_js.borrow();
@@ -11,6 +20,15 @@ pub fn export_id(mut cx: FunctionContext) -> JsResult<JsString> {
     Ok(cx.string(id))
 }
 
+/// Wraps `delete` function.
+///
+/// # Arguments
+///
+/// # Returns
+/// * `undefined`
+///
+/// # Throws
+/// * When failing to execute.
 pub fn export_delete(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let handle_js = cx.this::<JsKeyHandle>()?;
     let handle = handle_js.borrow();
@@ -18,6 +36,16 @@ pub fn export_delete(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     Ok(cx.undefined())
 }
 
+/// Wraps `encrypt_data` function.
+///
+/// # Arguments
+/// * **data**: `Uint8Array`
+///
+/// # Returns
+/// * `[Uint8Array, Uint8Array]` - on success
+///
+/// # Throws
+/// * When failing to execute.
 pub fn export_encrypt_data(mut cx: FunctionContext) -> JsResult<JsArray> {
     let handle_js = cx.this::<JsKeyHandle>()?;
     let handle = handle_js.borrow();
@@ -37,6 +65,17 @@ pub fn export_encrypt_data(mut cx: FunctionContext) -> JsResult<JsArray> {
     Ok(arr)
 }
 
+/// Wraps `decrypt_data` function.
+///
+/// # Arguments
+/// * **encryptedData**: `Uint8Array`
+/// * **iv**: `Uint8Array`
+///
+/// # Returns
+/// * `Uint8Array` - decrypted data on success
+///
+/// # Throws
+/// * When failing to execute.
 pub fn export_decrypt_data(mut cx: FunctionContext) -> JsResult<JsUint8Array> {
     let handle_js = cx.this::<JsKeyHandle>()?;
     let handle = handle_js.borrow();
@@ -53,6 +92,15 @@ pub fn export_decrypt_data(mut cx: FunctionContext) -> JsResult<JsUint8Array> {
     Ok(JsUint8Array::from_slice(&mut cx, &decrypted_data)?)
 }
 
+/// Wraps `extract_key` function.
+///
+/// # Arguments
+///
+/// # Returns
+/// * `Uint8Array` - key on success
+///
+/// # Throws
+/// * When failing to execute.
 pub fn export_extract_key(mut cx: FunctionContext) -> JsResult<JsUint8Array> {
     let handle_js = cx.this::<JsKeyHandle>()?;
     let handle = handle_js.borrow();

@@ -7,3 +7,4 @@ lib
 cargo.log
 cross.log
 db
+/tests/test_db

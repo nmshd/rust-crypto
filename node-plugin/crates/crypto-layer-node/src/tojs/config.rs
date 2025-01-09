@@ -3,6 +3,7 @@ use neon::prelude::*;
 
 use super::wrap_string_array;
 
+/// Converts `ProviderConfig` to TS type definition defined in `crypto-layer-ts-types` package.
 pub fn wrap_provider_config<'a>(
     cx: &mut FunctionContext<'a>,
     config: ProviderConfig,
