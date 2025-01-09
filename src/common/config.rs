@@ -48,11 +48,11 @@ pub type DeleteFn = Arc<dyn Fn(String) -> Pin<Box<dyn Future<Output = ()> + Send
 /// The function returns a `DynFuture` resolving to a `Vec<String>` containing all the keys.
 pub type AllKeysFn = Arc<dyn Fn() -> DynFuture<Vec<String>> + Send + Sync>;
 
+/// Used for representing the security of a provider.
 #[derive(
     Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, EnumString, EnumIter, IntoStaticStr,
 )]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
-/// Used for representing the security of a provider.
 pub enum SecurityLevel {
     /// Highest security level.
     ///
@@ -79,9 +79,9 @@ pub enum Spec {
     KeyPairSpec(KeyPairSpec),
 }
 
+/// Struct used to configure keys.
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
-/// Struct used to configure keys.
 pub struct KeySpec {
     /// Cipher used for symmetric encryption.
     pub cipher: Cipher,
@@ -91,9 +91,9 @@ pub struct KeySpec {
     pub ephemeral: bool,
 }
 
+/// Struct used to configure key pairs.
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
-/// Struct used to configure key pairs.
 pub struct KeyPairSpec {
     /// Asymmetric algorithm to be used.
     pub asym_spec: AsymmetricKeySpec,
@@ -105,9 +105,9 @@ pub struct KeyPairSpec {
     pub ephemeral: bool,
 }
 
+/// Capabilities of a Provider
 #[derive(Clone, Debug)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
-/// Capabilities of a Provider
 pub struct ProviderConfig {
     pub max_security_level: SecurityLevel,
     pub min_security_level: SecurityLevel,
@@ -116,8 +116,6 @@ pub struct ProviderConfig {
     pub supported_asym_spec: HashSet<AsymmetricKeySpec>,
 }
 
-#[derive(Clone)]
-#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 /// Configuration needed for using or initializing providers.
 ///
 /// Either
@@ -146,14 +144,16 @@ pub struct ProviderConfig {
 ///     };
 /// }
 /// ```
+#[derive(Clone)]
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub struct ProviderImplConfig {
     pub additional_config: Vec<AdditionalConfig>,
 }
 
+/// Configuration needed for using or initializing providers.
 #[derive(Clone, EnumDiscriminants)]
 #[strum_discriminants(derive(EnumString, IntoStaticStr))]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
-/// Configuration needed for using or initializing providers.
 pub enum AdditionalConfig {
     #[cfg_attr(
         feature = "ts-interface",

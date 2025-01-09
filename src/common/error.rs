@@ -25,10 +25,10 @@ pub struct CalError {
     source: anyhow::Error,
 }
 
+/// Enumeration differentiating between the causes and the severity of the error.
 #[derive(thiserror::Error, Debug, Clone)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 #[repr(C)]
-/// Enumeration differentiating between the causes and the severity of the error.
 pub enum CalErrorKind {
     /// This error is returned on calling functions that are not implemented.
     #[error("The function called is not implemented.")]
