@@ -1,3 +1,4 @@
+#![allow(clippy::upper_case_acronyms)]
 use std::fmt;
 
 use hmac::Mac;
@@ -22,7 +23,6 @@ enum Storage {
     FileStore(FileStore),
 }
 
-#[allow(clippy::upper_case_acronyms)]
 #[derive(Clone, Debug)]
 enum ChecksumProvider {
     KeyPairHandle(Box<KeyPairHandle>),
@@ -137,15 +137,21 @@ impl StorageManager {
 
         let encrypted_data = KeyDataEncrypted {
             id: data.id.clone(),
-            secret_data: invert(data.secret_data.and_then(|secret| {
-                self.key_handle.as_ref().map(|key| {
-                    let (v, iv) = match key.encrypt_data(&secret) {
-                        Ok(v) => v,
-                        Err(e) => return Err(e),
-                    };
-                    Ok(StorageField::Encryped { data: v, iv })
+            secret_data: data
+                .secret_data
+                .map(|secret| {
+                    self.key_handle
+                        .as_ref()
+                        .map(|key| {
+                            let (v, iv) = match key.encrypt_data(&secret) {
+                                Ok(v) => v,
+                                Err(e) => return Err(e),
+                            };
+                            Ok(StorageField::Encryped { data: v, iv })
+                        })
+                        .unwrap_or(Ok(StorageField::Raw(secret)))
                 })
-            }))?,
+                .transpose()?,
             public_data: data.public_data,
             additional_data: data.additional_data,
             spec: data.spec,
@@ -177,89 +183,73 @@ impl StorageManager {
         .expect("Failed to encode key data, this should never happen");
 
         // choose storage Strategy
-        match *self {
-            StorageManager {
-                key_handle: _,
-                db_store: Some(ref db_store),
-                kv_store: _,
-                ref scope,
-            } => db_store.store(scope.clone(), id, encrypted_data),
-            StorageManager {
-                key_handle: _,
-                db_store: _,
-                kv_store: Some(ref kv_store),
-                ref scope,
-            } => kv_store.store(scope.clone(), id, encrypted_data),
-            _ => Err(CalError::failed_operation(
-                "neither KV Store nor DB store were initialised".to_owned(),
-                true,
-                None,
-            )),
+        match self.storage {
+            Storage::KVStore(ref store) => store.store(self.scope.clone(), id.clone(), encoded),
+            Storage::FileStore(ref store) => store.store(self.scope.clone(), id.clone(), encoded),
         }
     }
 
     pub(crate) fn get(&self, id: String) -> Result<KeyData, CalError> {
-        // try all available storage methods
-        if self.db_store.is_some() {
-            if let Ok(v) = self
-                .db_store
-                .as_ref()
-                .unwrap()
-                .get(self.scope.clone(), id.clone())
-            {
-                let decrypted = KeyData {
-                    id: v.id.clone(),
-                    secret_data: invert(v.secret_data.and_then(|secret| {
-                        self.key_handle.as_ref().map(|key| match secret {
-                            StorageField::Encryped { data, iv } => {
-                                match key.decrypt_data(&data, &iv) {
-                                    Ok(v) => Ok(v),
-                                    Err(e) => Err(e),
-                                }
-                            }
-                            StorageField::Raw(data) => Ok(data),
-                        })
-                    }))?,
-                    public_data: v.public_data,
-                    additional_data: v.additional_data,
-                    spec: v.spec,
-                };
-                return Ok(decrypted);
-            }
-        }
+        let value = match self.storage {
+            Storage::KVStore(ref store) => store.get(self.scope.clone(), id.clone()),
+            Storage::FileStore(ref store) => store.get(self.scope.clone(), id.clone()),
+        }?;
 
-        if self.kv_store.is_some() {
-            if let Ok(v) = self
-                .kv_store
-                .as_ref()
-                .unwrap()
-                .get(self.scope.clone(), id.clone())
-            {
-                let decrypted = KeyData {
-                    id: v.id.clone(),
-                    secret_data: invert(v.secret_data.and_then(|secret| {
-                        self.key_handle.as_ref().map(|key| match secret {
-                            StorageField::Encryped { data, iv } => {
-                                match key.decrypt_data(&data, &iv) {
-                                    Ok(v) => Ok(v),
-                                    Err(e) => Err(e),
-                                }
-                            }
-                            StorageField::Raw(data) => Ok(data),
-                        })
-                    }))?,
-                    public_data: v.public_data,
-                    additional_data: v.additional_data,
-                    spec: v.spec,
-                };
-                return Ok(decrypted);
-            }
-        }
+        let decoded = serde_json::from_slice::<WithChecksum>(&value).map_err(|e| {
+            CalError::failed_operation(format!("Failed to decode key data: {}", e), true, None)
+        })?;
 
-        Err(CalError::missing_key(
-            format!("{}:{id}", self.scope),
-            KeyType::Private,
-        ))
+        // verify checksum
+        match self.checksum_provider {
+            ChecksumProvider::KeyPairHandle(ref key_pair_handle) => {
+                if key_pair_handle.verify_signature(&decoded.data, &decoded.checksum)? {
+                } else {
+                    return Err(CalError::failed_operation(
+                        "Checksum verification failed".to_owned(),
+                        true,
+                        None,
+                    ));
+                }
+            }
+            ChecksumProvider::HMAC(ref pass) => {
+                let mut hmac =
+                    HmacSha256::new_from_slice(pass.as_bytes()).expect("Failed to create HMAC");
+                hmac.update(&decoded.data);
+                hmac.verify_slice(&decoded.checksum).map_err(|_| {
+                    CalError::failed_operation(
+                        "Checksum verification failed".to_owned(),
+                        true,
+                        None,
+                    )
+                })?;
+            }
+        };
+
+        let decoded = serde_json::from_slice::<KeyDataEncrypted>(&decoded.data).map_err(|e| {
+            CalError::failed_operation(format!("Failed to decode key data: {}", e), true, None)
+        })?;
+
+        let decrypted = KeyData {
+            id: decoded.id.clone(),
+            secret_data: decoded
+                .secret_data
+                .and_then(|secret| match secret {
+                    StorageField::Encryped { data, iv } => {
+                        self.key_handle
+                            .as_ref()
+                            .map(|key| match key.decrypt_data(&data, &iv) {
+                                Ok(v) => Ok(v),
+                                Err(e) => Err(e),
+                            })
+                    }
+                    StorageField::Raw(data) => Some(Ok(data)),
+                })
+                .transpose()?,
+            public_data: decoded.public_data,
+            additional_data: decoded.additional_data,
+            spec: decoded.spec,
+        };
+        Ok(decrypted)
     }
 
     pub(crate) fn delete(&self, id: String) {
@@ -273,15 +263,26 @@ impl StorageManager {
         // get keys from all available storage methods
         let mut keys = Vec::new();
 
-        if let Some(store) = self.db_store.as_ref() {
-            keys.append(&mut store.get_all_keys(self.scope.clone()));
+        match self.storage {
+            Storage::KVStore(ref store) => {
+                keys.append(&mut store.get_all_keys(self.scope.clone()));
+            }
+            Storage::FileStore(ref store) => {
+                keys.append(&mut store.get_all_keys(self.scope.clone()));
+            }
         }
 
-        if let Some(store) = self.kv_store.as_ref() {
-            keys.append(&mut store.get_all_keys(self.scope.clone()));
-        }
-
-        keys
+        keys.iter()
+            .map(|v| {
+                serde_json::from_slice::<WithChecksum>(v.as_slice())
+                    .expect("Could not decode key data, this should never happen")
+            })
+            .map(|with_checksum| {
+                serde_json::from_slice::<KeyDataEncrypted>(with_checksum.data.as_slice())
+                    .expect("Could not decode key data, this should never happen")
+            })
+            .map(|v| (v.id, v.spec))
+            .collect()
     }
 }
 
@@ -414,7 +415,6 @@ pub(crate) struct KeyDataEncrypted {
     pub(crate) spec: Spec,
 }
 
-#[allow(clippy::upper_case_acronyms)]
 #[derive(Serialize, Deserialize, Clone, Copy)]
 pub enum ChecksumType {
     HMAC,
