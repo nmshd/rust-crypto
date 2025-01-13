@@ -28,6 +28,7 @@
 /// interfacing with C-based systems. They encompass a broad range of PKI applications,
 /// from encryption and digital signatures to certificate management.
 #[repr(C)]
+
 pub enum PkiStandards {
     /// PKCS (Public-Key Cryptography Standards) related operations.
     ///
@@ -58,6 +59,7 @@ pub enum PkiStandards {
 ///
 /// `#[repr(C)]` attribute for C compatibility.
 #[repr(C)]
+
 pub enum PkcsType {
     /// RSA Cryptography Standard.
     Pkcs1,
@@ -99,6 +101,7 @@ pub enum PkcsType {
 /// Uses `#[repr(C)]` for compatibility with C language standards, facilitating use
 /// in systems where interoperability with C is required.
 #[repr(C)]
+
 pub enum X509Type {
     /// Represents an X.509 certificate.
     Certificate,
@@ -132,6 +135,7 @@ pub enum X509Type {
 /// configuration and operation of cryptographic systems, ensuring the correct application
 /// of algorithms and standards.
 #[repr(C)]
+
 pub enum ObjectIdentifiers {
     /// Container for various cryptographic Object Identifiers (OIDs).
     Oid(OidType),
@@ -180,6 +184,7 @@ pub enum ObjectIdentifiers {
 /// is essential for ensuring cryptographic operations adhere to the intended standards and
 /// protocols.
 #[repr(C)]
+
 pub enum OidType {
     // Hashing Algorithms
     Sha1WithRsaEncryption,

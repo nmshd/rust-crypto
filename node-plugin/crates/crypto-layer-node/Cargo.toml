@@ -1,0 +1,37 @@
+[package]
+name = "crypto-layer-node"
+version = "0.1.0"
+description = "crypto layer ts interface for nodejs"
+authors = ["j&s-soft AG"]
+license = "MIT"
+edition = "2021"
+exclude = ["index.node"]
+
+[lib]
+crate-type = ["cdylib"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+crypto-layer = { version = "0.1.0", path = "../../..", features = [] }
+neon = { version = "1", features = ["futures"] }
+strum = "0.26.3"
+thiserror = "2.0.3"
+tracing = { version = "0.1.41", features = ["release_max_level_info"] }
+tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
+color-eyre = "0.6.3"
+
+[target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies]
+crypto-layer = { path = "../../..", features = [
+    "apple-secure-enclave",
+    "software",
+] }
+
+[target.'cfg(target_os = "android")'.dependencies]
+crypto-layer = { path = "../../..", features = ["android", "software"] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+crypto-layer = { path = "../../..", features = ["software"] }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+crypto-layer = { path = "../../..", features = ["software"] }

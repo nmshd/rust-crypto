@@ -52,10 +52,10 @@ fn provider_supports_capabilities(
 
 /// Returns a provider which supports the given requierements.
 ///
-/// This function returns the first provider, which supports the given requirements and has a [ProviderImplConfig].
+/// This function returns the first provider, which supports the given requirements and can be initialized with the given [ProviderImplConfig].
 ///
-/// * `conf` - A provider config that the provider must at least contain.
-/// * `impl_conf_vec` - A `Vec` of [ProviderImplConfig]. Only providers, which have [ProviderImplConfig] are returned.
+/// * `conf` - A provider config that the provider must at least support.
+/// * `impl_conf` - Configuration needed for initializing providers.
 ///
 /// # Example
 /// ```
@@ -66,7 +66,7 @@ fn provider_supports_capabilities(
 ///     factory::*,
 /// };
 ///
-/// let specific_provider_config = ProviderImplConfig{additional_config: vec![], ephemeral_keys: false};
+/// let specific_provider_config = ProviderImplConfig{additional_config: vec![]};
 /// let provider_config = ProviderConfig {
 ///     min_security_level: SecurityLevel::Software,
 ///     max_security_level: SecurityLevel::Hardware,
@@ -95,10 +95,10 @@ pub fn create_provider(conf: ProviderConfig, impl_conf: ProviderImplConfig) -> O
     None
 }
 
-/// Returns the provider with the given name.
+/// Returns the provider matching the given name.
 ///
 /// * `name` - Name of the provider. See `get_name()`.
-/// * `impl_config` - Specif configuration for said provider.
+/// * `impl_config` - Configuration needed for initializing providers.
 pub fn create_provider_from_name(name: String, impl_conf: ProviderImplConfig) -> Option<Provider> {
     for provider in ALL_PROVIDERS.iter() {
         let p_name = provider.get_name();
@@ -118,7 +118,7 @@ pub fn create_provider_from_name(name: String, impl_conf: ProviderImplConfig) ->
     None
 }
 
-/// Returns the names of all available providers for testing.
+/// Returns the names of all available providers.
 pub fn get_all_providers() -> Vec<String> {
     ALL_PROVIDERS.iter().map(|p| p.get_name()).collect()
 }

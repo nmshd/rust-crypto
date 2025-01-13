@@ -8,13 +8,18 @@ use traits::key_handle::{
 };
 use traits::module_provider::{ProviderImpl, ProviderImplEnum};
 
+/// Structs and enumerations used for configuring providers, key and key pairs.
 pub mod config;
+/// Structs and enumerations representing cryptographic algorithms or standards.
 pub mod crypto;
+/// Struct for error handling.
 pub mod error;
+/// Functions used for creating providers.
 pub mod factory;
 pub(crate) mod traits;
 
 // Do not delete this struct, it is a workaround for a bug in the code generation
+/// ¯\_(ツ)_/¯
 pub struct T {}
 
 macro_rules! delegate_enum {
@@ -79,8 +84,9 @@ macro_rules! delegate_enum_bare {
 /// Abstraction of cryptographic providers.
 ///
 /// [Provider] abstracts hardware, software and network based keystores.
-/// /// flutter_rust_bridge:opaque
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub struct Provider {
+    #[cfg_attr(feature = "ts-interface", ts(skip))]
     pub(crate) implementation: ProviderImplEnum,
 }
 
@@ -147,8 +153,9 @@ impl Provider {
 }
 
 #[derive(Debug, Clone)]
-/// flutter_rust_bridge:opaque
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub struct KeyPairHandle {
+    #[cfg_attr(feature = "ts-interface", ts(skip))]
     pub(crate) implementation: KeyPairHandleImplEnum,
 }
 
@@ -188,8 +195,9 @@ impl KeyPairHandle {
 }
 
 #[derive(Debug, Clone)]
-/// flutter_rust_bridge:opaque
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub struct KeyHandle {
+    #[cfg_attr(feature = "ts-interface", ts(skip))]
     pub(crate) implementation: KeyHandleImplEnum,
 }
 
@@ -226,7 +234,9 @@ impl KeyHandle {
 
 #[allow(dead_code)]
 #[derive(Debug)]
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub struct DHExchange {
+    #[cfg_attr(feature = "ts-interface", ts(skip))]
     pub(crate) implementation: DHKeyExchangeImplEnum,
 }
 

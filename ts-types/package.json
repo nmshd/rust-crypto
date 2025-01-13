@@ -1,0 +1,16 @@
+{
+  "name": "crypto-layer-ts-types",
+  "version": "0.1.0",
+  "description": "Crypto Layer TS type definitions.",
+  "main": "./dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "author": "j&s-soft AG",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.9.1",
+    "typescript": "^5.6.3"
+  }
+}

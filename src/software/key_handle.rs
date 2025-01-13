@@ -236,6 +236,7 @@ impl KeyPairHandleImpl for SoftwareKeyPairHandle {
     }
 
     fn extract_key(&self) -> Result<Vec<u8>, CalError> {
+        // TODO: extract_key should return the private key / key pair?
         Ok(self.public_key.clone())
     }
 

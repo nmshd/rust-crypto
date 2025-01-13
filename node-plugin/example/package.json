@@ -1,0 +1,18 @@
+{
+  "name": "cal-node-example",
+  "module": "index.ts",
+  "type": "module",
+  "scripts": {
+    "test": "tsc && node ./index.js"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "crypto-layer-node": "file:..",
+    "crypto-layer-ts-types": "file:../../ts-types"
+  }
+}

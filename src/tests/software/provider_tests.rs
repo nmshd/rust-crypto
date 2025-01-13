@@ -17,10 +17,13 @@ mod tests {
 
         #[test]
         fn test_dh_exchange_success() {
-            let storage_manager =
-                Some(StorageManager::new("SoftwareProvider".to_owned(), unsafe {
+            let storage_manager = Some(
+                StorageManager::new("SoftwareProvider".to_owned(), unsafe {
                     &STORE.impl_config().additional_config
-                }));
+                })
+                .unwrap()
+                .unwrap(),
+            );
 
             // Party A creates an instance of SoftwareDHExchange
             let mut dh_exchange_a =
@@ -67,10 +70,13 @@ mod tests {
 
         #[test]
         fn test_dh_exchange_derive_symmetric_key() {
-            let storage_manager =
-                Some(StorageManager::new("SoftwareProvider".to_owned(), unsafe {
+            let storage_manager = Some(
+                StorageManager::new("SoftwareProvider".to_owned(), unsafe {
                     &STORE.impl_config().additional_config
-                }));
+                })
+                .unwrap()
+                .unwrap(),
+            );
 
             // Party A creates an instance of SoftwareDHExchange
             let mut dh_exchange_a =
@@ -126,10 +132,13 @@ mod tests {
 
         #[test]
         fn test_dh_exchange_with_invalid_public_key() {
-            let storage_manager =
-                Some(StorageManager::new("SoftwareProvider".to_owned(), unsafe {
+            let storage_manager = Some(
+                StorageManager::new("SoftwareProvider".to_owned(), unsafe {
                     &STORE.impl_config().additional_config
-                }));
+                })
+                .unwrap()
+                .unwrap(),
+            );
 
             // Party A creates an instance of SoftwareDHExchange
             let mut dh_exchange_a =
@@ -156,10 +165,13 @@ mod tests {
 
         #[test]
         fn test_dh_exchange_private_key_consumed() {
-            let storage_manager =
-                Some(StorageManager::new("SoftwareProvider".to_owned(), unsafe {
+            let storage_manager = Some(
+                StorageManager::new("SoftwareProvider".to_owned(), unsafe {
                     &STORE.impl_config().additional_config
-                }));
+                })
+                .unwrap()
+                .unwrap(),
+            );
 
             // Party A creates an instance of SoftwareDHExchange
             let mut dh_exchange_a =
