@@ -132,6 +132,19 @@ pub(crate) trait ProviderImpl: Send + Sync {
     fn provider_name(&self) -> String;
 
     fn get_capabilities(&self) -> Option<ProviderConfig>;
+
+    /// Generates random bytes
+    ///
+    /// # Arguments
+    ///
+    /// * `len` - Number of bytes to generate
+    ///
+    /// # Returns
+    ///
+    /// A `Vec` that, on success, contains a the requested amount of random bytes.
+    fn get_random(&self, len: usize) -> Vec<u8> {
+        unimplemented!()
+    }
 }
 
 #[enum_dispatch]
