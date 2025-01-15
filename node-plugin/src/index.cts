@@ -40,7 +40,9 @@ import {
     startEphemeralDhExchange,
     getPublicKeyForDHExchange,
     addExternalFinalForDHExchange,
-    addExternalForDHExchange
+    addExternalForDHExchange,
+    specForKeyHandle,
+    specForKeyPairHandle
 } from "./load.cjs";
 
 type BareProvider = {};
@@ -73,12 +75,14 @@ declare module "./load.cjs" {
     function getPublicKey(this: BareKeyPairHandle): Uint8Array;
     function encryptDataForKeyPairHandle(this: BareKeyPairHandle, data: Uint8Array): Uint8Array;
     function decryptDataForKeyPairHandle(this: BareKeyPairHandle, data: Uint8Array): Uint8Array;
+    function specForKeyPairHandle(this: BareKeyPairHandle): KeyPairSpec;
 
     function idForKeyHandle(this: BareKeyHandle): string;
     function deleteForKeyHandle(this: BareKeyHandle): undefined;
     function extractKey(this: BareKeyHandle): Uint8Array;
     function encryptDataForKeyHandle(this: BareKeyHandle, data: Uint8Array): [Uint8Array, Uint8Array];
     function decryptDataForKeyHandle(this: BareKeyHandle, data: Uint8Array, iv: Uint8Array): Uint8Array;
+    function specForKeyHandle(this: BareKeyHandle): KeySpec;
 
     function getPublicKeyForDHExchange(this: BareDHExchange): Uint8Array;
     function addExternalForDHExchange(this: BareDHExchange, key: Uint8Array): Uint8Array;
@@ -159,6 +163,10 @@ class NodeKeyHandle implements KeyHandle {
     decryptData(encryptedData: Uint8Array, iv: Uint8Array): Uint8Array {
         return decryptDataForKeyHandle.call(this.keyHandle, encryptedData, iv);
     }
+
+    spec(): KeySpec {
+        return specForKeyHandle.call(this.keyHandle);
+    }
 }
 
 class NodeKeyPairHandle implements KeyPairHandle {
@@ -194,6 +202,10 @@ class NodeKeyPairHandle implements KeyPairHandle {
 
     getPublicKey(): Uint8Array {
         return getPublicKey.call(this.keyPairHandle);
+    }
+
+    spec(): KeyPairSpec {
+        return specForKeyPairHandle.call(this.keyPairHandle);
     }
 }
 

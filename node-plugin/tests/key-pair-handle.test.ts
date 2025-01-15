@@ -28,6 +28,16 @@ describe("test key pair handle methods", () => {
         expect(provider.createKeyPair(spec).id()).toBeTruthy();
     });
 
+    test("delete", () => {
+        let key_pair = provider.createKeyPair(spec);
+        key_pair.delete();
+    });
+
+    test("spec", () => {
+        let key_pair = provider.createKeyPair(spec);
+        expect(key_pair.spec()).toEqual(spec);
+    });
+
     // TODO: not yet implemented for software provider.
     /* test("encrypt and decrypt data", () => {
         let key = provider.createKeyPair(spec);
