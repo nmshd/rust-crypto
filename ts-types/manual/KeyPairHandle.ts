@@ -5,5 +5,5 @@ export type KeyPairHandle = {
     verifySignature: (data: Uint8Array, signature: Uint8Array) => boolean;
     getPublicKey: () => Uint8Array;
     id: () => string;
-    delete: () => undefined;
+    delete: () => void;
 };
