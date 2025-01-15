@@ -123,7 +123,7 @@ impl KeyHandleImpl for SoftwareKeyHandle {
         Ok(in_out)
     }
 
-    fn hmac(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
+    fn hmac(&self, _data: &[u8]) -> Result<Vec<u8>, CalError> {
         todo!("HMAC not supported for AES keys")
     }
 
@@ -141,7 +141,9 @@ impl KeyHandleImpl for SoftwareKeyHandle {
 
     #[doc = " Delete this key."]
     fn delete(self) -> Result<(), CalError> {
-        self.storage_manager.map(|s| s.delete(self.key_id));
+        if let Some(s) = self.storage_manager {
+            s.delete(self.key_id)
+        }
         Ok(())
     }
 }
@@ -160,7 +162,7 @@ impl KeyPairHandleImpl for SoftwareKeyPairHandle {
         };
 
         match self.spec.asym_spec {
-            AsymmetricKeySpec::Curve25519 => ed25519_compact::SecretKey::from_slice(&signing_key)
+            AsymmetricKeySpec::Curve25519 => ed25519_compact::SecretKey::from_slice(signing_key)
                 .map(|key| {
                     key.sign(data, Some(ed25519_compact::Noise::generate()))
                         .to_vec()
@@ -250,7 +252,9 @@ impl KeyPairHandleImpl for SoftwareKeyPairHandle {
 
     #[doc = " Delete this key pair."]
     fn delete(self) -> Result<(), CalError> {
-        self.storage_manager.map(|s| s.delete(self.key_id));
+        if let Some(s) = self.storage_manager {
+            s.delete(self.key_id)
+        }
         Ok(())
     }
 }

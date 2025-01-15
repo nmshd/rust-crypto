@@ -1,3 +1,4 @@
+#[allow(static_mut_refs)]
 #[cfg(test)]
 mod tests {
     use crate::common::{
@@ -17,7 +18,7 @@ mod tests {
         use crate::{common::Provider, tests::TestStore};
 
         static mut STORE: std::sync::LazyLock<TestStore> =
-            std::sync::LazyLock::new(|| TestStore::new());
+            std::sync::LazyLock::new(TestStore::new);
 
         /// Helper function to create a new key pair and extract the SoftwareKeyPairHandle
         fn create_key_pair_handle(spec: KeyPairSpec) -> Result<KeyPairHandle, CalError> {
@@ -248,7 +249,7 @@ mod tests {
         use super::*;
 
         static mut STORE: std::sync::LazyLock<TestStore> =
-            std::sync::LazyLock::new(|| TestStore::new());
+            std::sync::LazyLock::new(TestStore::new);
 
         /// Helper function to create a new key and extract the SoftwareKeyHandle
         fn create_software_key_handle(spec: KeySpec) -> Result<KeyHandle, CalError> {

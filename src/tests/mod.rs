@@ -1,3 +1,4 @@
+#[allow(static_mut_refs)]
 //mod common;
 #[cfg(feature = "hsm")]
 mod hsm;

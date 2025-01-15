@@ -1,3 +1,4 @@
+#![allow(clippy::upper_case_acronyms)]
 use std::fmt;
 
 use hmac::Mac;
@@ -141,12 +142,12 @@ impl StorageManager {
                 .map(|secret| {
                     self.key_handle
                         .as_ref()
-                        .and_then(|key| {
+                        .map(|key| {
                             let (v, iv) = match key.encrypt_data(&secret) {
                                 Ok(v) => v,
-                                Err(e) => return Some(Err(e)),
+                                Err(e) => return Err(e),
                             };
-                            Some(Ok(StorageField::Encryped { data: v, iv }))
+                            Ok(StorageField::Encryped { data: v, iv })
                         })
                         .unwrap_or(Ok(StorageField::Raw(secret)))
                 })
@@ -202,7 +203,6 @@ impl StorageManager {
         match self.checksum_provider {
             ChecksumProvider::KeyPairHandle(ref key_pair_handle) => {
                 if key_pair_handle.verify_signature(&decoded.data, &decoded.checksum)? {
-                    ()
                 } else {
                     return Err(CalError::failed_operation(
                         "Checksum verification failed".to_owned(),
@@ -233,7 +233,7 @@ impl StorageManager {
             id: decoded.id.clone(),
             secret_data: decoded
                 .secret_data
-                .map(|secret| match secret {
+                .and_then(|secret| match secret {
                     StorageField::Encryped { data, iv } => {
                         self.key_handle
                             .as_ref()
@@ -244,7 +244,6 @@ impl StorageManager {
                     }
                     StorageField::Raw(data) => Some(Ok(data)),
                 })
-                .flatten()
                 .transpose()?,
             public_data: decoded.public_data,
             additional_data: decoded.additional_data,
@@ -279,7 +278,7 @@ impl StorageManager {
                     .expect("Could not decode key data, this should never happen")
             })
             .map(|with_checksum| {
-                serde_json::from_slice::<KeyDataEncrypted>(&with_checksum.data.as_slice())
+                serde_json::from_slice::<KeyDataEncrypted>(with_checksum.data.as_slice())
                     .expect("Could not decode key data, this should never happen")
             })
             .map(|v| (v.id, v.spec))
@@ -333,7 +332,7 @@ impl KVStore {
         keys.into_iter()
             .filter(|k| k.starts_with(&format!("{}:", scope.clone())))
             .map(|k| k.split(':').last().unwrap().to_owned())
-            .filter_map(|k| Some(self.get(scope.clone(), k).ok()?))
+            .filter_map(|k| self.get(scope.clone(), k).ok())
             .collect()
     }
 }

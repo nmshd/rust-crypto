@@ -133,16 +133,14 @@ pub struct ProviderConfig {
 ///
 /// ```rust
 /// use crypto_layer::prelude::*;
-/// fn main() {
-///     let implementation_config = ProviderImplConfig {
-///           additional_config: vec![
-///              AdditionalConfig::FileStoreConfig {
-///                  db_dir: "./testdb".to_owned(),
-///              },
-///              AdditionalConfig::StorageConfigPass("password".to_owned()),
-///          ],
-///     };
-/// }
+/// let implementation_config = ProviderImplConfig {
+///       additional_config: vec![
+///          AdditionalConfig::FileStoreConfig {
+///              db_dir: "./testdb".to_owned(),
+///          },
+///          AdditionalConfig::StorageConfigPass("password".to_owned()),
+///      ],
+/// };
 /// ```
 #[derive(Clone)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
