@@ -1,0 +1,1 @@
+{"version":3,"file":"KeySpec.d.ts","sourceRoot":"","sources":["../../generated/KeySpec.ts"],"names":[],"mappings":"AACA,OAAO,KAAK,EAAE,MAAM,EAAE,MAAM,UAAU,CAAC;AACvC,OAAO,KAAK,EAAE,UAAU,EAAE,MAAM,cAAc,CAAC;AAE/C;;GAEG;AACH,MAAM,MAAM,OAAO,GAAG;IACpB,MAAM,EAAE,MAAM,CAAC;IACf,YAAY,EAAE,UAAU,CAAC;IACzB,SAAS,EAAE,OAAO,CAAC;CACpB,CAAC"}

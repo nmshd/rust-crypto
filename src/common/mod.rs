@@ -67,7 +67,7 @@ macro_rules! delegate_enum {
 macro_rules! delegate_enum_bare {
     ($(pub fn $method:ident(&self $(,$arg:ident: $type:ty)* $(,)?) $(-> $ret:ty)?;)+) => {
         $(
-            pub fn $method(&self $(,$arg: $type)*) $(-> $ret)? {
+            #[must_use] pub fn $method(&self $(,$arg: $type)*) $(-> $ret)? {
                 self.implementation.$method($($arg),*)
             }
         )+
