@@ -377,7 +377,7 @@ impl ProviderImpl for SoftwareProvider {
         let key_id = nanoid!(10); // Generate a unique key ID
 
         // Initialize the SoftwareDHExchange instance
-        let dh_exchange = SoftwareDHExchange::new(key_id, self.storage_manager.clone());
+        let dh_exchange = SoftwareDHExchange::new(key_id, self.storage_manager.clone()).unwrap();
 
         // Wrap in DHExchange and return
         Ok(DHExchange {
@@ -481,12 +481,12 @@ impl SoftwareDHExchange {
             .compute_public_key()
             .expect("Failed to compute DH public key");
 
-        Self {
+        Ok(Self {
             key_id,
             private_key: Some(private_key),
             public_key,
             storage_manager,
-        }
+        })
     }
 }
 

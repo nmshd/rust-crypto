@@ -235,12 +235,7 @@ impl KeyPairHandleImpl for SoftwareKeyPairHandle {
     }
 
     fn extract_key(&self) -> Result<Vec<u8>, CalError> {
-<<<<<<< HEAD
         Ok(self.signing_key.clone().unwrap())
-=======
-        // TODO: extract_key should return the private key / key pair?
-        Ok(self.public_key.clone())
->>>>>>> main
     }
 
     fn start_dh_exchange(&self) -> Result<DHExchange, CalError> {

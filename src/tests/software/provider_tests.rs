@@ -28,11 +28,11 @@ mod tests {
 
             // Party A creates an instance of SoftwareDHExchange
             let mut dh_exchange_a =
-                SoftwareDHExchange::new("key_id_a".to_string(), storage_manager.clone());
+                SoftwareDHExchange::new("key_id_a".to_string(), storage_manager.clone()).unwrap();
 
             // Party B creates an instance of SoftwareDHExchange
             let mut dh_exchange_b =
-                SoftwareDHExchange::new("key_id_b".to_string(), storage_manager);
+                SoftwareDHExchange::new("key_id_b".to_string(), storage_manager).unwrap();
 
             // Party A gets its public key
             let public_key_a = dh_exchange_a
@@ -79,11 +79,11 @@ mod tests {
 
             // Party A creates an instance of SoftwareDHExchange
             let mut dh_exchange_a =
-                SoftwareDHExchange::new("key_id_a".to_string(), storage_manager.clone());
+                SoftwareDHExchange::new("key_id_a".to_string(), storage_manager.clone()).unwrap();
 
             // Party B creates an instance of SoftwareDHExchange
             let mut dh_exchange_b =
-                SoftwareDHExchange::new("key_id_b".to_string(), storage_manager);
+                SoftwareDHExchange::new("key_id_b".to_string(), storage_manager).unwrap();
 
             // Party A gets its public key
             let public_key_a = dh_exchange_a
@@ -139,7 +139,7 @@ mod tests {
 
             // Party A creates an instance of SoftwareDHExchange
             let mut dh_exchange_a =
-                SoftwareDHExchange::new("key_id_a".to_string(), storage_manager);
+                SoftwareDHExchange::new("key_id_a".to_string(), storage_manager).unwrap();
 
             // Generate an invalid public key (e.g., random bytes)
             let invalid_public_key = vec![1, 2, 3, 4, 5];
@@ -171,7 +171,7 @@ mod tests {
 
             // Party A creates an instance of SoftwareDHExchange
             let mut dh_exchange_a =
-                SoftwareDHExchange::new("key_id_a".to_string(), storage_manager);
+                SoftwareDHExchange::new("key_id_a".to_string(), storage_manager).unwrap();
 
             // Party A gets its public key
             let public_key_a = dh_exchange_a
@@ -225,6 +225,7 @@ mod tests {
                     crate::common::crypto::algorithms::encryption::Cipher::XChaCha20Poly1305,
                 ),
                 signing_hash: crate::common::crypto::algorithms::hashes::CryptoHash::Sha2_256,
+                ephemeral: true,
             };
 
             // Test successful key derivation

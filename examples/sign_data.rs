@@ -26,7 +26,7 @@ fn main() {
         ],
     };
 
-    let mut provider = create_provider(capabilities, implementation_config).unwrap();
+    let mut provider = create_provider(&capabilities, implementation_config).unwrap();
 
     println!("Provider: {}", provider.provider_name());
 
