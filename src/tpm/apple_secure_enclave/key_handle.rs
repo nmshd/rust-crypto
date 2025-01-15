@@ -108,6 +108,10 @@ impl KeyPairHandleImpl for AppleSecureEnclaveKeyPair {
         }
         self.key_handle.delete().err_internal()
     }
+
+    fn spec(&self) -> KeyPairSpec {
+        self.spec
+    }
 }
 
 impl fmt::Debug for AppleSecureEnclaveKeyPair {

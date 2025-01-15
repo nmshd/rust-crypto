@@ -10,7 +10,11 @@ use crate::tpm::android::key_handle::{AndroidKeyHandle, AndroidKeyPairHandle};
 use crate::tpm::apple_secure_enclave::key_handle::AppleSecureEnclaveKeyPair;
 
 use crate::{
-    common::{error::CalError, DHExchange, KeyHandle},
+    common::{
+        config::{KeyPairSpec, KeySpec},
+        error::CalError,
+        DHExchange, KeyHandle,
+    },
     stub::{StubDHKeyExchange, StubKeyHandle, StubKeyPairHandle},
 };
 use enum_dispatch::enum_dispatch;
@@ -56,6 +60,9 @@ pub(crate) trait KeyHandleImpl: Send + Sync {
 
     /// Delete this key.
     fn delete(self) -> Result<(), CalError>;
+
+    /// Returns the [KeySpec] the key was generated with.
+    fn spec(&self) -> KeySpec;
 }
 
 #[enum_dispatch]
@@ -116,6 +123,9 @@ pub(crate) trait KeyPairHandleImpl: Send + Sync {
 
     /// Delete this key pair.
     fn delete(self) -> Result<(), CalError>;
+
+    /// Returns the [KeyPairSpec] the key was generated with.
+    fn spec(&self) -> KeyPairSpec;
 }
 
 #[enum_dispatch]

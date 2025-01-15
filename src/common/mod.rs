@@ -192,6 +192,10 @@ impl KeyPairHandle {
     delegate_enum! {
         pub fn delete(self) -> Result<(), CalError>;
     }
+
+    delegate_enum_bare! {
+        pub fn spec(&self) -> KeyPairSpec;
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -229,6 +233,10 @@ impl KeyHandle {
 
     delegate_enum! {
         pub fn delete(self) -> Result<(), CalError>;
+    }
+
+    delegate_enum_bare! {
+        pub fn spec(&self) -> KeySpec;
     }
 }
 
