@@ -8,6 +8,47 @@ This project is a starting point for a Flutter
 [FFI plugin](https://flutter.dev/to/ffi-package),
 a specialized package that includes native code directly invoked with Dart FFI.
 
+## Example
+
+### Creating a TPM Provider
+
+```dart
+import 'package:cal_flutter_plugin/cal_flutter_plugin.dart';
+
+var implConf = await getAndroidConfig();
+var provider = await createProviderFromName(name: "AndroidProvider", implConf: implConf);
+```
+
+### Creating a Keypair
+
+```dart
+var spec = cal.KeyPairSpec(
+    asymSpec: cal.AsymmetricKeySpec.rsa(cal.KeyBits.bits2048),
+    signingHash: const cal.CryptoHash.sha2(cal.Sha2Bits.sha256));
+var keyPair = await provider.createKeyPair(spec: spec);
+```
+
+### Signing Data
+
+```dart
+var data = ...
+
+// Errors are thrown as Exceptions
+var signature = await keyPair.signData(data)
+```
+
+### Verifying Signature
+
+```dart
+var data = ...;
+var signature = ...;
+
+if (await keyPair.verifySignature(data, signature))
+    print("Signature is valid");
+else
+    print("Signature is invalid");
+```
+
 ## Project structure
 
 This template uses the following structure:
@@ -89,4 +130,3 @@ For example, see `sumAsync` in `lib/cal_flutter_plugin.dart`.
 For help getting started with Flutter, view our
 [online documentation](https://docs.flutter.dev), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
-

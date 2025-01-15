@@ -36,7 +36,9 @@ void main() async {
       for (var asymSpec in caps!.supportedAsymSpec) {
         var handle = await provider.createKeyPair(
             spec: cal.KeyPairSpec(
-                asymSpec: asymSpec, signingHash: cal.CryptoHash.sha2256));
+                asymSpec: asymSpec,
+                signingHash: cal.CryptoHash.sha2256,
+                ephemeral: true));
         expect(handle, isNotNull);
         expect(store.count(), 1);
 

@@ -5,14 +5,17 @@ use std::{collections::HashSet, hash::Hash};
 
 use serde_json::error;
 
-use crate::common::{
-    config::{KeyPairSpec, KeySpec, ProviderConfig, ProviderImplConfig, SecurityLevel, Spec},
-    error::CalError,
-    traits::{
-        key_handle::{DHKeyExchangeImpl, KeyHandleImpl, KeyPairHandleImpl},
-        module_provider::{ProviderFactory, ProviderImpl, ProviderImplEnum},
+use crate::{
+    common::{
+        config::{KeyPairSpec, KeySpec, ProviderConfig, ProviderImplConfig, SecurityLevel, Spec},
+        error::CalError,
+        traits::{
+            key_handle::{DHKeyExchangeImpl, KeyHandleImpl, KeyPairHandleImpl},
+            module_provider::{ProviderFactory, ProviderImpl, ProviderImplEnum},
+        },
+        DHExchange, KeyHandle, KeyPairHandle,
     },
-    DHExchange, KeyHandle, KeyPairHandle,
+    storage::KeyData,
 };
 
 const PROVIDER_NAME: &str = "STUB_PROVIDER";
@@ -34,8 +37,11 @@ impl ProviderFactory for StubProviderFactory {
         })
     }
 
-    fn create_provider(&self, impl_config: ProviderImplConfig) -> ProviderImplEnum {
-        (StubProvider { impl_config }).into()
+    fn create_provider(
+        &self,
+        impl_config: ProviderImplConfig,
+    ) -> Result<ProviderImplEnum, CalError> {
+        Ok((StubProvider { impl_config }).into())
     }
 }
 
@@ -87,7 +93,7 @@ impl ProviderImpl for StubProvider {
         todo!()
     }
 
-    fn get_all_keys(&self) -> Result<Vec<Spec>, CalError> {
+    fn get_all_keys(&self) -> Result<Vec<(String, Spec)>, CalError> {
         todo!()
     }
 
@@ -160,6 +166,14 @@ impl KeyHandleImpl for StubKeyHandle {
     }
 
     fn decrypt_data(&self, encrypted_data: &[u8], iv: &[u8]) -> Result<Vec<u8>, CalError> {
+        todo!()
+    }
+
+    fn hmac(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
+        todo!()
+    }
+
+    fn verify_hmac(&self, data: &[u8], hmac: &[u8]) -> Result<bool, CalError> {
         todo!()
     }
 

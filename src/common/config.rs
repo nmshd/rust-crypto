@@ -10,11 +10,13 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 
+use strum::{EnumDiscriminants, EnumIter, EnumString, IntoStaticStr};
+
 use super::crypto::algorithms::{
     encryption::{AsymmetricKeySpec, Cipher},
     hashes::CryptoHash,
 };
-use super::KeyHandle;
+use super::{KeyHandle, KeyPairHandle};
 
 /// A type alias for a pinned, heap-allocated, dynamically dispatched future that is `Send`.
 ///
@@ -48,16 +50,31 @@ pub type AllKeysFn = Arc<dyn Fn() -> DynFuture<Vec<String>> + Send + Sync>;
 
 /// Enum describing the security level of a provider.
 ///
-/// * [`SecurityLevel::Hardware`]: Provider is hardware backed (`TPM`, `StrongBox KeyStore`, other security chips).
-/// * [`SecurityLevel::Software`]: Provder uses the systems software keystore.
-/// * [`SecurityLevel::Network`]: Provider uses a network key store (Hashicorp).
-/// * [`SecurityLevel::Unsafe`]: Provder uses software fallback.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+/// * [SecurityLevel::Hardware]: Provider is hardware backed (tpm, other security chips, StrongBox KeyStore).
+/// * [SecurityLevel::Software]: Provder uses the systems software keystore.
+/// * [SecurityLevel::Network]: Provider uses a network key store (Hashicorp).
+/// * [SecurityLevel::Unsafe]: Provder uses software fallback.
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, EnumString, EnumIter, IntoStaticStr,
+)]
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum SecurityLevel {
-    /// Highest security level
+    /// Highest security level.
+    ///
+    /// Implies running on a TPM, HSM or TEE.
+    /// The extraction of private keys is impossible.
     Hardware = 4,
+    /// Keys are stored in an encrypted database or on a native software key store.
+    ///
+    /// Extraction of private keys is possible.
     Software = 3,
+    /// NKS
+    ///
+    /// Extraction of private keys is possible.
     Network = 2,
+    /// Lowest security level.
+    ///
+    /// Keys are stored in an unencrypted, insecure database or file.
     Unsafe = 1,
 }
 
@@ -67,23 +84,35 @@ pub enum Spec {
     KeyPairSpec(KeyPairSpec),
 }
 
-/// flutter_rust_bridge:non_opaque
+/// Struct used to configure keys.
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub struct KeySpec {
+    /// Cipher used for symmetric encryption.
     pub cipher: Cipher,
+    /// Hash function used with HMAC.
     pub signing_hash: CryptoHash,
+    /// If set to `true`, the key is going to be deleted when the handle is dropped.
+    pub ephemeral: bool,
 }
 
-/// flutter_rust_bridge:non_opaque
+/// Struct used to configure key pairs.
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub struct KeyPairSpec {
+    /// Asymmetric algorithm to be used.
     pub asym_spec: AsymmetricKeySpec,
+    /// Cipher used for hybrid encryption. If set to None, no hybrid encryption will be used.
     pub cipher: Option<Cipher>,
+    /// Hash function used for signing and encrypting.
     pub signing_hash: CryptoHash,
+    /// If set to true, the key pair will be discarded after the handle is dropped.
+    pub ephemeral: bool,
 }
 
-/// flutter_rust_bridge:non_opaque
+/// Capabilities of a Provider
 #[derive(Clone, Debug)]
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub struct ProviderConfig {
     pub max_security_level: SecurityLevel,
     pub min_security_level: SecurityLevel,
@@ -92,28 +121,72 @@ pub struct ProviderConfig {
     pub supported_asym_spec: HashSet<AsymmetricKeySpec>,
 }
 
-/// flutter_rust_bridge:opaque
+/// Configuration needed for using or initializing providers.
+///
+/// Either
+/// * [AdditionalConfig::KVStoreConfig]
+/// * [AdditionalConfig::FileStoreConfig]
+///
+/// and either
+/// * [AdditionalConfig::StorageConfigHMAC]
+/// * [AdditionalConfig::StorageConfigDSA]
+/// * [AdditionalConfig::StorageConfigPass]
+///
+/// need to be supplied.
+///
+/// ## Example
+///
+/// ```rust
+/// use crypto_layer::prelude::*;
+/// let implementation_config = ProviderImplConfig {
+///       additional_config: vec![
+///          AdditionalConfig::FileStoreConfig {
+///              db_dir: "./testdb".to_owned(),
+///          },
+///          AdditionalConfig::StorageConfigPass("password".to_owned()),
+///      ],
+/// };
+/// ```
 #[derive(Clone)]
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub struct ProviderImplConfig {
     pub additional_config: Vec<AdditionalConfig>,
 }
 
-#[derive(Clone)]
+/// Configuration needed for using or initializing providers.
+#[derive(Clone, EnumDiscriminants)]
+#[strum_discriminants(derive(EnumString, IntoStaticStr))]
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum AdditionalConfig {
+    #[cfg_attr(
+        feature = "ts-interface",
+        ts(type = "{
+            get_fn: (id: string) => Uint8Array | undefined;
+            store_fn: (id: string, data: Uint8Array) => boolean;
+            delete_fn: (id: string) => void;
+            all_keys_fn: () => string[];
+        }")
+    )]
+    /// Callback functions acting like a hashmap for storing key metadata.
+    ///
+    /// Not supported by the NodeJS plugin.
     KVStoreConfig {
         get_fn: GetFn,
         store_fn: StoreFn,
         delete_fn: DeleteFn,
         all_keys_fn: AllKeysFn,
     },
+    /// Configuration for the usage of the metadata file database.
     FileStoreConfig {
-        db_path: String,
-        secure_path: String,
-        pass: String,
+        /// Path to a directory where the database holding key metadata will be saved.
+        db_dir: String,
     },
-    StorageConfig {
-        key_handle: KeyHandle,
-    },
+    /// Used for verifying the integrity of the key metadata.
+    StorageConfigHMAC(KeyHandle),
+    /// Used for verifying the integrity of the key metadata.
+    StorageConfigDSA(KeyPairHandle),
+    /// Used for verifying the integrity of the key metadata.
+    StorageConfigPass(String),
 }
 
 impl std::fmt::Debug for ProviderImplConfig {
@@ -139,16 +212,6 @@ impl ProviderImplConfig {
         };
         additional_config.push(kv_config);
         Self { additional_config }
-    }
-
-    /// Creates a new stubbed `ProviderImplConfig` instance for testing or default purposes.
-    pub fn new_stub(
-        get_fn: GetFn,
-        store_fn: StoreFn,
-        delete_fn: DeleteFn,
-        all_keys_fn: AllKeysFn,
-    ) -> Self {
-        Self::new(get_fn, store_fn, delete_fn, all_keys_fn, vec![])
     }
 }
 

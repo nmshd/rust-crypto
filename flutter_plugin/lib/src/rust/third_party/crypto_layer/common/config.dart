@@ -5,62 +5,53 @@
 
 import '../../../frb_generated.dart';
 import '../../../lib.dart';
+import '../common.dart';
 import 'crypto/algorithms/encryption.dart';
 import 'crypto/algorithms/hashes.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
+import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
+part 'config.freezed.dart';
 
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_receiver_is_total_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `cmp`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `partial_cmp`
 
-// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AdditionalConfig>>
-abstract class AdditionalConfig implements RustOpaqueInterface {}
+@freezed
+sealed class AdditionalConfig with _$AdditionalConfig {
+  const AdditionalConfig._();
 
-// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ProviderImplConfig>>
-abstract class ProviderImplConfig implements RustOpaqueInterface {
-  List<AdditionalConfig> get additionalConfig;
-
-  set additionalConfig(List<AdditionalConfig> additionalConfig);
-
-  // HINT: Make it `#[frb(sync)]` to let it become the default constructor of Dart class.
-  /// Creates a new `ProviderImplConfig` instance.
-  static Future<ProviderImplConfig> newInstance(
-          {required ArcFnStringDynFutureOptionVecU8 getFn,
-          required ArcFnStringVecU8DynFutureBool storeFn,
-          required ArcFnStringPinBoxFutureOutput deleteFn,
-          required ArcFnDynFutureVecString allKeysFn,
-          required List<AdditionalConfig> additionalConfig}) =>
-      RustLib.instance.api.cryptoLayerCommonConfigProviderImplConfigNew(
-          getFn: getFn,
-          storeFn: storeFn,
-          deleteFn: deleteFn,
-          allKeysFn: allKeysFn,
-          additionalConfig: additionalConfig);
-
-  /// Creates a new stubbed `ProviderImplConfig` instance for testing or default purposes.
-  static Future<ProviderImplConfig> newStub(
-          {required ArcFnStringDynFutureOptionVecU8 getFn,
-          required ArcFnStringVecU8DynFutureBool storeFn,
-          required ArcFnStringPinBoxFutureOutput deleteFn,
-          required ArcFnDynFutureVecString allKeysFn}) =>
-      RustLib.instance.api.cryptoLayerCommonConfigProviderImplConfigNewStub(
-          getFn: getFn,
-          storeFn: storeFn,
-          deleteFn: deleteFn,
-          allKeysFn: allKeysFn);
+  const factory AdditionalConfig.kvStoreConfig({
+    required ArcFnStringDynFutureOptionVecU8 getFn,
+    required ArcFnStringVecU8DynFutureBool storeFn,
+    required ArcFnStringPinBoxFutureOutput deleteFn,
+    required ArcFnDynFutureVecString allKeysFn,
+  }) = AdditionalConfig_KVStoreConfig;
+  const factory AdditionalConfig.fileStoreConfig({
+    required String dbPath,
+    required String securePath,
+    required String pass,
+  }) = AdditionalConfig_FileStoreConfig;
+  const factory AdditionalConfig.storageConfigHmac(
+    KeyHandle field0,
+  ) = AdditionalConfig_StorageConfigHMAC;
+  const factory AdditionalConfig.storageConfigDsa(
+    KeyPairHandle field0,
+  ) = AdditionalConfig_StorageConfigDSA;
+  const factory AdditionalConfig.storageConfigPass(
+    String field0,
+  ) = AdditionalConfig_StorageConfigPass;
 }
-
-// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Spec>>
-abstract class Spec implements RustOpaqueInterface {}
 
 /// flutter_rust_bridge:non_opaque
 class KeyPairSpec {
   final AsymmetricKeySpec asymSpec;
   final Cipher? cipher;
   final CryptoHash signingHash;
+  final bool ephemeral;
 
   const KeyPairSpec({
     required this.asymSpec,
     this.cipher,
     required this.signingHash,
+    required this.ephemeral,
   });
 
   static Future<KeyPairSpec> default_() =>
@@ -68,7 +59,10 @@ class KeyPairSpec {
 
   @override
   int get hashCode =>
-      asymSpec.hashCode ^ cipher.hashCode ^ signingHash.hashCode;
+      asymSpec.hashCode ^
+      cipher.hashCode ^
+      signingHash.hashCode ^
+      ephemeral.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -77,24 +71,28 @@ class KeyPairSpec {
           runtimeType == other.runtimeType &&
           asymSpec == other.asymSpec &&
           cipher == other.cipher &&
-          signingHash == other.signingHash;
+          signingHash == other.signingHash &&
+          ephemeral == other.ephemeral;
 }
 
 /// flutter_rust_bridge:non_opaque
 class KeySpec {
   final Cipher cipher;
   final CryptoHash signingHash;
+  final bool ephemeral;
 
   const KeySpec({
     required this.cipher,
     required this.signingHash,
+    required this.ephemeral,
   });
 
   static Future<KeySpec> default_() =>
       RustLib.instance.api.cryptoLayerCommonConfigKeySpecDefault();
 
   @override
-  int get hashCode => cipher.hashCode ^ signingHash.hashCode;
+  int get hashCode =>
+      cipher.hashCode ^ signingHash.hashCode ^ ephemeral.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -102,7 +100,8 @@ class KeySpec {
       other is KeySpec &&
           runtimeType == other.runtimeType &&
           cipher == other.cipher &&
-          signingHash == other.signingHash;
+          signingHash == other.signingHash &&
+          ephemeral == other.ephemeral;
 }
 
 /// flutter_rust_bridge:non_opaque
@@ -141,6 +140,40 @@ class ProviderConfig {
           supportedAsymSpec == other.supportedAsymSpec;
 }
 
+/// flutter_rust_bridge:non_opaque
+class ProviderImplConfig {
+  final List<AdditionalConfig> additionalConfig;
+
+  const ProviderImplConfig({
+    required this.additionalConfig,
+  });
+
+  // HINT: Make it `#[frb(sync)]` to let it become the default constructor of Dart class.
+  /// Creates a new `ProviderImplConfig` instance.
+  static Future<ProviderImplConfig> newInstance(
+          {required ArcFnStringDynFutureOptionVecU8 getFn,
+          required ArcFnStringVecU8DynFutureBool storeFn,
+          required ArcFnStringPinBoxFutureOutput deleteFn,
+          required ArcFnDynFutureVecString allKeysFn,
+          required List<AdditionalConfig> additionalConfig}) =>
+      RustLib.instance.api.cryptoLayerCommonConfigProviderImplConfigNew(
+          getFn: getFn,
+          storeFn: storeFn,
+          deleteFn: deleteFn,
+          allKeysFn: allKeysFn,
+          additionalConfig: additionalConfig);
+
+  @override
+  int get hashCode => additionalConfig.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ProviderImplConfig &&
+          runtimeType == other.runtimeType &&
+          additionalConfig == other.additionalConfig;
+}
+
 /// Enum describing the security level of a provider.
 ///
 /// * [SecurityLevel::Hardware]: Provider is hardware backed (tpm, other security chips, StrongBox KeyStore).
@@ -154,4 +187,16 @@ enum SecurityLevel {
   network,
   unsafe,
   ;
+}
+
+@freezed
+sealed class Spec with _$Spec {
+  const Spec._();
+
+  const factory Spec.keySpec(
+    KeySpec field0,
+  ) = Spec_KeySpec;
+  const factory Spec.keyPairSpec(
+    KeyPairSpec field0,
+  ) = Spec_KeyPairSpec;
 }

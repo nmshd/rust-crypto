@@ -84,15 +84,19 @@ impl ProviderFactory for AppleSecureEnclaveFactory {
         Some(CAPABILITIES.clone())
     }
 
-    fn create_provider(&self, impl_config: ProviderImplConfig) -> ProviderImplEnum {
-        let storage_manager = StorageManager::new(self.get_name(), &impl_config.additional_config);
-        AppleSecureEnclaveProvider { storage_manager }.into()
+    fn create_provider(
+        &self,
+        impl_config: ProviderImplConfig,
+    ) -> Result<ProviderImplEnum, CalError> {
+        let storage_manager = StorageManager::new(self.get_name(), &impl_config.additional_config)?;
+
+        Ok(AppleSecureEnclaveProvider { storage_manager }.into())
     }
 }
 
 #[derive(Debug)]
 pub(crate) struct AppleSecureEnclaveProvider {
-    pub(crate) storage_manager: StorageManager,
+    pub(crate) storage_manager: Option<StorageManager>,
 }
 
 impl ProviderImpl for AppleSecureEnclaveProvider {
@@ -107,6 +111,9 @@ impl ProviderImpl for AppleSecureEnclaveProvider {
     #[instrument]
     fn create_key_pair(&mut self, spec: KeyPairSpec) -> Result<KeyPairHandle, CalError> {
         check_key_pair_spec_for_compatibility(&spec)?;
+        if self.storage_manager.is_none() && !spec.ephemeral {
+            return Err(CalError::ephemeral_key_required());
+        }
 
         let access_controll = SecAccessControl::create_with_protection(
             Some(ProtectionMode::AccessibleAfterFirstUnlockThisDeviceOnly),
@@ -125,16 +132,14 @@ impl ProviderImpl for AppleSecureEnclaveProvider {
 
         let sec_key: SecKey = SecKey::new(&key_options).err_internal()?;
 
-        let key_pair = KeyPairHandle {
-            implementation: AppleSecureEnclaveKeyPair {
-                key_handle: sec_key,
-                spec,
-                storage_manager: self.storage_manager.clone(),
-            }
-            .into(),
-        };
-
-        let id = key_pair.id()?;
+        let id = match sec_key.application_label() {
+            None => Err(CalError::missing_value(
+                "kSecAttrApplicationLabel missing for this key".to_owned(),
+                false,
+                None,
+            )),
+            Some(bytes) => Ok(BASE64_STANDARD.encode(bytes)),
+        }?;
 
         let storage_data = KeyData {
             id: id.clone(),
@@ -144,13 +149,37 @@ impl ProviderImpl for AppleSecureEnclaveProvider {
             spec: Spec::KeyPairSpec(spec),
         };
 
-        self.storage_manager.store(id, storage_data)?;
+        let storage_manager = self.storage_manager.clone().filter(|_| !spec.ephemeral);
+
+        if storage_manager.is_some() {
+            self.storage_manager
+                .as_mut()
+                .unwrap()
+                .store(id.clone(), storage_data)?;
+        }
+
+        let key_pair = KeyPairHandle {
+            implementation: AppleSecureEnclaveKeyPair {
+                key_handle: sec_key,
+                spec,
+                storage_manager,
+            }
+            .into(),
+        };
 
         Ok(key_pair)
     }
 
     #[instrument]
     fn load_key_pair(&mut self, key_id: String) -> Result<KeyPairHandle, CalError> {
+        if self.storage_manager.is_none() {
+            return Err(CalError::failed_operation(
+                "This is an ephemeral provider, it cannot have stored keys".to_owned(),
+                true,
+                None,
+            ));
+        }
+
         let label = match BASE64_STANDARD.decode(&key_id) {
             Ok(label) => label,
             Err(e) => {
@@ -162,7 +191,13 @@ impl ProviderImpl for AppleSecureEnclaveProvider {
             }
         };
 
-        let spec = match self.storage_manager.get(key_id.clone())?.spec {
+        let spec = match self
+            .storage_manager
+            .as_ref()
+            .unwrap()
+            .get(key_id.clone())?
+            .spec
+        {
             Spec::KeyPairSpec(v) => v,
             Spec::KeySpec(_) => {
                 return Err(CalError::failed_operation(
@@ -264,7 +299,14 @@ impl ProviderImpl for AppleSecureEnclaveProvider {
         Some(CAPABILITIES.clone())
     }
 
-    fn get_all_keys(&self) -> Result<Vec<Spec>, CalError> {
-        todo!()
+    fn get_all_keys(&self) -> Result<Vec<(String, Spec)>, CalError> {
+        if self.storage_manager.is_none() {
+            return Err(CalError::failed_operation(
+                "This is an ephemeral provider, it cannot have stored keys".to_owned(),
+                true,
+                None,
+            ));
+        }
+        Ok(self.storage_manager.as_ref().unwrap().get_all_keys())
     }
 }

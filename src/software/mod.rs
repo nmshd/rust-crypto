@@ -5,6 +5,7 @@ use crate::{
             encryption::{AsymmetricKeySpec, Cipher},
             hashes::CryptoHash,
         },
+        error::CalError,
         traits::module_provider::{ProviderFactory, ProviderImplEnum},
     },
     storage::StorageManager,
@@ -56,18 +57,21 @@ impl ProviderFactory for SoftwareProviderFactory {
         })
     }
 
-    fn create_provider(&self, impl_config: ProviderImplConfig) -> ProviderImplEnum {
-        let storage_manager = StorageManager::new(self.get_name(), &impl_config.additional_config);
-        Into::into(SoftwareProvider {
+    fn create_provider(
+        &self,
+        impl_config: ProviderImplConfig,
+    ) -> Result<ProviderImplEnum, CalError> {
+        let storage_manager = StorageManager::new(self.get_name(), &impl_config.additional_config)?;
+        Ok(Into::into(SoftwareProvider {
             impl_config,
             storage_manager,
-        })
+        }))
     }
 }
 
 pub(crate) struct SoftwareProvider {
     impl_config: ProviderImplConfig,
-    storage_manager: StorageManager,
+    storage_manager: Option<StorageManager>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

@@ -1,5 +1,7 @@
 use std::sync::LazyLock;
 
+use tracing::warn;
+
 use super::{
     config::{ProviderConfig, ProviderImplConfig},
     traits::module_provider::{ProviderFactory, ProviderFactoryEnum},
@@ -80,14 +82,20 @@ pub fn create_provider(conf: &ProviderConfig, impl_conf: ProviderImplConfig) -> 
         let supported = provider_caps.map(|caps| provider_supports_capabilities(&caps, conf));
         if supported.unwrap_or(false) {
             return Some(Provider {
-                implementation: provider.create_provider(impl_conf),
+                implementation: match provider.create_provider(impl_conf) {
+                    Ok(p) => p,
+                    Err(e) => {
+                        warn!("Error creating provider: {:?}", e);
+                        return None;
+                    }
+                },
             });
         }
     }
     None
 }
 
-/// Returns the provider with the given name.
+/// Returns the provider matching the given name.
 ///
 /// * `name` - Name of the provider. See `get_name()`.
 /// * `impl_config` - Specif configuration for said provider.
@@ -97,14 +105,20 @@ pub fn create_provider_from_name(name: &str, impl_conf: ProviderImplConfig) -> O
 
         if p_name == name {
             return Some(Provider {
-                implementation: provider.create_provider(impl_conf),
+                implementation: match provider.create_provider(impl_conf) {
+                    Ok(p) => p,
+                    Err(e) => {
+                        warn!("Error creating provider: {:?}", e);
+                        return None;
+                    }
+                },
             });
         }
     }
     None
 }
 
-/// Returns the names of all available providers for testing.
+/// Returns the names of all available providers.
 pub fn get_all_providers() -> Vec<String> {
     ALL_PROVIDERS
         .iter()

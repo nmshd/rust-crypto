@@ -1,0 +1,10 @@
+target
+index.node
+**/node_modules
+**/.DS_Store
+npm-debug.log*
+lib
+cargo.log
+cross.log
+db
+/tests/test_db

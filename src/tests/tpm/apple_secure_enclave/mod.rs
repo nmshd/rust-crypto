@@ -34,6 +34,7 @@ fn test_create_key_with_provider() -> Result<()> {
         asym_spec: AsymmetricKeySpec::P256,
         cipher: None,
         signing_hash: CryptoHash::Sha2_256,
+        ephemeral: false,
     };
 
     let _key = provider.create_key_pair(key_spec)?;
@@ -63,6 +64,7 @@ fn test_create_key_pair_sign_and_verify_data() -> Result<()> {
             asym_spec: AsymmetricKeySpec::P256,
             cipher: None,
             signing_hash: hash,
+            ephemeral: false,
         };
 
         let key = provider.create_key_pair(key_spec)?;
@@ -93,6 +95,7 @@ fn test_load_key_pair() -> Result<()> {
             asym_spec: AsymmetricKeySpec::P256,
             cipher: None,
             signing_hash: CryptoHash::Sha2_256,
+            ephemeral: false,
         };
 
         let key = provider.create_key_pair(key_spec)?;

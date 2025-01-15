@@ -1,6 +1,8 @@
+use std::convert::From;
 use std::fmt;
 
 use anyhow::anyhow;
+use sled;
 use thiserror;
 
 // Feel free to add more items to error.
@@ -14,14 +16,18 @@ use thiserror;
 /// If other fields are usefull for understanding the error, they should also exist.
 #[derive(thiserror::Error, Debug)]
 #[error("{error_kind}: {source}")]
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 #[repr(C)]
 pub struct CalError {
     error_kind: CalErrorKind,
+
+    #[cfg_attr(feature = "ts-interface", ts(skip))]
     source: anyhow::Error,
 }
 
-/// flutter_rust_bridge:non_opaque
+/// Enumeration differentiating between the causes and the severity of the error.
 #[derive(thiserror::Error, Debug, Clone)]
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 #[repr(C)]
 pub enum CalErrorKind {
     /// This error is returned on calling functions that are not implemented.
@@ -66,6 +72,10 @@ pub enum CalErrorKind {
     /// Function is not implemented.
     #[error("Unsupported Algorithm: {0}")]
     UnsupportedAlgorithm(String),
+
+    /// Tried to create a non-ephermal key with an ephermal provider.
+    #[error("Ephermal Key Error")]
+    EphermalKeyError,
 
     /// Errors that do not fall into the above classes.
     #[error("Other Error")]
@@ -158,6 +168,13 @@ impl CalError {
         }
     }
 
+    pub(crate) fn ephemeral_key_required() -> Self {
+        Self {
+            error_kind: CalErrorKind::EphermalKeyError,
+            source: anyhow!("Ephermal Key Error"),
+        }
+    }
+
     pub fn error_kind(&self) -> CalErrorKind {
         self.error_kind.clone()
     }
@@ -169,6 +186,7 @@ impl CalError {
 
 /// Key type for error pertaining to said key.
 #[derive(Debug, Clone, Copy)]
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum KeyType {
     Public,
     Private,
@@ -190,4 +208,17 @@ impl fmt::Display for KeyType {
 #[allow(dead_code)]
 pub(crate) trait ToCalError<T> {
     fn err_internal(self) -> Result<T, CalError>;
+}
+
+impl From<sled::Error> for CalError {
+    fn from(value: sled::Error) -> Self {
+        match value {
+            sled::Error::CollectionNotFound(_) => CalError::missing_value(
+                "Sled (db): Collection not found.".to_owned(),
+                false,
+                Some(anyhow!(value)),
+            ),
+            _ => CalError::other(anyhow!(value)),
+        }
+    }
 }
