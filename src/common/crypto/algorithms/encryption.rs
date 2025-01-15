@@ -41,31 +41,31 @@ pub enum AsymmetricKeySpec {
     P256,
     P384,
     P521,
-    /// secp256k1 curve, commonly used in blockchain technologies.
+    /// `secp256k1` curve, commonly used in blockchain technologies.
     Secp256k1,
-    /// Brainpool P256r1 curve.
+    /// Brainpool `P256r1` curve.
     BrainpoolP256r1,
-    /// Brainpool P384r1 curve.
+    /// Brainpool `P384r1` curve.
     BrainpoolP384r1,
-    /// Brainpool P512r1 curve.
+    /// Brainpool `P512r1` curve.
     BrainpoolP512r1,
-    /// Brainpool P638 curve.
+    /// Brainpool `P638` curve.
     BrainpoolP638,
-    /// Curve25519, popular for its security and performance.
+    /// `Curve25519`, popular for its security and performance.
     Curve25519,
-    /// Curve448, known for high security and efficiency.
+    /// `Curve448`, known for high security and efficiency.
     Curve448,
-    /// FRP256v1, a French curve providing strong security and performance.
+    /// `FRP256v1`, a French curve providing strong security and performance.
     Frp256v1,
 }
 
 /// Represents the available cipher algorithms.
 ///
 /// This enum provides a C-compatible representation of various algorithms supported,
-/// including AES, ChaCha20 variants, Triple DES, DES, RC2, and Camellia. Some algorithms can be configured with specific modes of operation and key sizes.
+/// including `AES`, `ChaCha20` variants, `Triple DES`, `DES`, `RC2`, and `Camellia`. Some algorithms can be configured with specific modes of operation and key sizes.
 /// It is designed for flexibility, allowing for easy extension to include additional cipher algorithms.
 /// Stream ciphers encrypt plaintext one bit or byte at a time, offering different security and performance characteristics compared to block ciphers.
-/// XChaCha20 is the recommended stream cipher for new applications due to its strong security profile.
+/// `XChaCha20` is the recommended stream cipher for new applications due to its strong security profile.
 ///
 /// # Note
 ///

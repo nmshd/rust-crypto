@@ -154,15 +154,12 @@ impl KeyHandleImpl for SoftwareKeyHandle {
 
 impl KeyPairHandleImpl for SoftwareKeyPairHandle {
     fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
-        let signing_key = match self.signing_key.as_ref() {
-            Some(key) => key,
-            None => {
-                return Err(CalError::failed_operation(
-                    "No private key available for signing".to_string(),
-                    true,
-                    None,
-                ))
-            }
+        let Some(signing_key) = self.signing_key.as_ref() else {
+            return Err(CalError::failed_operation(
+                "No private key available for signing".to_string(),
+                true,
+                None,
+            ));
         };
 
         match self.spec.asym_spec {
@@ -242,8 +239,7 @@ impl KeyPairHandleImpl for SoftwareKeyPairHandle {
     }
 
     fn extract_key(&self) -> Result<Vec<u8>, CalError> {
-        // TODO: extract_key should return the private key / key pair?
-        Ok(self.public_key.clone())
+        Ok(self.signing_key.clone().unwrap())
     }
 
     fn start_dh_exchange(&self) -> Result<DHExchange, CalError> {

@@ -52,10 +52,10 @@ fn provider_supports_capabilities(
 
 /// Returns a provider which supports the given requierements.
 ///
-/// This function returns the first provider, which supports the given requirements and can be initialized with the given [ProviderImplConfig].
+/// This function returns the first provider, which supports the given requirements and has a [`ProviderImplConfig`].
 ///
-/// * `conf` - A provider config that the provider must at least support.
-/// * `impl_conf` - Configuration needed for initializing providers.
+/// * `conf` - A provider config that the provider must at least contain.
+/// * `impl_conf_vec` - A `Vec` of [`ProviderImplConfig`]. Only providers, which have [`ProviderImplConfig`] are returned.
 ///
 /// # Example
 /// ```
@@ -76,10 +76,10 @@ fn provider_supports_capabilities(
 /// };
 /// let provider = create_provider(provider_config, specific_provider_config).unwrap();
 /// ```
-pub fn create_provider(conf: ProviderConfig, impl_conf: ProviderImplConfig) -> Option<Provider> {
+pub fn create_provider(conf: &ProviderConfig, impl_conf: ProviderImplConfig) -> Option<Provider> {
     for provider in ALL_PROVIDERS.iter() {
         let provider_caps = provider.get_capabilities(impl_conf.clone());
-        let supported = provider_caps.map(|caps| provider_supports_capabilities(&caps, &conf));
+        let supported = provider_caps.map(|caps| provider_supports_capabilities(&caps, conf));
         if supported.unwrap_or(false) {
             return Some(Provider {
                 implementation: match provider.create_provider(impl_conf) {
@@ -98,8 +98,8 @@ pub fn create_provider(conf: ProviderConfig, impl_conf: ProviderImplConfig) -> O
 /// Returns the provider matching the given name.
 ///
 /// * `name` - Name of the provider. See `get_name()`.
-/// * `impl_config` - Configuration needed for initializing providers.
-pub fn create_provider_from_name(name: String, impl_conf: ProviderImplConfig) -> Option<Provider> {
+/// * `impl_config` - Specif configuration for said provider.
+pub fn create_provider_from_name(name: &str, impl_conf: ProviderImplConfig) -> Option<Provider> {
     for provider in ALL_PROVIDERS.iter() {
         let p_name = provider.get_name();
 
@@ -120,5 +120,8 @@ pub fn create_provider_from_name(name: String, impl_conf: ProviderImplConfig) ->
 
 /// Returns the names of all available providers.
 pub fn get_all_providers() -> Vec<String> {
-    ALL_PROVIDERS.iter().map(|p| p.get_name()).collect()
+    ALL_PROVIDERS
+        .iter()
+        .map(ProviderFactory::get_name)
+        .collect()
 }

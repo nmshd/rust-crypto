@@ -17,16 +17,14 @@ mod tests {
         use super::*;
         use crate::{common::Provider, tests::TestStore};
 
-        static mut STORE: std::sync::LazyLock<TestStore> =
-            std::sync::LazyLock::new(TestStore::new);
+        static mut STORE: std::sync::LazyLock<TestStore> = std::sync::LazyLock::new(TestStore::new);
 
-        /// Helper function to create a new key pair and extract the SoftwareKeyPairHandle
+        /// Helper function to create a new key pair and extract the `SoftwareKeyPairHandle`
         fn create_key_pair_handle(spec: KeyPairSpec) -> Result<KeyPairHandle, CalError> {
             let impl_config = unsafe { STORE.impl_config().clone() };
 
             let mut provider: Provider =
-                factory::create_provider_from_name("SoftwareProvider".to_owned(), impl_config)
-                    .unwrap();
+                factory::create_provider_from_name("SoftwareProvider", impl_config).unwrap();
 
             provider.create_key_pair(spec)
         }
@@ -157,8 +155,7 @@ mod tests {
             let impl_config = unsafe { STORE.impl_config().clone() };
 
             let mut provider: Provider =
-                factory::create_provider_from_name("SoftwareProvider".to_owned(), impl_config)
-                    .unwrap();
+                factory::create_provider_from_name("SoftwareProvider", impl_config).unwrap();
 
             let key_pair_handle = provider.create_key_pair(spec).unwrap();
 
@@ -197,8 +194,7 @@ mod tests {
             let impl_config = unsafe { STORE.impl_config().clone() };
 
             let mut provider: Provider =
-                factory::create_provider_from_name("SoftwareProvider".to_owned(), impl_config)
-                    .unwrap();
+                factory::create_provider_from_name("SoftwareProvider", impl_config).unwrap();
 
             let key_pair_handle = provider.create_key_pair(spec).unwrap();
 
@@ -248,16 +244,14 @@ mod tests {
 
         use super::*;
 
-        static mut STORE: std::sync::LazyLock<TestStore> =
-            std::sync::LazyLock::new(TestStore::new);
+        static mut STORE: std::sync::LazyLock<TestStore> = std::sync::LazyLock::new(TestStore::new);
 
-        /// Helper function to create a new key and extract the SoftwareKeyHandle
+        /// Helper function to create a new key and extract the `SoftwareKeyHandle`
         fn create_software_key_handle(spec: KeySpec) -> Result<KeyHandle, CalError> {
             let impl_config = unsafe { STORE.impl_config().clone() };
 
             let mut provider =
-                factory::create_provider_from_name("SoftwareProvider".to_owned(), impl_config)
-                    .unwrap();
+                factory::create_provider_from_name("SoftwareProvider", impl_config).unwrap();
             provider.create_key(spec)
         }
 

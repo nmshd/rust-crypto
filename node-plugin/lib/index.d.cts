@@ -1,0 +1,38 @@
+export { getAllProviders } from "./load.cjs";
+import { type Provider, type ProviderConfig, type ProviderImplConfig, type KeyPairSpec, type KeySpec } from "crypto-layer-ts-types";
+type BareProvider = {};
+type BareKeyHandle = {};
+type BareKeyPairHandle = {};
+type BareDHExchange = {};
+declare module "./load.cjs" {
+    function getAllProviders(): string[];
+    function createBareProvider(config: ProviderConfig, impl_config: ProviderImplConfig): BareProvider | undefined;
+    function createBareProviderFromName(name: string, impl_config: ProviderImplConfig): BareProvider | undefined;
+    function providerName(this: BareProvider): string;
+    function createBareKey(this: BareProvider, spec: KeySpec): BareKeyHandle;
+    function createBareKeyPair(this: BareProvider, spec: KeyPairSpec): BareKeyPairHandle;
+    function loadBareKey(this: BareProvider, id: string): BareKeyHandle;
+    function loadBareKeyPair(this: BareProvider, id: string): BareKeyPairHandle;
+    function importBareKey(this: BareProvider, spec: KeySpec, key: Uint8Array): BareKeyHandle;
+    function importBareKeyPair(this: BareProvider, spec: KeyPairSpec, publicKey: Uint8Array, privateKey: Uint8Array): BareKeyPairHandle;
+    function importBarePublicKey(this: BareProvider, spec: KeyPairSpec, publicKey: Uint8Array): BareKeyPairHandle;
+    function getCapabilities(this: BareProvider): ProviderConfig | undefined;
+    function startEphemeralDhExchange(this: BareProvider, spec: KeyPairSpec): BareDHExchange;
+    function signData(this: BareKeyPairHandle, data: Uint8Array): Uint8Array;
+    function verifySignature(this: BareKeyPairHandle, data: Uint8Array, signature: Uint8Array): boolean;
+    function idForKeyPair(this: BareKeyPairHandle): string;
+    function deleteForKeyPair(this: BareKeyPairHandle): undefined;
+    function getPublicKey(this: BareKeyPairHandle): Uint8Array;
+    function encryptDataForKeyPairHandle(this: BareKeyPairHandle, data: Uint8Array): Uint8Array;
+    function decryptDataForKeyPairHandle(this: BareKeyPairHandle, data: Uint8Array): Uint8Array;
+    function idForKeyHandle(this: BareKeyHandle): string;
+    function deleteForKeyHandle(this: BareKeyHandle): undefined;
+    function extractKey(this: BareKeyHandle): Uint8Array;
+    function encryptDataForKeyHandle(this: BareKeyHandle, data: Uint8Array): [Uint8Array, Uint8Array];
+    function decryptDataForKeyHandle(this: BareKeyHandle, data: Uint8Array, iv: Uint8Array): Uint8Array;
+    function getPublicKeyForDHExchange(this: BareDHExchange): Uint8Array;
+    function addExternalForDHExchange(this: BareDHExchange, key: Uint8Array): Uint8Array;
+    function addExternalFinalForDHExchange(this: BareDHExchange, key: Uint8Array): BareKeyHandle;
+}
+export declare function createProvider(config: ProviderConfig, impl_config: ProviderImplConfig): Provider | undefined;
+export declare function createProviderFromName(name: string, impl_config: ProviderImplConfig): Provider | undefined;

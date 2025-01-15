@@ -108,9 +108,13 @@ impl KeyHandleImpl for AndroidKeyHandle {
             tracing::warn!("Failed to delete key on device: {:?}", e);
         }
 
-        if let Some(storage_manager) = &self.storage_manager {
-            storage_manager.delete(self.key_id.clone());
-        }
+        let keystore = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_owned()).err_internal()?;
+        keystore.load(&env, None).err_internal()?;
+        keystore
+            .deleteEntry(&env, self.key_id.clone())
+            .err_internal()?;
+
+        self.storage_manager.delete(&self.key_id);
 
         Ok(())
     }

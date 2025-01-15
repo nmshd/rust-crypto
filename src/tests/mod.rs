@@ -1,5 +1,4 @@
-#[allow(static_mut_refs)]
-//mod common;
+#![allow(static_mut_refs)]
 #[cfg(feature = "hsm")]
 mod hsm;
 
@@ -27,7 +26,7 @@ use tracing_subscriber::{
 use crate::common::config::{AdditionalConfig, ProviderImplConfig};
 use crate::common::KeyPairHandle;
 
-static SETUP_INITIALIZATIOIN: Once = Once::new();
+static SETUP_INITIALIZATION: Once = Once::new();
 
 /// When going out of scope, deletes the key pair it holds.
 #[allow(dead_code)]
@@ -52,7 +51,7 @@ impl CleanupKeyPair {
 }
 
 fn setup() {
-    SETUP_INITIALIZATIOIN.call_once(|| {
+    SETUP_INITIALIZATION.call_once(|| {
         install().unwrap();
 
         // Please change this subscriber as you see fit.
