@@ -233,7 +233,7 @@ impl ProviderImpl for AndroidProvider {
     /// Returns `Ok(())` if the key loading is successful, otherwise returns an error of type `CalError`.
     #[instrument]
     fn load_key(&mut self, key_id: String) -> Result<KeyHandle, CalError> {
-        let store_data = self.storage_manager.get(key_id.clone())?;
+        let store_data = self.storage_manager.get(&key_id.clone())?;
 
         match store_data.spec {
             Spec::KeySpec(spec) => Ok(KeyHandle {
@@ -251,7 +251,7 @@ impl ProviderImpl for AndroidProvider {
 
     #[instrument]
     fn load_key_pair(&mut self, key_id: String) -> Result<KeyPairHandle, CalError> {
-        let store_data = self.storage_manager.get(key_id.clone())?;
+        let store_data = self.storage_manager.get(&key_id.clone())?;
 
         match store_data.spec {
             Spec::KeyPairSpec(spec) => Ok(KeyPairHandle {

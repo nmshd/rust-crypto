@@ -106,7 +106,7 @@ impl KeyHandleImpl for AndroidKeyHandle {
             .deleteEntry(&env, self.key_id.clone())
             .err_internal()?;
 
-        self.storage_manager.delete(self.key_id);
+        self.storage_manager.delete(&self.key_id);
 
         Ok(())
     }
@@ -272,7 +272,7 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
             .deleteEntry(&env, self.key_id.clone())
             .err_internal()?;
 
-        self.storage_manager.delete(self.key_id);
+        self.storage_manager.delete(&self.key_id);
 
         Ok(())
     }
