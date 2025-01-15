@@ -39,8 +39,7 @@ macro_rules! unwrap_or_throw {
             Ok(res) => res,
             Err(err) => {
                 let msg = format!("{}", err);
-                let jserr = $cx.error(msg)?;
-                $cx.throw(jserr)?
+                return $cx.throw_error(msg);
             }
         }
     };

@@ -29,7 +29,7 @@ macro_rules! delegate_enum {
                 match self.implementation.$method($($arg),*) {
                     Ok(v) => Ok(v),
                     Err(e) => {
-                        error!("Error in {}: {:?}", stringify!($method), e);
+                        error!("Error in {}: {}", stringify!($method), e);
                         Err(e)
                     }
                 }
@@ -42,7 +42,7 @@ macro_rules! delegate_enum {
                 match self.implementation.$method($($arg),*) {
                     Ok(v) => Ok(v),
                     Err(e) => {
-                        error!("Error in {}: {:?}", stringify!($method), e);
+                        error!("Error in {}: {}", stringify!($method), e);
                         Err(e)
                     }
                 }
