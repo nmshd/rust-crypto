@@ -37,6 +37,7 @@ fn main() {
         cipher: None,
         signing_hash: CryptoHash::Sha2_512,
         ephemeral: false,
+        non_exportable: false,
     };
 
     let key_pair_handle = provider.create_key_pair(key_pair_capabilities).unwrap();
