@@ -108,6 +108,8 @@ pub struct KeyPairSpec {
     pub signing_hash: CryptoHash,
     /// If set to true, the key pair will be discarded after the handle is dropped.
     pub ephemeral: bool,
+    /// If set to true, the key can't be exported (also software keys)
+    pub non_exportable: bool,
 }
 
 /// Capabilities of a Provider

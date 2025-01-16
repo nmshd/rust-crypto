@@ -239,7 +239,15 @@ impl KeyPairHandleImpl for SoftwareKeyPairHandle {
     }
 
     fn extract_key(&self) -> Result<Vec<u8>, CalError> {
-        Ok(self.signing_key.clone().unwrap())
+        if !self.spec.non_exportable {
+            Ok(self.signing_key.clone().unwrap())
+        } else {
+            Err(CalError::failed_operation(
+                "The private key is not exportable".to_string(),
+                true,
+                None,
+            ))
+        }
     }
 
     fn start_dh_exchange(&self) -> Result<DHExchange, CalError> {
