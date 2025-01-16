@@ -226,6 +226,7 @@ mod tests {
                 ),
                 signing_hash: crate::common::crypto::algorithms::hashes::CryptoHash::Sha2_256,
                 ephemeral: true,
+                non_exportable: false,
             };
 
             // Test successful key derivation
