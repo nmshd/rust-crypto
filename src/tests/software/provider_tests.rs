@@ -211,84 +211,130 @@ mod tests {
 
         static mut STORE: LazyLock<TestStore> = LazyLock::new(TestStore::new);
 
-        #[test]
-        fn test_derive_key_method() {
+        fn setup_provider() -> Provider {
             let impl_config = unsafe { STORE.impl_config().clone() };
-            let provider: Provider =
-                factory::create_provider_from_name("SoftwareProvider", impl_config).unwrap();
+            factory::create_provider_from_name("SoftwareProvider", impl_config).unwrap()
+        }
 
-            let password = "test_password";
-            let salt = [0u8; 16];
-            let algorithm = KeyPairSpec {
+        fn get_algorithm() -> KeyPairSpec {
+            KeyPairSpec {
                 asym_spec: AsymmetricKeySpec::P256,
                 cipher: Some(
                     crate::common::crypto::algorithms::encryption::Cipher::XChaCha20Poly1305,
                 ),
                 signing_hash: crate::common::crypto::algorithms::hashes::CryptoHash::Sha2_256,
                 ephemeral: true,
-            };
+            }
+        }
 
-            // Test successful key derivation
+        #[test]
+        fn test_successful_key_derivation() {
+            let provider = setup_provider();
+            let password = "test_password";
+            let salt = [0u8; 16];
+            let algorithm = get_algorithm();
+
             let key_handle_result: Result<KeyPairHandle, CalError> = provider
                 .implementation
                 .derive_key_from_password(password, &salt, algorithm);
             assert!(key_handle_result.is_ok(), "Failed to derive key");
-            let key_handle: KeyPairHandle = key_handle_result.unwrap();
-            let key_impl = key_handle.implementation.clone();
-            let key = key_impl.extract_key().unwrap();
+
+            let key_handle = key_handle_result.unwrap();
+            let key = key_handle.implementation.extract_key().unwrap();
             assert_eq!(key.len(), 32, "Derived key should be 32 bytes");
+        }
 
-            // Test different password yields different key
-            let password2 = "another_password";
-            let key_handle_result2: Result<KeyPairHandle, CalError> = provider
-                .implementation
-                .derive_key_from_password(password2, &salt, algorithm);
-            assert!(key_handle_result2.is_ok());
-            let key_handle2 = key_handle_result2.unwrap();
-            let key_impl2 = key_handle2.implementation.clone();
-            let key2 = key_impl2.extract_key().unwrap();
-            assert_ne!(key, key2, "Different passwords should yield different keys");
+        #[test]
+        fn test_different_passwords_yield_different_keys() {
+            let provider = setup_provider();
+            let salt = [0u8; 16];
+            let algorithm = get_algorithm();
 
-            // Test different salt yields different key
-            let salt2 = [1u8; 16];
-            let key_handle_result3: Result<KeyPairHandle, CalError> = provider
+            let key1 = provider
                 .implementation
-                .derive_key_from_password(password, &salt2, algorithm);
-            assert!(key_handle_result3.is_ok());
-            let key_handle3 = key_handle_result3.unwrap();
-            let key_impl3 = key_handle3.implementation.clone();
-            let key3 = key_impl3.extract_key().unwrap();
-            assert_ne!(key, key3, "Different salts should yield different keys");
+                .derive_key_from_password("test_password", &salt, algorithm.clone())
+                .unwrap()
+                .implementation
+                .extract_key()
+                .unwrap();
 
-            // Test incorrect salt length
-            let short_salt = [0u8; 15];
-            let key_handle_result4: Result<KeyPairHandle, CalError> = provider
+            let key2 = provider
                 .implementation
-                .derive_key_from_password(password, &short_salt, algorithm);
-            assert!(
-                key_handle_result4.is_err(),
-                "Deriving key with incorrect salt length should fail"
+                .derive_key_from_password("another_password", &salt, algorithm)
+                .unwrap()
+                .implementation
+                .extract_key()
+                .unwrap();
+
+            assert_ne!(
+                key1, key2,
+                "Different passwords should yield different keys"
             );
-            if let Err(e) = &key_handle_result4 {
+        }
+
+        #[test]
+        fn test_different_salts_yield_different_keys() {
+            let provider = setup_provider();
+            let password = "test_password";
+            let algorithm = get_algorithm();
+
+            let key1 = provider
+                .implementation
+                .derive_key_from_password(password, &[0u8; 16], algorithm.clone())
+                .unwrap()
+                .implementation
+                .extract_key()
+                .unwrap();
+
+            let key2 = provider
+                .implementation
+                .derive_key_from_password(password, &[1u8; 16], algorithm)
+                .unwrap()
+                .implementation
+                .extract_key()
+                .unwrap();
+
+            assert_ne!(key1, key2, "Different salts should yield different keys");
+        }
+
+        #[test]
+        fn test_short_salt_length_fails() {
+            let provider = setup_provider();
+            let password = "test_password";
+            let short_salt = [0u8; 15];
+            let algorithm = get_algorithm();
+
+            let result =
+                provider
+                    .implementation
+                    .derive_key_from_password(password, &short_salt, algorithm);
+
+            assert!(result.is_err(), "Deriving key with short salt should fail");
+            if let Err(e) = result {
                 assert_eq!(
                     e.to_string(),
-                    "Failed operation: description",
+                    "Failed Operation: description: Failed Operation",
                     "Incorrect error message for short salt"
                 );
             }
+        }
 
+        #[test]
+        fn test_long_salt_length_fails() {
+            let provider = setup_provider();
+            let password = "test_password";
             let long_salt = [0u8; 17];
-            let key_handle_result5: Result<KeyPairHandle, CalError> = provider
+            let algorithm = get_algorithm();
+
+            let result = provider
                 .implementation
                 .derive_key_from_password(password, &long_salt, algorithm);
-            assert!(
-                key_handle_result5.is_err(),
-                "Deriving key with incorrect salt length should fail"
-            );
-            if let Err(e) = &key_handle_result5 {
+
+            assert!(result.is_err(), "Deriving key with long salt should fail");
+            if let Err(e) = result {
                 assert_eq!(
                     e.to_string(),
-                    "Failed operation: description",
+                    "Failed Operation: description: Failed Operation",
                     "Incorrect error message for long salt"
                 );
             }
