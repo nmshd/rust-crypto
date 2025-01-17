@@ -1,6 +1,6 @@
 import type { KeyType } from "./KeyType";
 /**
- * flutter_rust_bridge:non_opaque
+ * Enumeration differentiating between the causes and the severity of the error.
  */
 export type CalErrorKind = "NotImplemented" | {
     "BadParameter": {

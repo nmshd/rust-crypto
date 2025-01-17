@@ -91,6 +91,8 @@ pub fn wrap_key_pair_spec<'a>(
     insert_as_js_str_into_obj!(cx, obj, spec.signing_hash);
     let ephemeral_js = cx.boolean(spec.ephemeral);
     obj.set(cx, "ephemeral", ephemeral_js)?;
+    let non_exportable_js = cx.boolean(spec.non_exportable);
+    obj.set(cx, "non_exportable", non_exportable_js)?;
     if let Some(cipher) = spec.cipher {
         insert_as_js_str_into_obj!(cx, obj, cipher);
     } else {

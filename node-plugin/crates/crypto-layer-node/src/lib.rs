@@ -61,7 +61,7 @@ fn export_create_provider(mut cx: FunctionContext) -> JsResult<JsValue> {
         from_wrapped_provider_impl_config(&mut cx, impl_config_js)
     );
 
-    match create_provider(config, impl_config) {
+    match create_provider(&config, impl_config) {
         Some(prov) => Ok(cx.boxed(RefCell::new(Finalized::new(prov))).upcast()),
         None => Ok(cx.undefined().upcast()),
     }
@@ -90,7 +90,7 @@ fn export_create_provider_from_name(mut cx: FunctionContext) -> JsResult<JsValue
         from_wrapped_provider_impl_config(&mut cx, impl_config_js)
     );
 
-    match create_provider_from_name(name, impl_config) {
+    match create_provider_from_name(&name, impl_config) {
         Some(prov) => Ok(cx.boxed(RefCell::new(Finalized::new(prov))).upcast()),
         None => Ok(cx.undefined().upcast()),
     }
