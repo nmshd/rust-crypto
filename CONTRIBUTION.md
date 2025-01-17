@@ -42,13 +42,7 @@ fix/program-crash-on-second-provider-creation
 
 A PR should have a good description of what has been added, changed and removed. Examples might be usefull.
 
-Before merging a PR please check these points:
-* [ ] Do the unit tests in CAL run? `cargo test -F software`
-* [ ] Did I change a trait in common and then propagated the change to all providers that are currently in use? (`software`, `tpm/android`, `tpm/apple_secure_enclave`)
-* [ ] Have I change the API of CAL in such a way that `ts-types` need to be updated?
-* [ ] Does the node plugin still compile? 👀
-* [ ] (flutter things here)
-* [ ] Are you accidentally commiting build artifacts?
+Before merging a PR go over the [checklist](.github/PULL_REQUEST_TEMPLATE/default.md).
 
 
 ## Examples
