@@ -79,6 +79,7 @@ pub enum SecurityLevel {
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug)]
+/// flutter_rust_bridge:non_opaque
 pub enum Spec {
     KeySpec(KeySpec),
     KeyPairSpec(KeyPairSpec),
@@ -87,6 +88,7 @@ pub enum Spec {
 /// Struct used to configure keys.
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
+/// flutter_rust_bridge:non_opaque
 pub struct KeySpec {
     /// Cipher used for symmetric encryption.
     pub cipher: Cipher,
@@ -99,6 +101,7 @@ pub struct KeySpec {
 /// Struct used to configure key pairs.
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
+/// flutter_rust_bridge:non_opaque
 pub struct KeyPairSpec {
     /// Asymmetric algorithm to be used.
     pub asym_spec: AsymmetricKeySpec,
@@ -113,6 +116,7 @@ pub struct KeyPairSpec {
 }
 
 /// Capabilities of a Provider
+/// flutter_rust_bridge:non_opaque
 #[derive(Clone, Debug)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub struct ProviderConfig {
@@ -149,6 +153,7 @@ pub struct ProviderConfig {
 ///      ],
 /// };
 /// ```
+/// flutter_rust_bridge:non_opaque
 #[derive(Clone)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub struct ProviderImplConfig {
@@ -156,6 +161,7 @@ pub struct ProviderImplConfig {
 }
 
 /// Configuration needed for using or initializing providers.
+/// flutter_rust_bridge:non_opaque
 #[derive(Clone, EnumDiscriminants)]
 #[strum_discriminants(derive(EnumString, IntoStaticStr))]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
