@@ -2,6 +2,7 @@ use neon::prelude::*;
 use neon::types::buffer::TypedArray;
 
 use crate::fromjs::error::unwrap_or_throw;
+use crate::tojs::config::wrap_key_spec;
 use crate::JsKeyHandle;
 
 /// Wraps `id` function.
@@ -107,4 +108,20 @@ pub fn export_extract_key(mut cx: FunctionContext) -> JsResult<JsUint8Array> {
 
     let key = unwrap_or_throw!(cx, handle.extract_key());
     Ok(JsUint8Array::from_slice(&mut cx, &key)?)
+}
+
+/// Wraps `spec` function.
+///
+/// # Arguments
+///
+/// # Returns
+/// * `KeySpec` - spec of key
+///
+/// # Throws
+pub fn export_spec(mut cx: FunctionContext) -> JsResult<JsObject> {
+    let handle_js = cx.this::<JsKeyHandle>()?;
+    let handle = handle_js.borrow();
+
+    let spec = handle.spec();
+    wrap_key_spec(&mut cx, spec)
 }

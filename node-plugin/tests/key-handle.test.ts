@@ -27,6 +27,11 @@ describe("test key handle methods", () => {
         expect(provider.createKey(spec).id()).toBeTruthy();
     });
 
+    test("delete", () => {
+        let key = provider.createKey(spec);
+        key.delete();
+    });
+
     test("encrypt and decrypt data", () => {
         let key = provider.createKey(spec);
         let hello_msg: Uint8Array = Buffer.from("Hello World!");
@@ -36,5 +41,10 @@ describe("test key handle methods", () => {
         let decrypted_data = key.decryptData(...encrypted_data);
 
         expect(Buffer.from(decrypted_data).toString("utf8")).toEqual("Hello World!");
+    });
+
+    test("spec", () => {
+        let key = provider.createKey(spec);
+        expect(key.spec()).toEqual(spec);
     });
 });

@@ -155,6 +155,10 @@ impl KeyPairHandleImpl for StubKeyPairHandle {
     fn delete(self) -> Result<(), CalError> {
         todo!()
     }
+
+    fn spec(&self) -> KeyPairSpec {
+        todo!()
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -186,6 +190,10 @@ impl KeyHandleImpl for StubKeyHandle {
     }
 
     fn delete(self) -> Result<(), CalError> {
+        todo!()
+    }
+
+    fn spec(&self) -> KeySpec {
         todo!()
     }
 }

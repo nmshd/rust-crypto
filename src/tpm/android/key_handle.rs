@@ -122,6 +122,10 @@ impl KeyHandleImpl for AndroidKeyHandle {
     fn id(&self) -> Result<String, CalError> {
         Ok(self.key_id.clone())
     }
+
+    fn spec(&self) -> KeySpec {
+        self.spec
+    }
 }
 
 impl KeyPairHandleImpl for AndroidKeyPairHandle {
@@ -285,6 +289,10 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
 
     fn id(&self) -> Result<String, CalError> {
         Ok(self.key_id.clone())
+    }
+
+    fn spec(&self) -> KeyPairSpec {
+        self.spec
     }
 }
 

@@ -29,7 +29,7 @@ macro_rules! delegate_enum {
                 match self.implementation.$method($($arg),*) {
                     Ok(v) => Ok(v),
                     Err(e) => {
-                        error!("Error in {}: {:?}", stringify!($method), e);
+                        error!("Error in {}: {}", stringify!($method), e);
                         Err(e)
                     }
                 }
@@ -42,7 +42,7 @@ macro_rules! delegate_enum {
                 match self.implementation.$method($($arg),*) {
                     Ok(v) => Ok(v),
                     Err(e) => {
-                        error!("Error in {}: {:?}", stringify!($method), e);
+                        error!("Error in {}: {}", stringify!($method), e);
                         Err(e)
                     }
                 }
@@ -192,6 +192,10 @@ impl KeyPairHandle {
     delegate_enum! {
         pub fn delete(self) -> Result<(), CalError>;
     }
+
+    delegate_enum_bare! {
+        pub fn spec(&self) -> KeyPairSpec;
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -229,6 +233,10 @@ impl KeyHandle {
 
     delegate_enum! {
         pub fn delete(self) -> Result<(), CalError>;
+    }
+
+    delegate_enum_bare! {
+        pub fn spec(&self) -> KeySpec;
     }
 }
 
