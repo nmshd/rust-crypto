@@ -149,6 +149,7 @@ pub(crate) fn from_wrapped_key_pair_spec(
     let cipher_js = js_result(wrapped.get::<JsValue, _, _>(cx, "cipher"))?;
     let signing_hash_js = js_result(wrapped.get(cx, "signing_hash"))?;
     let ephemeral_js = js_result(wrapped.get::<JsBoolean, _, _>(cx, "ephemeral"))?;
+    let non_exportable_js = js_result(wrapped.get::<JsBoolean, _, _>(cx, "non_exportable"))?;
 
     let cipher = if let Ok(cipher_js_str) = cipher_js.downcast::<JsString, _>(cx) {
         Some(from_wrapped_simple_enum(cx, cipher_js_str.upcast())?)
@@ -161,5 +162,6 @@ pub(crate) fn from_wrapped_key_pair_spec(
         cipher: cipher,
         signing_hash: from_wrapped_simple_enum(cx, signing_hash_js)?,
         ephemeral: ephemeral_js.value(cx),
+        non_exportable: non_exportable_js.value(cx),
     })
 }

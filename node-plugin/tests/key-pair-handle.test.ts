@@ -21,7 +21,8 @@ describe("test key pair handle methods", () => {
         asym_spec: "P256",
         cipher: null,
         signing_hash: "Sha2_256",
-        ephemeral: false
+        ephemeral: false,
+        non_exportable: false,
     };
 
     test("id", () => {
