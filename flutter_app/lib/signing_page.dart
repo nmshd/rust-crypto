@@ -55,7 +55,8 @@ class _SigningPageState extends State<SigningPage> {
       var spec = cal.KeyPairSpec(
           asymSpec: _algoChoice!,
           signingHash: cal.CryptoHash.sha2256,
-          ephemeral: false);
+          ephemeral: false,
+          nonExportable: false);
 
       cal.KeyPairHandle keyPair;
       try {
@@ -198,10 +199,10 @@ class _SigningPageState extends State<SigningPage> {
                     });
                   },
                   dropdownMenuEntries: _keyIds.where((id) {
-                    return id.$2.when(
-                      keySpec: (keySpec) => false,
-                      keyPairSpec: (keyPairSpec) => true,
-                    );
+                    return switch (id.$2) {
+                      cal.Spec_KeySpec() => false,
+                      cal.Spec_KeyPairSpec() => true,
+                    };
                   }).map<DropdownMenuEntry<String>>((id) {
                     return DropdownMenuEntry<String>(
                       value: id.$1,

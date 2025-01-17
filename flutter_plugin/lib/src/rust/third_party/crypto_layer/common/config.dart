@@ -12,46 +12,69 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'config.freezed.dart';
 
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_receiver_is_total_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `cmp`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `partial_cmp`
+// These types are ignored because they are not used by any `pub` functions: `AdditionalConfigDiscriminants`, `SecurityLevelIter`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_receiver_is_total_eq`, `assert_receiver_is_total_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `cmp`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `from_str`, `from_str`, `from`, `from`, `from`, `from`, `from`, `from`, `iter`, `len`, `next_back`, `next`, `nth`, `partial_cmp`, `size_hint`, `try_from`, `try_from`
 
 @freezed
 sealed class AdditionalConfig with _$AdditionalConfig {
   const AdditionalConfig._();
 
+  /// Callback functions acting like a hashmap for storing key metadata.
+  ///
+  /// Not supported by the NodeJS plugin.
   const factory AdditionalConfig.kvStoreConfig({
     required ArcFnStringDynFutureOptionVecU8 getFn,
     required ArcFnStringVecU8DynFutureBool storeFn,
     required ArcFnStringPinBoxFutureOutput deleteFn,
     required ArcFnDynFutureVecString allKeysFn,
   }) = AdditionalConfig_KVStoreConfig;
+
+  /// Configuration for the usage of the metadata file database.
   const factory AdditionalConfig.fileStoreConfig({
-    required String dbPath,
-    required String securePath,
-    required String pass,
+    /// Path to a directory where the database holding key metadata will be saved.
+    required String dbDir,
   }) = AdditionalConfig_FileStoreConfig;
+
+  /// Used for verifying the integrity of the key metadata.
   const factory AdditionalConfig.storageConfigHmac(
     KeyHandle field0,
   ) = AdditionalConfig_StorageConfigHMAC;
+
+  /// Used for verifying the integrity of the key metadata.
   const factory AdditionalConfig.storageConfigDsa(
     KeyPairHandle field0,
   ) = AdditionalConfig_StorageConfigDSA;
+
+  /// Used for verifying the integrity of the key metadata.
   const factory AdditionalConfig.storageConfigPass(
     String field0,
   ) = AdditionalConfig_StorageConfigPass;
 }
 
+/// Struct used to configure key pairs.
 /// flutter_rust_bridge:non_opaque
 class KeyPairSpec {
+  /// Asymmetric algorithm to be used.
   final AsymmetricKeySpec asymSpec;
+
+  /// Cipher used for hybrid encryption. If set to None, no hybrid encryption will be used.
   final Cipher? cipher;
+
+  /// Hash function used for signing and encrypting.
   final CryptoHash signingHash;
+
+  /// If set to true, the key pair will be discarded after the handle is dropped.
   final bool ephemeral;
+
+  /// If set to true, the key can't be exported (also software keys)
+  final bool nonExportable;
 
   const KeyPairSpec({
     required this.asymSpec,
     this.cipher,
     required this.signingHash,
     required this.ephemeral,
+    required this.nonExportable,
   });
 
   static Future<KeyPairSpec> default_() =>
@@ -62,7 +85,8 @@ class KeyPairSpec {
       asymSpec.hashCode ^
       cipher.hashCode ^
       signingHash.hashCode ^
-      ephemeral.hashCode;
+      ephemeral.hashCode ^
+      nonExportable.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -72,13 +96,20 @@ class KeyPairSpec {
           asymSpec == other.asymSpec &&
           cipher == other.cipher &&
           signingHash == other.signingHash &&
-          ephemeral == other.ephemeral;
+          ephemeral == other.ephemeral &&
+          nonExportable == other.nonExportable;
 }
 
+/// Struct used to configure keys.
 /// flutter_rust_bridge:non_opaque
 class KeySpec {
+  /// Cipher used for symmetric encryption.
   final Cipher cipher;
+
+  /// Hash function used with HMAC.
   final CryptoHash signingHash;
+
+  /// If set to `true`, the key is going to be deleted when the handle is dropped.
   final bool ephemeral;
 
   const KeySpec({
@@ -104,6 +135,7 @@ class KeySpec {
           ephemeral == other.ephemeral;
 }
 
+/// Capabilities of a Provider
 /// flutter_rust_bridge:non_opaque
 class ProviderConfig {
   final SecurityLevel maxSecurityLevel;
@@ -140,6 +172,32 @@ class ProviderConfig {
           supportedAsymSpec == other.supportedAsymSpec;
 }
 
+/// Configuration needed for using or initializing providers.
+///
+/// Either
+/// * [AdditionalConfig::KVStoreConfig]
+/// * [AdditionalConfig::FileStoreConfig]
+///
+/// and either
+/// * [AdditionalConfig::StorageConfigHMAC]
+/// * [AdditionalConfig::StorageConfigDSA]
+/// * [AdditionalConfig::StorageConfigPass]
+///
+/// need to be supplied.
+///
+/// ## Example
+///
+/// ```rust
+/// use crypto_layer::prelude::*;
+/// let implementation_config = ProviderImplConfig {
+///       additional_config: vec![
+///          AdditionalConfig::FileStoreConfig {
+///              db_dir: "./testdb".to_owned(),
+///          },
+///          AdditionalConfig::StorageConfigPass("password".to_owned()),
+///      ],
+/// };
+/// ```
 /// flutter_rust_bridge:non_opaque
 class ProviderImplConfig {
   final List<AdditionalConfig> additionalConfig;
@@ -181,10 +239,25 @@ class ProviderImplConfig {
 /// * [SecurityLevel::Network]: Provider uses a network key store (Hashicorp).
 /// * [SecurityLevel::Unsafe]: Provder uses software fallback.
 enum SecurityLevel {
-  /// Highest security level
+  /// Highest security level.
+  ///
+  /// Implies running on a TPM, HSM or TEE.
+  /// The extraction of private keys is impossible.
   hardware,
+
+  /// Keys are stored in an encrypted database or on a native software key store.
+  ///
+  /// Extraction of private keys is possible.
   software,
+
+  /// NKS
+  ///
+  /// Extraction of private keys is possible.
   network,
+
+  /// Lowest security level.
+  ///
+  /// Keys are stored in an unencrypted, insecure database or file.
   unsafe,
   ;
 }
