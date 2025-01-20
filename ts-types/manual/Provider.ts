@@ -1,15 +1,15 @@
+import { DHExchange, KeyPairSpec, KeySpec, ProviderConfig } from "../generated";
 import { KeyHandle, KeyPairHandle } from "./";
-import { DHExchange, KeyPairSpec, ProviderConfig, KeySpec } from "../generated";
 
 export type Provider = {
-    createKey: (spec: KeySpec) => KeyHandle;
-    loadKey: (id: string) => KeyHandle;
-    importKey: (spec: KeySpec, data: Uint8Array) => KeyHandle;
-    createKeyPair: (spec: KeyPairSpec) => KeyPairHandle;
-    loadKeyPair: (id: string) => KeyPairHandle;
-    importKeyPair: (spec: KeyPairSpec, publicKey: Uint8Array, privateKey: Uint8Array) => KeyPairHandle;
-    importPublicKey: (spec: KeyPairSpec, publicKey: Uint8Array) => KeyPairHandle;
-    startEphemeralDhExchange: (spec: KeyPairSpec) => DHExchange;
-    providerName: () => string;
-    getCapabilities: () => ProviderConfig | undefined;
+    createKey: (spec: KeySpec) => Promise<KeyHandle>;
+    loadKey: (id: string) => Promise<KeyHandle>;
+    importKey: (spec: KeySpec, data: Uint8Array) => Promise<KeyHandle>;
+    createKeyPair: (spec: KeyPairSpec) => Promise<KeyPairHandle>;
+    loadKeyPair: (id: string) => Promise<KeyPairHandle>;
+    importKeyPair: (spec: KeyPairSpec, publicKey: Uint8Array, privateKey: Uint8Array) => Promise<KeyPairHandle>;
+    importPublicKey: (spec: KeyPairSpec, publicKey: Uint8Array) => Promise<KeyPairHandle>;
+    startEphemeralDhExchange: (spec: KeyPairSpec) => Promise<DHExchange>;
+    providerName: () => Promise<string>;
+    getCapabilities: () => Promise<ProviderConfig | undefined>;
 };
