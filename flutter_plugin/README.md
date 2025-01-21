@@ -8,6 +8,13 @@ This project is a starting point for a Flutter
 [FFI plugin](https://flutter.dev/to/ffi-package),
 a specialized package that includes native code directly invoked with Dart FFI.
 
+## Generating Dart Bindings
+
+```
+cargo install flutter_rust_bridge_codegen
+flutter_rust_bridge_codegen generate
+```
+
 ## Example
 
 ### Creating a TPM Provider
