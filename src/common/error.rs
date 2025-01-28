@@ -70,7 +70,7 @@ pub enum CalErrorKind {
         internal: bool,
     },
 
-    /// Function is not implemented.
+    /// Algorithm requested is not supported by the provider.
     #[error("Unsupported Algorithm: {0}")]
     UnsupportedAlgorithm(String),
 
