@@ -143,6 +143,10 @@ fn main(mut cx: ModuleContext) -> NeonResult<()> {
     cx.export_function("deleteForKeyPair", crate::keypairhandle::export_delete)?;
     cx.export_function("getPublicKey", crate::keypairhandle::export_get_public_key)?;
     cx.export_function(
+        "extractKeyForKeyPairHandle",
+        crate::keypairhandle::export_extract_key,
+    )?;
+    cx.export_function(
         "encryptDataForKeyPairHandle",
         crate::keypairhandle::export_encrypt_data,
     )?;
@@ -155,7 +159,10 @@ fn main(mut cx: ModuleContext) -> NeonResult<()> {
     // key handle
     cx.export_function("idForKeyHandle", crate::keyhandle::export_id)?;
     cx.export_function("deleteForKeyHandle", crate::keyhandle::export_delete)?;
-    cx.export_function("extractKey", crate::keyhandle::export_extract_key)?;
+    cx.export_function(
+        "extractKeyForKeyHandle",
+        crate::keyhandle::export_extract_key,
+    )?;
     cx.export_function(
         "encryptDataForKeyHandle",
         crate::keyhandle::export_encrypt_data,
