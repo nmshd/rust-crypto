@@ -1,4 +1,4 @@
-#![allow(static_mut_refs)]
+#![allow(static_mut_refs, dead_code, unused_variables)]
 #[cfg(feature = "hsm")]
 mod hsm;
 
@@ -29,7 +29,6 @@ use crate::common::KeyPairHandle;
 static SETUP_INITIALIZATION: Once = Once::new();
 
 /// When going out of scope, deletes the key pair it holds.
-#[allow(dead_code)]
 struct CleanupKeyPair {
     key_pair_handle: KeyPairHandle,
 }
