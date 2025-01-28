@@ -186,6 +186,10 @@ impl KeyPairHandle {
     }
 
     delegate_enum! {
+        pub fn extract_key(&self) -> Result<Vec<u8>, CalError>;
+    }
+
+    delegate_enum! {
         pub fn id(&self) -> Result<String, CalError>;
     }
 
