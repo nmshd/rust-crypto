@@ -207,7 +207,7 @@ class NodeKeyPairHandle implements KeyPairHandle {
     }
 
     extractKey(): Uint8Array {
-        return extractKeyForKeyPairHandle.call(this);
+        return extractKeyForKeyPairHandle.call(this.keyPairHandle);
     }
 
     spec(): KeyPairSpec {

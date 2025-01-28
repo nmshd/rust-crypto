@@ -39,6 +39,16 @@ describe("test key pair handle methods", () => {
         expect(key_pair.spec()).toEqual(spec);
     });
 
+    test("getPublicKey", () => {
+        let key_pair = provider.createKeyPair(spec);
+        key_pair.getPublicKey()
+    })
+
+    test("extractKey", () => {
+        let key_pair = provider.createKeyPair(spec);
+        key_pair.extractKey()
+    })
+
     // TODO: not yet implemented for software provider.
     /* test("encrypt and decrypt data", () => {
         let key = provider.createKeyPair(spec);
