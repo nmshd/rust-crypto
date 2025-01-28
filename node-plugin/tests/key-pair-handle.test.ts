@@ -49,6 +49,14 @@ describe("test key pair handle methods", () => {
         key_pair.extractKey()
     })
 
+    test("sign and verify data", () => {
+        let key_pair = provider.createKeyPair(spec);
+        let data = Uint8Array.from([1, 2, 3, 4]);
+
+        let signature = key_pair.signData(data);
+        expect(key_pair.verifySignature(data, signature)).toBeTruthy()
+    })
+
     // TODO: not yet implemented for software provider.
     /* test("encrypt and decrypt data", () => {
         let key = provider.createKeyPair(spec);
