@@ -1,10 +1,10 @@
 use std::cell::RefCell;
 
 use neon::prelude::*;
-use neon::types::buffer::TypedArray;
 
 use crate::common::Finalized;
 use crate::fromjs::error::unwrap_or_throw;
+use crate::fromjs::vec_from_uint_8_array;
 use crate::{JsDhExchange, JsKeyHandle};
 
 /// Wraps `get_public_key` function.
@@ -38,7 +38,7 @@ pub fn export_add_external(mut cx: FunctionContext) -> JsResult<JsUint8Array> {
     let dh_exchange_js = cx.this::<JsDhExchange>()?;
     let mut dh_exchange = dh_exchange_js.borrow_mut();
     let raw_public_key_js = cx.argument::<JsUint8Array>(0)?;
-    let raw_public_key = raw_public_key_js.as_slice(&cx).to_vec();
+    let raw_public_key = vec_from_uint_8_array(&mut cx, raw_public_key_js);
 
     let new_raw_key = unwrap_or_throw!(cx, dh_exchange.add_external(&raw_public_key));
 
@@ -59,7 +59,7 @@ pub fn export_add_external_final(mut cx: FunctionContext) -> JsResult<JsKeyHandl
     let dh_exchange_js = cx.this::<JsDhExchange>()?;
     let mut dh_exchange = dh_exchange_js.borrow_mut();
     let raw_public_key_js = cx.argument::<JsUint8Array>(0)?;
-    let raw_public_key = raw_public_key_js.as_slice(&cx).to_vec();
+    let raw_public_key = vec_from_uint_8_array(&mut cx, raw_public_key_js);
 
     let key_handle = unwrap_or_throw!(cx, dh_exchange.add_external_final(&raw_public_key));
 

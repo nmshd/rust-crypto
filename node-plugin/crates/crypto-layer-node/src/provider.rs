@@ -1,10 +1,10 @@
 use std::cell::RefCell;
 
 use neon::prelude::*;
-use neon::types::buffer::TypedArray;
 
 use crate::common::Finalized;
 use crate::fromjs::error::unwrap_or_throw;
+use crate::fromjs::vec_from_uint_8_array;
 use crate::tojs::config::wrap_provider_config;
 use crate::{from_wrapped_key_pair_spec, from_wrapped_key_spec};
 use crate::{JsDhExchange, JsKeyHandle, JsKeyPairHandle, JsProvider};
@@ -141,7 +141,7 @@ pub fn export_import_key(mut cx: FunctionContext) -> JsResult<JsKeyHandle> {
     let spec_js = cx.argument::<JsObject>(0)?;
     let spec = unwrap_or_throw!(cx, from_wrapped_key_spec(&mut cx, spec_js));
     let raw_key_js = cx.argument::<JsUint8Array>(1)?;
-    let raw_key = raw_key_js.as_slice(&cx).to_vec();
+    let raw_key = vec_from_uint_8_array(&mut cx, raw_key_js);
 
     let key_handle = unwrap_or_throw!(cx, provider.import_key(spec, &raw_key));
 
@@ -170,9 +170,9 @@ pub fn export_import_key_pair(mut cx: FunctionContext) -> JsResult<JsKeyPairHand
     let spec_js = cx.argument::<JsObject>(0)?;
     let spec = unwrap_or_throw!(cx, from_wrapped_key_pair_spec(&mut cx, spec_js));
     let raw_public_key_js = cx.argument::<JsUint8Array>(1)?;
-    let raw_public_key = raw_public_key_js.as_slice(&cx).to_vec();
+    let raw_public_key = vec_from_uint_8_array(&mut cx, raw_public_key_js);
     let raw_private_key_js = cx.argument::<JsUint8Array>(2)?;
-    let raw_private_key = raw_private_key_js.as_slice(&cx).to_vec();
+    let raw_private_key = vec_from_uint_8_array(&mut cx, raw_private_key_js);
 
     let key_pair_handle = unwrap_or_throw!(
         cx,
@@ -203,7 +203,7 @@ pub fn export_import_public_key(mut cx: FunctionContext) -> JsResult<JsKeyPairHa
     let spec_js = cx.argument::<JsObject>(0)?;
     let spec = unwrap_or_throw!(cx, from_wrapped_key_pair_spec(&mut cx, spec_js));
     let raw_public_key_js = cx.argument::<JsUint8Array>(1)?;
-    let raw_public_key = raw_public_key_js.as_slice(&cx).to_vec();
+    let raw_public_key = vec_from_uint_8_array(&mut cx, raw_public_key_js);
 
     let key_pair_handle = unwrap_or_throw!(cx, provider.import_public_key(spec, &raw_public_key));
 

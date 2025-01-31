@@ -93,13 +93,13 @@ describe("test provider methods", () => {
             non_exportable: false,
         };
 
-        let key_pair = provider.createKeyPair(spec);
+        let keyPair = provider.createKeyPair(spec);
 
-        let id = key_pair.id();
+        let id = keyPair.id();
 
-        let loaded_key_pair = provider.loadKeyPair(id);
+        let loadedKeyPair = provider.loadKeyPair(id);
 
-        expect(loaded_key_pair.id()).toEqual(id);
+        expect(loadedKeyPair.id()).toEqual(id);
     });
 
     test("create P256 key pair, export and import public key", () => {
@@ -111,11 +111,44 @@ describe("test provider methods", () => {
             non_exportable: false,
         };
 
-        let key_pair = provider.createKeyPair(spec);
+        let keyPair = provider.createKeyPair(spec);
 
-        let raw_public_key = key_pair.getPublicKey();
+        let rawPublicKey = keyPair.getPublicKey();
 
-        let public_key = provider.importPublicKey(spec, raw_public_key);
+        let publicKey = provider.importPublicKey(spec, rawPublicKey);
+    });
+
+    test("create P256 key pair, export and import key pair", () => {
+        let spec: KeyPairSpec = {
+            asym_spec: "P256",
+            cipher: null,
+            signing_hash: "Sha2_256",
+            ephemeral: false,
+            non_exportable: false,
+        };
+
+        let keyPair = provider.createKeyPair(spec);
+
+        let rawPublicKey = keyPair.getPublicKey();
+        let rawPrivateKey = keyPair.extractKey();
+
+        let importedKeyPair = provider.importKeyPair(spec, rawPublicKey,rawPrivateKey);
+    });
+
+    test("create P256 key pair, export and import private key", () => {
+        let spec: KeyPairSpec = {
+            asym_spec: "P256",
+            cipher: null,
+            signing_hash: "Sha2_256",
+            ephemeral: false,
+            non_exportable: false,
+        };
+
+        let keyPair = provider.createKeyPair(spec);
+
+        let rawPrivateKey = keyPair.extractKey();
+
+        let importedKeyPair = provider.importKeyPair(spec, new Uint8Array(0),rawPrivateKey);
     });
 
     test("get provider name", () => {
