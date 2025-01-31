@@ -1,8 +1,9 @@
 use neon::prelude::*;
-use neon::types::buffer::TypedArray;
 
 use crate::error::unwrap_or_throw;
+use crate::fromjs::vec_from_uint_8_array;
 use crate::tojs::config::wrap_key_pair_spec;
+use crate::tojs::uint_8_array_from_vec_u8;
 use crate::JsKeyPairHandle;
 
 /// Wraps `sign_data` function.
@@ -17,12 +18,13 @@ use crate::JsKeyPairHandle;
 /// * When failing to execute.
 pub fn export_sign_data(mut cx: FunctionContext) -> JsResult<JsUint8Array> {
     let handle_js = cx.this::<JsKeyPairHandle>()?;
-    let mut data_js = cx.argument::<JsUint8Array>(0)?;
+    let data_js = cx.argument::<JsUint8Array>(0)?;
 
-    let data = data_js.as_mut_slice(&mut cx);
+    let data = vec_from_uint_8_array(&mut cx, data_js);
     let handle = handle_js.borrow();
-    let signature = unwrap_or_throw!(cx, handle.sign_data(data));
-    Ok(JsUint8Array::from_slice(&mut cx, &signature)?)
+
+    let signature = unwrap_or_throw!(cx, handle.sign_data(&data));
+    Ok(uint_8_array_from_vec_u8(&mut cx, signature)?)
 }
 
 /// Wraps `verify_data` function.
@@ -38,13 +40,13 @@ pub fn export_sign_data(mut cx: FunctionContext) -> JsResult<JsUint8Array> {
 /// * When failing to execute.
 pub fn export_verify_data(mut cx: FunctionContext) -> JsResult<JsBoolean> {
     let handle_js = cx.this::<JsKeyPairHandle>()?;
-    let mut data_js = cx.argument::<JsUint8Array>(0)?;
-    let mut signature_js = cx.argument::<JsUint8Array>(1)?;
+    let data_js = cx.argument::<JsUint8Array>(0)?;
+    let signature_js = cx.argument::<JsUint8Array>(1)?;
 
-    let data = Vec::from(data_js.as_mut_slice(&mut cx));
-    let signature = signature_js.as_mut_slice(&mut cx);
+    let data = vec_from_uint_8_array(&mut cx, data_js);
+    let signature = vec_from_uint_8_array(&mut cx, signature_js);
     let handle = handle_js.borrow();
-    let res = unwrap_or_throw!(cx, handle.verify_signature(&data, signature));
+    let res = unwrap_or_throw!(cx, handle.verify_signature(&data, &signature));
     Ok(cx.boolean(res))
 }
 
@@ -95,10 +97,10 @@ pub fn export_encrypt_data(mut cx: FunctionContext) -> JsResult<JsUint8Array> {
     let handle_js = cx.this::<JsKeyPairHandle>()?;
     let handle = handle_js.borrow();
     let data_js = cx.argument::<JsUint8Array>(0)?;
-    let data = data_js.as_slice(&mut cx);
+    let data = vec_from_uint_8_array(&mut cx, data_js);
 
-    let encrypted_data = unwrap_or_throw!(cx, handle.encrypt_data(data));
-    Ok(JsUint8Array::from_slice(&mut cx, &encrypted_data)?)
+    let encrypted_data = unwrap_or_throw!(cx, handle.encrypt_data(&data));
+    Ok(uint_8_array_from_vec_u8(&mut cx, encrypted_data)?)
 }
 
 /// Wraps `decrypt_data` function.
@@ -115,10 +117,10 @@ pub fn export_decrypt_data(mut cx: FunctionContext) -> JsResult<JsUint8Array> {
     let handle_js = cx.this::<JsKeyPairHandle>()?;
     let handle = handle_js.borrow();
     let data_js = cx.argument::<JsUint8Array>(0)?;
-    let data = data_js.as_slice(&mut cx);
+    let data = vec_from_uint_8_array(&mut cx, data_js);
 
-    let decrypted_data = unwrap_or_throw!(cx, handle.decrypt_data(data));
-    Ok(JsUint8Array::from_slice(&mut cx, &decrypted_data)?)
+    let decrypted_data = unwrap_or_throw!(cx, handle.decrypt_data(&data));
+    Ok(uint_8_array_from_vec_u8(&mut cx, decrypted_data)?)
 }
 
 /// Wraps `get_public_key` function.
@@ -135,7 +137,7 @@ pub fn export_get_public_key(mut cx: FunctionContext) -> JsResult<JsUint8Array> 
     let handle = handle_js.borrow();
 
     let public_key = unwrap_or_throw!(cx, handle.get_public_key());
-    Ok(JsUint8Array::from_slice(&mut cx, &public_key)?)
+    Ok(uint_8_array_from_vec_u8(&mut cx, public_key)?)
 }
 
 /// Wraps `extract_key` function.
@@ -152,7 +154,7 @@ pub fn export_extract_key(mut cx: FunctionContext) -> JsResult<JsUint8Array> {
     let handle = handle_js.borrow();
 
     let private_key = unwrap_or_throw!(cx, handle.extract_key());
-    Ok(JsUint8Array::from_slice(&mut cx, &private_key)?)
+    Ok(uint_8_array_from_vec_u8(&mut cx, private_key)?)
 }
 
 /// Wraps `spec` function.
