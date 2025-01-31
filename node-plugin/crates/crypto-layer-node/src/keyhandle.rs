@@ -3,6 +3,7 @@ use neon::prelude::*;
 use crate::fromjs::error::unwrap_or_throw;
 use crate::fromjs::vec_from_uint_8_array;
 use crate::tojs::config::wrap_key_spec;
+use crate::tojs::uint_8_array_from_vec_u8;
 use crate::JsKeyHandle;
 
 /// Wraps `id` function.
@@ -57,11 +58,7 @@ pub fn export_encrypt_data(mut cx: FunctionContext) -> JsResult<JsArray> {
     let arr = cx.empty_array();
     let encrypted_data_js = JsUint8Array::from_slice(&mut cx, &encrypted_data)?;
     arr.set(&mut cx, 0, encrypted_data_js)?;
-    let iv_js = if iv.len() == 0 {
-        JsUint8Array::new(&mut cx, 0)?
-    } else {
-        JsUint8Array::from_slice(&mut cx, &iv)?
-    };
+    let iv_js = uint_8_array_from_vec_u8(&mut cx, iv)?;
     arr.set(&mut cx, 1, iv_js)?;
     Ok(arr)
 }
@@ -86,7 +83,7 @@ pub fn export_decrypt_data(mut cx: FunctionContext) -> JsResult<JsUint8Array> {
     let iv = vec_from_uint_8_array(&mut cx, iv_js);
 
     let decrypted_data = unwrap_or_throw!(cx, handle.decrypt_data(&data, &iv));
-    Ok(JsUint8Array::from_slice(&mut cx, &decrypted_data)?)
+    Ok(uint_8_array_from_vec_u8(&mut cx, decrypted_data)?)
 }
 
 /// Wraps `extract_key` function.
@@ -103,7 +100,7 @@ pub fn export_extract_key(mut cx: FunctionContext) -> JsResult<JsUint8Array> {
     let handle = handle_js.borrow();
 
     let key = unwrap_or_throw!(cx, handle.extract_key());
-    Ok(JsUint8Array::from_slice(&mut cx, &key)?)
+    Ok(uint_8_array_from_vec_u8(&mut cx, key)?)
 }
 
 /// Wraps `spec` function.

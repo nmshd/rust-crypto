@@ -3,6 +3,7 @@ use neon::prelude::*;
 use crate::error::unwrap_or_throw;
 use crate::fromjs::vec_from_uint_8_array;
 use crate::tojs::config::wrap_key_pair_spec;
+use crate::tojs::uint_8_array_from_vec_u8;
 use crate::JsKeyPairHandle;
 
 /// Wraps `sign_data` function.
@@ -23,7 +24,7 @@ pub fn export_sign_data(mut cx: FunctionContext) -> JsResult<JsUint8Array> {
     let handle = handle_js.borrow();
 
     let signature = unwrap_or_throw!(cx, handle.sign_data(&data));
-    Ok(JsUint8Array::from_slice(&mut cx, &signature)?)
+    Ok(uint_8_array_from_vec_u8(&mut cx, signature)?)
 }
 
 /// Wraps `verify_data` function.
@@ -99,7 +100,7 @@ pub fn export_encrypt_data(mut cx: FunctionContext) -> JsResult<JsUint8Array> {
     let data = vec_from_uint_8_array(&mut cx, data_js);
 
     let encrypted_data = unwrap_or_throw!(cx, handle.encrypt_data(&data));
-    Ok(JsUint8Array::from_slice(&mut cx, &encrypted_data)?)
+    Ok(uint_8_array_from_vec_u8(&mut cx, encrypted_data)?)
 }
 
 /// Wraps `decrypt_data` function.
@@ -119,7 +120,7 @@ pub fn export_decrypt_data(mut cx: FunctionContext) -> JsResult<JsUint8Array> {
     let data = vec_from_uint_8_array(&mut cx, data_js);
 
     let decrypted_data = unwrap_or_throw!(cx, handle.decrypt_data(&data));
-    Ok(JsUint8Array::from_slice(&mut cx, &decrypted_data)?)
+    Ok(uint_8_array_from_vec_u8(&mut cx, decrypted_data)?)
 }
 
 /// Wraps `get_public_key` function.
@@ -136,7 +137,7 @@ pub fn export_get_public_key(mut cx: FunctionContext) -> JsResult<JsUint8Array> 
     let handle = handle_js.borrow();
 
     let public_key = unwrap_or_throw!(cx, handle.get_public_key());
-    Ok(JsUint8Array::from_slice(&mut cx, &public_key)?)
+    Ok(uint_8_array_from_vec_u8(&mut cx, public_key)?)
 }
 
 /// Wraps `extract_key` function.
@@ -153,7 +154,7 @@ pub fn export_extract_key(mut cx: FunctionContext) -> JsResult<JsUint8Array> {
     let handle = handle_js.borrow();
 
     let private_key = unwrap_or_throw!(cx, handle.extract_key());
-    Ok(JsUint8Array::from_slice(&mut cx, &private_key)?)
+    Ok(uint_8_array_from_vec_u8(&mut cx, private_key)?)
 }
 
 /// Wraps `spec` function.
