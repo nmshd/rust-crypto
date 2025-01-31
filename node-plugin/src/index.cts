@@ -26,7 +26,7 @@ import {
     decryptDataForKeyPairHandle,
     encryptDataForKeyHandle,
     encryptDataForKeyPairHandle,
-    extractKey,
+    extractKeyForKeyHandle,
     getPublicKey,
     createBareKey,
     createBareKeyPair,
@@ -42,7 +42,8 @@ import {
     addExternalFinalForDHExchange,
     addExternalForDHExchange,
     specForKeyHandle,
-    specForKeyPairHandle
+    specForKeyPairHandle,
+    extractKeyForKeyPairHandle
 } from "./load.cjs";
 
 type BareProvider = {};
@@ -73,13 +74,14 @@ declare module "./load.cjs" {
     function idForKeyPair(this: BareKeyPairHandle): string;
     function deleteForKeyPair(this: BareKeyPairHandle): undefined;
     function getPublicKey(this: BareKeyPairHandle): Uint8Array;
+    function extractKeyForKeyPairHandle(this: BareKeyPairHandle): Uint8Array;
     function encryptDataForKeyPairHandle(this: BareKeyPairHandle, data: Uint8Array): Uint8Array;
     function decryptDataForKeyPairHandle(this: BareKeyPairHandle, data: Uint8Array): Uint8Array;
     function specForKeyPairHandle(this: BareKeyPairHandle): KeyPairSpec;
 
     function idForKeyHandle(this: BareKeyHandle): string;
     function deleteForKeyHandle(this: BareKeyHandle): undefined;
-    function extractKey(this: BareKeyHandle): Uint8Array;
+    function extractKeyForKeyHandle(this: BareKeyHandle): Uint8Array;
     function encryptDataForKeyHandle(this: BareKeyHandle, data: Uint8Array): [Uint8Array, Uint8Array];
     function decryptDataForKeyHandle(this: BareKeyHandle, data: Uint8Array, iv: Uint8Array): Uint8Array;
     function specForKeyHandle(this: BareKeyHandle): KeySpec;
@@ -153,7 +155,7 @@ class NodeKeyHandle implements KeyHandle {
     }
 
     extractKey(): Uint8Array {
-        return extractKey.call(this.keyHandle);
+        return extractKeyForKeyHandle.call(this.keyHandle);
     }
 
     encryptData(data: Uint8Array): [Uint8Array, Uint8Array] {
@@ -202,6 +204,10 @@ class NodeKeyPairHandle implements KeyPairHandle {
 
     getPublicKey(): Uint8Array {
         return getPublicKey.call(this.keyPairHandle);
+    }
+
+    extractKey(): Uint8Array {
+        return extractKeyForKeyPairHandle.call(this.keyPairHandle);
     }
 
     spec(): KeyPairSpec {

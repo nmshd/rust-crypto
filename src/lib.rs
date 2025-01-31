@@ -8,7 +8,7 @@
 //! | ANDROID_PROVIDER                | ✅                    | ✅                        | ✅          | ⬜         | ⬜              | ⬜                | ⬜         | ⬜                 | ✅                |
 //! | ANDROID_PROVIDER_SECURE_ELEMENT | ✅                    | ✅                        | ✅          | ⬜         | ⬜              | ⬜                | ⬜         | ⬜                 | ✅                |
 //! | APPLE_SECURE_ENCLAVE            | ✅                    | ⬜                        | ⬜          | ⬜         | ⬜              | ⬜                | ⬜         | ⬜                 | ✅                |
-//! | SoftwareProvider                | ✅                    | ✅                        | ✅          | ✅         | ✅              | ✅                | ⬜         | ⬜                 | ✅                |
+//! | SoftwareProvider                | ✅                    | ✅                        | ✅          | ✅         | ✅              | ✅                | ⬜         | ✅                 | ✅                |
 //!
 //!
 

@@ -134,6 +134,7 @@ pub(crate) trait ProviderImpl: Send + Sync {
     fn get_capabilities(&self) -> Option<ProviderConfig>;
 
     /// Derives a high-entropy key from a low-entropy password and a unique salt
+    #[allow(dead_code, unused_variables)]
     fn derive_key_from_password(
         &self,
         password: &str,
@@ -152,6 +153,7 @@ pub(crate) trait ProviderImpl: Send + Sync {
     /// # Returns
     ///
     /// A `Vec` that, on success, contains a the requested amount of random bytes.
+    #[allow(dead_code, unused_variables)]
     fn get_random(&self, len: usize) -> Vec<u8> {
         unimplemented!()
     }

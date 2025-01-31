@@ -138,6 +138,23 @@ pub fn export_get_public_key(mut cx: FunctionContext) -> JsResult<JsUint8Array> 
     Ok(JsUint8Array::from_slice(&mut cx, &public_key)?)
 }
 
+/// Wraps `extract_key` function.
+///
+/// # Arguments
+///
+/// # Returns
+/// * `Uint8Array` - on success
+///
+/// # Throws
+/// * When failing to execute.
+pub fn export_extract_key(mut cx: FunctionContext) -> JsResult<JsUint8Array> {
+    let handle_js = cx.this::<JsKeyPairHandle>()?;
+    let handle = handle_js.borrow();
+
+    let private_key = unwrap_or_throw!(cx, handle.extract_key());
+    Ok(JsUint8Array::from_slice(&mut cx, &private_key)?)
+}
+
 /// Wraps `spec` function.
 ///
 /// # Arguments
