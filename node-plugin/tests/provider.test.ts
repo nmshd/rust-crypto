@@ -89,7 +89,8 @@ describe("test provider methods", () => {
             asym_spec: "P256",
             cipher: null,
             signing_hash: "Sha2_256",
-            ephemeral: false
+            ephemeral: false,
+            non_exportable: false,
         };
 
         let key_pair = provider.createKeyPair(spec);
@@ -106,7 +107,8 @@ describe("test provider methods", () => {
             asym_spec: "P256",
             cipher: null,
             signing_hash: "Sha2_256",
-            ephemeral: false
+            ephemeral: false,
+            non_exportable: false,
         };
 
         let key_pair = provider.createKeyPair(spec);

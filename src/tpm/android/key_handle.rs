@@ -108,19 +108,19 @@ impl KeyHandleImpl for AndroidKeyHandle {
             tracing::warn!("Failed to delete key on device: {:?}", e);
         }
 
-        let keystore = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_owned()).err_internal()?;
-        keystore.load(&env, None).err_internal()?;
-        keystore
-            .deleteEntry(&env, self.key_id.clone())
-            .err_internal()?;
-
-        self.storage_manager.delete(&self.key_id);
+        if let Some(storage_manager) = &self.storage_manager {
+            storage_manager.delete(self.key_id.clone());
+        }
 
         Ok(())
     }
 
     fn id(&self) -> Result<String, CalError> {
         Ok(self.key_id.clone())
+    }
+
+    fn spec(&self) -> KeySpec {
+        self.spec
     }
 }
 
@@ -285,6 +285,10 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
 
     fn id(&self) -> Result<String, CalError> {
         Ok(self.key_id.clone())
+    }
+
+    fn spec(&self) -> KeyPairSpec {
+        self.spec
     }
 }
 

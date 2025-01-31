@@ -26,6 +26,7 @@ pub struct CalError {
 }
 
 /// Enumeration differentiating between the causes and the severity of the error.
+/// flutter_rust_bridge:non_opaque
 #[derive(thiserror::Error, Debug, Clone)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 #[repr(C)]

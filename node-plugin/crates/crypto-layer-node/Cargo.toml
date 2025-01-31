@@ -10,8 +10,6 @@ exclude = ["index.node"]
 [lib]
 crate-type = ["cdylib"]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 crypto-layer = { version = "0.1.0", path = "../../..", features = [] }
 neon = { version = "1", features = ["futures"] }
@@ -35,3 +33,6 @@ crypto-layer = { path = "../../..", features = ["software"] }
 
 [target.'cfg(target_os = "windows")'.dependencies]
 crypto-layer = { path = "../../..", features = ["software"] }
+
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

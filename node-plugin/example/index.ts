@@ -47,6 +47,10 @@ let signature = keypair.signData(data);
 
 console.log("Signature: ", signature);
 
-console.log("Verified: ", keypair.verifySignature(data, signature) ? "OK" : "FAILURE");
+try {
+    console.log("Verified: ", keypair.verifySignature(data, signature) ? "OK" : "FAILURE");
+} catch (e) {
+    console.log("Error while verifying:\n", e);
+}
 
 exit(0);

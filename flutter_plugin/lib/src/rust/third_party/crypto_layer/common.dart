@@ -36,6 +36,8 @@ abstract class KeyHandle implements RustOpaqueInterface {
 
   Future<String> id();
 
+  Future<KeySpec> spec();
+
   Future<bool> verifyHmac({required List<int> data, required List<int> hmac});
 }
 
@@ -58,6 +60,9 @@ abstract class KeyPairHandle implements RustOpaqueInterface {
 
   /// Abstraction of asymmetric key pair handles.
   Future<Uint8List> signData({required List<int> data});
+
+  /// Abstraction of asymmetric key pair handles.
+  Future<KeyPairSpec> spec();
 
   /// Abstraction of asymmetric key pair handles.
   Future<bool> verifySignature(
@@ -93,6 +98,7 @@ abstract class Provider implements RustOpaqueInterface {
   Future<DhExchange> startEphemeralDhExchange({required KeyPairSpec spec});
 }
 
+/// ¯\_(ツ)_/¯
 class T {
   const T();
 

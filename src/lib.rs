@@ -12,6 +12,16 @@
 //!
 //!
 
+#![warn(
+    rust_2024_incompatible_pat,
+    rust_2024_prelude_collisions,
+    clippy::suspicious,
+    clippy::perf,
+    clippy::cargo
+)]
+#![deny(clippy::correctness)]
+//#![allow(dead_code)]
+
 /// Public module holding the API of the library and common structs.
 pub mod common;
 #[cfg(feature = "ffi")]

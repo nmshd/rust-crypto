@@ -2,6 +2,7 @@ use neon::prelude::*;
 use neon::types::buffer::TypedArray;
 
 use crate::error::unwrap_or_throw;
+use crate::tojs::config::wrap_key_pair_spec;
 use crate::JsKeyPairHandle;
 
 /// Wraps `sign_data` function.
@@ -135,4 +136,20 @@ pub fn export_get_public_key(mut cx: FunctionContext) -> JsResult<JsUint8Array> 
 
     let public_key = unwrap_or_throw!(cx, handle.get_public_key());
     Ok(JsUint8Array::from_slice(&mut cx, &public_key)?)
+}
+
+/// Wraps `spec` function.
+///
+/// # Arguments
+///
+/// # Returns
+/// * `KeySpec` - spec of key
+///
+/// # Throws
+pub fn export_spec(mut cx: FunctionContext) -> JsResult<JsObject> {
+    let handle_js = cx.this::<JsKeyPairHandle>()?;
+    let handle = handle_js.borrow();
+
+    let spec = handle.spec();
+    wrap_key_pair_spec(&mut cx, spec)
 }

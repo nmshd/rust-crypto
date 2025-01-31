@@ -6,7 +6,7 @@
 import '../../../../../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_receiver_is_total_eq`, `assert_receiver_is_total_eq`, `clone`, `clone`, `eq`, `eq`, `fmt`, `fmt`, `hash`, `hash`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_receiver_is_total_eq`, `assert_receiver_is_total_eq`, `clone`, `clone`, `eq`, `eq`, `fmt`, `fmt`, `from_str`, `from_str`, `from`, `from`, `from`, `from`, `hash`, `hash`, `try_from`, `try_from`
 
 /// Represents the available encryption algorithms.
 ///
@@ -30,28 +30,28 @@ enum AsymmetricKeySpec {
   p384,
   p521,
 
-  /// secp256k1 curve, commonly used in blockchain technologies.
+  /// `secp256k1` curve, commonly used in blockchain technologies.
   secp256K1,
 
-  /// Brainpool P256r1 curve.
+  /// Brainpool `P256r1` curve.
   brainpoolP256R1,
 
-  /// Brainpool P384r1 curve.
+  /// Brainpool `P384r1` curve.
   brainpoolP384R1,
 
-  /// Brainpool P512r1 curve.
+  /// Brainpool `P512r1` curve.
   brainpoolP512R1,
 
-  /// Brainpool P638 curve.
+  /// Brainpool `P638` curve.
   brainpoolP638,
 
-  /// Curve25519, popular for its security and performance.
+  /// `Curve25519`, popular for its security and performance.
   curve25519,
 
-  /// Curve448, known for high security and efficiency.
+  /// `Curve448`, known for high security and efficiency.
   curve448,
 
-  /// FRP256v1, a French curve providing strong security and performance.
+  /// `FRP256v1`, a French curve providing strong security and performance.
   frp256V1,
   ;
 
@@ -62,10 +62,10 @@ enum AsymmetricKeySpec {
 /// Represents the available cipher algorithms.
 ///
 /// This enum provides a C-compatible representation of various algorithms supported,
-/// including AES, ChaCha20 variants, Triple DES, DES, RC2, and Camellia. Some algorithms can be configured with specific modes of operation and key sizes.
+/// including `AES`, `ChaCha20` variants, `Triple DES`, `DES`, `RC2`, and `Camellia`. Some algorithms can be configured with specific modes of operation and key sizes.
 /// It is designed for flexibility, allowing for easy extension to include additional cipher algorithms.
 /// Stream ciphers encrypt plaintext one bit or byte at a time, offering different security and performance characteristics compared to block ciphers.
-/// XChaCha20 is the recommended stream cipher for new applications due to its strong security profile.
+/// `XChaCha20` is the recommended stream cipher for new applications due to its strong security profile.
 ///
 /// # Note
 ///

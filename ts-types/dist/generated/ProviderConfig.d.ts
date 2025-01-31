@@ -3,7 +3,7 @@ import type { Cipher } from "./Cipher";
 import type { CryptoHash } from "./CryptoHash";
 import type { SecurityLevel } from "./SecurityLevel";
 /**
- * flutter_rust_bridge:non_opaque
+ * Capabilities of a Provider
  */
 export type ProviderConfig = {
     max_security_level: SecurityLevel;

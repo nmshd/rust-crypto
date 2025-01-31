@@ -2,6 +2,9 @@
 import type { KeyHandle } from "./KeyHandle";
 import type { KeyPairHandle } from "./KeyPairHandle";
 
+/**
+ * Configuration needed for using or initializing providers.
+ */
 export type AdditionalConfig =
   | {
     "KVStoreConfig": {

@@ -24,8 +24,7 @@ mixin _$AdditionalConfig {
             ArcFnStringPinBoxFutureOutput deleteFn,
             ArcFnDynFutureVecString allKeysFn)
         kvStoreConfig,
-    required TResult Function(String dbPath, String securePath, String pass)
-        fileStoreConfig,
+    required TResult Function(String dbDir) fileStoreConfig,
     required TResult Function(KeyHandle field0) storageConfigHmac,
     required TResult Function(KeyPairHandle field0) storageConfigDsa,
     required TResult Function(String field0) storageConfigPass,
@@ -39,8 +38,7 @@ mixin _$AdditionalConfig {
             ArcFnStringPinBoxFutureOutput deleteFn,
             ArcFnDynFutureVecString allKeysFn)?
         kvStoreConfig,
-    TResult? Function(String dbPath, String securePath, String pass)?
-        fileStoreConfig,
+    TResult? Function(String dbDir)? fileStoreConfig,
     TResult? Function(KeyHandle field0)? storageConfigHmac,
     TResult? Function(KeyPairHandle field0)? storageConfigDsa,
     TResult? Function(String field0)? storageConfigPass,
@@ -54,8 +52,7 @@ mixin _$AdditionalConfig {
             ArcFnStringPinBoxFutureOutput deleteFn,
             ArcFnDynFutureVecString allKeysFn)?
         kvStoreConfig,
-    TResult Function(String dbPath, String securePath, String pass)?
-        fileStoreConfig,
+    TResult Function(String dbDir)? fileStoreConfig,
     TResult Function(KeyHandle field0)? storageConfigHmac,
     TResult Function(KeyPairHandle field0)? storageConfigDsa,
     TResult Function(String field0)? storageConfigPass,
@@ -239,8 +236,7 @@ class _$AdditionalConfig_KVStoreConfigImpl
             ArcFnStringPinBoxFutureOutput deleteFn,
             ArcFnDynFutureVecString allKeysFn)
         kvStoreConfig,
-    required TResult Function(String dbPath, String securePath, String pass)
-        fileStoreConfig,
+    required TResult Function(String dbDir) fileStoreConfig,
     required TResult Function(KeyHandle field0) storageConfigHmac,
     required TResult Function(KeyPairHandle field0) storageConfigDsa,
     required TResult Function(String field0) storageConfigPass,
@@ -257,8 +253,7 @@ class _$AdditionalConfig_KVStoreConfigImpl
             ArcFnStringPinBoxFutureOutput deleteFn,
             ArcFnDynFutureVecString allKeysFn)?
         kvStoreConfig,
-    TResult? Function(String dbPath, String securePath, String pass)?
-        fileStoreConfig,
+    TResult? Function(String dbDir)? fileStoreConfig,
     TResult? Function(KeyHandle field0)? storageConfigHmac,
     TResult? Function(KeyPairHandle field0)? storageConfigDsa,
     TResult? Function(String field0)? storageConfigPass,
@@ -275,8 +270,7 @@ class _$AdditionalConfig_KVStoreConfigImpl
             ArcFnStringPinBoxFutureOutput deleteFn,
             ArcFnDynFutureVecString allKeysFn)?
         kvStoreConfig,
-    TResult Function(String dbPath, String securePath, String pass)?
-        fileStoreConfig,
+    TResult Function(String dbDir)? fileStoreConfig,
     TResult Function(KeyHandle field0)? storageConfigHmac,
     TResult Function(KeyPairHandle field0)? storageConfigDsa,
     TResult Function(String field0)? storageConfigPass,
@@ -368,7 +362,7 @@ abstract class _$$AdditionalConfig_FileStoreConfigImplCopyWith<$Res> {
           $Res Function(_$AdditionalConfig_FileStoreConfigImpl) then) =
       __$$AdditionalConfig_FileStoreConfigImplCopyWithImpl<$Res>;
   @useResult
-  $Res call({String dbPath, String securePath, String pass});
+  $Res call({String dbDir});
 }
 
 /// @nodoc
@@ -386,22 +380,12 @@ class __$$AdditionalConfig_FileStoreConfigImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? dbPath = null,
-    Object? securePath = null,
-    Object? pass = null,
+    Object? dbDir = null,
   }) {
     return _then(_$AdditionalConfig_FileStoreConfigImpl(
-      dbPath: null == dbPath
-          ? _value.dbPath
-          : dbPath // ignore: cast_nullable_to_non_nullable
-              as String,
-      securePath: null == securePath
-          ? _value.securePath
-          : securePath // ignore: cast_nullable_to_non_nullable
-              as String,
-      pass: null == pass
-          ? _value.pass
-          : pass // ignore: cast_nullable_to_non_nullable
+      dbDir: null == dbDir
+          ? _value.dbDir
+          : dbDir // ignore: cast_nullable_to_non_nullable
               as String,
     ));
   }
@@ -411,20 +395,16 @@ class __$$AdditionalConfig_FileStoreConfigImplCopyWithImpl<$Res>
 
 class _$AdditionalConfig_FileStoreConfigImpl
     extends AdditionalConfig_FileStoreConfig {
-  const _$AdditionalConfig_FileStoreConfigImpl(
-      {required this.dbPath, required this.securePath, required this.pass})
+  const _$AdditionalConfig_FileStoreConfigImpl({required this.dbDir})
       : super._();
 
+  /// Path to a directory where the database holding key metadata will be saved.
   @override
-  final String dbPath;
-  @override
-  final String securePath;
-  @override
-  final String pass;
+  final String dbDir;
 
   @override
   String toString() {
-    return 'AdditionalConfig.fileStoreConfig(dbPath: $dbPath, securePath: $securePath, pass: $pass)';
+    return 'AdditionalConfig.fileStoreConfig(dbDir: $dbDir)';
   }
 
   @override
@@ -432,14 +412,11 @@ class _$AdditionalConfig_FileStoreConfigImpl
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$AdditionalConfig_FileStoreConfigImpl &&
-            (identical(other.dbPath, dbPath) || other.dbPath == dbPath) &&
-            (identical(other.securePath, securePath) ||
-                other.securePath == securePath) &&
-            (identical(other.pass, pass) || other.pass == pass));
+            (identical(other.dbDir, dbDir) || other.dbDir == dbDir));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, dbPath, securePath, pass);
+  int get hashCode => Object.hash(runtimeType, dbDir);
 
   /// Create a copy of AdditionalConfig
   /// with the given fields replaced by the non-null parameter values.
@@ -460,13 +437,12 @@ class _$AdditionalConfig_FileStoreConfigImpl
             ArcFnStringPinBoxFutureOutput deleteFn,
             ArcFnDynFutureVecString allKeysFn)
         kvStoreConfig,
-    required TResult Function(String dbPath, String securePath, String pass)
-        fileStoreConfig,
+    required TResult Function(String dbDir) fileStoreConfig,
     required TResult Function(KeyHandle field0) storageConfigHmac,
     required TResult Function(KeyPairHandle field0) storageConfigDsa,
     required TResult Function(String field0) storageConfigPass,
   }) {
-    return fileStoreConfig(dbPath, securePath, pass);
+    return fileStoreConfig(dbDir);
   }
 
   @override
@@ -478,13 +454,12 @@ class _$AdditionalConfig_FileStoreConfigImpl
             ArcFnStringPinBoxFutureOutput deleteFn,
             ArcFnDynFutureVecString allKeysFn)?
         kvStoreConfig,
-    TResult? Function(String dbPath, String securePath, String pass)?
-        fileStoreConfig,
+    TResult? Function(String dbDir)? fileStoreConfig,
     TResult? Function(KeyHandle field0)? storageConfigHmac,
     TResult? Function(KeyPairHandle field0)? storageConfigDsa,
     TResult? Function(String field0)? storageConfigPass,
   }) {
-    return fileStoreConfig?.call(dbPath, securePath, pass);
+    return fileStoreConfig?.call(dbDir);
   }
 
   @override
@@ -496,15 +471,14 @@ class _$AdditionalConfig_FileStoreConfigImpl
             ArcFnStringPinBoxFutureOutput deleteFn,
             ArcFnDynFutureVecString allKeysFn)?
         kvStoreConfig,
-    TResult Function(String dbPath, String securePath, String pass)?
-        fileStoreConfig,
+    TResult Function(String dbDir)? fileStoreConfig,
     TResult Function(KeyHandle field0)? storageConfigHmac,
     TResult Function(KeyPairHandle field0)? storageConfigDsa,
     TResult Function(String field0)? storageConfigPass,
     required TResult orElse(),
   }) {
     if (fileStoreConfig != null) {
-      return fileStoreConfig(dbPath, securePath, pass);
+      return fileStoreConfig(dbDir);
     }
     return orElse();
   }
@@ -562,14 +536,11 @@ class _$AdditionalConfig_FileStoreConfigImpl
 
 abstract class AdditionalConfig_FileStoreConfig extends AdditionalConfig {
   const factory AdditionalConfig_FileStoreConfig(
-      {required final String dbPath,
-      required final String securePath,
-      required final String pass}) = _$AdditionalConfig_FileStoreConfigImpl;
+      {required final String dbDir}) = _$AdditionalConfig_FileStoreConfigImpl;
   const AdditionalConfig_FileStoreConfig._() : super._();
 
-  String get dbPath;
-  String get securePath;
-  String get pass;
+  /// Path to a directory where the database holding key metadata will be saved.
+  String get dbDir;
 
   /// Create a copy of AdditionalConfig
   /// with the given fields replaced by the non-null parameter values.
@@ -659,8 +630,7 @@ class _$AdditionalConfig_StorageConfigHMACImpl
             ArcFnStringPinBoxFutureOutput deleteFn,
             ArcFnDynFutureVecString allKeysFn)
         kvStoreConfig,
-    required TResult Function(String dbPath, String securePath, String pass)
-        fileStoreConfig,
+    required TResult Function(String dbDir) fileStoreConfig,
     required TResult Function(KeyHandle field0) storageConfigHmac,
     required TResult Function(KeyPairHandle field0) storageConfigDsa,
     required TResult Function(String field0) storageConfigPass,
@@ -677,8 +647,7 @@ class _$AdditionalConfig_StorageConfigHMACImpl
             ArcFnStringPinBoxFutureOutput deleteFn,
             ArcFnDynFutureVecString allKeysFn)?
         kvStoreConfig,
-    TResult? Function(String dbPath, String securePath, String pass)?
-        fileStoreConfig,
+    TResult? Function(String dbDir)? fileStoreConfig,
     TResult? Function(KeyHandle field0)? storageConfigHmac,
     TResult? Function(KeyPairHandle field0)? storageConfigDsa,
     TResult? Function(String field0)? storageConfigPass,
@@ -695,8 +664,7 @@ class _$AdditionalConfig_StorageConfigHMACImpl
             ArcFnStringPinBoxFutureOutput deleteFn,
             ArcFnDynFutureVecString allKeysFn)?
         kvStoreConfig,
-    TResult Function(String dbPath, String securePath, String pass)?
-        fileStoreConfig,
+    TResult Function(String dbDir)? fileStoreConfig,
     TResult Function(KeyHandle field0)? storageConfigHmac,
     TResult Function(KeyPairHandle field0)? storageConfigDsa,
     TResult Function(String field0)? storageConfigPass,
@@ -854,8 +822,7 @@ class _$AdditionalConfig_StorageConfigDSAImpl
             ArcFnStringPinBoxFutureOutput deleteFn,
             ArcFnDynFutureVecString allKeysFn)
         kvStoreConfig,
-    required TResult Function(String dbPath, String securePath, String pass)
-        fileStoreConfig,
+    required TResult Function(String dbDir) fileStoreConfig,
     required TResult Function(KeyHandle field0) storageConfigHmac,
     required TResult Function(KeyPairHandle field0) storageConfigDsa,
     required TResult Function(String field0) storageConfigPass,
@@ -872,8 +839,7 @@ class _$AdditionalConfig_StorageConfigDSAImpl
             ArcFnStringPinBoxFutureOutput deleteFn,
             ArcFnDynFutureVecString allKeysFn)?
         kvStoreConfig,
-    TResult? Function(String dbPath, String securePath, String pass)?
-        fileStoreConfig,
+    TResult? Function(String dbDir)? fileStoreConfig,
     TResult? Function(KeyHandle field0)? storageConfigHmac,
     TResult? Function(KeyPairHandle field0)? storageConfigDsa,
     TResult? Function(String field0)? storageConfigPass,
@@ -890,8 +856,7 @@ class _$AdditionalConfig_StorageConfigDSAImpl
             ArcFnStringPinBoxFutureOutput deleteFn,
             ArcFnDynFutureVecString allKeysFn)?
         kvStoreConfig,
-    TResult Function(String dbPath, String securePath, String pass)?
-        fileStoreConfig,
+    TResult Function(String dbDir)? fileStoreConfig,
     TResult Function(KeyHandle field0)? storageConfigHmac,
     TResult Function(KeyPairHandle field0)? storageConfigDsa,
     TResult Function(String field0)? storageConfigPass,
@@ -1049,8 +1014,7 @@ class _$AdditionalConfig_StorageConfigPassImpl
             ArcFnStringPinBoxFutureOutput deleteFn,
             ArcFnDynFutureVecString allKeysFn)
         kvStoreConfig,
-    required TResult Function(String dbPath, String securePath, String pass)
-        fileStoreConfig,
+    required TResult Function(String dbDir) fileStoreConfig,
     required TResult Function(KeyHandle field0) storageConfigHmac,
     required TResult Function(KeyPairHandle field0) storageConfigDsa,
     required TResult Function(String field0) storageConfigPass,
@@ -1067,8 +1031,7 @@ class _$AdditionalConfig_StorageConfigPassImpl
             ArcFnStringPinBoxFutureOutput deleteFn,
             ArcFnDynFutureVecString allKeysFn)?
         kvStoreConfig,
-    TResult? Function(String dbPath, String securePath, String pass)?
-        fileStoreConfig,
+    TResult? Function(String dbDir)? fileStoreConfig,
     TResult? Function(KeyHandle field0)? storageConfigHmac,
     TResult? Function(KeyPairHandle field0)? storageConfigDsa,
     TResult? Function(String field0)? storageConfigPass,
@@ -1085,8 +1048,7 @@ class _$AdditionalConfig_StorageConfigPassImpl
             ArcFnStringPinBoxFutureOutput deleteFn,
             ArcFnDynFutureVecString allKeysFn)?
         kvStoreConfig,
-    TResult Function(String dbPath, String securePath, String pass)?
-        fileStoreConfig,
+    TResult Function(String dbDir)? fileStoreConfig,
     TResult Function(KeyHandle field0)? storageConfigHmac,
     TResult Function(KeyPairHandle field0)? storageConfigDsa,
     TResult Function(String field0)? storageConfigPass,

@@ -13,10 +13,10 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 /// Returns a provider which supports the given requierements.
 ///
-/// This function returns the first provider, which supports the given requirements and has a [ProviderImplConfig].
+/// This function returns the first provider, which supports the given requirements and has a [`ProviderImplConfig`].
 ///
 /// * `conf` - A provider config that the provider must at least contain.
-/// * `impl_conf_vec` - A `Vec` of [ProviderImplConfig]. Only providers, which have [ProviderImplConfig] are returned.
+/// * `impl_conf_vec` - A `Vec` of [`ProviderImplConfig`]. Only providers, which have [`ProviderImplConfig`] are returned.
 ///
 /// # Example
 /// ```
@@ -27,7 +27,7 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 ///     factory::*,
 /// };
 ///
-/// let specific_provider_config = ProviderImplConfig{additional_config: vec![], ephemeral_keys: false};
+/// let specific_provider_config = ProviderImplConfig{additional_config: vec![]};
 /// let provider_config = ProviderConfig {
 ///     min_security_level: SecurityLevel::Software,
 ///     max_security_level: SecurityLevel::Hardware,
@@ -42,7 +42,7 @@ Future<Provider?> createProvider(
     RustLib.instance.api
         .cryptoLayerCommonFactoryCreateProvider(conf: conf, implConf: implConf);
 
-/// Returns the provider with the given name.
+/// Returns the provider matching the given name.
 ///
 /// * `name` - Name of the provider. See `get_name()`.
 /// * `impl_config` - Specif configuration for said provider.
@@ -51,6 +51,6 @@ Future<Provider?> createProviderFromName(
     RustLib.instance.api.cryptoLayerCommonFactoryCreateProviderFromName(
         name: name, implConf: implConf);
 
-/// Returns the names of all available providers for testing.
+/// Returns the names of all available providers.
 Future<List<String>> getAllProviders() =>
     RustLib.instance.api.cryptoLayerCommonFactoryGetAllProviders();

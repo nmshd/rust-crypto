@@ -169,10 +169,10 @@ class _EncryptionPageState extends State<EncryptionPage> {
                     });
                   },
                   dropdownMenuEntries: _keyIds.where((id) {
-                    return id.$2.when(
-                      keySpec: (keySpec) => true,
-                      keyPairSpec: (keyPairSpec) => false,
-                    );
+                    return switch (id.$2) {
+                      cal.Spec_KeySpec() => true,
+                      cal.Spec_KeyPairSpec() => false,
+                    };
                   }).map<DropdownMenuEntry<String>>((id) {
                     return DropdownMenuEntry<String>(
                       value: id.$1,

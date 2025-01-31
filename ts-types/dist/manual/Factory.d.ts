@@ -9,4 +9,9 @@ export type CreateProviderFunc = {
 export type CreateProviderFromNameFunc = {
     (name: string, implConf: ProviderImplConfig): Provider | undefined;
 };
+export type ProviderFactoryFunctions = {
+    getAllProviders: GetAllProvidersFunc;
+    createProvider: CreateProviderFunc;
+    createProviderFromName: CreateProviderFromNameFunc;
+};
 //# sourceMappingURL=Factory.d.ts.map

@@ -61,7 +61,7 @@ fn export_create_provider(mut cx: FunctionContext) -> JsResult<JsValue> {
         from_wrapped_provider_impl_config(&mut cx, impl_config_js)
     );
 
-    match create_provider(config, impl_config) {
+    match create_provider(&config, impl_config) {
         Some(prov) => Ok(cx.boxed(RefCell::new(Finalized::new(prov))).upcast()),
         None => Ok(cx.undefined().upcast()),
     }
@@ -90,7 +90,7 @@ fn export_create_provider_from_name(mut cx: FunctionContext) -> JsResult<JsValue
         from_wrapped_provider_impl_config(&mut cx, impl_config_js)
     );
 
-    match create_provider_from_name(name, impl_config) {
+    match create_provider_from_name(&name, impl_config) {
         Some(prov) => Ok(cx.boxed(RefCell::new(Finalized::new(prov))).upcast()),
         None => Ok(cx.undefined().upcast()),
     }
@@ -150,6 +150,7 @@ fn main(mut cx: ModuleContext) -> NeonResult<()> {
         "decryptDataForKeyPairHandle",
         crate::keypairhandle::export_decrypt_data,
     )?;
+    cx.export_function("specForKeyPairHandle", crate::keypairhandle::export_spec)?;
 
     // key handle
     cx.export_function("idForKeyHandle", crate::keyhandle::export_id)?;
@@ -163,6 +164,7 @@ fn main(mut cx: ModuleContext) -> NeonResult<()> {
         "decryptDataForKeyHandle",
         crate::keyhandle::export_decrypt_data,
     )?;
+    cx.export_function("specForKeyHandle", crate::keyhandle::export_spec)?;
 
     // dh exchange
     cx.export_function(

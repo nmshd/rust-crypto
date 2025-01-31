@@ -169,6 +169,10 @@ impl KeyHandleImpl for SoftwareKeyHandle {
         }
         Ok(())
     }
+
+    fn spec(&self) -> KeySpec {
+        self.spec
+    }
 }
 
 impl KeyPairHandleImpl for SoftwareKeyPairHandle {
@@ -283,6 +287,10 @@ impl KeyPairHandleImpl for SoftwareKeyPairHandle {
             s.delete(self.key_id)
         }
         Ok(())
+    }
+
+    fn spec(&self) -> KeyPairSpec {
+        self.spec
     }
 }
 
