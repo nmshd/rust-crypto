@@ -23,7 +23,6 @@ use std::collections::HashSet;
 
 pub(crate) mod key_handle;
 pub(crate) mod provider;
-// pub(crate) mod storage;
 
 #[derive(Default)]
 pub(crate) struct SoftwareProviderFactory {}
@@ -72,6 +71,19 @@ impl ProviderFactory for SoftwareProviderFactory {
 pub(crate) struct SoftwareProvider {
     impl_config: ProviderImplConfig,
     storage_manager: Option<StorageManager>,
+}
+
+impl SoftwareProvider {
+    #[allow(unused)]
+    pub(crate) fn new(
+        impl_config: ProviderImplConfig,
+        storage_manager: Option<StorageManager>,
+    ) -> Self {
+        Self {
+            impl_config,
+            storage_manager,
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

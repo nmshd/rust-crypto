@@ -18,7 +18,7 @@ use crate::{
     },
     storage::KeyData,
 };
-use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
+use argon2::{password_hash::SaltString, Argon2, Params, PasswordHasher};
 use nanoid::nanoid;
 use ring::{
     aead::Algorithm,
@@ -419,7 +419,11 @@ impl ProviderImpl for SoftwareProvider {
             ));
         }
 
-        let argon2 = Argon2::default();
+        let params = Params::new(64, 3_u32, 1, Some(32))
+            .map_err(|e| e.to_string())
+            .map_err(|e: String| CalError::failed_operation(e.to_string(), false, None))?;
+
+        let argon2 = Argon2::new(argon2::Algorithm::Argon2id, argon2::Version::V0x13, params);
         let salt_str = SaltString::encode_b64(salt)
             .map_err(|_| CalError::failed_operation("Failed to encode salt".into(), true, None))?;
 

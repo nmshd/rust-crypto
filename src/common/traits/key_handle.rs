@@ -68,6 +68,7 @@ pub(crate) enum KeyHandleImplEnum {
     SoftwareKeyHandle,
 }
 
+/// docs
 #[enum_dispatch(KeyPairHandleImplEnum)]
 pub(crate) trait KeyPairHandleImpl: Send + Sync {
     /// Signs the given data using the cryptographic key.

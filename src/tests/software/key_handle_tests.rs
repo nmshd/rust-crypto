@@ -37,7 +37,7 @@ mod tests {
                 cipher: None,
                 signing_hash: CryptoHash::Sha2_256,
                 ephemeral: true,
-                non_exportable: false
+                non_exportable: false,
             };
 
             // Create a new key pair and get the SoftwareKeyPairHandle
@@ -66,7 +66,7 @@ mod tests {
                 cipher: None,
                 signing_hash: CryptoHash::Sha2_256,
                 ephemeral: true,
-                non_exportable: false
+                non_exportable: false,
             };
 
             // Create a new key pair and get the SoftwareKeyPairHandle
@@ -99,7 +99,7 @@ mod tests {
                 cipher: None,
                 signing_hash: CryptoHash::Sha2_256,
                 ephemeral: true,
-                non_exportable: false
+                non_exportable: false,
             };
 
             // Create two key pairs
@@ -132,7 +132,7 @@ mod tests {
                 cipher: None,
                 signing_hash: CryptoHash::Sha2_256,
                 ephemeral: true,
-                non_exportable: false
+                non_exportable: false,
             };
 
             // Create a new key pair and get the SoftwareKeyPairHandle
@@ -154,7 +154,7 @@ mod tests {
                 cipher: None,
                 signing_hash: CryptoHash::Sha2_256,
                 ephemeral: true,
-                non_exportable: false
+                non_exportable: false,
             };
 
             let impl_config = unsafe { STORE.impl_config().clone() };
@@ -194,7 +194,7 @@ mod tests {
                 cipher: None,
                 signing_hash: CryptoHash::Sha2_256,
                 ephemeral: true,
-                non_exportable: false
+                non_exportable: false,
             };
 
             let impl_config = unsafe { STORE.impl_config().clone() };
@@ -234,7 +234,7 @@ mod tests {
                 cipher: None,
                 signing_hash: CryptoHash::Sha2_256,
                 ephemeral: true,
-                non_exportable: false
+                non_exportable: false,
             };
 
             // Create a new key pair and get the SoftwareKeyPairHandle
@@ -247,6 +247,8 @@ mod tests {
         }
     }
     mod key_handle {
+        use ring::aead::MAX_TAG_LEN;
+
         use crate::tests::TestStore;
 
         use super::*;
@@ -282,9 +284,10 @@ mod tests {
                 "Encrypted data should not match plaintext"
             );
 
-            let decrypted_data = software_key_handle
-                .decrypt_data(&encrypted_data.0, &[])
+            let mut decrypted_data = software_key_handle
+                .decrypt_data(&encrypted_data.0, &encrypted_data.1)
                 .expect("Decryption failed");
+            decrypted_data.truncate(decrypted_data.len() - MAX_TAG_LEN);
 
             assert_eq!(
                 from_utf8(&decrypted_data).unwrap(),
@@ -308,9 +311,10 @@ mod tests {
                 .encrypt_data(plaintext)
                 .expect("Encryption failed");
 
-            let decrypted_data = software_key_handle
-                .decrypt_data(&encrypted_data.0, &[])
+            let mut decrypted_data = software_key_handle
+                .decrypt_data(&encrypted_data.0, &encrypted_data.1)
                 .expect("Decryption failed");
+            decrypted_data.truncate(decrypted_data.len() - MAX_TAG_LEN);
 
             assert_eq!(
                 from_utf8(&decrypted_data).unwrap(),
@@ -360,7 +364,8 @@ mod tests {
 
             encrypted_data.0[15] ^= 0xFF;
 
-            let decrypted_result = software_key_handle.decrypt_data(&encrypted_data.0, &[]);
+            let decrypted_result =
+                software_key_handle.decrypt_data(&encrypted_data.0, &encrypted_data.1);
 
             assert!(
                 decrypted_result.is_err(),
@@ -397,9 +402,10 @@ mod tests {
                 .encrypt_data(&plaintext)
                 .expect("Encryption failed");
 
-            let decrypted_data = software_key_handle
-                .decrypt_data(&encrypted_data.0, &[])
+            let mut decrypted_data = software_key_handle
+                .decrypt_data(&encrypted_data.0, &encrypted_data.1)
                 .expect("Decryption failed");
+            decrypted_data.truncate(decrypted_data.len() - MAX_TAG_LEN);
 
             assert_eq!(
                 from_utf8(&plaintext).unwrap(),
@@ -432,13 +438,15 @@ mod tests {
                 "Encrypted data should differ with different nonces"
             );
 
-            let decrypted_data1 = software_key_handle
-                .decrypt_data(&encrypted_data1.0, &[])
+            let mut decrypted_data1 = software_key_handle
+                .decrypt_data(&encrypted_data1.0, &encrypted_data1.1)
                 .expect("Decryption failed");
+            decrypted_data1.truncate(decrypted_data1.len() - MAX_TAG_LEN);
 
-            let decrypted_data2 = software_key_handle
-                .decrypt_data(&encrypted_data2.0, &[])
+            let mut decrypted_data2 = software_key_handle
+                .decrypt_data(&encrypted_data2.0, &encrypted_data2.1)
                 .expect("Decryption failed");
+            decrypted_data2.truncate(decrypted_data2.len() - MAX_TAG_LEN);
 
             assert_eq!(
                 from_utf8(&decrypted_data1).unwrap(),
@@ -513,7 +521,8 @@ mod tests {
                 .encrypt_data(plaintext)
                 .expect("Encryption failed");
 
-            let decrypted_result = software_key_handle128.decrypt_data(&encrypted_data.0, &[]);
+            let decrypted_result =
+                software_key_handle128.decrypt_data(&encrypted_data.0, &encrypted_data.1);
 
             assert!(
                 decrypted_result.is_err(),
@@ -543,9 +552,10 @@ mod tests {
                     .encrypt_data(plaintext)
                     .expect("Encryption failed");
 
-                let decrypted_data = software_key_handle
-                    .decrypt_data(&encrypted_data.0, &[])
+                let mut decrypted_data = software_key_handle
+                    .decrypt_data(&encrypted_data.0, &encrypted_data.1)
                     .expect("Decryption failed");
+                decrypted_data.truncate(decrypted_data.len() - MAX_TAG_LEN);
 
                 assert_eq!(
                     from_utf8(&decrypted_data).unwrap(),

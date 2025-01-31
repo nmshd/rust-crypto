@@ -50,6 +50,7 @@ impl CleanupKeyPair {
     }
 }
 
+#[allow(unused)]
 fn setup() {
     SETUP_INITIALIZATION.call_once(|| {
         install().unwrap();

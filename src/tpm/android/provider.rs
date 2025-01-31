@@ -46,8 +46,8 @@ impl ProviderFactory for AndroidProviderFactory {
             min_security_level: SecurityLevel::Hardware,
             max_security_level: SecurityLevel::Hardware,
             supported_asym_spec: vec![
-                AsymmetricKeySpec::RSA2048,
-                AsymmetricKeySpec::RSA1024,
+                AsymmetricKeySpec::Rsa2048,
+                AsymmetricKeySpec::Rsa1024,
                 AsymmetricKeySpec::Secp256k1,
             ]
             .into_iter()

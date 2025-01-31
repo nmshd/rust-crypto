@@ -8,12 +8,11 @@ mod tests {
 
     mod dh_exchange {
 
-        use std::sync::LazyLock;
-
-        use crate::{storage::StorageManager, tests::TestStore};
+        use ring::aead::MAX_TAG_LEN;
 
         use super::*;
-
+        use crate::{storage::StorageManager, tests::TestStore};
+        use std::sync::LazyLock;
         static mut STORE: LazyLock<TestStore> = LazyLock::new(TestStore::new);
 
         #[test]
@@ -115,9 +114,10 @@ mod tests {
                 .expect("Encryption failed on party A");
 
             // Party B decrypts the data
-            let decrypted_data = key_handle_b
-                .decrypt_data(&encrypted_data.0, &[])
+            let mut decrypted_data = key_handle_b
+                .decrypt_data(&encrypted_data.0, &encrypted_data.1)
                 .expect("Decryption failed on party B");
+            decrypted_data.truncate(decrypted_data.len() - MAX_TAG_LEN);
 
             // The decrypted data should match the original plaintext
             assert_eq!(
@@ -253,7 +253,7 @@ mod tests {
 
             let key1 = provider
                 .implementation
-                .derive_key_from_password("test_password", &salt, algorithm.clone())
+                .derive_key_from_password("test_password", &salt, algorithm)
                 .unwrap()
                 .implementation
                 .extract_key()
@@ -281,7 +281,7 @@ mod tests {
 
             let key1 = provider
                 .implementation
-                .derive_key_from_password(password, &[0u8; 16], algorithm.clone())
+                .derive_key_from_password(password, &[0u8; 16], algorithm)
                 .unwrap()
                 .implementation
                 .extract_key()

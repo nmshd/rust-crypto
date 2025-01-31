@@ -88,8 +88,8 @@ pub enum Spec {
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub struct KeySpec {
-    /// Cipher used for symmetric encryption.
     pub cipher: Cipher,
+    /// Cipher used for symmetric encryption.
     /// Hash function used with HMAC.
     pub signing_hash: CryptoHash,
     /// If set to `true`, the key is going to be deleted when the handle is dropped.

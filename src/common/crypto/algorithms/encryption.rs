@@ -32,11 +32,11 @@ use strum::{EnumString, IntoStaticStr};
 )]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum AsymmetricKeySpec {
-    RSA1024,
-    RSA2048,
-    RSA3072,
-    RSA4096,
-    RSA8192,
+    Rsa1024,
+    Rsa2048,
+    Rsa3072,
+    Rsa4096,
+    Rsa8192,
     #[default]
     P256,
     P384,

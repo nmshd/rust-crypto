@@ -42,11 +42,11 @@ impl From<CryptoHash> for String {
 
 pub fn is_rsa(asym_spec: AsymmetricKeySpec) -> bool {
     match asym_spec {
-        AsymmetricKeySpec::RSA1024
-        | AsymmetricKeySpec::RSA2048
-        | AsymmetricKeySpec::RSA3072
-        | AsymmetricKeySpec::RSA4096
-        | AsymmetricKeySpec::RSA8192 => true,
+        AsymmetricKeySpec::Rsa1024
+        | AsymmetricKeySpec::Rsa2048
+        | AsymmetricKeySpec::Rsa3072
+        | AsymmetricKeySpec::Rsa4096
+        | AsymmetricKeySpec::Rsa8192 => true,
         _ => false,
     }
 }
@@ -69,11 +69,11 @@ pub fn get_key_size(cipher: Cipher) -> Result<i32, CalError> {
 
 pub fn get_asym_key_size(asym_spec: AsymmetricKeySpec) -> Result<i32, CalError> {
     match asym_spec {
-        AsymmetricKeySpec::RSA1024 => Ok(1024),
-        AsymmetricKeySpec::RSA2048 => Ok(2048),
-        AsymmetricKeySpec::RSA3072 => Ok(3072),
-        AsymmetricKeySpec::RSA4096 => Ok(4096),
-        AsymmetricKeySpec::RSA8192 => Ok(8192),
+        AsymmetricKeySpec::Rsa1024 => Ok(1024),
+        AsymmetricKeySpec::Rsa2048 => Ok(2048),
+        AsymmetricKeySpec::Rsa3072 => Ok(3072),
+        AsymmetricKeySpec::Rsa4096 => Ok(4096),
+        AsymmetricKeySpec::Rsa8192 => Ok(8192),
         _ => Err(CalError::unsupported_algorithm(format!("{:?}", asym_spec))),
     }
 }
@@ -108,11 +108,11 @@ pub fn get_sym_cipher_mode(cipher: Cipher) -> Result<String, CalError> {
 
 pub fn get_asym_cipher_mode(asym_spec: AsymmetricKeySpec) -> Result<String, CalError> {
     match asym_spec {
-        AsymmetricKeySpec::RSA1024
-        | AsymmetricKeySpec::RSA2048
-        | AsymmetricKeySpec::RSA3072
-        | AsymmetricKeySpec::RSA4096
-        | AsymmetricKeySpec::RSA8192 => Ok("RSA/ECB/PKCS1Padding".to_owned()),
+        AsymmetricKeySpec::Rsa1024
+        | AsymmetricKeySpec::Rsa2048
+        | AsymmetricKeySpec::Rsa3072
+        | AsymmetricKeySpec::Rsa4096
+        | AsymmetricKeySpec::Rsa8192 => Ok("RSA/ECB/PKCS1Padding".to_owned()),
         _ => Err(CalError::unsupported_algorithm(format!(
             "ECC encryption/decryption not supported: {:?}",
             asym_spec
@@ -142,11 +142,11 @@ pub(crate) fn get_cipher_name(cipher: Cipher) -> Result<String, CalError> {
 impl From<AsymmetricKeySpec> for String {
     fn from(algo: AsymmetricKeySpec) -> Self {
         match algo {
-            AsymmetricKeySpec::RSA1024
-            | AsymmetricKeySpec::RSA2048
-            | AsymmetricKeySpec::RSA3072
-            | AsymmetricKeySpec::RSA4096
-            | AsymmetricKeySpec::RSA8192 => "RSA".to_string(),
+            AsymmetricKeySpec::Rsa1024
+            | AsymmetricKeySpec::Rsa2048
+            | AsymmetricKeySpec::Rsa3072
+            | AsymmetricKeySpec::Rsa4096
+            | AsymmetricKeySpec::Rsa8192 => "RSA".to_string(),
             AsymmetricKeySpec::BrainpoolP256r1
             | AsymmetricKeySpec::BrainpoolP384r1
             | AsymmetricKeySpec::BrainpoolP512r1
@@ -164,11 +164,11 @@ impl From<AsymmetricKeySpec> for String {
 
 pub fn get_signature_algorithm(spec: KeyPairSpec) -> Result<String, CalError> {
     let part1 = match spec.asym_spec {
-        AsymmetricKeySpec::RSA1024
-        | AsymmetricKeySpec::RSA2048
-        | AsymmetricKeySpec::RSA3072
-        | AsymmetricKeySpec::RSA4096
-        | AsymmetricKeySpec::RSA8192 => "RSA".to_string(),
+        AsymmetricKeySpec::Rsa1024
+        | AsymmetricKeySpec::Rsa2048
+        | AsymmetricKeySpec::Rsa3072
+        | AsymmetricKeySpec::Rsa4096
+        | AsymmetricKeySpec::Rsa8192 => "RSA".to_string(),
         AsymmetricKeySpec::BrainpoolP256r1
         | AsymmetricKeySpec::BrainpoolP384r1
         | AsymmetricKeySpec::BrainpoolP512r1

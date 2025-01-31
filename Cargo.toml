@@ -32,7 +32,8 @@ linux = ["tss-esapi"]
 apple-secure-enclave = ["dep:security-framework", "dep:core-foundation", "dep:base64"]
 win = ["dep:windows"]
 hsm = []
-software = ["dep:base64", "dep:ring", "dep:pkcs8", "dep:der", "dep:redb", "dep:ed25519-compact", "dep:chacha20", "dep:argon2"]
+sodium-tests = ["software", "dep:hex"]
+software = ["dep:base64", "dep:ring", "dep:pkcs8", "dep:der", "dep:redb", "dep:ed25519-compact", "dep:chacha20", "dep:argon2", "dep:chacha20poly1305"]
 software-keystore = ["software", "software-metadata"]
 software-metadata = ["software"]
 yubi = ["hsm", "dep:yubikey", "dep:x509-cert", "dep:base64", "dep:rsa", "dep:openssl"]
@@ -43,9 +44,11 @@ argon2 = { version = "0.5.3", optional = true }
 arrayref = { version = "0.3.7", optional = true }
 base64 = { version = "0.22.1", optional = true }
 chacha20 = { version = "0.9.1", optional = true }
+chacha20poly1305 = { version = "0.10.1", optional = true }
 core-foundation = { version = "0.10.0", optional = true }
 der = { version = "0.7.9", optional = true }
 ed25519-dalek = { version = "2.1.1", optional = true }
+hex = { version = "0.4.3", optional = true }
 openssl = { version = "0.10.66", optional = true }
 pkcs8 = { version = "0.10.2", optional = true }
 rand = { version = "0.8.5", optional = true }
@@ -95,7 +98,11 @@ ts-rs = { version = "10.0.0", optional = true, features = ["format"] }
 strum = { version = "0.26.3", features = ["derive"] }
 ed25519-compact = { version = "2.1.1", optional = true }
 sled = "0.34.7"
+paste = "*"
 hmac = "0.12.1"
+
+[build-dependencies]
+bindgen = "0.71.1"
 
 [dev-dependencies]
 color-eyre = "0.6.3"

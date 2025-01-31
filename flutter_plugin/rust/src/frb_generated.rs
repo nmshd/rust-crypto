@@ -2663,11 +2663,11 @@ impl SseDecode for crypto_layer::common::crypto::algorithms::encryption::Asymmet
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <i32>::sse_decode(deserializer);
         return match inner {
-            0 => crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::RSA1024,
-1 => crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::RSA2048,
-2 => crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::RSA3072,
-3 => crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::RSA4096,
-4 => crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::RSA8192,
+            0 => crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::Rsa1024,
+1 => crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::Rsa2048,
+2 => crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::Rsa3072,
+3 => crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::Rsa4096,
+4 => crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::Rsa8192,
 5 => crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::P256,
 6 => crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::P384,
 7 => crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::P521,
@@ -3494,11 +3494,11 @@ impl flutter_rust_bridge::IntoDart
 {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self.0 {
-                    crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::RSA1024 => 0.into_dart(),
-crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::RSA2048 => 1.into_dart(),
-crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::RSA3072 => 2.into_dart(),
-crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::RSA4096 => 3.into_dart(),
-crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::RSA8192 => 4.into_dart(),
+                    crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::Rsa1024 => 0.into_dart(),
+crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::Rsa2048 => 1.into_dart(),
+crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::Rsa3072 => 2.into_dart(),
+crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::Rsa4096 => 3.into_dart(),
+crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::Rsa8192 => 4.into_dart(),
 crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::P256 => 5.into_dart(),
 crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::P384 => 6.into_dart(),
 crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::P521 => 7.into_dart(),
@@ -4306,11 +4306,11 @@ impl SseEncode for crypto_layer::common::config::AdditionalConfig {
 impl SseEncode for crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <i32>::sse_encode(match self {crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::RSA1024 => { 0 }
-crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::RSA2048 => { 1 }
-crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::RSA3072 => { 2 }
-crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::RSA4096 => { 3 }
-crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::RSA8192 => { 4 }
+        <i32>::sse_encode(match self {crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::Rsa1024 => { 0 }
+crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::Rsa2048 => { 1 }
+crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::Rsa3072 => { 2 }
+crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::Rsa4096 => { 3 }
+crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::Rsa8192 => { 4 }
 crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::P256 => { 5 }
 crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::P384 => { 6 }
 crypto_layer::common::crypto::algorithms::encryption::AsymmetricKeySpec::P521 => { 7 }
