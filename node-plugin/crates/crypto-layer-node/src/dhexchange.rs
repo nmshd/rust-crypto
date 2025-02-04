@@ -1,4 +1,4 @@
-use std::sync::RwLock;
+use std::sync::{Arc, RwLock};
 
 use neon::prelude::*;
 
@@ -64,5 +64,8 @@ pub fn export_add_external_final(mut cx: FunctionContext) -> JsResult<JsKeyHandl
 
     let key_handle = unwrap_or_throw!(cx, dh_exchange.add_external_final(&raw_public_key));
 
-    Ok(JsBox::new(&mut cx, RwLock::new(Finalized::new(key_handle))))
+    Ok(JsBox::new(
+        &mut cx,
+        Arc::new(RwLock::new(Finalized::new(key_handle))),
+    ))
 }
