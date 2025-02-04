@@ -42,10 +42,12 @@ describe("test provider methods", () => {
 
             let key = await provider.createKey(spec);
             id = await key.id();
+
+            console.log("id:", id);
         }
-        expect(async () => {
+        await expect(async () => {
             await provider.loadKey(id);
-        }).toThrow();
+        }).rejects.toThrow();
     });
 
     test("create aes gcm key and load", async () => {
@@ -60,7 +62,7 @@ describe("test provider methods", () => {
             let key = await provider.createKey(spec);
             id = await key.id();
         }
-        expect((await provider.loadKey(id)).id()).toEqual(id);
+        expect(await (await provider.loadKey(id)).id()).toEqual(id);
     });
 
     // TODO: Extraction of symmetric keys is not implemented yet.
