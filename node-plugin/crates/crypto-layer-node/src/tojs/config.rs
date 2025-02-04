@@ -82,7 +82,7 @@ pub fn wrap_key_spec<'a>(cx: &mut impl Context<'a>, spec: KeySpec) -> JsResult<'
 }
 
 pub fn wrap_key_pair_spec<'a>(
-    cx: &mut FunctionContext<'a>,
+    cx: &mut impl Context<'a>,
     spec: KeyPairSpec,
 ) -> JsResult<'a, JsObject> {
     let obj = cx.empty_object();

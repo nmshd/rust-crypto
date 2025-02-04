@@ -16,27 +16,27 @@ describe("test provider factory methods", () => {
         supported_hashes: ["Sha2_256"]
     };
 
-    test("get provider names", () => {
-        let provider_arr = getAllProviders();
+    test("get provider names", async () => {
+        let provider_arr = await getAllProviders();
         expect(provider_arr).toBeTruthy();
         expect(provider_arr).toContain(SOFTWARE_PROVIDER_NAME);
     });
 
-    test("create simple provider with file store", () => {
+    test("create simple provider with file store",  async () => {
         let providerImplConfigWithFileStore: ProviderImplConfig = {
             additional_config: [{ FileStoreConfig: { db_dir: FACTORY_DB_DIR_PATH } }, { StorageConfigPass: "1234" }]
         };
-        expect(createProvider(providerConfig, providerImplConfigWithFileStore)).toBeTruthy();
+        expect(await createProvider(providerConfig, providerImplConfigWithFileStore)).toBeTruthy();
     });
 
-    test("create software provider from name with file store", () => {
+    test("create software provider from name with file store", async () => {
         let providerImplConfigWithFileStore: ProviderImplConfig = {
             additional_config: [{ FileStoreConfig: { db_dir: FACTORY_DB_DIR_PATH + "FromName" } }, { StorageConfigPass: "1234" }]
         };
-        expect(createProviderFromName(SOFTWARE_PROVIDER_NAME, providerImplConfigWithFileStore)).toBeTruthy();
+        expect(await createProviderFromName(SOFTWARE_PROVIDER_NAME, providerImplConfigWithFileStore)).toBeTruthy();
     });
 
-    test("functions fullfilling defined types", () => {
+    test("functions fullfilling defined types", async () => {
         let _a: GetAllProvidersFunc = getAllProviders;
         let _b: CreateProviderFromNameFunc = createProviderFromName;
         let _c: CreateProviderFunc = createProvider;
