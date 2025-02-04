@@ -16,26 +16,27 @@ let providerImplConfig: ProviderImplConfig = {
     additional_config: [{ FileStoreConfig: { db_dir: "./db" } }, { StorageConfigPass: "1234" }]
 };
 
-let provider = createProvider(providerConfig, providerImplConfig);
+let provider = await createProvider(providerConfig, providerImplConfig);
 
 if (!provider) {
     console.log("Failed creating provider.");
     exit(1);
 }
 
-console.log("Provider initialized: ", provider.providerName());
-console.log("Capabilities: ", provider.getCapabilities());
+console.log("Provider initialized: ", await provider.providerName());
+console.log("Capabilities: ", await provider.getCapabilities());
 
 let keypairspec: KeyPairSpec = {
     asym_spec: "P256",
     cipher: null,
     signing_hash: "Sha2_224",
-    ephemeral: true
+    ephemeral: true,
+    non_exportable: false,
 };
 
 console.log("Creating KeyPair");
 
-let keypair = provider.createKeyPair(keypairspec) as KeyPairHandle;
+let keypair = await provider.createKeyPair(keypairspec) as KeyPairHandle;
 
 console.log("Created KeyPair");
 
@@ -43,12 +44,12 @@ let data = Uint8Array.from([1, 2, 3, 4]);
 
 console.log("Data: ", data);
 
-let signature = keypair.signData(data);
+let signature = await keypair.signData(data);
 
 console.log("Signature: ", signature);
 
 try {
-    console.log("Verified: ", keypair.verifySignature(data, signature) ? "OK" : "FAILURE");
+    console.log("Verified: ", await keypair.verifySignature(data, signature) ? "OK" : "FAILURE");
 } catch (e) {
     console.log("Error while verifying:\n", e);
 }
