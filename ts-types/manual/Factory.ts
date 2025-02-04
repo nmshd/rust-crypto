@@ -12,3 +12,9 @@ export type CreateProviderFunc = {
 export type CreateProviderFromNameFunc = {
     (name: string, implConf: ProviderImplConfig): Promise<Provider | undefined>;
 };
+
+export type ProviderFactoryFunctions = {
+    getAllProviders: GetAllProvidersFunc,
+    createProvider: CreateProviderFunc,
+    createProviderFromName: CreateProviderFromNameFunc,
+}

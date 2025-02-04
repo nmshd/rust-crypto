@@ -38,6 +38,9 @@ describe("test key handle methods", () => {
 
         let encrypted_data = key.encryptData(hello_msg);
 
+        console.log("data length: ", encrypted_data[0].length);
+        console.log("iv length: ", encrypted_data[1].length);
+
         let decrypted_data = key.decryptData(...encrypted_data);
 
         expect(Buffer.from(decrypted_data).toString("utf8")).toEqual("Hello World!");

@@ -53,6 +53,10 @@ pub(crate) trait KeyHandleImpl: Send + Sync {
 
     fn verify_hmac(&self, data: &[u8], hmac: &[u8]) -> Result<bool, CalError>;
 
+    /// Returns the raw key as binary.
+    ///
+    /// Most hardware based providers will return [CalError]
+    /// with [CalErrorKind::NotImplemented](super::CalErrorKind::NotImplemented).
     fn extract_key(&self) -> Result<Vec<u8>, CalError>;
 
     /// Returns the id of the key, which can be used with `load_key`.
@@ -114,8 +118,20 @@ pub(crate) trait KeyPairHandleImpl: Send + Sync {
     /// # Returns
     /// A `Result` containing the decrypted data as a `Vec<u8>` on success, or a `CalError` on failure.
     fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, CalError>;
+
+    /// Returns the raw public key as binary.
     fn get_public_key(&self) -> Result<Vec<u8>, CalError>;
+
+    /// Returns the raw private key as binary.
+    ///
+    /// Most hardware based providers will return [CalError]
+    /// with [CalErrorKind::NotImplemented](super::CalErrorKind::NotImplemented).
     fn extract_key(&self) -> Result<Vec<u8>, CalError>;
+
+    /// Starts a [DHExchange].
+    ///
+    /// Some Providers might return [CalError]
+    /// with [CalErrorKind::NotImplemented](super::CalErrorKind::NotImplemented).
     fn start_dh_exchange(&self) -> Result<DHExchange, CalError>;
 
     /// Returns the id of the key pair, which can be used with `load_key_pair`.

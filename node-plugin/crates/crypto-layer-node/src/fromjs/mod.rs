@@ -8,6 +8,7 @@ use std::hash::Hash;
 use std::str::FromStr;
 
 use neon::prelude::*;
+use neon::types::buffer::TypedArray;
 use tracing::error;
 
 use error::{js_result, ConversionError};
@@ -29,6 +30,19 @@ pub(crate) fn from_wrapped_string_vec<'a>(
     }
 
     Ok(res)
+}
+
+/// Converts any `Uint8Array` into a `Vec<u8>`.
+pub(crate) fn vec_from_uint_8_array(
+    cx: &mut FunctionContext,
+    typed_js_array: Handle<JsUint8Array>,
+) -> Vec<u8> {
+    if typed_js_array.len(cx) == 0 {
+        vec![]
+    } else {
+        // `as_slice` method panics on empty array.
+        typed_js_array.as_slice(cx).to_vec()
+    }
 }
 
 /// Returns all keys of an JS Object.
