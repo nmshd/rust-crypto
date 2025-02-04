@@ -1,16 +1,16 @@
-import { Provider } from "./Provider";
 import { ProviderConfig, ProviderImplConfig } from "../generated";
+import { Provider } from "./Provider";
 
 export type GetAllProvidersFunc = {
-    (): string[];
+    (): Promise<string[]>;
 };
 
 export type CreateProviderFunc = {
-    (conf: ProviderConfig, implConf: ProviderImplConfig): Provider | undefined;
+    (conf: ProviderConfig, implConf: ProviderImplConfig): Promise<Provider | undefined>;
 };
 
 export type CreateProviderFromNameFunc = {
-    (name: string, implConf: ProviderImplConfig): Provider | undefined;
+    (name: string, implConf: ProviderImplConfig): Promise<Provider | undefined>;
 };
 
 export type ProviderFactoryFunctions = {

@@ -28,7 +28,7 @@ macro_rules! insert_as_js_str_into_obj {
 
 /// Converts `ProviderConfig` to TS type definition defined in `crypto-layer-ts-types` package.
 pub fn wrap_provider_config<'a>(
-    cx: &mut FunctionContext<'a>,
+    cx: &mut impl Context<'a>,
     config: ProviderConfig,
 ) -> JsResult<'a, JsObject> {
     let ciphers: Vec<String> = config
@@ -70,7 +70,7 @@ pub fn wrap_provider_config<'a>(
     Ok(obj)
 }
 
-pub fn wrap_key_spec<'a>(cx: &mut FunctionContext<'a>, spec: KeySpec) -> JsResult<'a, JsObject> {
+pub fn wrap_key_spec<'a>(cx: &mut impl Context<'a>, spec: KeySpec) -> JsResult<'a, JsObject> {
     let obj = cx.empty_object();
 
     insert_as_js_str_into_obj!(cx, obj, spec.cipher);
@@ -82,7 +82,7 @@ pub fn wrap_key_spec<'a>(cx: &mut FunctionContext<'a>, spec: KeySpec) -> JsResul
 }
 
 pub fn wrap_key_pair_spec<'a>(
-    cx: &mut FunctionContext<'a>,
+    cx: &mut impl Context<'a>,
     spec: KeyPairSpec,
 ) -> JsResult<'a, JsObject> {
     let obj = cx.empty_object();

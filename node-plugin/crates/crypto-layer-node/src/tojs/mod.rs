@@ -15,7 +15,7 @@ pub fn wrap_string_array<'a>(cx: &mut impl Context<'a>, arr: Vec<String>) -> JsR
 
 /// Converts a `Vec<u8>` into a `Uint8Array`.
 pub(crate) fn uint_8_array_from_vec_u8<'a>(
-    cx: &mut FunctionContext<'a>,
+    cx: &mut impl Context<'a>,
     value: Vec<u8>,
 ) -> NeonResult<Handle<'a, JsUint8Array>> {
     if value.len() == 0 {

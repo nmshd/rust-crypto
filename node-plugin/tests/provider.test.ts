@@ -12,22 +12,26 @@ describe("test provider methods", () => {
         additional_config: [{ FileStoreConfig: { db_dir: PROVIDER_DB_DIR_PATH } }, { StorageConfigPass: "1234" }]
     };
 
-    let provider = createProviderFromName(SOFTWARE_PROVIDER_NAME, providerImplConfigWithFileStore);
-    if (!provider) {
-        throw Error("Failed initializing simple software provider.");
-    }
+    let provider: Provider;
+    beforeAll(async () => {
+        let provider_or_null = await createProviderFromName(SOFTWARE_PROVIDER_NAME, providerImplConfigWithFileStore);
+        if (!provider_or_null) {
+            throw Error("Failed initializing simple software provider.");
+        }
+        provider = provider_or_null
+    })
 
-    test("create aes gcm ephemeral key", () => {
+    test("create aes gcm ephemeral key", async () => {
         let spec: KeySpec = {
             cipher: "AesGcm256",
             signing_hash: "Sha2_256",
             ephemeral: true
         };
 
-        let _key = provider.createKey(spec);
+        let _key = await provider.createKey(spec);
     });
 
-    test("create aes gcm ephemeral key and failed load", () => {
+    test("create aes gcm ephemeral key and failed load", async () => {
         let id: string;
         {
             let spec: KeySpec = {
@@ -36,15 +40,17 @@ describe("test provider methods", () => {
                 ephemeral: true
             };
 
-            let key = provider.createKey(spec);
-            id = key.id();
+            let key = await provider.createKey(spec);
+            id = await key.id();
+
+            console.log("id:", id);
         }
-        expect(() => {
-            provider.loadKey(id);
-        }).toThrow();
+        await expect(async () => {
+            await provider.loadKey(id);
+        }).rejects.toThrow();
     });
 
-    test("create aes gcm key and load", () => {
+    test("create aes gcm key and load", async () => {
         let id: string;
         {
             let spec: KeySpec = {
@@ -53,10 +59,10 @@ describe("test provider methods", () => {
                 ephemeral: false
             };
 
-            let key = provider.createKey(spec);
-            id = key.id();
+            let key = await provider.createKey(spec);
+            id = await key.id();
         }
-        expect(provider.loadKey(id).id()).toEqual(id);
+        expect(await (await provider.loadKey(id)).id()).toEqual(id);
     });
 
     // TODO: Extraction of symmetric keys is not implemented yet.
@@ -84,7 +90,7 @@ describe("test provider methods", () => {
         expect(decrypted_data).toEqual(hello_msg);
     }); */
 
-    test("create P256 key pair and load", () => {
+    test("create P256 key pair and load", async () => {
         let spec: KeyPairSpec = {
             asym_spec: "P256",
             cipher: null,
@@ -93,16 +99,16 @@ describe("test provider methods", () => {
             non_exportable: false,
         };
 
-        let keyPair = provider.createKeyPair(spec);
+        let keyPair = await provider.createKeyPair(spec);
 
-        let id = keyPair.id();
+        let id = await keyPair.id();
 
-        let loadedKeyPair = provider.loadKeyPair(id);
+        let loadedKeyPair = await provider.loadKeyPair(id);
 
-        expect(loadedKeyPair.id()).toEqual(id);
+        expect(await loadedKeyPair.id()).toEqual(id);
     });
 
-    test("create P256 key pair, export and import public key", () => {
+    test("create P256 key pair, export and import public key", async () => {
         let spec: KeyPairSpec = {
             asym_spec: "P256",
             cipher: null,
@@ -111,14 +117,14 @@ describe("test provider methods", () => {
             non_exportable: false,
         };
 
-        let keyPair = provider.createKeyPair(spec);
+        let keyPair = await provider.createKeyPair(spec);
 
-        let rawPublicKey = keyPair.getPublicKey();
+        let rawPublicKey = await keyPair.getPublicKey();
 
-        let publicKey = provider.importPublicKey(spec, rawPublicKey);
+        let publicKey = await provider.importPublicKey(spec, rawPublicKey);
     });
 
-    test("create P256 key pair, export and import key pair", () => {
+    test("create P256 key pair, export and import key pair", async () => {
         let spec: KeyPairSpec = {
             asym_spec: "P256",
             cipher: null,
@@ -127,15 +133,15 @@ describe("test provider methods", () => {
             non_exportable: false,
         };
 
-        let keyPair = provider.createKeyPair(spec);
+        let keyPair = await provider.createKeyPair(spec);
 
-        let rawPublicKey = keyPair.getPublicKey();
-        let rawPrivateKey = keyPair.extractKey();
+        let rawPublicKey = await keyPair.getPublicKey();
+        let rawPrivateKey = await keyPair.extractKey();
 
-        let importedKeyPair = provider.importKeyPair(spec, rawPublicKey,rawPrivateKey);
+        let importedKeyPair = await provider.importKeyPair(spec, rawPublicKey,rawPrivateKey);
     });
 
-    test("create P256 key pair, export and import private key", () => {
+    test("create P256 key pair, export and import private key", async () => {
         let spec: KeyPairSpec = {
             asym_spec: "P256",
             cipher: null,
@@ -144,18 +150,18 @@ describe("test provider methods", () => {
             non_exportable: false,
         };
 
-        let keyPair = provider.createKeyPair(spec);
+        let keyPair = await provider.createKeyPair(spec);
 
-        let rawPrivateKey = keyPair.extractKey();
+        let rawPrivateKey = await keyPair.extractKey();
 
-        let importedKeyPair = provider.importKeyPair(spec, new Uint8Array(0),rawPrivateKey);
+        let importedKeyPair = await provider.importKeyPair(spec, new Uint8Array(0),rawPrivateKey);
     });
 
-    test("get provider name", () => {
-        expect(provider.providerName()).toEqual(SOFTWARE_PROVIDER_NAME);
+    test("get provider name", async () => {
+        expect(await provider.providerName()).toEqual(SOFTWARE_PROVIDER_NAME);
     });
 
-    test("get provider capabilities", () => {
-        expect(provider.getCapabilities()).toBeTruthy();
+    test("get provider capabilities", async () => {
+        expect(await provider.getCapabilities()).toBeTruthy();
     });
 });

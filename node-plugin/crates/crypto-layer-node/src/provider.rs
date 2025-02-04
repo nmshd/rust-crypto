@@ -1,13 +1,11 @@
-use std::cell::RefCell;
-
 use neon::prelude::*;
 
-use crate::common::Finalized;
+use crate::common::{arc_or_poisoned_error_deferred, box_if_ok, spawn_promise};
 use crate::fromjs::error::unwrap_or_throw;
 use crate::fromjs::vec_from_uint_8_array;
 use crate::tojs::config::wrap_provider_config;
+use crate::JsProvider;
 use crate::{from_wrapped_key_pair_spec, from_wrapped_key_spec};
-use crate::{JsDhExchange, JsKeyHandle, JsKeyPairHandle, JsProvider};
 
 /// Wraps `create_key` function.
 ///
@@ -20,19 +18,20 @@ use crate::{JsDhExchange, JsKeyHandle, JsKeyPairHandle, JsProvider};
 /// # Throws
 /// * When one of the inputs is incorrect.
 /// * When failing to generate the key.
-pub fn export_create_key(mut cx: FunctionContext) -> JsResult<JsKeyHandle> {
-    let provider_js = cx.this::<JsProvider>()?;
+pub fn export_create_key(mut cx: FunctionContext) -> JsResult<JsPromise> {
+    let provider_arc = (**cx.this::<JsProvider>()?).clone();
     let spec_js = cx.argument::<JsObject>(0)?;
 
     let spec = unwrap_or_throw!(cx, from_wrapped_key_spec(&mut cx, spec_js));
 
-    let mut provider = provider_js.borrow_mut();
-    let key_handle = unwrap_or_throw!(cx, provider.create_key(spec));
+    spawn_promise(&mut cx, move |channel, deferred| {
+        let mut provider =
+            arc_or_poisoned_error_deferred!(&channel, deferred, provider_arc.write());
 
-    Ok(JsBox::new(
-        &mut cx,
-        RefCell::new(Finalized::new(key_handle)),
-    ))
+        let key_handle_result = provider.create_key(spec);
+
+        deferred.settle_with(&channel, |mut cx| box_if_ok(&mut cx, key_handle_result));
+    })
 }
 
 /// Wraps `create_key_pair` function.
@@ -46,19 +45,22 @@ pub fn export_create_key(mut cx: FunctionContext) -> JsResult<JsKeyHandle> {
 /// # Throws
 /// * When one of the inputs is incorrect.
 /// * When failing to generate the key pair.
-pub fn export_create_key_pair(mut cx: FunctionContext) -> JsResult<JsKeyPairHandle> {
-    let provider_js = cx.this::<JsProvider>()?;
+pub fn export_create_key_pair(mut cx: FunctionContext) -> JsResult<JsPromise> {
+    let provider_arc = (**cx.this::<JsProvider>()?).clone();
     let spec_js = cx.argument::<JsObject>(0)?;
 
     let spec = unwrap_or_throw!(cx, from_wrapped_key_pair_spec(&mut cx, spec_js));
 
-    let mut provider = provider_js.borrow_mut();
-    let key_pair_handle = unwrap_or_throw!(cx, provider.create_key_pair(spec));
+    spawn_promise(&mut cx, move |channel, deferred| {
+        let mut provider =
+            arc_or_poisoned_error_deferred!(&channel, deferred, provider_arc.write());
 
-    Ok(JsBox::new(
-        &mut cx,
-        RefCell::new(Finalized::new(key_pair_handle)),
-    ))
+        let key_pair_handle_result = provider.create_key_pair(spec);
+
+        deferred.settle_with(&channel, |mut cx| {
+            box_if_ok(&mut cx, key_pair_handle_result)
+        });
+    })
 }
 
 /// Wraps `provider_name` function.
@@ -69,10 +71,13 @@ pub fn export_create_key_pair(mut cx: FunctionContext) -> JsResult<JsKeyPairHand
 /// * `string` - provider name
 ///
 /// # Throws
-pub fn export_provider_name(mut cx: FunctionContext) -> JsResult<JsString> {
+pub fn export_provider_name(mut cx: FunctionContext) -> JsResult<JsPromise> {
     let provider_js = cx.this::<JsProvider>()?;
-    let provider = provider_js.borrow();
-    Ok(cx.string(provider.provider_name()))
+    let provider = unwrap_or_throw!(cx, provider_js.read());
+    let (deferred, promise) = cx.promise();
+    let name = cx.string(provider.provider_name());
+    deferred.resolve(&mut cx, name);
+    Ok(promise)
 }
 
 /// Wraps `load_key` function.
@@ -85,18 +90,19 @@ pub fn export_provider_name(mut cx: FunctionContext) -> JsResult<JsString> {
 ///
 /// # Throws
 /// * When failing to load the key.
-pub fn export_load_key(mut cx: FunctionContext) -> JsResult<JsKeyHandle> {
-    let provider_js = cx.this::<JsProvider>()?;
-    let mut provider = provider_js.borrow_mut();
+pub fn export_load_key(mut cx: FunctionContext) -> JsResult<JsPromise> {
+    let provider_arc = (**cx.this::<JsProvider>()?).clone();
     let id_js = cx.argument::<JsString>(0)?;
     let id = id_js.value(&mut cx);
 
-    let key_handle = unwrap_or_throw!(cx, provider.load_key(id));
+    spawn_promise(&mut cx, move |channel, deferred| {
+        let mut provider =
+            arc_or_poisoned_error_deferred!(&channel, deferred, provider_arc.write());
 
-    Ok(JsBox::new(
-        &mut cx,
-        RefCell::new(Finalized::new(key_handle)),
-    ))
+        let key_handle_result = provider.load_key(id.clone());
+
+        deferred.settle_with(&channel, |mut cx| box_if_ok(&mut cx, key_handle_result));
+    })
 }
 
 /// Wraps `load_key_pair` function.
@@ -109,18 +115,19 @@ pub fn export_load_key(mut cx: FunctionContext) -> JsResult<JsKeyHandle> {
 ///
 /// # Throws
 /// * When failing to load the key pair.
-pub fn export_load_key_pair(mut cx: FunctionContext) -> JsResult<JsKeyPairHandle> {
-    let provider_js = cx.this::<JsProvider>()?;
-    let mut provider = provider_js.borrow_mut();
+pub fn export_load_key_pair(mut cx: FunctionContext) -> JsResult<JsPromise> {
+    let provider_arc = (**cx.this::<JsProvider>()?).clone();
     let id_js = cx.argument::<JsString>(0)?;
     let id = id_js.value(&mut cx);
 
-    let key_pair_handle = unwrap_or_throw!(cx, provider.load_key_pair(id));
+    spawn_promise(&mut cx, move |channel, deferred| {
+        let mut provider =
+            arc_or_poisoned_error_deferred!(&channel, deferred, provider_arc.write());
 
-    Ok(JsBox::new(
-        &mut cx,
-        RefCell::new(Finalized::new(key_pair_handle)),
-    ))
+        let key_pair_handle = provider.load_key_pair(id.clone());
+
+        deferred.settle_with(&channel, |mut cx| box_if_ok(&mut cx, key_pair_handle));
+    })
 }
 
 /// Wraps `import_key` function.
@@ -135,20 +142,21 @@ pub fn export_load_key_pair(mut cx: FunctionContext) -> JsResult<JsKeyPairHandle
 /// # Throws
 /// * When one of the inputs is incorrect.
 /// * When failing to import the key.
-pub fn export_import_key(mut cx: FunctionContext) -> JsResult<JsKeyHandle> {
-    let provider_js = cx.this::<JsProvider>()?;
-    let mut provider = provider_js.borrow_mut();
+pub fn export_import_key(mut cx: FunctionContext) -> JsResult<JsPromise> {
+    let provider_arc = (**cx.this::<JsProvider>()?).clone();
     let spec_js = cx.argument::<JsObject>(0)?;
     let spec = unwrap_or_throw!(cx, from_wrapped_key_spec(&mut cx, spec_js));
     let raw_key_js = cx.argument::<JsUint8Array>(1)?;
     let raw_key = vec_from_uint_8_array(&mut cx, raw_key_js);
 
-    let key_handle = unwrap_or_throw!(cx, provider.import_key(spec, &raw_key));
+    spawn_promise(&mut cx, move |channel, deferred| {
+        let mut provider =
+            arc_or_poisoned_error_deferred!(&channel, deferred, provider_arc.write());
 
-    Ok(JsBox::new(
-        &mut cx,
-        RefCell::new(Finalized::new(key_handle)),
-    ))
+        let key_handle = provider.import_key(spec, &raw_key);
+
+        deferred.settle_with(&channel, |mut cx| box_if_ok(&mut cx, key_handle));
+    })
 }
 
 /// Wraps `import_key_pair` function.
@@ -164,9 +172,8 @@ pub fn export_import_key(mut cx: FunctionContext) -> JsResult<JsKeyHandle> {
 /// # Throws
 /// * When one of the inputs is incorrect.
 /// * When failing to import the key pair.
-pub fn export_import_key_pair(mut cx: FunctionContext) -> JsResult<JsKeyPairHandle> {
-    let provider_js = cx.this::<JsProvider>()?;
-    let mut provider = provider_js.borrow_mut();
+pub fn export_import_key_pair(mut cx: FunctionContext) -> JsResult<JsPromise> {
+    let provider_arc = (**cx.this::<JsProvider>()?).clone();
     let spec_js = cx.argument::<JsObject>(0)?;
     let spec = unwrap_or_throw!(cx, from_wrapped_key_pair_spec(&mut cx, spec_js));
     let raw_public_key_js = cx.argument::<JsUint8Array>(1)?;
@@ -174,15 +181,14 @@ pub fn export_import_key_pair(mut cx: FunctionContext) -> JsResult<JsKeyPairHand
     let raw_private_key_js = cx.argument::<JsUint8Array>(2)?;
     let raw_private_key = vec_from_uint_8_array(&mut cx, raw_private_key_js);
 
-    let key_pair_handle = unwrap_or_throw!(
-        cx,
-        provider.import_key_pair(spec, &raw_public_key, &raw_private_key)
-    );
+    spawn_promise(&mut cx, move |channel, deferred| {
+        let mut provider =
+            arc_or_poisoned_error_deferred!(&channel, deferred, provider_arc.write());
 
-    Ok(JsBox::new(
-        &mut cx,
-        RefCell::new(Finalized::new(key_pair_handle)),
-    ))
+        let key_pair_handle = provider.import_key_pair(spec, &raw_public_key, &raw_private_key);
+
+        deferred.settle_with(&channel, |mut cx| box_if_ok(&mut cx, key_pair_handle));
+    })
 }
 
 /// Wraps `import_public_key` function.
@@ -197,20 +203,21 @@ pub fn export_import_key_pair(mut cx: FunctionContext) -> JsResult<JsKeyPairHand
 /// # Throws
 /// * When one of the inputs is incorrect.
 /// * When failing to import the public key.
-pub fn export_import_public_key(mut cx: FunctionContext) -> JsResult<JsKeyPairHandle> {
-    let provider_js = cx.this::<JsProvider>()?;
-    let mut provider = provider_js.borrow_mut();
+pub fn export_import_public_key(mut cx: FunctionContext) -> JsResult<JsPromise> {
+    let provider_arc = (**cx.this::<JsProvider>()?).clone();
     let spec_js = cx.argument::<JsObject>(0)?;
     let spec = unwrap_or_throw!(cx, from_wrapped_key_pair_spec(&mut cx, spec_js));
     let raw_public_key_js = cx.argument::<JsUint8Array>(1)?;
     let raw_public_key = vec_from_uint_8_array(&mut cx, raw_public_key_js);
 
-    let key_pair_handle = unwrap_or_throw!(cx, provider.import_public_key(spec, &raw_public_key));
+    spawn_promise(&mut cx, move |channel, deferred| {
+        let mut provider =
+            arc_or_poisoned_error_deferred!(&channel, deferred, provider_arc.write());
 
-    Ok(JsBox::new(
-        &mut cx,
-        RefCell::new(Finalized::new(key_pair_handle)),
-    ))
+        let key_pair_handle = provider.import_public_key(spec, &raw_public_key);
+
+        deferred.settle_with(&channel, |mut cx| box_if_ok(&mut cx, key_pair_handle));
+    })
 }
 
 /// Wraps `get_capabilities` function.
@@ -223,14 +230,20 @@ pub fn export_import_public_key(mut cx: FunctionContext) -> JsResult<JsKeyPairHa
 ///
 /// # Throws
 /// * When failing to wrap provider config.
-pub fn export_get_capabilities(mut cx: FunctionContext) -> JsResult<JsValue> {
-    let provider_js = cx.this::<JsProvider>()?;
-    let provider = provider_js.borrow();
-    if let Some(capabilities) = provider.get_capabilities() {
-        Ok(wrap_provider_config(&mut cx, capabilities)?.upcast())
-    } else {
-        Ok(cx.undefined().upcast())
-    }
+pub fn export_get_capabilities(mut cx: FunctionContext) -> JsResult<JsPromise> {
+    let provider_arc = (**cx.this::<JsProvider>()?).clone();
+
+    spawn_promise(&mut cx, move |channel, deferred| {
+        let provider = arc_or_poisoned_error_deferred!(&channel, deferred, provider_arc.read());
+
+        if let Some(capabilities) = provider.get_capabilities() {
+            deferred.settle_with(&channel, |mut cx| {
+                wrap_provider_config(&mut cx, capabilities)
+            });
+        } else {
+            deferred.settle_with(&channel, |mut cx| Ok(cx.undefined()));
+        }
+    })
 }
 
 /// Wraps `ephemeral_dh_exchange` function.
@@ -244,16 +257,17 @@ pub fn export_get_capabilities(mut cx: FunctionContext) -> JsResult<JsValue> {
 /// # Throws
 /// * When one of the inputs is incorrect.
 /// * When failing to start the dh exchange.
-pub fn export_start_ephemeral_dh_exchange(mut cx: FunctionContext) -> JsResult<JsDhExchange> {
-    let provider_js = cx.this::<JsProvider>()?;
-    let mut provider = provider_js.borrow_mut();
+pub fn export_start_ephemeral_dh_exchange(mut cx: FunctionContext) -> JsResult<JsPromise> {
+    let provider_arc = (**cx.this::<JsProvider>()?).clone();
     let spec_js = cx.argument::<JsObject>(0)?;
     let spec = unwrap_or_throw!(cx, from_wrapped_key_pair_spec(&mut cx, spec_js));
 
-    let dh_exchange = unwrap_or_throw!(cx, provider.start_ephemeral_dh_exchange(spec));
+    spawn_promise(&mut cx, move |channel, deferred| {
+        let mut provider =
+            arc_or_poisoned_error_deferred!(&channel, deferred, provider_arc.write());
 
-    Ok(JsBox::new(
-        &mut cx,
-        RefCell::new(Finalized::new(dh_exchange)),
-    ))
+        let dh_exchange = provider.start_ephemeral_dh_exchange(spec);
+
+        deferred.settle_with(&channel, |mut cx| box_if_ok(&mut cx, dh_exchange));
+    })
 }

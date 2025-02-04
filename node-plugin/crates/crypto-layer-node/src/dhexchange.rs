@@ -1,12 +1,10 @@
-use std::cell::RefCell;
-
 use neon::prelude::*;
 
-use crate::common::Finalized;
+use crate::common::{arc_or_poisoned_error_deferred, box_if_ok, spawn_promise};
 use crate::fromjs::error::unwrap_or_throw;
 use crate::fromjs::vec_from_uint_8_array;
 use crate::tojs::uint_8_array_from_vec_u8;
-use crate::{JsDhExchange, JsKeyHandle};
+use crate::JsDhExchange;
 
 /// Wraps `get_public_key` function.
 ///
@@ -17,12 +15,19 @@ use crate::{JsDhExchange, JsKeyHandle};
 ///
 /// # Throws
 /// * When failing to get public key.
-pub fn export_get_public_key(mut cx: FunctionContext) -> JsResult<JsUint8Array> {
-    let handle_js = cx.this::<JsDhExchange>()?;
-    let handle = handle_js.borrow();
+pub fn export_get_public_key(mut cx: FunctionContext) -> JsResult<JsPromise> {
+    let handle_arc = (**cx.this::<JsDhExchange>()?).clone();
 
-    let public_key = unwrap_or_throw!(cx, handle.get_public_key());
-    Ok(uint_8_array_from_vec_u8(&mut cx, public_key)?)
+    spawn_promise(&mut cx, move |channel, deferred| {
+        let handle = arc_or_poisoned_error_deferred!(&channel, deferred, handle_arc.read());
+
+        let public_key = handle.get_public_key();
+
+        deferred.settle_with(&channel, |mut cx| {
+            let public_key = unwrap_or_throw!(cx, public_key);
+            Ok(uint_8_array_from_vec_u8(&mut cx, public_key)?)
+        });
+    })
 }
 
 /// Wraps `add_external` function.
@@ -35,15 +40,21 @@ pub fn export_get_public_key(mut cx: FunctionContext) -> JsResult<JsUint8Array> 
 ///
 /// # Throws
 /// * When failing to execute.
-pub fn export_add_external(mut cx: FunctionContext) -> JsResult<JsUint8Array> {
-    let dh_exchange_js = cx.this::<JsDhExchange>()?;
-    let mut dh_exchange = dh_exchange_js.borrow_mut();
+pub fn export_add_external(mut cx: FunctionContext) -> JsResult<JsPromise> {
+    let handle_arc = (**cx.this::<JsDhExchange>()?).clone();
     let raw_public_key_js = cx.argument::<JsUint8Array>(0)?;
     let raw_public_key = vec_from_uint_8_array(&mut cx, raw_public_key_js);
 
-    let new_raw_key = unwrap_or_throw!(cx, dh_exchange.add_external(&raw_public_key));
+    spawn_promise(&mut cx, move |channel, deferred| {
+        let mut handle = arc_or_poisoned_error_deferred!(&channel, deferred, handle_arc.write());
 
-    Ok(uint_8_array_from_vec_u8(&mut cx, new_raw_key)?)
+        let new_raw_key = handle.add_external(&raw_public_key);
+
+        deferred.settle_with(&channel, |mut cx| {
+            let new_raw_key = unwrap_or_throw!(cx, new_raw_key);
+            Ok(uint_8_array_from_vec_u8(&mut cx, new_raw_key)?)
+        });
+    })
 }
 
 /// Wraps `add_external_final` function.
@@ -56,16 +67,16 @@ pub fn export_add_external(mut cx: FunctionContext) -> JsResult<JsUint8Array> {
 ///
 /// # Throws
 /// * When failing to execute.
-pub fn export_add_external_final(mut cx: FunctionContext) -> JsResult<JsKeyHandle> {
-    let dh_exchange_js = cx.this::<JsDhExchange>()?;
-    let mut dh_exchange = dh_exchange_js.borrow_mut();
+pub fn export_add_external_final(mut cx: FunctionContext) -> JsResult<JsPromise> {
+    let handle_arc = (**cx.this::<JsDhExchange>()?).clone();
     let raw_public_key_js = cx.argument::<JsUint8Array>(0)?;
     let raw_public_key = vec_from_uint_8_array(&mut cx, raw_public_key_js);
 
-    let key_handle = unwrap_or_throw!(cx, dh_exchange.add_external_final(&raw_public_key));
+    spawn_promise(&mut cx, move |channel, deferred| {
+        let mut handle = arc_or_poisoned_error_deferred!(&channel, deferred, handle_arc.write());
 
-    Ok(JsBox::new(
-        &mut cx,
-        RefCell::new(Finalized::new(key_handle)),
-    ))
+        let key_handle = handle.add_external_final(&raw_public_key);
+
+        deferred.settle_with(&channel, |mut cx| box_if_ok(&mut cx, key_handle));
+    })
 }

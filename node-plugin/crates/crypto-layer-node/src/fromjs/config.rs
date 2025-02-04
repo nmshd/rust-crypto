@@ -2,7 +2,7 @@ use crypto_layer::common::config::AdditionalConfigDiscriminants;
 use crypto_layer::prelude::*;
 use neon::prelude::*;
 
-use super::error::{bad_parameter, js_result, ConversionError};
+use super::error::{bad_parameter, js_result, rw_lock_poisoned, ConversionError};
 use super::{from_wrapped_enum, from_wrapped_simple_enum, wrapped_array_to_hash_set};
 use crate::{JsKeyHandle, JsKeyPairHandle};
 
@@ -102,14 +102,14 @@ pub fn from_wrapped_additional_config(
         AdditionalConfigDiscriminants::StorageConfigHMAC => {
             let key_handle_js = bad_parameter(obj.downcast::<JsKeyHandle, _>(cx))?;
 
-            let key_handle = key_handle_js.borrow();
+            let key_handle = rw_lock_poisoned(key_handle_js.read())?;
 
             AdditionalConfig::StorageConfigHMAC(key_handle.clone())
         }
         AdditionalConfigDiscriminants::StorageConfigDSA => {
             let key_pair_handle_js = bad_parameter(obj.downcast::<JsKeyPairHandle, _>(cx))?;
 
-            let key_pair_handle = key_pair_handle_js.borrow();
+            let key_pair_handle = rw_lock_poisoned(key_pair_handle_js.read())?;
 
             AdditionalConfig::StorageConfigDSA(key_pair_handle.clone())
         }

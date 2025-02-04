@@ -2,6 +2,12 @@
 
 This is an npm package with the ts type defintions of the CAL project.
 
+## Use the Package with [GitPkg](https://gitpkg.vercel.app/)
+
+```
+npm install 'https://gitpkg.vercel.app/nmshd/rust-crypto/ts-types?main&scripts.postinstall=npm%20i%20--ignore-scripts%20%26%26%20npm%20run%20build'
+```
+
 
 ## Build Package
 

@@ -1,4 +1,4 @@
-use std::cell::RefCell;
+use std::sync::{Arc, RwLock};
 
 use color_eyre;
 use crypto_layer::prelude::*;
@@ -17,16 +17,16 @@ pub(crate) mod keypairhandle;
 pub(crate) mod provider;
 pub(crate) mod tojs;
 
-use crate::common::Finalized;
+use crate::common::{box_if_ok, spawn_promise, Finalized};
 use crate::fromjs::error::unwrap_or_throw;
 use fromjs::config::*;
 use fromjs::*;
 use tojs::*;
 
-type JsKeyHandle = JsBox<RefCell<Finalized<KeyHandle>>>;
-type JsKeyPairHandle = JsBox<RefCell<Finalized<KeyPairHandle>>>;
-type JsProvider = JsBox<RefCell<Finalized<Provider>>>;
-type JsDhExchange = JsBox<RefCell<Finalized<DHExchange>>>;
+type JsKeyHandle = JsBox<Arc<RwLock<Finalized<KeyHandle>>>>;
+type JsKeyPairHandle = JsBox<Arc<RwLock<Finalized<KeyPairHandle>>>>;
+type JsProvider = JsBox<Arc<RwLock<Finalized<Provider>>>>;
+type JsDhExchange = JsBox<Arc<RwLock<Finalized<DHExchange>>>>;
 
 /// Wraps `get_all_providers` function.
 ///
@@ -34,8 +34,11 @@ type JsDhExchange = JsBox<RefCell<Finalized<DHExchange>>>;
 ///
 /// # Returns
 /// * `string[]`
-fn export_get_all_providers(mut cx: FunctionContext) -> JsResult<JsArray> {
-    wrap_string_array(&mut cx, get_all_providers())
+fn export_get_all_providers(mut cx: FunctionContext) -> JsResult<JsPromise> {
+    spawn_promise(&mut cx, move |channel, deferred| {
+        let providers = get_all_providers();
+        deferred.settle_with(&channel, |mut cx| wrap_string_array(&mut cx, providers));
+    })
 }
 
 /// Wraps `create_provider` function.
@@ -51,7 +54,7 @@ fn export_get_all_providers(mut cx: FunctionContext) -> JsResult<JsArray> {
 /// # Throws
 /// * When one of the inputs is incorrect.
 #[tracing::instrument(level = "trace", skip(cx))]
-fn export_create_provider(mut cx: FunctionContext) -> JsResult<JsValue> {
+fn export_create_provider(mut cx: FunctionContext) -> JsResult<JsPromise> {
     let config_js = cx.argument::<JsObject>(0)?;
     let impl_config_js = cx.argument::<JsObject>(1)?;
 
@@ -61,10 +64,12 @@ fn export_create_provider(mut cx: FunctionContext) -> JsResult<JsValue> {
         from_wrapped_provider_impl_config(&mut cx, impl_config_js)
     );
 
-    match create_provider(&config, impl_config) {
-        Some(prov) => Ok(cx.boxed(RefCell::new(Finalized::new(prov))).upcast()),
-        None => Ok(cx.undefined().upcast()),
-    }
+    spawn_promise(&mut cx, move |channel, deferred| {
+        match create_provider(&config, impl_config.clone()) {
+            Some(prov) => deferred.settle_with(&channel, |mut cx| box_if_ok(&mut cx, Ok(prov))),
+            None => deferred.settle_with(&channel, |mut cx| Ok(cx.undefined())),
+        };
+    })
 }
 
 /// Wraps `create_provider_from_name` function.
@@ -80,7 +85,7 @@ fn export_create_provider(mut cx: FunctionContext) -> JsResult<JsValue> {
 /// # Throws
 /// * When one of the inputs is incorrect.
 #[tracing::instrument(level = "trace", skip(cx))]
-fn export_create_provider_from_name(mut cx: FunctionContext) -> JsResult<JsValue> {
+fn export_create_provider_from_name(mut cx: FunctionContext) -> JsResult<JsPromise> {
     let name_js = cx.argument::<JsString>(0)?;
     let impl_config_js = cx.argument::<JsObject>(1)?;
 
@@ -90,10 +95,12 @@ fn export_create_provider_from_name(mut cx: FunctionContext) -> JsResult<JsValue
         from_wrapped_provider_impl_config(&mut cx, impl_config_js)
     );
 
-    match create_provider_from_name(&name, impl_config) {
-        Some(prov) => Ok(cx.boxed(RefCell::new(Finalized::new(prov))).upcast()),
-        None => Ok(cx.undefined().upcast()),
-    }
+    spawn_promise(&mut cx, move |channel, deferred| {
+        match create_provider_from_name(&name, impl_config.clone()) {
+            Some(prov) => deferred.settle_with(&channel, |mut cx| box_if_ok(&mut cx, Ok(prov))),
+            None => deferred.settle_with(&channel, |mut cx| Ok(cx.undefined())),
+        };
+    })
 }
 
 #[neon::main]
