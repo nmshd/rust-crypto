@@ -1,4 +1,4 @@
-use std::cell::RefCell;
+use std::sync::RwLock;
 
 use neon::prelude::*;
 
@@ -19,7 +19,7 @@ use crate::{JsDhExchange, JsKeyHandle};
 /// * When failing to get public key.
 pub fn export_get_public_key(mut cx: FunctionContext) -> JsResult<JsUint8Array> {
     let handle_js = cx.this::<JsDhExchange>()?;
-    let handle = handle_js.borrow();
+    let handle = unwrap_or_throw!(cx, handle_js.read());
 
     let public_key = unwrap_or_throw!(cx, handle.get_public_key());
     Ok(uint_8_array_from_vec_u8(&mut cx, public_key)?)
@@ -37,7 +37,7 @@ pub fn export_get_public_key(mut cx: FunctionContext) -> JsResult<JsUint8Array> 
 /// * When failing to execute.
 pub fn export_add_external(mut cx: FunctionContext) -> JsResult<JsUint8Array> {
     let dh_exchange_js = cx.this::<JsDhExchange>()?;
-    let mut dh_exchange = dh_exchange_js.borrow_mut();
+    let mut dh_exchange = unwrap_or_throw!(cx, dh_exchange_js.write());
     let raw_public_key_js = cx.argument::<JsUint8Array>(0)?;
     let raw_public_key = vec_from_uint_8_array(&mut cx, raw_public_key_js);
 
@@ -58,14 +58,11 @@ pub fn export_add_external(mut cx: FunctionContext) -> JsResult<JsUint8Array> {
 /// * When failing to execute.
 pub fn export_add_external_final(mut cx: FunctionContext) -> JsResult<JsKeyHandle> {
     let dh_exchange_js = cx.this::<JsDhExchange>()?;
-    let mut dh_exchange = dh_exchange_js.borrow_mut();
+    let mut dh_exchange = unwrap_or_throw!(cx, dh_exchange_js.write());
     let raw_public_key_js = cx.argument::<JsUint8Array>(0)?;
     let raw_public_key = vec_from_uint_8_array(&mut cx, raw_public_key_js);
 
     let key_handle = unwrap_or_throw!(cx, dh_exchange.add_external_final(&raw_public_key));
 
-    Ok(JsBox::new(
-        &mut cx,
-        RefCell::new(Finalized::new(key_handle)),
-    ))
+    Ok(JsBox::new(&mut cx, RwLock::new(Finalized::new(key_handle))))
 }

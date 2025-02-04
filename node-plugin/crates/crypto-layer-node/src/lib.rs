@@ -1,4 +1,4 @@
-use std::cell::RefCell;
+use std::sync::RwLock;
 
 use color_eyre;
 use crypto_layer::prelude::*;
@@ -23,10 +23,10 @@ use fromjs::config::*;
 use fromjs::*;
 use tojs::*;
 
-type JsKeyHandle = JsBox<RefCell<Finalized<KeyHandle>>>;
-type JsKeyPairHandle = JsBox<RefCell<Finalized<KeyPairHandle>>>;
-type JsProvider = JsBox<RefCell<Finalized<Provider>>>;
-type JsDhExchange = JsBox<RefCell<Finalized<DHExchange>>>;
+type JsKeyHandle = JsBox<RwLock<Finalized<KeyHandle>>>;
+type JsKeyPairHandle = JsBox<RwLock<Finalized<KeyPairHandle>>>;
+type JsProvider = JsBox<RwLock<Finalized<Provider>>>;
+type JsDhExchange = JsBox<RwLock<Finalized<DHExchange>>>;
 
 /// Wraps `get_all_providers` function.
 ///
@@ -62,7 +62,7 @@ fn export_create_provider(mut cx: FunctionContext) -> JsResult<JsValue> {
     );
 
     match create_provider(&config, impl_config) {
-        Some(prov) => Ok(cx.boxed(RefCell::new(Finalized::new(prov))).upcast()),
+        Some(prov) => Ok(cx.boxed(RwLock::new(Finalized::new(prov))).upcast()),
         None => Ok(cx.undefined().upcast()),
     }
 }
@@ -91,7 +91,7 @@ fn export_create_provider_from_name(mut cx: FunctionContext) -> JsResult<JsValue
     );
 
     match create_provider_from_name(&name, impl_config) {
-        Some(prov) => Ok(cx.boxed(RefCell::new(Finalized::new(prov))).upcast()),
+        Some(prov) => Ok(cx.boxed(RwLock::new(Finalized::new(prov))).upcast()),
         None => Ok(cx.undefined().upcast()),
     }
 }

@@ -9,6 +9,8 @@ pub(crate) enum ConversionError {
     BadParameter,
     #[error("Unexpected error while executing js component.")]
     JsError,
+    #[error("RwLock is poisoned.")]
+    RwLockPoisoned,
 }
 
 /// Used for errors which stem from internal logic (casting up and down).
@@ -29,6 +31,17 @@ pub fn bad_parameter<R, E: std::fmt::Display>(res: Result<R, E>) -> Result<R, Co
         Err(e) => {
             error!(error = %e, "{}", ConversionError::BadParameter);
             Err(ConversionError::BadParameter)
+        }
+    }
+}
+
+/// Used for [std::sync::LockResult].
+pub fn rw_lock_poisoned<R, E: std::fmt::Display>(res: Result<R, E>) -> Result<R, ConversionError> {
+    match res {
+        Ok(r) => Ok(r),
+        Err(e) => {
+            error!(error = %e, "{}", ConversionError::RwLockPoisoned);
+            Err(ConversionError::RwLockPoisoned)
         }
     }
 }

@@ -1,4 +1,4 @@
-use std::cell::RefCell;
+use std::sync::RwLock;
 
 use neon::prelude::*;
 
@@ -26,13 +26,10 @@ pub fn export_create_key(mut cx: FunctionContext) -> JsResult<JsKeyHandle> {
 
     let spec = unwrap_or_throw!(cx, from_wrapped_key_spec(&mut cx, spec_js));
 
-    let mut provider = provider_js.borrow_mut();
+    let mut provider = unwrap_or_throw!(cx, provider_js.write());
     let key_handle = unwrap_or_throw!(cx, provider.create_key(spec));
 
-    Ok(JsBox::new(
-        &mut cx,
-        RefCell::new(Finalized::new(key_handle)),
-    ))
+    Ok(JsBox::new(&mut cx, RwLock::new(Finalized::new(key_handle))))
 }
 
 /// Wraps `create_key_pair` function.
@@ -52,12 +49,12 @@ pub fn export_create_key_pair(mut cx: FunctionContext) -> JsResult<JsKeyPairHand
 
     let spec = unwrap_or_throw!(cx, from_wrapped_key_pair_spec(&mut cx, spec_js));
 
-    let mut provider = provider_js.borrow_mut();
+    let mut provider = unwrap_or_throw!(cx, provider_js.write());
     let key_pair_handle = unwrap_or_throw!(cx, provider.create_key_pair(spec));
 
     Ok(JsBox::new(
         &mut cx,
-        RefCell::new(Finalized::new(key_pair_handle)),
+        RwLock::new(Finalized::new(key_pair_handle)),
     ))
 }
 
@@ -71,7 +68,7 @@ pub fn export_create_key_pair(mut cx: FunctionContext) -> JsResult<JsKeyPairHand
 /// # Throws
 pub fn export_provider_name(mut cx: FunctionContext) -> JsResult<JsString> {
     let provider_js = cx.this::<JsProvider>()?;
-    let provider = provider_js.borrow();
+    let provider = unwrap_or_throw!(cx, provider_js.read());
     Ok(cx.string(provider.provider_name()))
 }
 
@@ -87,16 +84,13 @@ pub fn export_provider_name(mut cx: FunctionContext) -> JsResult<JsString> {
 /// * When failing to load the key.
 pub fn export_load_key(mut cx: FunctionContext) -> JsResult<JsKeyHandle> {
     let provider_js = cx.this::<JsProvider>()?;
-    let mut provider = provider_js.borrow_mut();
+    let mut provider = unwrap_or_throw!(cx, provider_js.write());
     let id_js = cx.argument::<JsString>(0)?;
     let id = id_js.value(&mut cx);
 
     let key_handle = unwrap_or_throw!(cx, provider.load_key(id));
 
-    Ok(JsBox::new(
-        &mut cx,
-        RefCell::new(Finalized::new(key_handle)),
-    ))
+    Ok(JsBox::new(&mut cx, RwLock::new(Finalized::new(key_handle))))
 }
 
 /// Wraps `load_key_pair` function.
@@ -111,7 +105,7 @@ pub fn export_load_key(mut cx: FunctionContext) -> JsResult<JsKeyHandle> {
 /// * When failing to load the key pair.
 pub fn export_load_key_pair(mut cx: FunctionContext) -> JsResult<JsKeyPairHandle> {
     let provider_js = cx.this::<JsProvider>()?;
-    let mut provider = provider_js.borrow_mut();
+    let mut provider = unwrap_or_throw!(cx, provider_js.write());
     let id_js = cx.argument::<JsString>(0)?;
     let id = id_js.value(&mut cx);
 
@@ -119,7 +113,7 @@ pub fn export_load_key_pair(mut cx: FunctionContext) -> JsResult<JsKeyPairHandle
 
     Ok(JsBox::new(
         &mut cx,
-        RefCell::new(Finalized::new(key_pair_handle)),
+        RwLock::new(Finalized::new(key_pair_handle)),
     ))
 }
 
@@ -137,7 +131,7 @@ pub fn export_load_key_pair(mut cx: FunctionContext) -> JsResult<JsKeyPairHandle
 /// * When failing to import the key.
 pub fn export_import_key(mut cx: FunctionContext) -> JsResult<JsKeyHandle> {
     let provider_js = cx.this::<JsProvider>()?;
-    let mut provider = provider_js.borrow_mut();
+    let mut provider = unwrap_or_throw!(cx, provider_js.write());
     let spec_js = cx.argument::<JsObject>(0)?;
     let spec = unwrap_or_throw!(cx, from_wrapped_key_spec(&mut cx, spec_js));
     let raw_key_js = cx.argument::<JsUint8Array>(1)?;
@@ -145,10 +139,7 @@ pub fn export_import_key(mut cx: FunctionContext) -> JsResult<JsKeyHandle> {
 
     let key_handle = unwrap_or_throw!(cx, provider.import_key(spec, &raw_key));
 
-    Ok(JsBox::new(
-        &mut cx,
-        RefCell::new(Finalized::new(key_handle)),
-    ))
+    Ok(JsBox::new(&mut cx, RwLock::new(Finalized::new(key_handle))))
 }
 
 /// Wraps `import_key_pair` function.
@@ -166,7 +157,7 @@ pub fn export_import_key(mut cx: FunctionContext) -> JsResult<JsKeyHandle> {
 /// * When failing to import the key pair.
 pub fn export_import_key_pair(mut cx: FunctionContext) -> JsResult<JsKeyPairHandle> {
     let provider_js = cx.this::<JsProvider>()?;
-    let mut provider = provider_js.borrow_mut();
+    let mut provider = unwrap_or_throw!(cx, provider_js.write());
     let spec_js = cx.argument::<JsObject>(0)?;
     let spec = unwrap_or_throw!(cx, from_wrapped_key_pair_spec(&mut cx, spec_js));
     let raw_public_key_js = cx.argument::<JsUint8Array>(1)?;
@@ -181,7 +172,7 @@ pub fn export_import_key_pair(mut cx: FunctionContext) -> JsResult<JsKeyPairHand
 
     Ok(JsBox::new(
         &mut cx,
-        RefCell::new(Finalized::new(key_pair_handle)),
+        RwLock::new(Finalized::new(key_pair_handle)),
     ))
 }
 
@@ -199,7 +190,7 @@ pub fn export_import_key_pair(mut cx: FunctionContext) -> JsResult<JsKeyPairHand
 /// * When failing to import the public key.
 pub fn export_import_public_key(mut cx: FunctionContext) -> JsResult<JsKeyPairHandle> {
     let provider_js = cx.this::<JsProvider>()?;
-    let mut provider = provider_js.borrow_mut();
+    let mut provider = unwrap_or_throw!(cx, provider_js.write());
     let spec_js = cx.argument::<JsObject>(0)?;
     let spec = unwrap_or_throw!(cx, from_wrapped_key_pair_spec(&mut cx, spec_js));
     let raw_public_key_js = cx.argument::<JsUint8Array>(1)?;
@@ -209,7 +200,7 @@ pub fn export_import_public_key(mut cx: FunctionContext) -> JsResult<JsKeyPairHa
 
     Ok(JsBox::new(
         &mut cx,
-        RefCell::new(Finalized::new(key_pair_handle)),
+        RwLock::new(Finalized::new(key_pair_handle)),
     ))
 }
 
@@ -225,7 +216,7 @@ pub fn export_import_public_key(mut cx: FunctionContext) -> JsResult<JsKeyPairHa
 /// * When failing to wrap provider config.
 pub fn export_get_capabilities(mut cx: FunctionContext) -> JsResult<JsValue> {
     let provider_js = cx.this::<JsProvider>()?;
-    let provider = provider_js.borrow();
+    let provider = unwrap_or_throw!(cx, provider_js.read());
     if let Some(capabilities) = provider.get_capabilities() {
         Ok(wrap_provider_config(&mut cx, capabilities)?.upcast())
     } else {
@@ -246,7 +237,7 @@ pub fn export_get_capabilities(mut cx: FunctionContext) -> JsResult<JsValue> {
 /// * When failing to start the dh exchange.
 pub fn export_start_ephemeral_dh_exchange(mut cx: FunctionContext) -> JsResult<JsDhExchange> {
     let provider_js = cx.this::<JsProvider>()?;
-    let mut provider = provider_js.borrow_mut();
+    let mut provider = unwrap_or_throw!(cx, provider_js.write());
     let spec_js = cx.argument::<JsObject>(0)?;
     let spec = unwrap_or_throw!(cx, from_wrapped_key_pair_spec(&mut cx, spec_js));
 
@@ -254,6 +245,6 @@ pub fn export_start_ephemeral_dh_exchange(mut cx: FunctionContext) -> JsResult<J
 
     Ok(JsBox::new(
         &mut cx,
-        RefCell::new(Finalized::new(dh_exchange)),
+        RwLock::new(Finalized::new(dh_exchange)),
     ))
 }

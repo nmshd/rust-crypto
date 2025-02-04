@@ -21,7 +21,7 @@ pub fn export_sign_data(mut cx: FunctionContext) -> JsResult<JsUint8Array> {
     let data_js = cx.argument::<JsUint8Array>(0)?;
 
     let data = vec_from_uint_8_array(&mut cx, data_js);
-    let handle = handle_js.borrow();
+    let handle = unwrap_or_throw!(cx, handle_js.read());
 
     let signature = unwrap_or_throw!(cx, handle.sign_data(&data));
     Ok(uint_8_array_from_vec_u8(&mut cx, signature)?)
@@ -45,7 +45,7 @@ pub fn export_verify_data(mut cx: FunctionContext) -> JsResult<JsBoolean> {
 
     let data = vec_from_uint_8_array(&mut cx, data_js);
     let signature = vec_from_uint_8_array(&mut cx, signature_js);
-    let handle = handle_js.borrow();
+    let handle = unwrap_or_throw!(cx, handle_js.read());
     let res = unwrap_or_throw!(cx, handle.verify_signature(&data, &signature));
     Ok(cx.boolean(res))
 }
@@ -61,7 +61,7 @@ pub fn export_verify_data(mut cx: FunctionContext) -> JsResult<JsBoolean> {
 /// * When failing to execute.
 pub fn export_id(mut cx: FunctionContext) -> JsResult<JsString> {
     let handle_js = cx.this::<JsKeyPairHandle>()?;
-    let handle = handle_js.borrow();
+    let handle = unwrap_or_throw!(cx, handle_js.read());
     let id = unwrap_or_throw!(cx, handle.id());
     Ok(cx.string(id))
 }
@@ -77,7 +77,7 @@ pub fn export_id(mut cx: FunctionContext) -> JsResult<JsString> {
 /// * When failing to execute.
 pub fn export_delete(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let handle_js = cx.this::<JsKeyPairHandle>()?;
-    let handle = handle_js.borrow();
+    let handle = unwrap_or_throw!(cx, handle_js.read());
     unwrap_or_throw!(cx, handle.clone().delete());
     Ok(cx.undefined())
 }
@@ -95,7 +95,7 @@ pub fn export_delete(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 /// * When failing to execute.
 pub fn export_encrypt_data(mut cx: FunctionContext) -> JsResult<JsUint8Array> {
     let handle_js = cx.this::<JsKeyPairHandle>()?;
-    let handle = handle_js.borrow();
+    let handle = unwrap_or_throw!(cx, handle_js.read());
     let data_js = cx.argument::<JsUint8Array>(0)?;
     let data = vec_from_uint_8_array(&mut cx, data_js);
 
@@ -115,7 +115,7 @@ pub fn export_encrypt_data(mut cx: FunctionContext) -> JsResult<JsUint8Array> {
 /// * When failing to execute.
 pub fn export_decrypt_data(mut cx: FunctionContext) -> JsResult<JsUint8Array> {
     let handle_js = cx.this::<JsKeyPairHandle>()?;
-    let handle = handle_js.borrow();
+    let handle = unwrap_or_throw!(cx, handle_js.read());
     let data_js = cx.argument::<JsUint8Array>(0)?;
     let data = vec_from_uint_8_array(&mut cx, data_js);
 
@@ -134,7 +134,7 @@ pub fn export_decrypt_data(mut cx: FunctionContext) -> JsResult<JsUint8Array> {
 /// * When failing to execute.
 pub fn export_get_public_key(mut cx: FunctionContext) -> JsResult<JsUint8Array> {
     let handle_js = cx.this::<JsKeyPairHandle>()?;
-    let handle = handle_js.borrow();
+    let handle = unwrap_or_throw!(cx, handle_js.read());
 
     let public_key = unwrap_or_throw!(cx, handle.get_public_key());
     Ok(uint_8_array_from_vec_u8(&mut cx, public_key)?)
@@ -151,7 +151,7 @@ pub fn export_get_public_key(mut cx: FunctionContext) -> JsResult<JsUint8Array> 
 /// * When failing to execute.
 pub fn export_extract_key(mut cx: FunctionContext) -> JsResult<JsUint8Array> {
     let handle_js = cx.this::<JsKeyPairHandle>()?;
-    let handle = handle_js.borrow();
+    let handle = unwrap_or_throw!(cx, handle_js.read());
 
     let private_key = unwrap_or_throw!(cx, handle.extract_key());
     Ok(uint_8_array_from_vec_u8(&mut cx, private_key)?)
@@ -167,7 +167,7 @@ pub fn export_extract_key(mut cx: FunctionContext) -> JsResult<JsUint8Array> {
 /// # Throws
 pub fn export_spec(mut cx: FunctionContext) -> JsResult<JsObject> {
     let handle_js = cx.this::<JsKeyPairHandle>()?;
-    let handle = handle_js.borrow();
+    let handle = unwrap_or_throw!(cx, handle_js.read());
 
     let spec = handle.spec();
     wrap_key_pair_spec(&mut cx, spec)
