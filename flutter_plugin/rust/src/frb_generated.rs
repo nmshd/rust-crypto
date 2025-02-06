@@ -25,7 +25,11 @@
 
 // Section: imports
 
+use std::future::Future;
+use std::pin::Pin;
+
 use crate::*;
+use crypto_layer::common::config::DynFuture;
 use crypto_layer::common::error::*;
 use crypto_layer::common::*;
 use flutter_rust_bridge::for_generated::byteorder::{NativeEndian, ReadBytesExt, WriteBytesExt};
