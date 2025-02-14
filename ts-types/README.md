@@ -7,8 +7,6 @@ This is an npm package with the ts type defintions of the CAL project.
 1. You need to have rust installed.
 2. You need to have npm or similar installed.
 
-<a name="generation" />
-
 ### Generate the Types
 
 ```

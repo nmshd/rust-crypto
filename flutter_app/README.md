@@ -36,8 +36,6 @@ Now you can install the NDK with:
 sdkmanager ndk-bundle
 ```
 
-<a name="run" />
-
 ## Running the App
 
 Get the id of the connected Android device with `flutter devices`, then run the App in debug mode:
