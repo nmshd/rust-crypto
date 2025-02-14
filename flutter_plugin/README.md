@@ -9,6 +9,7 @@ This project is a starting point for a Flutter
 a specialized package that includes native code directly invoked with Dart FFI.
 
 <a name="generating" />
+
 ## Generating Dart Bindings
 
 ```
@@ -61,24 +62,24 @@ else
 
 This template uses the following structure:
 
-* `src`: Contains the native source code, and a CmakeFile.txt file for building
-  that source code into a dynamic library.
+-   `src`: Contains the native source code, and a CmakeFile.txt file for building
+    that source code into a dynamic library.
 
-* `lib`: Contains the Dart code that defines the API of the plugin, and which
-  calls into the native code using `dart:ffi`.
+-   `lib`: Contains the Dart code that defines the API of the plugin, and which
+    calls into the native code using `dart:ffi`.
 
-* platform folders (`android`, `ios`, `windows`, etc.): Contains the build files
-  for building and bundling the native code library with the platform application.
+-   platform folders (`android`, `ios`, `windows`, etc.): Contains the build files
+    for building and bundling the native code library with the platform application.
 
 ## Building and bundling native code
 
 The `pubspec.yaml` specifies FFI plugins as follows:
 
 ```yaml
-  plugin:
+plugin:
     platforms:
-      some_platform:
-        ffiPlugin: true
+        some_platform:
+            ffiPlugin: true
 ```
 
 This configuration invokes the native build for the various target platforms
@@ -88,34 +89,34 @@ This can be combined with dartPluginClass, such as when FFI is used for the
 implementation of one platform in a federated plugin:
 
 ```yaml
-  plugin:
+plugin:
     implements: some_other_plugin
     platforms:
-      some_platform:
-        dartPluginClass: SomeClass
-        ffiPlugin: true
+        some_platform:
+            dartPluginClass: SomeClass
+            ffiPlugin: true
 ```
 
 A plugin can have both FFI and method channels:
 
 ```yaml
-  plugin:
+plugin:
     platforms:
-      some_platform:
-        pluginClass: SomeName
-        ffiPlugin: true
+        some_platform:
+            pluginClass: SomeName
+            ffiPlugin: true
 ```
 
 The native build systems that are invoked by FFI (and method channel) plugins are:
 
-* For Android: Gradle, which invokes the Android NDK for native builds.
-  * See the documentation in android/build.gradle.
-* For iOS and MacOS: Xcode, via CocoaPods.
-  * See the documentation in ios/cal_flutter_plugin.podspec.
-  * See the documentation in macos/cal_flutter_plugin.podspec.
-* For Linux and Windows: CMake.
-  * See the documentation in linux/CMakeLists.txt.
-  * See the documentation in windows/CMakeLists.txt.
+-   For Android: Gradle, which invokes the Android NDK for native builds.
+    -   See the documentation in android/build.gradle.
+-   For iOS and MacOS: Xcode, via CocoaPods.
+    -   See the documentation in ios/cal_flutter_plugin.podspec.
+    -   See the documentation in macos/cal_flutter_plugin.podspec.
+-   For Linux and Windows: CMake.
+    -   See the documentation in linux/CMakeLists.txt.
+    -   See the documentation in windows/CMakeLists.txt.
 
 ## Binding to native code
 
