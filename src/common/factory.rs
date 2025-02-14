@@ -126,6 +126,7 @@ pub fn get_all_providers() -> Vec<String> {
         .collect()
 }
 
+/// Returns the names and capabilities of all providers that can be initialized with the given [ProviderImplConfig].
 pub fn get_provider_capabilities(impl_config: ProviderImplConfig) -> Vec<(String, ProviderConfig)> {
     ALL_PROVIDERS
         .iter()
