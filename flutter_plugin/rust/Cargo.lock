@@ -582,7 +582,6 @@ dependencies = [
  "hmac",
  "libloading",
  "nanoid",
- "ndk-context",
  "pkcs8",
  "pollster",
  "redb",

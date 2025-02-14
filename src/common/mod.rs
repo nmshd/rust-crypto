@@ -265,3 +265,12 @@ impl DHExchange {
         pub fn add_external_final(&mut self, external_key: &[u8]) -> Result<KeyHandle, CalError>;
     }
 }
+
+#[cfg(feature = "android")]
+use crate::tpm::android::wrapper::context;
+#[cfg(feature = "android")]
+use std::ffi::c_void;
+#[cfg(feature = "android")]
+pub unsafe fn initialize_android_context(java_vm: *mut c_void, context_jobject: *mut c_void) {
+    context::initialize_android_context(java_vm, context_jobject);
+}

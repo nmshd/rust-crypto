@@ -18,7 +18,7 @@ use enum_dispatch::enum_dispatch;
 
 #[enum_dispatch(ProviderFactoryEnum)]
 pub(crate) trait ProviderFactory: Send + Sync {
-    fn get_name(&self) -> String;
+    fn get_name(&self) -> Option<String>;
 
     /// Returns security level and supported algorithms of a provider.
     ///

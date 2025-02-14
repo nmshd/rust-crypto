@@ -9,7 +9,7 @@ use crate::{
     tpm::android::{
         utils::{get_asym_cipher_mode, get_signature_algorithm, get_sym_cipher_mode},
         wrapper::{
-            self,
+            self, context,
             key_generation::iv_parameter_spec::jni::IvParameterSpec,
             key_store::{signature::jni::Signature, store::jni::KeyStore},
         },
@@ -38,7 +38,7 @@ impl KeyHandleImpl for AndroidKeyHandle {
     fn encrypt_data(&self, data: &[u8]) -> Result<(Vec<u8>, Vec<u8>), CalError> {
         info!("encrypting");
 
-        let vm = ndk_context::android_context().vm();
+        let vm = context::android_context()?.vm();
         let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
         let env = vm.attach_current_thread().err_internal()?;
 
@@ -63,7 +63,7 @@ impl KeyHandleImpl for AndroidKeyHandle {
     }
 
     fn decrypt_data(&self, encrypted_data: &[u8], iv: &[u8]) -> Result<Vec<u8>, CalError> {
-        let vm = ndk_context::android_context().vm();
+        let vm = context::android_context()?.vm();
         let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
         let env = vm.attach_current_thread().err_internal()?;
 
@@ -128,7 +128,7 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
     fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
         info!("signing");
 
-        let vm = ndk_context::android_context().vm();
+        let vm = context::android_context()?.vm();
         let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
         let env = vm.attach_current_thread().err_internal()?;
 
@@ -158,7 +158,7 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
     fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, CalError> {
         info!("verifiying");
 
-        let vm = ndk_context::android_context().vm();
+        let vm = context::android_context()?.vm();
         let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
         let env = vm.attach_current_thread().err_internal()?;
 
@@ -188,7 +188,7 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
     fn encrypt_data(&self, encryped_data: &[u8]) -> Result<Vec<u8>, CalError> {
         info!("encrypting");
 
-        let vm = ndk_context::android_context().vm();
+        let vm = context::android_context()?.vm();
         let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
         let env = vm.attach_current_thread().err_internal()?;
 
@@ -217,7 +217,7 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
     fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, CalError> {
         info!("decrypting");
 
-        let vm = ndk_context::android_context().vm();
+        let vm = context::android_context()?.vm();
         let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
         let env = vm.attach_current_thread().err_internal()?;
 
@@ -245,7 +245,7 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
     fn get_public_key(&self) -> Result<Vec<u8>, CalError> {
         info!("getting public key");
 
-        let vm = ndk_context::android_context().vm();
+        let vm = context::android_context()?.vm();
         let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
         let env = vm.attach_current_thread().err_internal()?;
 
@@ -294,7 +294,7 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
 
 impl AndroidKeyHandle {
     fn delete_internal(&mut self) -> Result<(), CalError> {
-        let vm = ndk_context::android_context().vm();
+        let vm = context::android_context()?.vm();
         let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
         let env = vm.attach_current_thread().err_internal()?;
 
@@ -309,7 +309,7 @@ impl AndroidKeyHandle {
 
 impl AndroidKeyPairHandle {
     fn delete_internal(&mut self) -> Result<(), CalError> {
-        let vm = ndk_context::android_context().vm();
+        let vm = context::android_context()?.vm();
         let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
         let env = vm.attach_current_thread().err_internal()?;
 

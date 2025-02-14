@@ -76,8 +76,8 @@ fn check_key_pair_spec_for_compatibility(key_spec: &KeyPairSpec) -> Result<(), C
 pub(crate) struct AppleSecureEnclaveFactory {}
 
 impl ProviderFactory for AppleSecureEnclaveFactory {
-    fn get_name(&self) -> String {
-        "APPLE_SECURE_ENCLAVE".to_owned()
+    fn get_name(&self) -> Option<String> {
+        Some("APPLE_SECURE_ENCLAVE".to_owned())
     }
 
     fn get_capabilities(&self, _impl_config: ProviderImplConfig) -> Option<ProviderConfig> {
@@ -88,7 +88,8 @@ impl ProviderFactory for AppleSecureEnclaveFactory {
         &self,
         impl_config: ProviderImplConfig,
     ) -> Result<ProviderImplEnum, CalError> {
-        let storage_manager = StorageManager::new(self.get_name(), &impl_config.additional_config)?;
+        let storage_manager =
+            StorageManager::new(self.get_name().unwrap(), &impl_config.additional_config)?;
 
         Ok(AppleSecureEnclaveProvider { storage_manager }.into())
     }

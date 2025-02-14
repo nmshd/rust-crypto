@@ -13,7 +13,7 @@ use crate::{
             get_asym_key_size, get_cipher_name, get_cipher_padding, get_key_size, get_mode_name,
             is_rsa, Padding,
         },
-        wrapper::{self},
+        wrapper::{self, context},
         ANDROID_KEYSTORE,
     },
 };
@@ -29,15 +29,27 @@ pub(crate) struct AndroidProviderFactory {
 }
 
 impl ProviderFactory for AndroidProviderFactory {
-    fn get_name(&self) -> String {
+    fn get_name(&self) -> Option<String> {
+        if !wrapper::context::is_initialized() {
+            return None;
+        }
         if self.secure_element {
-            "ANDROID_PROVIDER_SECURE_ELEMENT".to_owned()
+            if wrapper::context::has_strong_box().ok()? {
+                Some("ANDROID_PROVIDER_SECURE_ELEMENT".to_owned())
+            } else {
+                None
+            }
         } else {
-            "ANDROID_PROVIDER".to_owned()
+            Some("ANDROID_PROVIDER".to_owned())
         }
     }
 
     fn get_capabilities(&self, _impl_config: ProviderImplConfig) -> Option<ProviderConfig> {
+        // check if android context is initialised
+        if !wrapper::context::is_initialized() {
+            return None;
+        }
+
         // only check for Stronbox if secure element is enabled
         if self.secure_element && !wrapper::context::has_strong_box().ok()? {
             return None;
@@ -61,7 +73,14 @@ impl ProviderFactory for AndroidProviderFactory {
         &self,
         impl_config: ProviderImplConfig,
     ) -> Result<ProviderImplEnum, CalError> {
-        let storage_manager = StorageManager::new(self.get_name(), &impl_config.additional_config)?;
+        if !wrapper::context::is_initialized() {
+            return Err(CalError::initialization_error(
+                "Android Context is not initialized".to_owned(),
+            ));
+        }
+
+        let storage_manager =
+            StorageManager::new(self.get_name().unwrap(), &impl_config.additional_config)?;
 
         Ok(ProviderImplEnum::from(AndroidProvider {
             impl_config,
@@ -108,7 +127,7 @@ impl ProviderImpl for AndroidProvider {
 
         info!("generating key: {}", key_id);
 
-        let vm = ndk_context::android_context().vm();
+        let vm = context::android_context()?.vm();
         let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
         let env = vm.attach_current_thread().err_internal()?;
 
@@ -177,7 +196,7 @@ impl ProviderImpl for AndroidProvider {
         let key_id = nanoid!(10);
         info!("generating key pair! {}", key_id);
 
-        let vm = ndk_context::android_context().vm();
+        let vm = context::android_context()?.vm();
         let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
         let env = vm.attach_current_thread().err_internal()?;
 
@@ -306,7 +325,7 @@ impl ProviderImpl for AndroidProvider {
             return Err(CalError::ephemeral_key_required());
         }
 
-        let vm = ndk_context::android_context().vm();
+        let vm = context::android_context()?.vm();
         let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
         let env = vm.attach_current_thread().err_internal()?;
 
@@ -392,7 +411,9 @@ impl ProviderImpl for AndroidProvider {
     }
 
     fn provider_name(&self) -> String {
-        self.used_factory.get_name()
+        self.used_factory
+            .get_name()
+            .expect("a created Provider should have a name. This is a bug")
     }
 
     fn get_capabilities(&self) -> Option<ProviderConfig> {

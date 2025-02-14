@@ -103,7 +103,7 @@ pub fn create_provider_from_name(name: &str, impl_conf: ProviderImplConfig) -> O
     for provider in ALL_PROVIDERS.iter() {
         let p_name = provider.get_name();
 
-        if p_name == name {
+        if p_name.as_deref() == Some(name) {
             return Some(Provider {
                 implementation: match provider.create_provider(impl_conf) {
                     Ok(p) => p,
@@ -122,7 +122,7 @@ pub fn create_provider_from_name(name: &str, impl_conf: ProviderImplConfig) -> O
 pub fn get_all_providers() -> Vec<String> {
     ALL_PROVIDERS
         .iter()
-        .map(ProviderFactory::get_name)
+        .filter_map(ProviderFactory::get_name)
         .collect()
 }
 
@@ -132,7 +132,7 @@ pub fn get_provider_capabilities(impl_config: ProviderImplConfig) -> Vec<(String
         .iter()
         .filter_map(|fac| {
             fac.get_capabilities(impl_config.clone())
-                .map(|caps| (fac.get_name(), caps))
+                .map(|caps| (fac.get_name().expect("When get_capabilities returned Some, get_name must return Some too. This is an internal error"), caps))
         })
         .collect()
 }

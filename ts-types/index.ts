@@ -1,2 +1,3 @@
 export * from "./generated/index";
-export { DHExchange, KeyHandle, KeyPairHandle, Provider, CreateProviderFromNameFunc, CreateProviderFunc, GetAllProvidersFunc, ProviderFactoryFunctions } from "./manual/index";
+export { CreateProviderFromNameFunc, CreateProviderFunc, DHExchange, GetAllProvidersFunc, GetProviderCapabilitiesFunc, KeyHandle, KeyPairHandle, Provider, ProviderFactoryFunctions } from "./manual/index";
+
