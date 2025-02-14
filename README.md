@@ -130,7 +130,7 @@ Examples for the rust crate can be found in the [example folder](./examples/).
 
 ### [Example Flutter App integration](./flutter_app/README.md)
 
-### [Usage NodeJS Plugin](./node-plugin/README.md)
+### [Usage NodeJS Plugin](https://github.com/nmshd/crypto-layer-node)
 
 
 ## Contributing

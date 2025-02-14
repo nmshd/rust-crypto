@@ -8,6 +8,7 @@ This project is a starting point for a Flutter
 [FFI plugin](https://flutter.dev/to/ffi-package),
 a specialized package that includes native code directly invoked with Dart FFI.
 
+<a name="generating" />
 ## Generating Dart Bindings
 
 ```
