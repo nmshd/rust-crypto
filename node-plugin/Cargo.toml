@@ -1,3 +1,0 @@
-[workspace]
-members = ["crates/crypto-layer-node"]
-resolver = "2"

@@ -14,7 +14,7 @@ npm install 'https://gitpkg.vercel.app/nmshd/rust-crypto/ts-types?main&scripts.p
 1. You need to have rust installed.
 2. You need to have npm or similar installed.
 
-
+<a name="generation" />
 ### Generate the Types
 
 ```
