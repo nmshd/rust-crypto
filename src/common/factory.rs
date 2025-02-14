@@ -125,3 +125,13 @@ pub fn get_all_providers() -> Vec<String> {
         .map(ProviderFactory::get_name)
         .collect()
 }
+
+pub fn get_provider_capabilities(impl_config: ProviderImplConfig) -> Vec<(String, ProviderConfig)> {
+    ALL_PROVIDERS
+        .iter()
+        .filter_map(|fac| {
+            fac.get_capabilities(impl_config.clone())
+                .map(|caps| (fac.get_name(), caps))
+        })
+        .collect()
+}
