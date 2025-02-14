@@ -21,6 +21,7 @@ use crate::common::{box_if_ok, spawn_promise, Finalized};
 use crate::fromjs::error::unwrap_or_throw;
 use fromjs::config::*;
 use fromjs::*;
+use tojs::config::wrap_provider_config;
 use tojs::*;
 
 type JsKeyHandle = JsBox<Arc<RwLock<Finalized<KeyHandle>>>>;
@@ -103,6 +104,39 @@ fn export_create_provider_from_name(mut cx: FunctionContext) -> JsResult<JsPromi
     })
 }
 
+/// Wraps `get_provider_capabilities` function.
+///
+/// # Arguments
+/// * **impl_config**: `ProviderImplConfig`
+///
+/// # Returns
+/// * `[string, ProviderConfig][]` - list of providers and their capabilities that are initializable.
+///
+/// # Throws
+fn export_get_provider_capabilities(mut cx: FunctionContext) -> JsResult<JsPromise> {
+    let impl_config_js = cx.argument::<JsObject>(0)?;
+    let impl_config = unwrap_or_throw!(
+        cx,
+        from_wrapped_provider_impl_config(&mut cx, impl_config_js)
+    );
+
+    spawn_promise(&mut cx, move |channel, deferred| {
+        let provider_caps_list = get_provider_capabilities(impl_config.clone());
+        deferred.settle_with(&channel, |mut cx| {
+            js_array_from_vec(&mut cx, provider_caps_list, |cx, value| {
+                let name = JsString::new(cx, value.0);
+                let caps = wrap_provider_config(cx, value.1)?;
+
+                let tuple = JsArray::new(cx, 2);
+                tuple.set(cx, 0, name)?;
+                tuple.set(cx, 1, caps)?;
+
+                Ok(tuple.upcast())
+            })
+        });
+    })
+}
+
 #[neon::main]
 fn main(mut cx: ModuleContext) -> NeonResult<()> {
     fmt()
@@ -124,6 +158,7 @@ fn main(mut cx: ModuleContext) -> NeonResult<()> {
         "createBareProviderFromName",
         export_create_provider_from_name,
     )?;
+    cx.export_function("getProviderCapabilities", export_get_provider_capabilities)?;
 
     // provider
     cx.export_function("providerName", crate::provider::export_provider_name)?;

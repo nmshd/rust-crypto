@@ -1,9 +1,10 @@
 import { test, expect, describe } from "@jest/globals";
 
 import { ProviderConfig, ProviderImplConfig, CreateProviderFromNameFunc, CreateProviderFunc, GetAllProvidersFunc } from "crypto-layer-ts-types";
-import { createProvider, getAllProviders, createProviderFromName } from "../lib/index.cjs";
+import { createProvider, getAllProviders, createProviderFromName, getProviderCapabilities } from "../lib/index.cjs";
 
 import { DB_DIR_PATH, SOFTWARE_PROVIDER_NAME } from "./common";
+import { GetProviderCapabilitiesFunc } from "crypto-layer-ts-types/manual";
 
 describe("test provider factory methods", () => {
     const FACTORY_DB_DIR_PATH = DB_DIR_PATH + "/factory";
@@ -22,7 +23,7 @@ describe("test provider factory methods", () => {
         expect(provider_arr).toContain(SOFTWARE_PROVIDER_NAME);
     });
 
-    test("create simple provider with file store",  async () => {
+    test("create simple provider with file store", async () => {
         let providerImplConfigWithFileStore: ProviderImplConfig = {
             additional_config: [{ FileStoreConfig: { db_dir: FACTORY_DB_DIR_PATH } }, { StorageConfigPass: "1234" }]
         };
@@ -40,5 +41,15 @@ describe("test provider factory methods", () => {
         let _a: GetAllProvidersFunc = getAllProviders;
         let _b: CreateProviderFromNameFunc = createProviderFromName;
         let _c: CreateProviderFunc = createProvider;
+        let _d: GetProviderCapabilitiesFunc = getProviderCapabilities;
+    });
+
+    test("test get provider capabilities", async () => {
+        let emptyProviderConfig: ProviderImplConfig = {
+            additional_config: []
+        };
+        let providerCapsList = await getProviderCapabilities(emptyProviderConfig);
+        expect(providerCapsList).toBeTruthy();
+        expect(providerCapsList.length).toBeGreaterThanOrEqual(0);
     });
 });
