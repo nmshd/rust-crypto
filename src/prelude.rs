@@ -6,6 +6,8 @@ pub use crate::common::{
         encryption::{AsymmetricKeySpec, Cipher},
         hashes::CryptoHash,
     },
-    factory::{create_provider, create_provider_from_name, get_all_providers},
+    factory::{
+        create_provider, create_provider_from_name, get_all_providers, get_provider_capabilities,
+    },
     DHExchange, KeyHandle, KeyPairHandle, Provider,
 };
