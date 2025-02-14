@@ -169,6 +169,16 @@ impl CalError {
         }
     }
 
+    pub(crate) fn initialization_error(description: String) -> Self {
+        Self {
+            error_kind: CalErrorKind::InitializationError {
+                description,
+                internal: true,
+            },
+            source: anyhow!("Initialization Error"),
+        }
+    }
+
     pub(crate) fn ephemeral_key_required() -> Self {
         Self {
             error_kind: CalErrorKind::EphermalKeyError,

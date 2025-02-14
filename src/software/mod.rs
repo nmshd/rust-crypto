@@ -29,8 +29,8 @@ pub(crate) mod provider;
 pub(crate) struct SoftwareProviderFactory {}
 
 impl ProviderFactory for SoftwareProviderFactory {
-    fn get_name(&self) -> String {
-        "SoftwareProvider".to_owned()
+    fn get_name(&self) -> Option<String> {
+        Some("SoftwareProvider".to_owned())
     }
 
     fn get_capabilities(&self, _impl_config: ProviderImplConfig) -> Option<ProviderConfig> {
@@ -61,7 +61,8 @@ impl ProviderFactory for SoftwareProviderFactory {
         &self,
         impl_config: ProviderImplConfig,
     ) -> Result<ProviderImplEnum, CalError> {
-        let storage_manager = StorageManager::new(self.get_name(), &impl_config.additional_config)?;
+        let storage_manager =
+            StorageManager::new(self.get_name().unwrap(), &impl_config.additional_config)?;
         Ok(Into::into(SoftwareProvider {
             impl_config,
             storage_manager,

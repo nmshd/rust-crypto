@@ -23,8 +23,8 @@ const PROVIDER_NAME: &str = "STUB_PROVIDER";
 pub(crate) struct StubProviderFactory {}
 
 impl ProviderFactory for StubProviderFactory {
-    fn get_name(&self) -> String {
-        PROVIDER_NAME.to_owned()
+    fn get_name(&self) -> Option<String> {
+        Some(PROVIDER_NAME.to_owned())
     }
 
     fn get_capabilities(&self, impl_config: ProviderImplConfig) -> Option<ProviderConfig> {
