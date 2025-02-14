@@ -26,6 +26,5 @@
     "editor.codeActionsOnSave": {
         "source.organizeImports": "explicit"
     },
-    "files.eol": "\n",
-    "cmake.sourceDirectory": "M:/DEV/WorkProjects/nmshd2/rust-crypto/flutter_app/linux"
+    "files.eol": "\n"
 }
