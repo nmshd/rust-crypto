@@ -1,7 +1,7 @@
 use crate::common::{
     config::{KeyPairSpec, KeySpec},
     crypto::algorithms::encryption::AsymmetricKeySpec,
-    error::CalError,
+    error::{CalError, KeyType},
     traits::key_handle::{KeyHandleImpl, KeyPairHandleImpl},
     DHExchange,
 };
@@ -240,7 +240,9 @@ impl KeyPairHandleImpl for SoftwareKeyPairHandle {
 
     fn extract_key(&self) -> Result<Vec<u8>, CalError> {
         if !self.spec.non_exportable {
-            Ok(self.signing_key.clone().unwrap())
+            self.signing_key
+                .clone()
+                .ok_or_else(|| CalError::missing_key(self.key_id.clone(), KeyType::Private))
         } else {
             Err(CalError::failed_operation(
                 "The private key is not exportable".to_string(),
