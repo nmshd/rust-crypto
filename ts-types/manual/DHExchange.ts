@@ -1,4 +1,4 @@
-import { KeyHandle } from "../generated";
+import { KeyHandle } from "./";
 
 export type DHExchange = {
     getPublicKey: () => Promise<Uint8Array>;
