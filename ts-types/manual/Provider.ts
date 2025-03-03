@@ -1,5 +1,5 @@
-import { DHExchange, KeyPairSpec, KeySpec, ProviderConfig } from "../generated";
-import { KeyHandle, KeyPairHandle } from "./";
+import { KeyPairSpec, KeySpec, ProviderConfig } from "../generated";
+import { KeyHandle, KeyPairHandle, DHExchange } from "./";
 
 export type Provider = {
     createKey: (spec: KeySpec) => Promise<KeyHandle>;
