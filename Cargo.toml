@@ -7,6 +7,10 @@ license = "MIT"
 [lib]
 crate-type = ["cdylib", "lib"]
 
+[[bench]]
+name = "software_provider"
+harness = false
+
 [profile.dev]
 debug-assertions = true
 overflow-checks = true
@@ -23,10 +27,11 @@ debug = false
 strip = "symbols"
 
 [features]
-ffi = []
 android = ["dep:robusta_jni", "dep:libloading", "dep:ndk-context"]
+bench = []
 nks = ["core", "dep:x25519-dalek", "hcvault", "dep:reqwest", "dep:rand", "dep:openssl", "dep:arrayref", "dep:base64", "dep:ed25519-dalek", "dep:sodiumoxide"]
 hcvault = []
+ffi = []
 core = []
 linux = ["tss-esapi"]
 apple-secure-enclave = ["dep:security-framework", "dep:core-foundation", "dep:base64"]
@@ -67,7 +72,6 @@ tracing = { version = "0.1.41", features = ["attributes", "release_max_level_inf
 tracing-attributes = "0.1.28"
 tss-esapi = { version = "7.5.1", optional = true }
 windows = { version = "0.57.0", features = [
-    "Win32_Foundation",
     "Win32_System_SystemServices",
     "Win32_Security_Tpm",
     "Security_Cryptography_Core",
@@ -107,5 +111,7 @@ bindgen = "0.71.1"
 [dev-dependencies]
 color-eyre = "0.6.3"
 test-case = "3.3.1"
-tempfile = "3.15.0"
+tempfile = "3.16.0"
 lazy_static = "1.5.0"
+criterion = "0.5.1"
+tracing-test = "0.2.5"

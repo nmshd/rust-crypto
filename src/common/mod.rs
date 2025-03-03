@@ -150,6 +150,15 @@ impl Provider {
     delegate_enum_bare! {
         pub fn get_capabilities(&self) -> Option<ProviderConfig>;
     }
+
+    delegate_enum! {
+            pub fn derive_key_from_password(
+            &self,
+            password: &str,
+            salt: &[u8],
+            spec: KeyPairSpec,
+        ) -> Result<KeyPairHandle, CalError>;
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -195,6 +204,10 @@ impl KeyPairHandle {
 
     delegate_enum_bare! {
         pub fn spec(&self) -> KeyPairSpec;
+    }
+
+    delegate_enum! {
+        pub fn extract_key(&self) -> Result<Vec<u8>, CalError>;
     }
 }
 

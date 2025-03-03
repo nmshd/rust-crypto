@@ -11,10 +11,12 @@ mod nks;
 #[cfg(feature = "software")]
 mod software;
 
-use std::collections::HashMap;
-use std::sync::Once;
-use std::sync::{Arc, RwLock};
-use std::{io, vec};
+use std::{
+    collections::HashMap,
+    io,
+    sync::{Arc, Once, RwLock},
+    vec,
+};
 
 use color_eyre::install;
 use tracing_subscriber::{
@@ -23,8 +25,10 @@ use tracing_subscriber::{
     fmt::format::FmtSpan,
 };
 
-use crate::common::config::{AdditionalConfig, ProviderImplConfig};
-use crate::common::KeyPairHandle;
+use crate::common::{
+    config::{AdditionalConfig, ProviderImplConfig},
+    KeyPairHandle,
+};
 
 static SETUP_INITIALIZATION: Once = Once::new();
 

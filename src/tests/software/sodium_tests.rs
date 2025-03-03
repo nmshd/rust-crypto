@@ -323,6 +323,12 @@ mod sodium_cross_checks {
                 .expect("Failed to create AES-GCM-256 key in Rust")
         }
 
+        pub unsafe fn create_sodium_aesgcm256_key() -> [u8; 32] {
+            let mut key = [0u8; 32];
+            randombytes_buf(key.as_mut_ptr() as *mut c_void, key.len());
+            key
+        }
+
         // ---------- 1) cross_check_encrypt_decrypt_data ----------
         #[test]
         fn cross_check_encrypt_decrypt_data() {
@@ -796,6 +802,82 @@ mod sodium_cross_checks {
                     assert_eq!(&dec, plaintext, "Decrypted data mismatch for key #{}", i);
                 }
             }
+        }
+
+        #[test]
+        fn cross_check_encrypt_with_libsodium_decrypt_in_rust() {
+            // Initialize libsodium
+            init_sodium();
+            if unsafe { crypto_aead_aes256gcm_is_available() } == 0 {
+                panic!("AES-GCM not available in libsodium build or CPU");
+            }
+
+            // Define plaintext for encryption
+            let plaintext = b"Data encrypted in libsodium, decrypted in Rust provider";
+
+            // ---------------------------------------------------------------------
+            // Step 1: Generate a random 32-byte key in libsodium
+            // ---------------------------------------------------------------------
+            let sodium_key: [u8; 32] = unsafe { create_sodium_aesgcm256_key() };
+
+            // ---------------------------------------------------------------------
+            // Step 2: Import the libsodium key into the Rust provider
+            // Create a symmetric KeyHandle from the raw key.
+            // (Assuming your provider supports importing symmetric keys via `import_key`.)
+            let impl_config = unsafe { STORE.impl_config().clone() };
+            let mut provider = factory::create_provider_from_name("SoftwareProvider", impl_config)
+                .expect("Failed to create provider");
+            let key_spec = KeySpec {
+                cipher: Cipher::AesGcm256,
+                signing_hash: CryptoHash::Sha2_256,
+                ephemeral: true,
+            };
+            let rust_key_handle = provider
+                .import_key(key_spec, &sodium_key)
+                .expect("Failed to import libsodium key into Rust provider");
+
+            // ---------------------------------------------------------------------
+            // Step 3: Encrypt plaintext using libsodium's AES-GCM-256
+            // ---------------------------------------------------------------------
+            let nonce_len = crypto_aead_aes256gcm_NPUBBYTES as usize;
+            let mut nonce = vec![0u8; nonce_len];
+            unsafe {
+                randombytes_buf(nonce.as_mut_ptr() as *mut std::ffi::c_void, nonce.len());
+            }
+
+            // Prepare ciphertext buffer: plaintext length + overhead for tag
+            let tag_len = crypto_aead_aes256gcm_ABYTES as usize;
+            let mut ciphertext = vec![0u8; plaintext.len() + tag_len];
+            let mut ciphertext_len: u64 = 0;
+            let additional_data = []; // No AAD
+
+            unsafe {
+                let enc_res = crypto_aead_aes256gcm_encrypt(
+                    ciphertext.as_mut_ptr(),
+                    &mut ciphertext_len,
+                    plaintext.as_ptr(),
+                    plaintext.len() as u64,
+                    additional_data.as_ptr(),
+                    additional_data.len() as u64,
+                    std::ptr::null_mut(), // nsec, not used
+                    nonce.as_ptr(),
+                    sodium_key.as_ptr(),
+                );
+                assert_eq!(enc_res, 0, "libsodium AES-GCM encryption failed");
+                ciphertext.resize(ciphertext_len as usize, 0);
+            }
+
+            // ---------------------------------------------------------------------
+            // Step 4: Use the Rust provider's decryption method to decrypt the data
+            // ---------------------------------------------------------------------
+            let rust_decrypted = rust_key_handle
+                .decrypt_data(&ciphertext, &nonce)
+                .expect("Rust provider decryption failed");
+
+            assert_eq!(
+                rust_decrypted, plaintext,
+                "Rust provider's decrypted text does not match the original plaintext"
+            );
         }
     }
 

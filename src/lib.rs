@@ -36,7 +36,10 @@ pub(crate) mod storage;
 pub(crate) mod stub;
 #[cfg(test)]
 mod tests;
+
 pub(crate) mod tpm;
 
 /// Exports structs and functions needed for using the library.
 pub mod prelude;
+
+// pub use crate::common::config::KeyPairSpec;
