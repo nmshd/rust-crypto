@@ -1,5 +1,7 @@
 # Crypto-Layer TS Type Definitions
 
+[![NPM Version](https://img.shields.io/npm/v/%40nmshd%2Frs-crypto-types)](https://www.npmjs.com/package/@nmshd/rs-crypto-types)
+
 This is an npm package with the ts type defintions of the CAL project.
 
 ## Build Package
