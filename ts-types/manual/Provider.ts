@@ -1,5 +1,5 @@
 import { KeyPairSpec, KeySpec, ProviderConfig } from "../generated";
-import { KeyHandle, KeyPairHandle, DHExchange } from "./";
+import { DHExchange, KeyHandle, KeyPairHandle } from "./";
 
 export type Provider = {
     createKey: (spec: KeySpec) => Promise<KeyHandle>;
@@ -12,4 +12,6 @@ export type Provider = {
     startEphemeralDhExchange: (spec: KeyPairSpec) => Promise<DHExchange>;
     providerName: () => Promise<string>;
     getCapabilities: () => Promise<ProviderConfig | undefined>;
+    deriveKeyFromPassword: (password: string, salt: Uint8Array, spec: KeyPairSpec) => KeyPairHandle;
+    getRandom: (len: number) => Uint8Array;
 };
