@@ -55,6 +55,7 @@ Future<Provider?> createProviderFromName(
 Future<List<String>> getAllProviders() =>
     RustLib.instance.api.cryptoLayerCommonFactoryGetAllProviders();
 
+/// Returns the names and capabilities of all providers that can be initialized with the given [ProviderImplConfig].
 Future<List<(String, ProviderConfig)>> getProviderCapabilities(
         {required ProviderImplConfig implConfig}) =>
     RustLib.instance.api.cryptoLayerCommonFactoryGetProviderCapabilities(

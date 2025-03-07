@@ -150,6 +150,19 @@ impl Provider {
     delegate_enum_bare! {
         pub fn get_capabilities(&self) -> Option<ProviderConfig>;
     }
+
+    delegate_enum! {
+        pub fn derive_key_from_password(
+            &self,
+            password: &str,
+            salt: &[u8],
+            spec: KeyPairSpec,
+        ) -> Result<KeyPairHandle, CalError>;
+    }
+
+    delegate_enum_bare! {
+        pub fn get_random(&self, len: usize) -> Vec<u8>;
+    }
 }
 
 #[derive(Debug, Clone)]
