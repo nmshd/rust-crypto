@@ -12,6 +12,6 @@ export type Provider = {
     startEphemeralDhExchange: (spec: KeyPairSpec) => Promise<DHExchange>;
     providerName: () => Promise<string>;
     getCapabilities: () => Promise<ProviderConfig | undefined>;
-    deriveKeyFromPassword: (password: string, salt: Uint8Array, spec: KeyPairSpec) => KeyPairHandle;
-    getRandom: (len: number) => Uint8Array;
+    deriveKeyFromPassword: (password: string, salt: Uint8Array, spec: KeyPairSpec) => Promise<KeyPairHandle>;
+    getRandom: (len: number) => Promise<Uint8Array>;
 };
