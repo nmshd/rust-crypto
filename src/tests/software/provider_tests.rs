@@ -340,5 +340,20 @@ mod tests {
                 );
             }
         }
+
+        #[test]
+        fn test_get_random() {
+            let provider = setup_provider();
+            let len = 16;
+            let random = provider.get_random(len);
+            assert_eq!(random.len(), 16);
+            let mut allZero = true;
+            for i in 0..random.len() {
+                if random[i] != 0 {
+                    allZero = false
+                }
+            }
+            assert!(!allZero);
+        }
     }
 }
