@@ -397,6 +397,7 @@ dependencies = [
  "arrayref",
  "base64 0.22.1",
  "bincode",
+ "blake2",
  "chacha20",
  "color-eyre",
  "core-foundation 0.10.0",

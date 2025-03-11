@@ -199,13 +199,12 @@ mod tests {
 
         use crate::{
             common::{
-                config::KeyPairSpec,
-                crypto::algorithms::encryption::AsymmetricKeySpec,
                 error::CalError,
                 factory,
-                traits::{key_handle::KeyPairHandleImpl, module_provider::ProviderImpl},
-                KeyPairHandle, Provider,
+                traits::{key_handle::KeyHandleImpl, module_provider::ProviderImpl},
+                KeyHandle, Provider,
             },
+            prelude::{Cipher, CryptoHash, KeySpec},
             tests::TestStore,
         };
 
@@ -216,17 +215,17 @@ mod tests {
             factory::create_provider_from_name("SoftwareProvider", impl_config).unwrap()
         }
 
-        fn get_algorithm() -> KeyPairSpec {
-            KeyPairSpec {
-                asym_spec: AsymmetricKeySpec::P256,
-                cipher: Some(
-                    crate::common::crypto::algorithms::encryption::Cipher::XChaCha20Poly1305,
-                ),
-                signing_hash: crate::common::crypto::algorithms::hashes::CryptoHash::Sha2_256,
+        fn get_algorithm() -> KeySpec {
+            KeySpec {
+                cipher: Cipher::XChaCha20Poly1305,
+                signing_hash: CryptoHash::Sha2_256,
                 ephemeral: true,
-                non_exportable: false,
             }
         }
+
+        // Default parameters for testing
+        const DEFAULT_OPSLIMIT: u32 = 4; // Low value for faster tests
+        const DEFAULT_MEMLIMIT: u32 = 8192; // Minimum reasonable value
 
         #[test]
         fn test_successful_key_derivation() {
@@ -235,9 +234,15 @@ mod tests {
             let salt = [0u8; 16];
             let algorithm = get_algorithm();
 
-            let key_handle_result: Result<KeyPairHandle, CalError> = provider
-                .implementation
-                .derive_key_from_password(password, &salt, algorithm);
+            let key_handle_result: Result<KeyHandle, CalError> =
+                provider.implementation.derive_key_from_password(
+                    password,
+                    &salt,
+                    algorithm,
+                    argon2::Algorithm::Argon2id.as_ref(),
+                    DEFAULT_OPSLIMIT,
+                    DEFAULT_MEMLIMIT,
+                );
             assert!(key_handle_result.is_ok(), "Failed to derive key");
 
             let key_handle = key_handle_result.unwrap();
@@ -253,7 +258,14 @@ mod tests {
 
             let key1 = provider
                 .implementation
-                .derive_key_from_password("test_password", &salt, algorithm.clone())
+                .derive_key_from_password(
+                    "test_password",
+                    &salt,
+                    algorithm,
+                    argon2::Algorithm::Argon2id.as_ref(),
+                    DEFAULT_OPSLIMIT,
+                    DEFAULT_MEMLIMIT,
+                )
                 .unwrap()
                 .implementation
                 .extract_key()
@@ -261,7 +273,14 @@ mod tests {
 
             let key2 = provider
                 .implementation
-                .derive_key_from_password("another_password", &salt, algorithm)
+                .derive_key_from_password(
+                    "another_password",
+                    &salt,
+                    algorithm,
+                    argon2::Algorithm::Argon2id.as_ref(),
+                    DEFAULT_OPSLIMIT,
+                    DEFAULT_MEMLIMIT,
+                )
                 .unwrap()
                 .implementation
                 .extract_key()
@@ -281,7 +300,14 @@ mod tests {
 
             let key1 = provider
                 .implementation
-                .derive_key_from_password(password, &[0u8; 16], algorithm.clone())
+                .derive_key_from_password(
+                    password,
+                    &[0u8; 16],
+                    algorithm,
+                    argon2::Algorithm::Argon2id.as_ref(),
+                    DEFAULT_OPSLIMIT,
+                    DEFAULT_MEMLIMIT,
+                )
                 .unwrap()
                 .implementation
                 .extract_key()
@@ -289,7 +315,14 @@ mod tests {
 
             let key2 = provider
                 .implementation
-                .derive_key_from_password(password, &[1u8; 16], algorithm)
+                .derive_key_from_password(
+                    password,
+                    &[1u8; 16],
+                    algorithm,
+                    argon2::Algorithm::Argon2id.as_ref(),
+                    DEFAULT_OPSLIMIT,
+                    DEFAULT_MEMLIMIT,
+                )
                 .unwrap()
                 .implementation
                 .extract_key()
@@ -305,17 +338,21 @@ mod tests {
             let short_salt = [0u8; 15];
             let algorithm = get_algorithm();
 
-            let result =
-                provider
-                    .implementation
-                    .derive_key_from_password(password, &short_salt, algorithm);
+            let result = provider.implementation.derive_key_from_password(
+                password,
+                &short_salt,
+                algorithm,
+                argon2::Algorithm::Argon2id.as_ref(),
+                DEFAULT_OPSLIMIT,
+                DEFAULT_MEMLIMIT,
+            );
 
             assert!(result.is_err(), "Deriving key with short salt should fail");
             if let Err(e) = result {
-                assert_eq!(
-                    e.to_string(),
-                    "Failed Operation: description: Failed Operation",
-                    "Incorrect error message for short salt"
+                assert!(
+                    e.to_string().contains("Salt must be exactly 16 bytes long"),
+                    "Incorrect error message for short salt: {}",
+                    e
                 );
             }
         }
@@ -327,18 +364,42 @@ mod tests {
             let long_salt = [0u8; 17];
             let algorithm = get_algorithm();
 
-            let result = provider
-                .implementation
-                .derive_key_from_password(password, &long_salt, algorithm);
+            let result = provider.implementation.derive_key_from_password(
+                password,
+                &long_salt,
+                algorithm,
+                argon2::Algorithm::Argon2id.as_ref(),
+                DEFAULT_OPSLIMIT,
+                DEFAULT_MEMLIMIT,
+            );
 
             assert!(result.is_err(), "Deriving key with long salt should fail");
             if let Err(e) = result {
-                assert_eq!(
-                    e.to_string(),
-                    "Failed Operation: description: Failed Operation",
-                    "Incorrect error message for long salt"
+                assert!(
+                    e.to_string().contains("Salt must be exactly 16 bytes long"),
+                    "Incorrect error message for long salt: {}",
+                    e
                 );
             }
+        }
+
+        #[test]
+        fn test_argon2i_variant() {
+            let provider = setup_provider();
+            let password = "test_password";
+            let salt = [0u8; 16];
+            let algorithm = get_algorithm();
+
+            let result = provider.implementation.derive_key_from_password(
+                password,
+                &salt,
+                algorithm,
+                argon2::Algorithm::Argon2id.as_ref(),
+                DEFAULT_OPSLIMIT,
+                DEFAULT_MEMLIMIT,
+            );
+
+            assert!(result.is_ok(), "Argon2i variant should work");
         }
 
         #[test]
@@ -347,13 +408,13 @@ mod tests {
             let len = 16;
             let random = provider.get_random(len);
             assert_eq!(random.len(), 16);
-            let mut allZero = true;
-            for i in 0..random.len() {
+            let mut all_zero = true;
+            (0..random.len()).for_each(|i| {
                 if random[i] != 0 {
-                    allZero = false
+                    all_zero = false
                 }
-            }
-            assert!(!allZero);
+            });
+            assert!(!all_zero);
         }
     }
 }

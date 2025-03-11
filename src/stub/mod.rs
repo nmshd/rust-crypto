@@ -110,8 +110,11 @@ impl ProviderImpl for StubProvider {
         &self,
         password: &str,
         salt: &[u8],
-        spec: KeyPairSpec,
-    ) -> Result<KeyPairHandle, CalError> {
+        algorithm: KeySpec,
+        derivation_algorithm: &str,
+        opslimit: u32,
+        memlimit: u32,
+    ) -> Result<KeyHandle, CalError> {
         todo!()
     }
 }
