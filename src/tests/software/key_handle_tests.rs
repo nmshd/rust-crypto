@@ -37,7 +37,7 @@ mod tests {
                 cipher: None,
                 signing_hash: CryptoHash::Sha2_256,
                 ephemeral: true,
-                non_exportable: false
+                non_exportable: false,
             };
 
             // Create a new key pair and get the SoftwareKeyPairHandle
@@ -66,7 +66,7 @@ mod tests {
                 cipher: None,
                 signing_hash: CryptoHash::Sha2_256,
                 ephemeral: true,
-                non_exportable: false
+                non_exportable: false,
             };
 
             // Create a new key pair and get the SoftwareKeyPairHandle
@@ -99,7 +99,7 @@ mod tests {
                 cipher: None,
                 signing_hash: CryptoHash::Sha2_256,
                 ephemeral: true,
-                non_exportable: false
+                non_exportable: false,
             };
 
             // Create two key pairs
@@ -132,7 +132,7 @@ mod tests {
                 cipher: None,
                 signing_hash: CryptoHash::Sha2_256,
                 ephemeral: true,
-                non_exportable: false
+                non_exportable: false,
             };
 
             // Create a new key pair and get the SoftwareKeyPairHandle
@@ -154,7 +154,7 @@ mod tests {
                 cipher: None,
                 signing_hash: CryptoHash::Sha2_256,
                 ephemeral: true,
-                non_exportable: false
+                non_exportable: false,
             };
 
             let impl_config = unsafe { STORE.impl_config().clone() };
@@ -194,7 +194,7 @@ mod tests {
                 cipher: None,
                 signing_hash: CryptoHash::Sha2_256,
                 ephemeral: true,
-                non_exportable: false
+                non_exportable: false,
             };
 
             let impl_config = unsafe { STORE.impl_config().clone() };
@@ -234,7 +234,7 @@ mod tests {
                 cipher: None,
                 signing_hash: CryptoHash::Sha2_256,
                 ephemeral: true,
-                non_exportable: false
+                non_exportable: false,
             };
 
             // Create a new key pair and get the SoftwareKeyPairHandle

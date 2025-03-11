@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use super::{
     key_handle::{SoftwareKeyHandle, SoftwareKeyPairHandle},
     SoftwareProvider, SoftwareProviderFactory, StorageManager,
@@ -18,7 +20,8 @@ use crate::{
     },
     storage::KeyData,
 };
-use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
+use argon2::{password_hash::SaltString, Argon2, Params, PasswordHasher};
+use blake2::{Blake2b512, Digest};
 use nanoid::nanoid;
 use ring::{
     aead::Algorithm,
@@ -409,44 +412,127 @@ impl ProviderImpl for SoftwareProvider {
         &self,
         password: &str,
         salt: &[u8],
-        algorithm: KeyPairSpec,
-    ) -> Result<KeyPairHandle, CalError> {
+        algorithm: KeySpec,
+        derivation_algorithm: &str,
+        opslimit: u32,
+        memlimit: u32,
+    ) -> Result<KeyHandle, CalError> {
         if salt.len() != 16 {
             return Err(CalError::failed_operation(
-                "description".to_string(),
+                "Salt must be exactly 16 bytes long".to_string(),
                 true,
                 None,
             ));
         }
 
-        let argon2 = Argon2::default();
+        // Determine key length based on cipher
+        let key_length = match algorithm.cipher {
+            Cipher::AesGcm128 => 16,
+            Cipher::AesGcm256 | Cipher::XChaCha20Poly1305 => 32,
+            _ => {
+                return Err(CalError::failed_operation(
+                    "Unsupported cipher for key derivation".to_string(),
+                    true,
+                    None,
+                ))
+            }
+        };
+
+        // Convert parameters to Argon2 format
+        let memory = memlimit; // Memory in KB
+
+        // Create Argon2 with specified algorithm
+        let argon2 = Argon2::new(
+            argon2::Algorithm::from_str(derivation_algorithm).unwrap(),
+            argon2::Version::V0x13, // Latest version
+            Params::new(
+                memory,   // m_cost (memory)
+                opslimit, // t_cost (iterations)
+                1,        // p_cost (parallelism)
+                Some(key_length),
+            )
+            .map_err(|e| {
+                CalError::failed_operation(format!("Invalid Argon2 parameters: {}", e), true, None)
+            })?,
+        );
+
         let salt_str = SaltString::encode_b64(salt)
             .map_err(|_| CalError::failed_operation("Failed to encode salt".into(), true, None))?;
 
-        // Perform the password hashing to derive a key
+        // Perform password hashing with specified parameters
         let password_hash = argon2
             .hash_password(password.as_bytes(), &salt_str)
             .map_err(|e| CalError::failed_operation(e.to_string(), false, None))?;
 
-        // Truncate or derive key material based on the selected encryption algorithm
-        let derived_key = match algorithm.cipher {
-            Some(Cipher::XChaCha20Poly1305) => {
-                // Extract the raw hash output and truncate it to 32 bytes (XChaCha20 key size)
-                password_hash.hash.unwrap().as_bytes()[..32].to_vec()
-            } // Add other algorithms here
-            _ => unimplemented!(),
-        };
+        // Extract the raw hash output and truncate to the required key length
+        let derived_key = password_hash.hash.unwrap().as_bytes()[..key_length].to_vec();
 
         let key_id = nanoid!(10);
-        let handle = SoftwareKeyPairHandle {
+        let handle = SoftwareKeyHandle {
             key_id: key_id.clone(),
             spec: algorithm,
-            public_key: vec![],
-            signing_key: Some(derived_key),
+            key: derived_key,
             storage_manager: self.storage_manager.clone(),
         };
 
-        Ok(KeyPairHandle {
+        Ok(KeyHandle {
+            implementation: handle.into(),
+        })
+    }
+
+    fn derive_key_from_base(
+        &self,
+        base_key: &[u8],
+        key_id: u64,
+        context: &str,
+        algorithm: KeySpec,
+    ) -> Result<KeyHandle, CalError> {
+        // Validate context is exactly 8 characters
+        if context.len() != 8 {
+            return Err(CalError::failed_operation(
+                "Context must be exactly 8 characters long".to_string(),
+                true,
+                None,
+            ));
+        }
+
+        // Determine key length based on cipher
+        let key_length = match algorithm.cipher {
+            Cipher::AesGcm128 => 16,
+            Cipher::AesGcm256 | Cipher::XChaCha20Poly1305 => 32,
+            _ => {
+                return Err(CalError::failed_operation(
+                    "Unsupported cipher for key derivation".to_string(),
+                    true,
+                    None,
+                ))
+            }
+        };
+
+        // Create derivation info by combining the context string and key_id (as little-endian bytes)
+        let mut derivation_info = Vec::with_capacity(16);
+        derivation_info.extend_from_slice(context.as_bytes());
+        derivation_info.extend_from_slice(&key_id.to_le_bytes());
+
+        // Use Blake2b512 for key derivation - this has a fixed 64-byte output size
+        let mut hasher = Blake2b512::new();
+        hasher.update(&derivation_info);
+        hasher.update(base_key);
+        let hash_result = hasher.finalize();
+
+        // Truncate the hash to the desired key length
+        let derived_key = hash_result[..key_length].to_vec();
+
+        // Create a key handle with the derived key
+        let key_id = nanoid!(10);
+        let handle = SoftwareKeyHandle {
+            key_id: key_id.clone(),
+            spec: algorithm,
+            key: derived_key,
+            storage_manager: self.storage_manager.clone(),
+        };
+
+        Ok(KeyHandle {
             implementation: handle.into(),
         })
     }

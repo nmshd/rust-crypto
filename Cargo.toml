@@ -32,7 +32,7 @@ linux = ["tss-esapi"]
 apple-secure-enclave = ["dep:security-framework", "dep:core-foundation", "dep:base64"]
 win = ["dep:windows"]
 hsm = []
-software = ["dep:base64", "dep:ring", "dep:pkcs8", "dep:der", "dep:redb", "dep:ed25519-compact", "dep:chacha20", "dep:argon2"]
+software = ["dep:base64", "dep:blake2", "dep:ring", "dep:pkcs8", "dep:der", "dep:redb", "dep:ed25519-compact", "dep:chacha20", "dep:argon2"]
 software-keystore = ["software", "software-metadata"]
 software-metadata = ["software"]
 yubi = ["hsm", "dep:yubikey", "dep:x509-cert", "dep:base64", "dep:rsa", "dep:openssl"]
@@ -42,6 +42,7 @@ ts-interface = ["dep:ts-rs"]
 argon2 = { version = "0.5.3", optional = true }
 arrayref = { version = "0.3.7", optional = true }
 base64 = { version = "0.22.1", optional = true }
+blake2 = { version = "0.10.6", optional = true }
 chacha20 = { version = "0.9.1", optional = true }
 core-foundation = { version = "0.10.0", optional = true }
 der = { version = "0.7.9", optional = true }

@@ -132,7 +132,7 @@ impl KeyHandleImpl for SoftwareKeyHandle {
     }
 
     fn extract_key(&self) -> Result<Vec<u8>, CalError> {
-        todo!("Cannot extract symmetric keys")
+        Ok(self.key.clone())
     }
 
     fn id(&self) -> Result<String, CalError> {

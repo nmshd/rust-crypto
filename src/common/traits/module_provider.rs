@@ -139,8 +139,23 @@ pub(crate) trait ProviderImpl: Send + Sync {
         &self,
         password: &str,
         salt: &[u8],
-        spec: KeyPairSpec,
-    ) -> Result<KeyPairHandle, CalError> {
+        algorithm: KeySpec,
+        derivation_algorithm: &str,
+        opslimit: u32,
+        memlimit: u32,
+    ) -> Result<KeyHandle, CalError> {
+        unimplemented!()
+    }
+
+    /// Derives a high-entropy key from a low-entropy password and a unique salt
+    #[allow(dead_code, unused_variables)]
+    fn derive_key_from_base(
+        &self,
+        base_key: &[u8],
+        key_id: u64,
+        context: &str,
+        spec: KeySpec,
+    ) -> Result<KeyHandle, CalError> {
         unimplemented!()
     }
 
