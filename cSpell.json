@@ -4,6 +4,7 @@
         "Brainpool",
         "keypair",
         "kibibytes",
+        "nmshd",
         "pkcs",
         "repr",
         "thiserror"
