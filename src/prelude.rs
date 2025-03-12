@@ -5,7 +5,9 @@ pub use crate::common::{
     crypto::algorithms::{
         encryption::{AsymmetricKeySpec, Cipher},
         hashes::CryptoHash,
+        key_derivation::{Argon2Options, KDF},
     },
+    error::{CalError, CalErrorKind},
     factory::{
         create_provider, create_provider_from_name, get_all_providers, get_provider_capabilities,
     },

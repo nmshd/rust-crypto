@@ -14,6 +14,7 @@ import 'third_party/crypto_layer/common.dart';
 import 'third_party/crypto_layer/common/config.dart';
 import 'third_party/crypto_layer/common/crypto/algorithms/encryption.dart';
 import 'third_party/crypto_layer/common/crypto/algorithms/hashes.dart';
+import 'third_party/crypto_layer/common/crypto/algorithms/key_derivation.dart';
 import 'third_party/crypto_layer/common/crypto/pkcs/standards.dart';
 import 'third_party/crypto_layer/common/error.dart';
 import 'third_party/crypto_layer/common/factory.dart';
@@ -47,6 +48,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_DhExchangePtr =>
       wire._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHExchangePtr;
+
+  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_KdfPtr => wire
+      ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKDFPtr;
 
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_KeyHandlePtr =>
       wire._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandlePtr;
@@ -90,6 +94,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   DhExchange
       dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHExchange(
           dynamic raw);
+
+  @protected
+  Kdf dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKDF(
+      dynamic raw);
 
   @protected
   KeyHandle
@@ -193,6 +201,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
           dynamic raw);
 
   @protected
+  Kdf dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKDF(
+      dynamic raw);
+
+  @protected
   KeyHandle
       dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandle(
           dynamic raw);
@@ -224,6 +236,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   AdditionalConfig dco_decode_additional_config(dynamic raw);
+
+  @protected
+  Argon2Options dco_decode_argon_2_options(dynamic raw);
 
   @protected
   AsymmetricKeySpec dco_decode_asymmetric_key_spec(dynamic raw);
@@ -347,6 +362,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   T dco_decode_t(dynamic raw);
 
   @protected
+  int dco_decode_u_32(dynamic raw);
+
+  @protected
+  BigInt dco_decode_u_64(dynamic raw);
+
+  @protected
   int dco_decode_u_8(dynamic raw);
 
   @protected
@@ -387,6 +408,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   DhExchange
       sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHExchange(
           SseDeserializer deserializer);
+
+  @protected
+  Kdf sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKDF(
+      SseDeserializer deserializer);
 
   @protected
   KeyHandle
@@ -472,6 +497,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
           SseDeserializer deserializer);
 
   @protected
+  Kdf sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKDF(
+      SseDeserializer deserializer);
+
+  @protected
   KeyHandle
       sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandle(
           SseDeserializer deserializer);
@@ -501,6 +530,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   AdditionalConfig sse_decode_additional_config(SseDeserializer deserializer);
+
+  @protected
+  Argon2Options sse_decode_argon_2_options(SseDeserializer deserializer);
 
   @protected
   AsymmetricKeySpec sse_decode_asymmetric_key_spec(
@@ -634,6 +666,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   T sse_decode_t(SseDeserializer deserializer);
 
   @protected
+  int sse_decode_u_32(SseDeserializer deserializer);
+
+  @protected
+  BigInt sse_decode_u_64(SseDeserializer deserializer);
+
+  @protected
   int sse_decode_u_8(SseDeserializer deserializer);
 
   @protected
@@ -675,6 +713,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void
       sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHExchange(
           DhExchange self, SseSerializer serializer);
+
+  @protected
+  void
+      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKDF(
+          Kdf self, SseSerializer serializer);
 
   @protected
   void
@@ -780,6 +823,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
+      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKDF(
+          Kdf self, SseSerializer serializer);
+
+  @protected
+  void
       sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandle(
           KeyHandle self, SseSerializer serializer);
 
@@ -810,6 +858,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_additional_config(
       AdditionalConfig self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_argon_2_options(Argon2Options self, SseSerializer serializer);
 
   @protected
   void sse_encode_asymmetric_key_spec(
@@ -946,6 +997,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_t(T self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_u_32(int self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_u_64(BigInt self, SseSerializer serializer);
 
   @protected
   void sse_encode_u_8(int self, SseSerializer serializer);
@@ -1161,6 +1218,38 @@ class RustLibWire implements BaseWire {
           'frbgen_cal_flutter_plugin_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHExchange');
   late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHExchange =
       _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHExchangePtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void
+      rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKDF(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKDF(
+      ptr,
+    );
+  }
+
+  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKDFPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'frbgen_cal_flutter_plugin_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKDF');
+  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKDF =
+      _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKDFPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void
+      rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKDF(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKDF(
+      ptr,
+    );
+  }
+
+  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKDFPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'frbgen_cal_flutter_plugin_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKDF');
+  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKDF =
+      _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKDFPtr
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   void

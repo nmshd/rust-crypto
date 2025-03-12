@@ -7,6 +7,7 @@ import '../../frb_generated.dart';
 import 'common/config.dart';
 import 'common/crypto/algorithms/encryption.dart';
 import 'common/crypto/algorithms/hashes.dart';
+import 'common/crypto/algorithms/key_derivation.dart';
 import 'common/error.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
@@ -78,10 +79,17 @@ abstract class Provider implements RustOpaqueInterface {
 
   Future<KeyPairHandle> createKeyPair({required KeyPairSpec spec});
 
-  Future<KeyPairHandle> deriveKeyFromPassword(
+  Future<KeyHandle> deriveKeyFromBase(
+      {required List<int> baseKey,
+      required BigInt keyId,
+      required String context,
+      required KeySpec spec});
+
+  Future<KeyHandle> deriveKeyFromPassword(
       {required String password,
       required List<int> salt,
-      required KeyPairSpec spec});
+      required KeySpec algorithm,
+      required Kdf kdf});
 
   Future<List<(String, Spec)>> getAllKeys();
 

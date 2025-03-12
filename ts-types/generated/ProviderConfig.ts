@@ -6,6 +6,7 @@ import type { SecurityLevel } from "./SecurityLevel";
 
 /**
  * Capabilities of a Provider
+ * flutter_rust_bridge:non_opaque
  */
 export type ProviderConfig = {
   max_security_level: SecurityLevel;

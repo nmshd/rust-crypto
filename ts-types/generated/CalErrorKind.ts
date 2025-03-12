@@ -3,6 +3,7 @@ import type { KeyType } from "./KeyType";
 
 /**
  * Enumeration differentiating between the causes and the severity of the error.
+ * flutter_rust_bridge:non_opaque
  */
 export type CalErrorKind =
   | "NotImplemented"
@@ -44,5 +45,5 @@ export type CalErrorKind =
     };
   }
   | { "UnsupportedAlgorithm": string }
-  | "EphermalKeyError"
+  | "EphemeralKeyError"
   | "Other";

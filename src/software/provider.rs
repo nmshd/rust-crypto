@@ -1,5 +1,3 @@
-use std::str::FromStr;
-
 use super::{
     key_handle::{SoftwareKeyHandle, SoftwareKeyPairHandle},
     SoftwareProvider, SoftwareProviderFactory, StorageManager,
@@ -18,9 +16,12 @@ use crate::{
         },
         DHExchange, KeyHandle, KeyPairHandle,
     },
+    prelude::KDF,
     storage::KeyData,
 };
-use argon2::{password_hash::SaltString, Argon2, Params, PasswordHasher};
+use argon2::{
+    password_hash::SaltString, Argon2, Params, PasswordHasher, MAX_SALT_LEN, MIN_SALT_LEN,
+};
 use blake2::{Blake2b512, Digest};
 use nanoid::nanoid;
 use ring::{
@@ -407,19 +408,30 @@ impl ProviderImpl for SoftwareProvider {
         SoftwareProviderFactory::default().get_capabilities(self.impl_config.clone())
     }
 
-    /// Derives a high-entropy key from a low-entropy password and a unique salt
+    /// Derives a high-entropy key from a low-entropy password and a unique salt.
+    ///
+    /// Only Argon2 is currently supported.
     fn derive_key_from_password(
         &self,
         password: &str,
         salt: &[u8],
         algorithm: KeySpec,
-        derivation_algorithm: &str,
-        opslimit: u32,
-        memlimit: u32,
+        kdf: KDF,
     ) -> Result<KeyHandle, CalError> {
-        if salt.len() != 16 {
-            return Err(CalError::failed_operation(
-                "Salt must be exactly 16 bytes long".to_string(),
+        let (argo2_algorithm, argon2_option) = match kdf {
+            KDF::Argon2d(o) => (argon2::Algorithm::Argon2d, o),
+            KDF::Argon2id(o) => (argon2::Algorithm::Argon2id, o),
+            // _ => return Err(CalError::not_implemented()),
+        };
+
+        if salt.len() < 8 || salt.len() > 64 {
+            return Err(CalError::bad_parameter(
+                format!(
+                    "Wrong salt length. Does not match requirement: {} <= {} <= {}",
+                    MIN_SALT_LEN,
+                    salt.len(),
+                    MAX_SALT_LEN
+                ),
                 true,
                 None,
             ));
@@ -430,7 +442,7 @@ impl ProviderImpl for SoftwareProvider {
             Cipher::AesGcm128 => 16,
             Cipher::AesGcm256 | Cipher::XChaCha20Poly1305 => 32,
             _ => {
-                return Err(CalError::failed_operation(
+                return Err(CalError::bad_parameter(
                     "Unsupported cipher for key derivation".to_string(),
                     true,
                     None,
@@ -438,17 +450,14 @@ impl ProviderImpl for SoftwareProvider {
             }
         };
 
-        // Convert parameters to Argon2 format
-        let memory = memlimit; // Memory in KB
-
         // Create Argon2 with specified algorithm
         let argon2 = Argon2::new(
-            argon2::Algorithm::from_str(derivation_algorithm).unwrap(),
+            argo2_algorithm,
             argon2::Version::V0x13, // Latest version
             Params::new(
-                memory,   // m_cost (memory)
-                opslimit, // t_cost (iterations)
-                1,        // p_cost (parallelism)
+                argon2_option.memory,      // m_cost (memory)
+                argon2_option.iterations,  // t_cost (iterations)
+                argon2_option.parallelism, // p_cost (parallelism)
                 Some(key_length),
             )
             .map_err(|e| {

@@ -5,6 +5,7 @@ import type { CryptoHash } from "./CryptoHash";
 
 /**
  * Struct used to configure key pairs.
+ * flutter_rust_bridge:non_opaque
  */
 export type KeyPairSpec = {
   /**

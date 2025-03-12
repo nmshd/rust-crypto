@@ -15,6 +15,7 @@ use crate::{
         },
         DHExchange, KeyHandle, KeyPairHandle,
     },
+    prelude::KDF,
     storage::KeyData,
 };
 
@@ -111,9 +112,7 @@ impl ProviderImpl for StubProvider {
         password: &str,
         salt: &[u8],
         algorithm: KeySpec,
-        derivation_algorithm: &str,
-        opslimit: u32,
-        memlimit: u32,
+        kdf: KDF,
     ) -> Result<KeyHandle, CalError> {
         todo!()
     }

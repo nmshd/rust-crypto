@@ -15,6 +15,13 @@ cargo install flutter_rust_bridge_codegen
 flutter_rust_bridge_codegen generate
 ```
 
+The generated rust code ([`./rust`](./rust/)) is likely broken after generation.
+
+```
+cd ./rust
+cargo c
+```
+
 ## Example
 
 ### Creating a TPM Provider
