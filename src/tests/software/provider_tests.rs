@@ -204,7 +204,7 @@ mod tests {
                 traits::{key_handle::KeyHandleImpl, module_provider::ProviderImpl},
                 KeyHandle, Provider,
             },
-            prelude::{Cipher, CryptoHash, KeySpec},
+            prelude::{Argon2Options, Cipher, CryptoHash, KeySpec, KDF},
             tests::TestStore,
         };
 
@@ -224,8 +224,11 @@ mod tests {
         }
 
         // Default parameters for testing
-        const DEFAULT_OPSLIMIT: u32 = 4; // Low value for faster tests
-        const DEFAULT_MEMLIMIT: u32 = 8192; // Minimum reasonable value
+        const DEFAULT_KDF: KDF = KDF::Argon2id(Argon2Options {
+            memory: 8192,  // Minimum reasonable value
+            iterations: 4, // Low value for faster tests
+            parallelism: 1,
+        });
 
         #[test]
         fn test_successful_key_derivation() {
@@ -234,15 +237,9 @@ mod tests {
             let salt = [0u8; 16];
             let algorithm = get_algorithm();
 
-            let key_handle_result: Result<KeyHandle, CalError> =
-                provider.implementation.derive_key_from_password(
-                    password,
-                    &salt,
-                    algorithm,
-                    argon2::Algorithm::Argon2id.as_ref(),
-                    DEFAULT_OPSLIMIT,
-                    DEFAULT_MEMLIMIT,
-                );
+            let key_handle_result: Result<KeyHandle, CalError> = provider
+                .implementation
+                .derive_key_from_password(password, &salt, algorithm, DEFAULT_KDF);
             assert!(key_handle_result.is_ok(), "Failed to derive key");
 
             let key_handle = key_handle_result.unwrap();
@@ -258,14 +255,7 @@ mod tests {
 
             let key1 = provider
                 .implementation
-                .derive_key_from_password(
-                    "test_password",
-                    &salt,
-                    algorithm,
-                    argon2::Algorithm::Argon2id.as_ref(),
-                    DEFAULT_OPSLIMIT,
-                    DEFAULT_MEMLIMIT,
-                )
+                .derive_key_from_password("test_password", &salt, algorithm, DEFAULT_KDF)
                 .unwrap()
                 .implementation
                 .extract_key()
@@ -273,14 +263,7 @@ mod tests {
 
             let key2 = provider
                 .implementation
-                .derive_key_from_password(
-                    "another_password",
-                    &salt,
-                    algorithm,
-                    argon2::Algorithm::Argon2id.as_ref(),
-                    DEFAULT_OPSLIMIT,
-                    DEFAULT_MEMLIMIT,
-                )
+                .derive_key_from_password("another_password", &salt, algorithm, DEFAULT_KDF)
                 .unwrap()
                 .implementation
                 .extract_key()
@@ -300,14 +283,7 @@ mod tests {
 
             let key1 = provider
                 .implementation
-                .derive_key_from_password(
-                    password,
-                    &[0u8; 16],
-                    algorithm,
-                    argon2::Algorithm::Argon2id.as_ref(),
-                    DEFAULT_OPSLIMIT,
-                    DEFAULT_MEMLIMIT,
-                )
+                .derive_key_from_password(password, &[0u8; 16], algorithm, DEFAULT_KDF)
                 .unwrap()
                 .implementation
                 .extract_key()
@@ -315,14 +291,7 @@ mod tests {
 
             let key2 = provider
                 .implementation
-                .derive_key_from_password(
-                    password,
-                    &[1u8; 16],
-                    algorithm,
-                    argon2::Algorithm::Argon2id.as_ref(),
-                    DEFAULT_OPSLIMIT,
-                    DEFAULT_MEMLIMIT,
-                )
+                .derive_key_from_password(password, &[1u8; 16], algorithm, DEFAULT_KDF)
                 .unwrap()
                 .implementation
                 .extract_key()
@@ -342,9 +311,7 @@ mod tests {
                 password,
                 &short_salt,
                 algorithm,
-                argon2::Algorithm::Argon2id.as_ref(),
-                DEFAULT_OPSLIMIT,
-                DEFAULT_MEMLIMIT,
+                DEFAULT_KDF,
             );
 
             assert!(result.is_err(), "Deriving key with short salt should fail");
@@ -368,9 +335,7 @@ mod tests {
                 password,
                 &long_salt,
                 algorithm,
-                argon2::Algorithm::Argon2id.as_ref(),
-                DEFAULT_OPSLIMIT,
-                DEFAULT_MEMLIMIT,
+                DEFAULT_KDF,
             );
 
             assert!(result.is_err(), "Deriving key with long salt should fail");
@@ -394,9 +359,7 @@ mod tests {
                 password,
                 &salt,
                 algorithm,
-                argon2::Algorithm::Argon2id.as_ref(),
-                DEFAULT_OPSLIMIT,
-                DEFAULT_MEMLIMIT,
+                DEFAULT_KDF,
             );
 
             assert!(result.is_ok(), "Argon2i variant should work");
