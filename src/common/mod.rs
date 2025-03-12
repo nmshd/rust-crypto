@@ -1,4 +1,5 @@
 use crate::common::traits::key_handle::DHKeyExchangeImpl;
+use crate::prelude::KDF;
 use config::{KeyPairSpec, KeySpec, ProviderConfig, Spec};
 use error::CalError;
 use tracing::error;
@@ -157,9 +158,7 @@ impl Provider {
             password: &str,
             salt: &[u8],
             algorithm: KeySpec,
-            derivation_algorithm: &str,
-            opslimit: u32,
-            memlimit: u32,
+            kdf: KDF,
         ) -> Result<KeyHandle, CalError>;
     }
 

@@ -10,10 +10,10 @@ use thiserror;
 /// Error wrapping native errors.
 ///
 /// The native libraries used large lists of errors that might occur.
-/// This struct exists to dumm down said errors.
+/// This struct exists to dumb down said errors.
 /// The provider implementation should map errors from native libraries to this enum.
 /// Most if not all errors should have a source for backtraces.
-/// If other fields are usefull for understanding the error, they should also exist.
+/// If other fields are useful for understanding the error, they should also exist.
 #[derive(thiserror::Error, Debug)]
 #[error("{error_kind}: {source}")]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
@@ -63,7 +63,7 @@ pub enum CalErrorKind {
     },
 
     /// Failed to initialize a provider.
-    #[error("Failed Initalizing Provider: {description}")]
+    #[error("Failed Initializing Provider: {description}")]
     InitializationError {
         description: String,
         /// `true` if caused within this library. `false` if caused by another library.
@@ -74,9 +74,9 @@ pub enum CalErrorKind {
     #[error("Unsupported Algorithm: {0}")]
     UnsupportedAlgorithm(String),
 
-    /// Tried to create a non-ephermal key with an ephermal provider.
-    #[error("Ephermal Key Error")]
-    EphermalKeyError,
+    /// Tried to create a non-ephemeral key with an ephemeral provider.
+    #[error("Ephemeral Key Error")]
+    EphemeralKeyError,
 
     /// Errors that do not fall into the above classes.
     #[error("Other Error")]
@@ -158,7 +158,7 @@ impl CalError {
                 description,
                 internal,
             },
-            source: source.unwrap_or_else(|| anyhow!("Initalization Error")),
+            source: source.unwrap_or_else(|| anyhow!("Initialization Error")),
         }
     }
 
@@ -181,8 +181,8 @@ impl CalError {
 
     pub(crate) fn ephemeral_key_required() -> Self {
         Self {
-            error_kind: CalErrorKind::EphermalKeyError,
-            source: anyhow!("Ephermal Key Error"),
+            error_kind: CalErrorKind::EphemeralKeyError,
+            source: anyhow!("Ephemeral Key Error"),
         }
     }
 

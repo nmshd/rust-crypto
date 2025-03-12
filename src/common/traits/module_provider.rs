@@ -9,6 +9,7 @@ use crate::tpm::apple_secure_enclave::provider::{
 use crate::{
     common::{
         config::{KeyPairSpec, KeySpec, ProviderConfig, ProviderImplConfig, Spec},
+        crypto::algorithms::key_derivation::KDF,
         error::CalError,
         DHExchange, KeyHandle, KeyPairHandle,
     },
@@ -140,9 +141,7 @@ pub(crate) trait ProviderImpl: Send + Sync {
         password: &str,
         salt: &[u8],
         algorithm: KeySpec,
-        derivation_algorithm: &str,
-        opslimit: u32,
-        memlimit: u32,
+        kdf: KDF,
     ) -> Result<KeyHandle, CalError> {
         unimplemented!()
     }
