@@ -424,7 +424,7 @@ impl ProviderImpl for SoftwareProvider {
             // _ => return Err(CalError::not_implemented()),
         };
 
-        if salt.len() < MIN_SALT_LEN || salt.len() > MAX_SALT_LEN {
+        if salt.len() < 8 || salt.len() > 64 {
             return Err(CalError::bad_parameter(
                 format!(
                     "Wrong salt length. Does not match requirement: {} <= {} <= {}",
