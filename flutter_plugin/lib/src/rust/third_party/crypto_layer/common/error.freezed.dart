@@ -27,7 +27,7 @@ mixin _$CalErrorKind {
     required TResult Function(String description, bool internal)
         initializationError,
     required TResult Function(String field0) unsupportedAlgorithm,
-    required TResult Function() ephermalKeyError,
+    required TResult Function() ephemeralKeyError,
     required TResult Function() other,
   }) =>
       throw _privateConstructorUsedError;
@@ -40,7 +40,7 @@ mixin _$CalErrorKind {
     TResult? Function(String description, bool internal)? failedOperation,
     TResult? Function(String description, bool internal)? initializationError,
     TResult? Function(String field0)? unsupportedAlgorithm,
-    TResult? Function()? ephermalKeyError,
+    TResult? Function()? ephemeralKeyError,
     TResult? Function()? other,
   }) =>
       throw _privateConstructorUsedError;
@@ -53,7 +53,7 @@ mixin _$CalErrorKind {
     TResult Function(String description, bool internal)? failedOperation,
     TResult Function(String description, bool internal)? initializationError,
     TResult Function(String field0)? unsupportedAlgorithm,
-    TResult Function()? ephermalKeyError,
+    TResult Function()? ephemeralKeyError,
     TResult Function()? other,
     required TResult orElse(),
   }) =>
@@ -70,8 +70,8 @@ mixin _$CalErrorKind {
         initializationError,
     required TResult Function(CalErrorKind_UnsupportedAlgorithm value)
         unsupportedAlgorithm,
-    required TResult Function(CalErrorKind_EphermalKeyError value)
-        ephermalKeyError,
+    required TResult Function(CalErrorKind_EphemeralKeyError value)
+        ephemeralKeyError,
     required TResult Function(CalErrorKind_Other value) other,
   }) =>
       throw _privateConstructorUsedError;
@@ -86,7 +86,7 @@ mixin _$CalErrorKind {
         initializationError,
     TResult? Function(CalErrorKind_UnsupportedAlgorithm value)?
         unsupportedAlgorithm,
-    TResult? Function(CalErrorKind_EphermalKeyError value)? ephermalKeyError,
+    TResult? Function(CalErrorKind_EphemeralKeyError value)? ephemeralKeyError,
     TResult? Function(CalErrorKind_Other value)? other,
   }) =>
       throw _privateConstructorUsedError;
@@ -101,7 +101,7 @@ mixin _$CalErrorKind {
         initializationError,
     TResult Function(CalErrorKind_UnsupportedAlgorithm value)?
         unsupportedAlgorithm,
-    TResult Function(CalErrorKind_EphermalKeyError value)? ephermalKeyError,
+    TResult Function(CalErrorKind_EphemeralKeyError value)? ephemeralKeyError,
     TResult Function(CalErrorKind_Other value)? other,
     required TResult orElse(),
   }) =>
@@ -182,7 +182,7 @@ class _$CalErrorKind_NotImplementedImpl extends CalErrorKind_NotImplemented {
     required TResult Function(String description, bool internal)
         initializationError,
     required TResult Function(String field0) unsupportedAlgorithm,
-    required TResult Function() ephermalKeyError,
+    required TResult Function() ephemeralKeyError,
     required TResult Function() other,
   }) {
     return notImplemented();
@@ -198,7 +198,7 @@ class _$CalErrorKind_NotImplementedImpl extends CalErrorKind_NotImplemented {
     TResult? Function(String description, bool internal)? failedOperation,
     TResult? Function(String description, bool internal)? initializationError,
     TResult? Function(String field0)? unsupportedAlgorithm,
-    TResult? Function()? ephermalKeyError,
+    TResult? Function()? ephemeralKeyError,
     TResult? Function()? other,
   }) {
     return notImplemented?.call();
@@ -214,7 +214,7 @@ class _$CalErrorKind_NotImplementedImpl extends CalErrorKind_NotImplemented {
     TResult Function(String description, bool internal)? failedOperation,
     TResult Function(String description, bool internal)? initializationError,
     TResult Function(String field0)? unsupportedAlgorithm,
-    TResult Function()? ephermalKeyError,
+    TResult Function()? ephemeralKeyError,
     TResult Function()? other,
     required TResult orElse(),
   }) {
@@ -237,8 +237,8 @@ class _$CalErrorKind_NotImplementedImpl extends CalErrorKind_NotImplemented {
         initializationError,
     required TResult Function(CalErrorKind_UnsupportedAlgorithm value)
         unsupportedAlgorithm,
-    required TResult Function(CalErrorKind_EphermalKeyError value)
-        ephermalKeyError,
+    required TResult Function(CalErrorKind_EphemeralKeyError value)
+        ephemeralKeyError,
     required TResult Function(CalErrorKind_Other value) other,
   }) {
     return notImplemented(this);
@@ -256,7 +256,7 @@ class _$CalErrorKind_NotImplementedImpl extends CalErrorKind_NotImplemented {
         initializationError,
     TResult? Function(CalErrorKind_UnsupportedAlgorithm value)?
         unsupportedAlgorithm,
-    TResult? Function(CalErrorKind_EphermalKeyError value)? ephermalKeyError,
+    TResult? Function(CalErrorKind_EphemeralKeyError value)? ephemeralKeyError,
     TResult? Function(CalErrorKind_Other value)? other,
   }) {
     return notImplemented?.call(this);
@@ -274,7 +274,7 @@ class _$CalErrorKind_NotImplementedImpl extends CalErrorKind_NotImplemented {
         initializationError,
     TResult Function(CalErrorKind_UnsupportedAlgorithm value)?
         unsupportedAlgorithm,
-    TResult Function(CalErrorKind_EphermalKeyError value)? ephermalKeyError,
+    TResult Function(CalErrorKind_EphemeralKeyError value)? ephemeralKeyError,
     TResult Function(CalErrorKind_Other value)? other,
     required TResult orElse(),
   }) {
@@ -385,7 +385,7 @@ class _$CalErrorKind_BadParameterImpl extends CalErrorKind_BadParameter {
     required TResult Function(String description, bool internal)
         initializationError,
     required TResult Function(String field0) unsupportedAlgorithm,
-    required TResult Function() ephermalKeyError,
+    required TResult Function() ephemeralKeyError,
     required TResult Function() other,
   }) {
     return badParameter(description, internal);
@@ -401,7 +401,7 @@ class _$CalErrorKind_BadParameterImpl extends CalErrorKind_BadParameter {
     TResult? Function(String description, bool internal)? failedOperation,
     TResult? Function(String description, bool internal)? initializationError,
     TResult? Function(String field0)? unsupportedAlgorithm,
-    TResult? Function()? ephermalKeyError,
+    TResult? Function()? ephemeralKeyError,
     TResult? Function()? other,
   }) {
     return badParameter?.call(description, internal);
@@ -417,7 +417,7 @@ class _$CalErrorKind_BadParameterImpl extends CalErrorKind_BadParameter {
     TResult Function(String description, bool internal)? failedOperation,
     TResult Function(String description, bool internal)? initializationError,
     TResult Function(String field0)? unsupportedAlgorithm,
-    TResult Function()? ephermalKeyError,
+    TResult Function()? ephemeralKeyError,
     TResult Function()? other,
     required TResult orElse(),
   }) {
@@ -440,8 +440,8 @@ class _$CalErrorKind_BadParameterImpl extends CalErrorKind_BadParameter {
         initializationError,
     required TResult Function(CalErrorKind_UnsupportedAlgorithm value)
         unsupportedAlgorithm,
-    required TResult Function(CalErrorKind_EphermalKeyError value)
-        ephermalKeyError,
+    required TResult Function(CalErrorKind_EphemeralKeyError value)
+        ephemeralKeyError,
     required TResult Function(CalErrorKind_Other value) other,
   }) {
     return badParameter(this);
@@ -459,7 +459,7 @@ class _$CalErrorKind_BadParameterImpl extends CalErrorKind_BadParameter {
         initializationError,
     TResult? Function(CalErrorKind_UnsupportedAlgorithm value)?
         unsupportedAlgorithm,
-    TResult? Function(CalErrorKind_EphermalKeyError value)? ephermalKeyError,
+    TResult? Function(CalErrorKind_EphemeralKeyError value)? ephemeralKeyError,
     TResult? Function(CalErrorKind_Other value)? other,
   }) {
     return badParameter?.call(this);
@@ -477,7 +477,7 @@ class _$CalErrorKind_BadParameterImpl extends CalErrorKind_BadParameter {
         initializationError,
     TResult Function(CalErrorKind_UnsupportedAlgorithm value)?
         unsupportedAlgorithm,
-    TResult Function(CalErrorKind_EphermalKeyError value)? ephermalKeyError,
+    TResult Function(CalErrorKind_EphemeralKeyError value)? ephemeralKeyError,
     TResult Function(CalErrorKind_Other value)? other,
     required TResult orElse(),
   }) {
@@ -596,7 +596,7 @@ class _$CalErrorKind_MissingKeyImpl extends CalErrorKind_MissingKey {
     required TResult Function(String description, bool internal)
         initializationError,
     required TResult Function(String field0) unsupportedAlgorithm,
-    required TResult Function() ephermalKeyError,
+    required TResult Function() ephemeralKeyError,
     required TResult Function() other,
   }) {
     return missingKey(keyId, keyType);
@@ -612,7 +612,7 @@ class _$CalErrorKind_MissingKeyImpl extends CalErrorKind_MissingKey {
     TResult? Function(String description, bool internal)? failedOperation,
     TResult? Function(String description, bool internal)? initializationError,
     TResult? Function(String field0)? unsupportedAlgorithm,
-    TResult? Function()? ephermalKeyError,
+    TResult? Function()? ephemeralKeyError,
     TResult? Function()? other,
   }) {
     return missingKey?.call(keyId, keyType);
@@ -628,7 +628,7 @@ class _$CalErrorKind_MissingKeyImpl extends CalErrorKind_MissingKey {
     TResult Function(String description, bool internal)? failedOperation,
     TResult Function(String description, bool internal)? initializationError,
     TResult Function(String field0)? unsupportedAlgorithm,
-    TResult Function()? ephermalKeyError,
+    TResult Function()? ephemeralKeyError,
     TResult Function()? other,
     required TResult orElse(),
   }) {
@@ -651,8 +651,8 @@ class _$CalErrorKind_MissingKeyImpl extends CalErrorKind_MissingKey {
         initializationError,
     required TResult Function(CalErrorKind_UnsupportedAlgorithm value)
         unsupportedAlgorithm,
-    required TResult Function(CalErrorKind_EphermalKeyError value)
-        ephermalKeyError,
+    required TResult Function(CalErrorKind_EphemeralKeyError value)
+        ephemeralKeyError,
     required TResult Function(CalErrorKind_Other value) other,
   }) {
     return missingKey(this);
@@ -670,7 +670,7 @@ class _$CalErrorKind_MissingKeyImpl extends CalErrorKind_MissingKey {
         initializationError,
     TResult? Function(CalErrorKind_UnsupportedAlgorithm value)?
         unsupportedAlgorithm,
-    TResult? Function(CalErrorKind_EphermalKeyError value)? ephermalKeyError,
+    TResult? Function(CalErrorKind_EphemeralKeyError value)? ephemeralKeyError,
     TResult? Function(CalErrorKind_Other value)? other,
   }) {
     return missingKey?.call(this);
@@ -688,7 +688,7 @@ class _$CalErrorKind_MissingKeyImpl extends CalErrorKind_MissingKey {
         initializationError,
     TResult Function(CalErrorKind_UnsupportedAlgorithm value)?
         unsupportedAlgorithm,
-    TResult Function(CalErrorKind_EphermalKeyError value)? ephermalKeyError,
+    TResult Function(CalErrorKind_EphemeralKeyError value)? ephemeralKeyError,
     TResult Function(CalErrorKind_Other value)? other,
     required TResult orElse(),
   }) {
@@ -809,7 +809,7 @@ class _$CalErrorKind_MissingValueImpl extends CalErrorKind_MissingValue {
     required TResult Function(String description, bool internal)
         initializationError,
     required TResult Function(String field0) unsupportedAlgorithm,
-    required TResult Function() ephermalKeyError,
+    required TResult Function() ephemeralKeyError,
     required TResult Function() other,
   }) {
     return missingValue(description, internal);
@@ -825,7 +825,7 @@ class _$CalErrorKind_MissingValueImpl extends CalErrorKind_MissingValue {
     TResult? Function(String description, bool internal)? failedOperation,
     TResult? Function(String description, bool internal)? initializationError,
     TResult? Function(String field0)? unsupportedAlgorithm,
-    TResult? Function()? ephermalKeyError,
+    TResult? Function()? ephemeralKeyError,
     TResult? Function()? other,
   }) {
     return missingValue?.call(description, internal);
@@ -841,7 +841,7 @@ class _$CalErrorKind_MissingValueImpl extends CalErrorKind_MissingValue {
     TResult Function(String description, bool internal)? failedOperation,
     TResult Function(String description, bool internal)? initializationError,
     TResult Function(String field0)? unsupportedAlgorithm,
-    TResult Function()? ephermalKeyError,
+    TResult Function()? ephemeralKeyError,
     TResult Function()? other,
     required TResult orElse(),
   }) {
@@ -864,8 +864,8 @@ class _$CalErrorKind_MissingValueImpl extends CalErrorKind_MissingValue {
         initializationError,
     required TResult Function(CalErrorKind_UnsupportedAlgorithm value)
         unsupportedAlgorithm,
-    required TResult Function(CalErrorKind_EphermalKeyError value)
-        ephermalKeyError,
+    required TResult Function(CalErrorKind_EphemeralKeyError value)
+        ephemeralKeyError,
     required TResult Function(CalErrorKind_Other value) other,
   }) {
     return missingValue(this);
@@ -883,7 +883,7 @@ class _$CalErrorKind_MissingValueImpl extends CalErrorKind_MissingValue {
         initializationError,
     TResult? Function(CalErrorKind_UnsupportedAlgorithm value)?
         unsupportedAlgorithm,
-    TResult? Function(CalErrorKind_EphermalKeyError value)? ephermalKeyError,
+    TResult? Function(CalErrorKind_EphemeralKeyError value)? ephemeralKeyError,
     TResult? Function(CalErrorKind_Other value)? other,
   }) {
     return missingValue?.call(this);
@@ -901,7 +901,7 @@ class _$CalErrorKind_MissingValueImpl extends CalErrorKind_MissingValue {
         initializationError,
     TResult Function(CalErrorKind_UnsupportedAlgorithm value)?
         unsupportedAlgorithm,
-    TResult Function(CalErrorKind_EphermalKeyError value)? ephermalKeyError,
+    TResult Function(CalErrorKind_EphemeralKeyError value)? ephemeralKeyError,
     TResult Function(CalErrorKind_Other value)? other,
     required TResult orElse(),
   }) {
@@ -1025,7 +1025,7 @@ class _$CalErrorKind_FailedOperationImpl extends CalErrorKind_FailedOperation {
     required TResult Function(String description, bool internal)
         initializationError,
     required TResult Function(String field0) unsupportedAlgorithm,
-    required TResult Function() ephermalKeyError,
+    required TResult Function() ephemeralKeyError,
     required TResult Function() other,
   }) {
     return failedOperation(description, internal);
@@ -1041,7 +1041,7 @@ class _$CalErrorKind_FailedOperationImpl extends CalErrorKind_FailedOperation {
     TResult? Function(String description, bool internal)? failedOperation,
     TResult? Function(String description, bool internal)? initializationError,
     TResult? Function(String field0)? unsupportedAlgorithm,
-    TResult? Function()? ephermalKeyError,
+    TResult? Function()? ephemeralKeyError,
     TResult? Function()? other,
   }) {
     return failedOperation?.call(description, internal);
@@ -1057,7 +1057,7 @@ class _$CalErrorKind_FailedOperationImpl extends CalErrorKind_FailedOperation {
     TResult Function(String description, bool internal)? failedOperation,
     TResult Function(String description, bool internal)? initializationError,
     TResult Function(String field0)? unsupportedAlgorithm,
-    TResult Function()? ephermalKeyError,
+    TResult Function()? ephemeralKeyError,
     TResult Function()? other,
     required TResult orElse(),
   }) {
@@ -1080,8 +1080,8 @@ class _$CalErrorKind_FailedOperationImpl extends CalErrorKind_FailedOperation {
         initializationError,
     required TResult Function(CalErrorKind_UnsupportedAlgorithm value)
         unsupportedAlgorithm,
-    required TResult Function(CalErrorKind_EphermalKeyError value)
-        ephermalKeyError,
+    required TResult Function(CalErrorKind_EphemeralKeyError value)
+        ephemeralKeyError,
     required TResult Function(CalErrorKind_Other value) other,
   }) {
     return failedOperation(this);
@@ -1099,7 +1099,7 @@ class _$CalErrorKind_FailedOperationImpl extends CalErrorKind_FailedOperation {
         initializationError,
     TResult? Function(CalErrorKind_UnsupportedAlgorithm value)?
         unsupportedAlgorithm,
-    TResult? Function(CalErrorKind_EphermalKeyError value)? ephermalKeyError,
+    TResult? Function(CalErrorKind_EphemeralKeyError value)? ephemeralKeyError,
     TResult? Function(CalErrorKind_Other value)? other,
   }) {
     return failedOperation?.call(this);
@@ -1117,7 +1117,7 @@ class _$CalErrorKind_FailedOperationImpl extends CalErrorKind_FailedOperation {
         initializationError,
     TResult Function(CalErrorKind_UnsupportedAlgorithm value)?
         unsupportedAlgorithm,
-    TResult Function(CalErrorKind_EphermalKeyError value)? ephermalKeyError,
+    TResult Function(CalErrorKind_EphemeralKeyError value)? ephemeralKeyError,
     TResult Function(CalErrorKind_Other value)? other,
     required TResult orElse(),
   }) {
@@ -1244,7 +1244,7 @@ class _$CalErrorKind_InitializationErrorImpl
     required TResult Function(String description, bool internal)
         initializationError,
     required TResult Function(String field0) unsupportedAlgorithm,
-    required TResult Function() ephermalKeyError,
+    required TResult Function() ephemeralKeyError,
     required TResult Function() other,
   }) {
     return initializationError(description, internal);
@@ -1260,7 +1260,7 @@ class _$CalErrorKind_InitializationErrorImpl
     TResult? Function(String description, bool internal)? failedOperation,
     TResult? Function(String description, bool internal)? initializationError,
     TResult? Function(String field0)? unsupportedAlgorithm,
-    TResult? Function()? ephermalKeyError,
+    TResult? Function()? ephemeralKeyError,
     TResult? Function()? other,
   }) {
     return initializationError?.call(description, internal);
@@ -1276,7 +1276,7 @@ class _$CalErrorKind_InitializationErrorImpl
     TResult Function(String description, bool internal)? failedOperation,
     TResult Function(String description, bool internal)? initializationError,
     TResult Function(String field0)? unsupportedAlgorithm,
-    TResult Function()? ephermalKeyError,
+    TResult Function()? ephemeralKeyError,
     TResult Function()? other,
     required TResult orElse(),
   }) {
@@ -1299,8 +1299,8 @@ class _$CalErrorKind_InitializationErrorImpl
         initializationError,
     required TResult Function(CalErrorKind_UnsupportedAlgorithm value)
         unsupportedAlgorithm,
-    required TResult Function(CalErrorKind_EphermalKeyError value)
-        ephermalKeyError,
+    required TResult Function(CalErrorKind_EphemeralKeyError value)
+        ephemeralKeyError,
     required TResult Function(CalErrorKind_Other value) other,
   }) {
     return initializationError(this);
@@ -1318,7 +1318,7 @@ class _$CalErrorKind_InitializationErrorImpl
         initializationError,
     TResult? Function(CalErrorKind_UnsupportedAlgorithm value)?
         unsupportedAlgorithm,
-    TResult? Function(CalErrorKind_EphermalKeyError value)? ephermalKeyError,
+    TResult? Function(CalErrorKind_EphemeralKeyError value)? ephemeralKeyError,
     TResult? Function(CalErrorKind_Other value)? other,
   }) {
     return initializationError?.call(this);
@@ -1336,7 +1336,7 @@ class _$CalErrorKind_InitializationErrorImpl
         initializationError,
     TResult Function(CalErrorKind_UnsupportedAlgorithm value)?
         unsupportedAlgorithm,
-    TResult Function(CalErrorKind_EphermalKeyError value)? ephermalKeyError,
+    TResult Function(CalErrorKind_EphemeralKeyError value)? ephemeralKeyError,
     TResult Function(CalErrorKind_Other value)? other,
     required TResult orElse(),
   }) {
@@ -1449,7 +1449,7 @@ class _$CalErrorKind_UnsupportedAlgorithmImpl
     required TResult Function(String description, bool internal)
         initializationError,
     required TResult Function(String field0) unsupportedAlgorithm,
-    required TResult Function() ephermalKeyError,
+    required TResult Function() ephemeralKeyError,
     required TResult Function() other,
   }) {
     return unsupportedAlgorithm(field0);
@@ -1465,7 +1465,7 @@ class _$CalErrorKind_UnsupportedAlgorithmImpl
     TResult? Function(String description, bool internal)? failedOperation,
     TResult? Function(String description, bool internal)? initializationError,
     TResult? Function(String field0)? unsupportedAlgorithm,
-    TResult? Function()? ephermalKeyError,
+    TResult? Function()? ephemeralKeyError,
     TResult? Function()? other,
   }) {
     return unsupportedAlgorithm?.call(field0);
@@ -1481,7 +1481,7 @@ class _$CalErrorKind_UnsupportedAlgorithmImpl
     TResult Function(String description, bool internal)? failedOperation,
     TResult Function(String description, bool internal)? initializationError,
     TResult Function(String field0)? unsupportedAlgorithm,
-    TResult Function()? ephermalKeyError,
+    TResult Function()? ephemeralKeyError,
     TResult Function()? other,
     required TResult orElse(),
   }) {
@@ -1504,8 +1504,8 @@ class _$CalErrorKind_UnsupportedAlgorithmImpl
         initializationError,
     required TResult Function(CalErrorKind_UnsupportedAlgorithm value)
         unsupportedAlgorithm,
-    required TResult Function(CalErrorKind_EphermalKeyError value)
-        ephermalKeyError,
+    required TResult Function(CalErrorKind_EphemeralKeyError value)
+        ephemeralKeyError,
     required TResult Function(CalErrorKind_Other value) other,
   }) {
     return unsupportedAlgorithm(this);
@@ -1523,7 +1523,7 @@ class _$CalErrorKind_UnsupportedAlgorithmImpl
         initializationError,
     TResult? Function(CalErrorKind_UnsupportedAlgorithm value)?
         unsupportedAlgorithm,
-    TResult? Function(CalErrorKind_EphermalKeyError value)? ephermalKeyError,
+    TResult? Function(CalErrorKind_EphemeralKeyError value)? ephemeralKeyError,
     TResult? Function(CalErrorKind_Other value)? other,
   }) {
     return unsupportedAlgorithm?.call(this);
@@ -1541,7 +1541,7 @@ class _$CalErrorKind_UnsupportedAlgorithmImpl
         initializationError,
     TResult Function(CalErrorKind_UnsupportedAlgorithm value)?
         unsupportedAlgorithm,
-    TResult Function(CalErrorKind_EphermalKeyError value)? ephermalKeyError,
+    TResult Function(CalErrorKind_EphemeralKeyError value)? ephemeralKeyError,
     TResult Function(CalErrorKind_Other value)? other,
     required TResult orElse(),
   }) {
@@ -1568,21 +1568,21 @@ abstract class CalErrorKind_UnsupportedAlgorithm extends CalErrorKind {
 }
 
 /// @nodoc
-abstract class _$$CalErrorKind_EphermalKeyErrorImplCopyWith<$Res> {
-  factory _$$CalErrorKind_EphermalKeyErrorImplCopyWith(
-          _$CalErrorKind_EphermalKeyErrorImpl value,
-          $Res Function(_$CalErrorKind_EphermalKeyErrorImpl) then) =
-      __$$CalErrorKind_EphermalKeyErrorImplCopyWithImpl<$Res>;
+abstract class _$$CalErrorKind_EphemeralKeyErrorImplCopyWith<$Res> {
+  factory _$$CalErrorKind_EphemeralKeyErrorImplCopyWith(
+          _$CalErrorKind_EphemeralKeyErrorImpl value,
+          $Res Function(_$CalErrorKind_EphemeralKeyErrorImpl) then) =
+      __$$CalErrorKind_EphemeralKeyErrorImplCopyWithImpl<$Res>;
 }
 
 /// @nodoc
-class __$$CalErrorKind_EphermalKeyErrorImplCopyWithImpl<$Res>
+class __$$CalErrorKind_EphemeralKeyErrorImplCopyWithImpl<$Res>
     extends _$CalErrorKindCopyWithImpl<$Res,
-        _$CalErrorKind_EphermalKeyErrorImpl>
-    implements _$$CalErrorKind_EphermalKeyErrorImplCopyWith<$Res> {
-  __$$CalErrorKind_EphermalKeyErrorImplCopyWithImpl(
-      _$CalErrorKind_EphermalKeyErrorImpl _value,
-      $Res Function(_$CalErrorKind_EphermalKeyErrorImpl) _then)
+        _$CalErrorKind_EphemeralKeyErrorImpl>
+    implements _$$CalErrorKind_EphemeralKeyErrorImplCopyWith<$Res> {
+  __$$CalErrorKind_EphemeralKeyErrorImplCopyWithImpl(
+      _$CalErrorKind_EphemeralKeyErrorImpl _value,
+      $Res Function(_$CalErrorKind_EphemeralKeyErrorImpl) _then)
       : super(_value, _then);
 
   /// Create a copy of CalErrorKind
@@ -1591,20 +1591,20 @@ class __$$CalErrorKind_EphermalKeyErrorImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$CalErrorKind_EphermalKeyErrorImpl
-    extends CalErrorKind_EphermalKeyError {
-  const _$CalErrorKind_EphermalKeyErrorImpl() : super._();
+class _$CalErrorKind_EphemeralKeyErrorImpl
+    extends CalErrorKind_EphemeralKeyError {
+  const _$CalErrorKind_EphemeralKeyErrorImpl() : super._();
 
   @override
   String toString() {
-    return 'CalErrorKind.ephermalKeyError()';
+    return 'CalErrorKind.ephemeralKeyError()';
   }
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$CalErrorKind_EphermalKeyErrorImpl);
+            other is _$CalErrorKind_EphemeralKeyErrorImpl);
   }
 
   @override
@@ -1622,10 +1622,10 @@ class _$CalErrorKind_EphermalKeyErrorImpl
     required TResult Function(String description, bool internal)
         initializationError,
     required TResult Function(String field0) unsupportedAlgorithm,
-    required TResult Function() ephermalKeyError,
+    required TResult Function() ephemeralKeyError,
     required TResult Function() other,
   }) {
-    return ephermalKeyError();
+    return ephemeralKeyError();
   }
 
   @override
@@ -1638,10 +1638,10 @@ class _$CalErrorKind_EphermalKeyErrorImpl
     TResult? Function(String description, bool internal)? failedOperation,
     TResult? Function(String description, bool internal)? initializationError,
     TResult? Function(String field0)? unsupportedAlgorithm,
-    TResult? Function()? ephermalKeyError,
+    TResult? Function()? ephemeralKeyError,
     TResult? Function()? other,
   }) {
-    return ephermalKeyError?.call();
+    return ephemeralKeyError?.call();
   }
 
   @override
@@ -1654,12 +1654,12 @@ class _$CalErrorKind_EphermalKeyErrorImpl
     TResult Function(String description, bool internal)? failedOperation,
     TResult Function(String description, bool internal)? initializationError,
     TResult Function(String field0)? unsupportedAlgorithm,
-    TResult Function()? ephermalKeyError,
+    TResult Function()? ephemeralKeyError,
     TResult Function()? other,
     required TResult orElse(),
   }) {
-    if (ephermalKeyError != null) {
-      return ephermalKeyError();
+    if (ephemeralKeyError != null) {
+      return ephemeralKeyError();
     }
     return orElse();
   }
@@ -1677,11 +1677,11 @@ class _$CalErrorKind_EphermalKeyErrorImpl
         initializationError,
     required TResult Function(CalErrorKind_UnsupportedAlgorithm value)
         unsupportedAlgorithm,
-    required TResult Function(CalErrorKind_EphermalKeyError value)
-        ephermalKeyError,
+    required TResult Function(CalErrorKind_EphemeralKeyError value)
+        ephemeralKeyError,
     required TResult Function(CalErrorKind_Other value) other,
   }) {
-    return ephermalKeyError(this);
+    return ephemeralKeyError(this);
   }
 
   @override
@@ -1696,10 +1696,10 @@ class _$CalErrorKind_EphermalKeyErrorImpl
         initializationError,
     TResult? Function(CalErrorKind_UnsupportedAlgorithm value)?
         unsupportedAlgorithm,
-    TResult? Function(CalErrorKind_EphermalKeyError value)? ephermalKeyError,
+    TResult? Function(CalErrorKind_EphemeralKeyError value)? ephemeralKeyError,
     TResult? Function(CalErrorKind_Other value)? other,
   }) {
-    return ephermalKeyError?.call(this);
+    return ephemeralKeyError?.call(this);
   }
 
   @override
@@ -1714,21 +1714,21 @@ class _$CalErrorKind_EphermalKeyErrorImpl
         initializationError,
     TResult Function(CalErrorKind_UnsupportedAlgorithm value)?
         unsupportedAlgorithm,
-    TResult Function(CalErrorKind_EphermalKeyError value)? ephermalKeyError,
+    TResult Function(CalErrorKind_EphemeralKeyError value)? ephemeralKeyError,
     TResult Function(CalErrorKind_Other value)? other,
     required TResult orElse(),
   }) {
-    if (ephermalKeyError != null) {
-      return ephermalKeyError(this);
+    if (ephemeralKeyError != null) {
+      return ephemeralKeyError(this);
     }
     return orElse();
   }
 }
 
-abstract class CalErrorKind_EphermalKeyError extends CalErrorKind {
-  const factory CalErrorKind_EphermalKeyError() =
-      _$CalErrorKind_EphermalKeyErrorImpl;
-  const CalErrorKind_EphermalKeyError._() : super._();
+abstract class CalErrorKind_EphemeralKeyError extends CalErrorKind {
+  const factory CalErrorKind_EphemeralKeyError() =
+      _$CalErrorKind_EphemeralKeyErrorImpl;
+  const CalErrorKind_EphemeralKeyError._() : super._();
 }
 
 /// @nodoc
@@ -1781,7 +1781,7 @@ class _$CalErrorKind_OtherImpl extends CalErrorKind_Other {
     required TResult Function(String description, bool internal)
         initializationError,
     required TResult Function(String field0) unsupportedAlgorithm,
-    required TResult Function() ephermalKeyError,
+    required TResult Function() ephemeralKeyError,
     required TResult Function() other,
   }) {
     return other();
@@ -1797,7 +1797,7 @@ class _$CalErrorKind_OtherImpl extends CalErrorKind_Other {
     TResult? Function(String description, bool internal)? failedOperation,
     TResult? Function(String description, bool internal)? initializationError,
     TResult? Function(String field0)? unsupportedAlgorithm,
-    TResult? Function()? ephermalKeyError,
+    TResult? Function()? ephemeralKeyError,
     TResult? Function()? other,
   }) {
     return other?.call();
@@ -1813,7 +1813,7 @@ class _$CalErrorKind_OtherImpl extends CalErrorKind_Other {
     TResult Function(String description, bool internal)? failedOperation,
     TResult Function(String description, bool internal)? initializationError,
     TResult Function(String field0)? unsupportedAlgorithm,
-    TResult Function()? ephermalKeyError,
+    TResult Function()? ephemeralKeyError,
     TResult Function()? other,
     required TResult orElse(),
   }) {
@@ -1836,8 +1836,8 @@ class _$CalErrorKind_OtherImpl extends CalErrorKind_Other {
         initializationError,
     required TResult Function(CalErrorKind_UnsupportedAlgorithm value)
         unsupportedAlgorithm,
-    required TResult Function(CalErrorKind_EphermalKeyError value)
-        ephermalKeyError,
+    required TResult Function(CalErrorKind_EphemeralKeyError value)
+        ephemeralKeyError,
     required TResult Function(CalErrorKind_Other value) other,
   }) {
     return other(this);
@@ -1855,7 +1855,7 @@ class _$CalErrorKind_OtherImpl extends CalErrorKind_Other {
         initializationError,
     TResult? Function(CalErrorKind_UnsupportedAlgorithm value)?
         unsupportedAlgorithm,
-    TResult? Function(CalErrorKind_EphermalKeyError value)? ephermalKeyError,
+    TResult? Function(CalErrorKind_EphemeralKeyError value)? ephemeralKeyError,
     TResult? Function(CalErrorKind_Other value)? other,
   }) {
     return other?.call(this);
@@ -1873,7 +1873,7 @@ class _$CalErrorKind_OtherImpl extends CalErrorKind_Other {
         initializationError,
     TResult Function(CalErrorKind_UnsupportedAlgorithm value)?
         unsupportedAlgorithm,
-    TResult Function(CalErrorKind_EphermalKeyError value)? ephermalKeyError,
+    TResult Function(CalErrorKind_EphemeralKeyError value)? ephemeralKeyError,
     TResult Function(CalErrorKind_Other value)? other,
     required TResult orElse(),
   }) {
