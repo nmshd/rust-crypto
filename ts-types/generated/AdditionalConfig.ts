@@ -4,6 +4,7 @@ import type { KeyPairHandle } from "./KeyPairHandle";
 
 /**
  * Configuration needed for using or initializing providers.
+ * flutter_rust_bridge:non_opaque
  */
 export type AdditionalConfig =
   | {

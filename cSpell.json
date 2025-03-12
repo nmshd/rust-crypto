@@ -1,3 +1,11 @@
 {
-    "words": ["asym", "keypair", "kibibytes", "pkcs", "repr", "thiserror"]
+    "words": [
+        "asym",
+        "Brainpool",
+        "keypair",
+        "kibibytes",
+        "pkcs",
+        "repr",
+        "thiserror"
+    ]
 }
