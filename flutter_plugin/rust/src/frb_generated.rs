@@ -25,7 +25,11 @@
 
 // Section: imports
 
+use std::future::Future;
+use std::pin::Pin;
+
 use crate::*;
+use crypto_layer::common::config::DynFuture;
 use crypto_layer::common::crypto::algorithms::key_derivation::*;
 use crypto_layer::common::error::*;
 use crypto_layer::common::*;
