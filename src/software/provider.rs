@@ -684,13 +684,20 @@ impl SoftwareDHExchange {
         // Generate a unique key ID
         let key_id = format!("{}_{}", self.key_id, key_id_suffix);
 
+        let cipher = self.spec.cipher.ok_or_else(
+            || CalError::bad_parameter(
+                "derive_client_key_handles and derive_server_key_handles need a KeyPairSpec supplied which cipher is not None.".to_owned(), 
+            true, 
+            None
+        ))?;
+
         // Create a SoftwareKeyHandle with the derived key
         let handle = SoftwareKeyHandle {
             key_id,
             key: key_material,
             storage_manager: self.storage_manager.clone(),
             spec: KeySpec {
-                cipher: self.spec.cipher.unwrap(),
+                cipher,
                 ephemeral: self.spec.ephemeral,
                 signing_hash: self.spec.signing_hash,
             },
