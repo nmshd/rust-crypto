@@ -1,6 +1,6 @@
 {
     "name": "@nmshd/rs-crypto-types",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "description": "Crypto Layer TS type definitions.",
     "homepage": "https://enmeshed.eu",
     "repository": "github:nmshd/rust-crypto",
