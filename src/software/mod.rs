@@ -11,7 +11,7 @@ use crate::{
     storage::StorageManager,
 };
 use ring::{
-    aead,
+    aead, agreement,
     signature::{
         EcdsaSigningAlgorithm, VerificationAlgorithm, ECDSA_P256_SHA256_ASN1,
         ECDSA_P256_SHA256_ASN1_SIGNING, ECDSA_P384_SHA384_ASN1, ECDSA_P384_SHA384_ASN1_SIGNING,
@@ -107,6 +107,24 @@ impl From<Cipher> for &'static aead::Algorithm {
             Cipher::AesGcm256 => &ring::aead::AES_256_GCM,
             Cipher::ChaCha20Poly1305 => &ring::aead::CHACHA20_POLY1305,
             _ => panic!("Unsupported cipher"), // Handle other cases or return an error
+        }
+    }
+}
+
+impl TryFrom<AsymmetricKeySpec> for &'static agreement::Algorithm {
+    type Error = CalError;
+
+    fn try_from(spec: AsymmetricKeySpec) -> Result<Self, Self::Error> {
+        match spec {
+            AsymmetricKeySpec::P256 => Ok(&agreement::ECDH_P256),
+            AsymmetricKeySpec::P384 => Ok(&agreement::ECDH_P384),
+            AsymmetricKeySpec::Curve25519 => Ok(&agreement::X25519),
+            // Handle other variants or return an error
+            _ => Err(CalError::failed_operation(
+                "Algorithm not supported".to_string(),
+                true,
+                None,
+            )),
         }
     }
 }

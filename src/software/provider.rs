@@ -13,7 +13,7 @@ use crate::{
         },
         DHExchange, KeyHandle, KeyPairHandle,
     },
-    prelude::{CryptoHash, KDF},
+    prelude::KDF,
     storage::KeyData,
 };
 use argon2::{
@@ -23,7 +23,7 @@ use blake2::{Blake2b512, Digest};
 use nanoid::nanoid;
 use ring::{
     aead::Algorithm,
-    agreement::{self, EphemeralPrivateKey, PublicKey, UnparsedPublicKey, X25519},
+    agreement::{self, EphemeralPrivateKey, PublicKey, UnparsedPublicKey},
     rand::{SecureRandom, SystemRandom},
     signature::{EcdsaKeyPair, EcdsaSigningAlgorithm, KeyPair},
 };
@@ -374,11 +374,12 @@ impl ProviderImpl for SoftwareProvider {
         })
     }
 
-    fn start_ephemeral_dh_exchange(&mut self, _spec: KeyPairSpec) -> Result<DHExchange, CalError> {
+    fn start_ephemeral_dh_exchange(&mut self, spec: KeyPairSpec) -> Result<DHExchange, CalError> {
         let key_id = nanoid!(10); // Generate a unique key ID
 
         // Initialize the SoftwareDHExchange instance
-        let dh_exchange = SoftwareDHExchange::new(key_id, self.storage_manager.clone()).unwrap();
+        let dh_exchange =
+            SoftwareDHExchange::new(key_id, self.storage_manager.clone(), spec).unwrap();
 
         // Wrap in DHExchange and return
         Ok(DHExchange {
@@ -558,14 +559,19 @@ pub(crate) struct SoftwareDHExchange {
     private_key: Option<EphemeralPrivateKey>,
     public_key: PublicKey,
     storage_manager: Option<StorageManager>,
+    spec: KeyPairSpec,
 }
 
 impl SoftwareDHExchange {
-    pub fn new(key_id: String, storage_manager: Option<StorageManager>) -> Result<Self, CalError> {
+    pub fn new(
+        key_id: String,
+        storage_manager: Option<StorageManager>,
+        spec: KeyPairSpec,
+    ) -> Result<Self, CalError> {
         let rng = SystemRandom::new();
 
         // Generate an ephemeral private key for DH using X25519
-        let private_key = EphemeralPrivateKey::generate(&X25519, &rng)
+        let private_key = EphemeralPrivateKey::generate(spec.asym_spec.try_into()?, &rng)
             .expect("Failed to generate DH private key");
 
         // Compute the associated public key
@@ -578,12 +584,26 @@ impl SoftwareDHExchange {
             private_key: Some(private_key),
             public_key,
             storage_manager,
+            spec,
         })
     }
 
     // Compute shared secret using the given peer public key
     fn compute_shared_secret(&mut self, peer_public_key_bytes: &[u8]) -> Result<Vec<u8>, CalError> {
-        let peer_public_key = UnparsedPublicKey::new(&X25519, peer_public_key_bytes);
+        let algo: &'static agreement::Algorithm = match self.spec.asym_spec {
+            AsymmetricKeySpec::P256 => &agreement::ECDH_P256,
+            AsymmetricKeySpec::P384 => &agreement::ECDH_P384,
+            AsymmetricKeySpec::Curve25519 => &agreement::X25519,
+            _ => {
+                return Err(CalError::failed_operation(
+                    "Algorithm not supported".to_string(),
+                    true,
+                    None,
+                ))
+            }
+        };
+
+        let peer_public_key = UnparsedPublicKey::new(algo, peer_public_key_bytes);
 
         if self.private_key.is_none() {
             return Err(CalError::failed_operation(
@@ -670,9 +690,9 @@ impl SoftwareDHExchange {
             key: key_material,
             storage_manager: self.storage_manager.clone(),
             spec: KeySpec {
-                cipher: Cipher::AesGcm256,
-                ephemeral: true,
-                signing_hash: CryptoHash::Sha2_256,
+                cipher: self.spec.cipher.unwrap(),
+                ephemeral: self.spec.ephemeral,
+                signing_hash: self.spec.signing_hash,
             },
         };
 
