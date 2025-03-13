@@ -5,20 +5,19 @@ mod tests {
         common::traits::key_handle::DHKeyExchangeImpl, prelude::*,
         software::provider::SoftwareDHExchange,
     };
-    use std::str::from_utf8;
 
     mod dh_exchange {
-
-        use std::sync::LazyLock;
-
-        use crate::{storage::StorageManager, tests::TestStore};
-
         use super::*;
+        use crate::software::key_handle::SoftwareKeyHandle;
+        use crate::{storage::StorageManager, tests::TestStore};
+        use nanoid::nanoid;
+        use std::str::from_utf8;
+        use std::sync::LazyLock;
 
         static mut STORE: LazyLock<TestStore> = LazyLock::new(TestStore::new);
 
         #[test]
-        fn test_dh_exchange_success() {
+        fn test_dh_exchange_client_server_keys() {
             let storage_manager = Some(
                 StorageManager::new("SoftwareProvider".to_owned(), unsafe {
                     &STORE.impl_config().additional_config
@@ -27,49 +26,64 @@ mod tests {
                 .unwrap(),
             );
 
-            // Party A creates an instance of SoftwareDHExchange
-            let mut dh_exchange_a =
-                SoftwareDHExchange::new("key_id_a".to_string(), storage_manager.clone()).unwrap();
+            // Client creates an instance of SoftwareDHExchange
+            let mut client_exchange =
+                SoftwareDHExchange::new("key_id_client".to_string(), storage_manager.clone())
+                    .unwrap();
 
-            // Party B creates an instance of SoftwareDHExchange
-            let mut dh_exchange_b =
-                SoftwareDHExchange::new("key_id_b".to_string(), storage_manager).unwrap();
+            // Server creates an instance of SoftwareDHExchange
+            let mut server_exchange =
+                SoftwareDHExchange::new("key_id_server".to_string(), storage_manager.clone())
+                    .unwrap();
 
-            // Party A gets its public key
-            let public_key_a = dh_exchange_a
+            // Client gets its public key
+            let client_public_key = client_exchange
                 .get_public_key()
-                .expect("Failed to get public key A");
+                .expect("Failed to get client public key");
 
-            // Party B gets its public key
-            let public_key_b = dh_exchange_b
+            // Server gets its public key
+            let server_public_key = server_exchange
                 .get_public_key()
-                .expect("Failed to get public key B");
+                .expect("Failed to get server public key");
 
-            // Party A computes the shared secret using B's public key
-            let shared_secret_a = dh_exchange_a
-                .add_external(&public_key_b)
-                .expect("Failed to compute shared secret on party A");
+            // Client computes session keys using server's public key
+            let (client_rx, client_tx) = client_exchange
+                .derive_client_session_keys(&server_public_key)
+                .expect("Failed to derive client session keys");
 
-            // Party B computes the shared secret using A's public key
-            let shared_secret_b = dh_exchange_b
-                .add_external(&public_key_a)
-                .expect("Failed to compute shared secret on party B");
+            // Server computes session keys using client's public key
+            let (server_rx, server_tx) = server_exchange
+                .derive_server_session_keys(&client_public_key)
+                .expect("Failed to derive server session keys");
 
-            // The shared secrets should be equal
+            // Verify complementary key derivation:
+            // Client's transmit key should equal server's receive key
             assert_eq!(
-                shared_secret_a, shared_secret_b,
-                "Shared secrets do not match"
+                client_tx, server_rx,
+                "Client's transmit key doesn't match server's receive key"
             );
 
-            // Optionally, check that the shared secret is non-zero
+            // Client's receive key should equal server's transmit key
+            assert_eq!(
+                client_rx, server_tx,
+                "Client's receive key doesn't match server's transmit key"
+            );
+
+            // Verify keys are not empty or all zeros
+            assert!(!client_rx.is_empty(), "Client receive key is empty");
+            assert!(!client_tx.is_empty(), "Client transmit key is empty");
             assert!(
-                shared_secret_a.iter().any(|&b| b != 0),
-                "Shared secret is all zeros"
+                client_rx.iter().any(|&b| b != 0),
+                "Client receive key is all zeros"
+            );
+            assert!(
+                client_tx.iter().any(|&b| b != 0),
+                "Client transmit key is all zeros"
             );
         }
 
         #[test]
-        fn test_dh_exchange_derive_symmetric_key() {
+        fn test_dh_exchange_encrypt_decrypt() {
             let storage_manager = Some(
                 StorageManager::new("SoftwareProvider".to_owned(), unsafe {
                     &STORE.impl_config().additional_config
@@ -78,53 +92,131 @@ mod tests {
                 .unwrap(),
             );
 
-            // Party A creates an instance of SoftwareDHExchange
-            let mut dh_exchange_a =
-                SoftwareDHExchange::new("key_id_a".to_string(), storage_manager.clone()).unwrap();
+            // Client creates an instance of SoftwareDHExchange
+            let mut client_exchange =
+                SoftwareDHExchange::new("key_id_client".to_string(), storage_manager.clone())
+                    .unwrap();
 
-            // Party B creates an instance of SoftwareDHExchange
-            let mut dh_exchange_b =
-                SoftwareDHExchange::new("key_id_b".to_string(), storage_manager).unwrap();
+            // Server creates an instance of SoftwareDHExchange
+            let mut server_exchange =
+                SoftwareDHExchange::new("key_id_server".to_string(), storage_manager.clone())
+                    .unwrap();
 
-            // Party A gets its public key
-            let public_key_a = dh_exchange_a
+            // Get public keys
+            let client_public_key = client_exchange
                 .get_public_key()
-                .expect("Failed to get public key A");
+                .expect("Failed to get client public key");
 
-            // Party B gets its public key
-            let public_key_b = dh_exchange_b
+            let server_public_key = server_exchange
                 .get_public_key()
-                .expect("Failed to get public key B");
+                .expect("Failed to get server public key");
 
-            // Party A computes the final shared secret and derives symmetric key
-            let key_handle_a = dh_exchange_a
-                .add_external_final(&public_key_b)
-                .expect("Failed to compute final shared secret on party A");
+            // Derive session keys
+            let (client_rx, client_tx) = client_exchange
+                .derive_client_session_keys(&server_public_key)
+                .expect("Failed to derive client session keys");
 
-            // Party B computes the final shared secret and derives symmetric key
-            let key_handle_b = dh_exchange_b
-                .add_external_final(&public_key_a)
-                .expect("Failed to compute final shared secret on party B");
+            let (server_rx, server_tx) = server_exchange
+                .derive_server_session_keys(&client_public_key)
+                .expect("Failed to derive server session keys");
 
-            // Now, test that the symmetric keys can encrypt and decrypt data
+            // Create key handles for encryption/decryption
+            let client_tx_key_id = nanoid!(10);
+            let client_tx_handle = SoftwareKeyHandle {
+                key_id: client_tx_key_id.clone(),
+                key: client_tx,
+                storage_manager: storage_manager.clone(),
+                spec: KeySpec {
+                    cipher: Cipher::AesGcm256,
+                    ephemeral: true,
+                    signing_hash: CryptoHash::Sha2_256,
+                },
+            };
+            let client_tx_key_handle = KeyHandle {
+                implementation: client_tx_handle.into(),
+            };
 
-            let plaintext = b"Test message for encryption";
+            let server_rx_key_id = nanoid!(10);
+            let server_rx_handle = SoftwareKeyHandle {
+                key_id: server_rx_key_id.clone(),
+                key: server_rx,
+                storage_manager: storage_manager.clone(),
+                spec: KeySpec {
+                    cipher: Cipher::AesGcm256,
+                    ephemeral: true,
+                    signing_hash: CryptoHash::Sha2_256,
+                },
+            };
+            let server_rx_key_handle = KeyHandle {
+                implementation: server_rx_handle.into(),
+            };
 
-            // Party A encrypts the data
-            let encrypted_data = key_handle_a
+            // Test message encryption/decryption client → server
+            let plaintext = b"Message from client to server";
+
+            // Client encrypts with their tx key
+            let encrypted_data = client_tx_key_handle
                 .encrypt_data(plaintext)
-                .expect("Encryption failed on party A");
+                .expect("Encryption failed on client");
 
-            // Party B decrypts the data
-            let decrypted_data = key_handle_b
+            // Server decrypts with their rx key
+            let decrypted_data = server_rx_key_handle
                 .decrypt_data(&encrypted_data.0, &[])
-                .expect("Decryption failed on party B");
+                .expect("Decryption failed on server");
 
-            // The decrypted data should match the original plaintext
             assert_eq!(
                 from_utf8(&decrypted_data).unwrap(),
                 from_utf8(plaintext).unwrap(),
                 "Decrypted data does not match plaintext"
+            );
+
+            // Also test server → client communication using the other keys
+            let server_tx_key_id = nanoid!(10);
+            let server_tx_handle = SoftwareKeyHandle {
+                key_id: server_tx_key_id.clone(),
+                key: server_tx,
+                storage_manager: storage_manager.clone(),
+                spec: KeySpec {
+                    cipher: Cipher::AesGcm256,
+                    ephemeral: true,
+                    signing_hash: CryptoHash::Sha2_256,
+                },
+            };
+            let server_tx_key_handle = KeyHandle {
+                implementation: server_tx_handle.into(),
+            };
+
+            let client_rx_key_id = nanoid!(10);
+            let client_rx_handle = SoftwareKeyHandle {
+                key_id: client_rx_key_id.clone(),
+                key: client_rx,
+                storage_manager: storage_manager.clone(),
+                spec: KeySpec {
+                    cipher: Cipher::AesGcm256,
+                    ephemeral: true,
+                    signing_hash: CryptoHash::Sha2_256,
+                },
+            };
+            let client_rx_key_handle = KeyHandle {
+                implementation: client_rx_handle.into(),
+            };
+
+            let server_plaintext = b"Message from server to client";
+
+            // Server encrypts with their tx key
+            let server_encrypted = server_tx_key_handle
+                .encrypt_data(server_plaintext)
+                .expect("Encryption failed on server");
+
+            // Client decrypts with their rx key
+            let client_decrypted = client_rx_key_handle
+                .decrypt_data(&server_encrypted.0, &[])
+                .expect("Decryption failed on client");
+
+            assert_eq!(
+                from_utf8(&client_decrypted).unwrap(),
+                from_utf8(server_plaintext).unwrap(),
+                "Server-to-client decrypted data does not match plaintext"
             );
         }
 
@@ -138,15 +230,15 @@ mod tests {
                 .unwrap(),
             );
 
-            // Party A creates an instance of SoftwareDHExchange
-            let mut dh_exchange_a =
-                SoftwareDHExchange::new("key_id_a".to_string(), storage_manager).unwrap();
+            // Client creates an instance of SoftwareDHExchange
+            let mut client_exchange =
+                SoftwareDHExchange::new("key_id_client".to_string(), storage_manager).unwrap();
 
-            // Generate an invalid public key (e.g., random bytes)
+            // Generate an invalid public key (too short for X25519)
             let invalid_public_key = vec![1, 2, 3, 4, 5];
 
-            // Party A attempts to compute the shared secret using the invalid public key
-            let result = dh_exchange_a.add_external(&invalid_public_key);
+            // Client attempts to derive session keys using the invalid public key
+            let result = client_exchange.derive_client_session_keys(&invalid_public_key);
 
             // Expect an error
             assert!(
@@ -170,27 +262,123 @@ mod tests {
                 .unwrap(),
             );
 
-            // Party A creates an instance of SoftwareDHExchange
-            let mut dh_exchange_a =
-                SoftwareDHExchange::new("key_id_a".to_string(), storage_manager).unwrap();
+            // Client creates an instance of SoftwareDHExchange
+            let mut client_exchange =
+                SoftwareDHExchange::new("key_id_client".to_string(), storage_manager.clone())
+                    .unwrap();
 
-            // Party A gets its public key
-            let public_key_a = dh_exchange_a
-                .get_public_key()
-                .expect("Failed to get public key A");
+            // Generate a valid server public key
+            let server_exchange =
+                SoftwareDHExchange::new("key_id_server".to_string(), storage_manager).unwrap();
+            let server_public_key = server_exchange.get_public_key().unwrap();
 
-            // Party A calls add_external_final with some public key (could be its own, doesn't matter here)
-            let _ = dh_exchange_a
-                .add_external_final(&public_key_a)
-                .expect("Failed to compute final shared secret on party A");
+            // Client derives session keys once
+            let _ = client_exchange
+                .derive_client_session_keys(&server_public_key)
+                .expect("Failed to derive client session keys");
 
-            // Attempting to call add_external should result in an error because private_key is consumed
-            let result = dh_exchange_a.add_external(&public_key_a);
+            // Attempting to derive keys again should fail because private_key was consumed
+            let result = client_exchange.derive_client_session_keys(&server_public_key);
 
             // Expect an error
             assert!(
                 result.is_err(),
-                "Expected error when calling add_external after add_external_final"
+                "Expected error when calling derive_client_session_keys after private key consumed"
+            );
+
+            // The error should indicate that the private key is no longer available
+            if let Err(e) = result {
+                assert!(
+                    e.to_string().contains("No private key available"),
+                    "Unexpected error message: {e}"
+                );
+            }
+        }
+
+        #[test]
+        fn test_multiple_key_derivations() {
+            let storage_manager = Some(
+                StorageManager::new("SoftwareProvider".to_owned(), unsafe {
+                    &STORE.impl_config().additional_config
+                })
+                .unwrap()
+                .unwrap(),
+            );
+
+            // Client1 creates an instance of SoftwareDHExchange
+            let mut client1_exchange =
+                SoftwareDHExchange::new("key_id_client1".to_string(), storage_manager.clone())
+                    .unwrap();
+
+            // Client2 creates an instance of SoftwareDHExchange
+            let mut client2_exchange =
+                SoftwareDHExchange::new("key_id_client2".to_string(), storage_manager.clone())
+                    .unwrap();
+
+            // Server instances for each client
+            let mut server_for_client1 = SoftwareDHExchange::new(
+                "key_id_server_for_client1".to_string(),
+                storage_manager.clone(),
+            )
+            .unwrap();
+            let mut server_for_client2 = SoftwareDHExchange::new(
+                "key_id_server_for_client2".to_string(),
+                storage_manager.clone(),
+            )
+            .unwrap();
+
+            // Get public keys
+            let client1_public_key = client1_exchange.get_public_key().unwrap();
+            let client2_public_key = client2_exchange.get_public_key().unwrap();
+            let server1_public_key = server_for_client1.get_public_key().unwrap();
+            let server2_public_key = server_for_client2.get_public_key().unwrap();
+
+            // Derive keys for Client1 and Server1
+            let (client1_rx, client1_tx) = client1_exchange
+                .derive_client_session_keys(&server1_public_key)
+                .expect("Failed to derive client1 session keys");
+
+            let (server1_rx, server1_tx) = server_for_client1
+                .derive_server_session_keys(&client1_public_key)
+                .expect("Failed to derive server keys for client1");
+
+            // Verify key complementarity for first client
+            assert_eq!(
+                client1_tx, server1_rx,
+                "Client1's transmit key should match server's receive key"
+            );
+            assert_eq!(
+                client1_rx, server1_tx,
+                "Client1's receive key should match server's transmit key"
+            );
+
+            // Derive keys for Client2 and Server2
+            let (client2_rx, client2_tx) = client2_exchange
+                .derive_client_session_keys(&server2_public_key)
+                .expect("Failed to derive client2 session keys");
+
+            let (server2_rx, server2_tx) = server_for_client2
+                .derive_server_session_keys(&client2_public_key)
+                .expect("Failed to derive server keys for client2");
+
+            // Verify key complementarity for second client
+            assert_eq!(
+                client2_tx, server2_rx,
+                "Client2's transmit key should match server's receive key"
+            );
+            assert_eq!(
+                client2_rx, server2_tx,
+                "Client2's receive key should match server's transmit key"
+            );
+
+            // Ensure different clients get different keys
+            assert_ne!(
+                client1_tx, client2_tx,
+                "Different clients should get different transmit keys"
+            );
+            assert_ne!(
+                client1_rx, client2_rx,
+                "Different clients should get different receive keys"
             );
         }
     }

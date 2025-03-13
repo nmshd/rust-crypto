@@ -209,13 +209,33 @@ impl DHKeyExchangeImpl for StubDHKeyExchange {
         todo!()
     }
 
-    /// add an external public point and compute the shared secret. The raw secret is returned to use in another round of the key exchange
-    fn add_external(&mut self, external_key: &[u8]) -> Result<Vec<u8>, CalError> {
+    #[doc = " Derive client session keys (rx, tx) - client is the templator in your code"]
+    fn derive_client_session_keys(
+        &mut self,
+        server_pk: &[u8],
+    ) -> Result<(Vec<u8>, Vec<u8>), CalError> {
         todo!()
     }
 
-    /// add the final external Keypair, derive a symmetric key from the shared secret and store the key
-    fn add_external_final(&mut self, external_key: &[u8]) -> Result<KeyHandle, CalError> {
+    #[doc = " Derive server session keys (rx, tx) - server is the requestor in your code"]
+    fn derive_server_session_keys(
+        &mut self,
+        client_pk: &[u8],
+    ) -> Result<(Vec<u8>, Vec<u8>), CalError> {
+        todo!()
+    }
+
+    fn derive_client_key_handles(
+        &mut self,
+        server_pk: &[u8],
+    ) -> Result<(KeyHandle, KeyHandle), CalError> {
+        todo!()
+    }
+
+    fn derive_server_key_handles(
+        &mut self,
+        client_pk: &[u8],
+    ) -> Result<(KeyHandle, KeyHandle), CalError> {
         todo!()
     }
 }
