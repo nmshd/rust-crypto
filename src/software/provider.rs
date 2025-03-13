@@ -5,18 +5,15 @@ use super::{
 use crate::{
     common::{
         config::{KeyPairSpec, KeySpec, ProviderConfig, Spec},
-        crypto::algorithms::{
-            encryption::{AsymmetricKeySpec, Cipher},
-            hashes::CryptoHash,
-        },
+        crypto::algorithms::encryption::{AsymmetricKeySpec, Cipher},
         error::CalError,
         traits::{
-            key_handle::{DHKeyExchangeImpl, KeyHandleImplEnum},
+            key_handle::DHKeyExchangeImpl,
             module_provider::{ProviderFactory, ProviderImpl},
         },
         DHExchange, KeyHandle, KeyPairHandle,
     },
-    prelude::KDF,
+    prelude::{CryptoHash, KDF},
     storage::KeyData,
 };
 use argon2::{
@@ -583,6 +580,107 @@ impl SoftwareDHExchange {
             storage_manager,
         })
     }
+
+    // Compute shared secret using the given peer public key
+    fn compute_shared_secret(&mut self, peer_public_key_bytes: &[u8]) -> Result<Vec<u8>, CalError> {
+        let peer_public_key = UnparsedPublicKey::new(&X25519, peer_public_key_bytes);
+
+        if self.private_key.is_none() {
+            return Err(CalError::failed_operation(
+                "No private key available".to_string(),
+                true,
+                None,
+            ));
+        }
+
+        // Take ownership of the private key (consumes it)
+        let private_key = self.private_key.take().unwrap();
+
+        // Perform key agreement to produce the shared secret
+        agreement::agree_ephemeral(private_key, &peer_public_key, |shared_secret| {
+            Ok(shared_secret.to_vec())
+        })
+        .map_err(|err| CalError::failed_operation(err.to_string(), true, None))?
+    }
+
+    // Generate session keys in the libsodium format
+    fn generate_session_keys(
+        &mut self,
+        peer_public_key: &[u8],
+        is_client: bool,
+    ) -> Result<(Vec<u8>, Vec<u8>), CalError> {
+        // Compute the shared secret
+        let shared_secret = self.compute_shared_secret(peer_public_key)?;
+
+        // Create a context for key derivation that mirrors libsodium's generichash
+        let self_pk = self.public_key.as_ref().to_vec();
+
+        // Create a BLAKE2b hash context (similar to libsodium's generichash)
+        // We need to hash: shared_secret | client_pk | server_pk
+        let mut params = blake2b_simd::Params::new();
+        params.hash_length(64); // Generate 64 bytes (for two 32-byte keys)
+        let mut state = params.to_state();
+
+        // Add the shared secret to the hash
+        state.update(&shared_secret);
+
+        // Add the public keys in the order that libsodium does:
+        // For both client and server, the order is: client_pk | server_pk
+        if is_client {
+            state.update(&self_pk); // client_pk (self)
+            state.update(peer_public_key); // server_pk (peer)
+        } else {
+            state.update(peer_public_key); // client_pk (peer)
+            state.update(&self_pk); // server_pk (self)
+        }
+
+        // Finalize the hash to get the session keys
+        let keys = state.finalize().as_bytes().to_vec();
+
+        // In libsodium:
+        // - Client: rx = first half, tx = second half
+        // - Server: rx = second half, tx = first half
+        let (rx, tx) = if is_client {
+            // Client mode
+            let rx = keys[0..32].to_vec();
+            let tx = keys[32..64].to_vec();
+            (rx, tx)
+        } else {
+            // Server mode
+            let rx = keys[32..64].to_vec();
+            let tx = keys[0..32].to_vec();
+            (rx, tx)
+        };
+
+        Ok((rx, tx))
+    }
+
+    // Create a key handle from derived key material
+    fn create_key_handle(
+        &self,
+        key_material: Vec<u8>,
+        key_id_suffix: &str,
+    ) -> Result<KeyHandle, CalError> {
+        // Generate a unique key ID
+        let key_id = format!("{}_{}", self.key_id, key_id_suffix);
+
+        // Create a SoftwareKeyHandle with the derived key
+        let handle = SoftwareKeyHandle {
+            key_id,
+            key: key_material,
+            storage_manager: self.storage_manager.clone(),
+            spec: KeySpec {
+                cipher: Cipher::AesGcm256,
+                ephemeral: true,
+                signing_hash: CryptoHash::Sha2_256,
+            },
+        };
+
+        // Convert to KeyHandle
+        Ok(KeyHandle {
+            implementation: handle.into(),
+        })
+    }
 }
 
 impl DHKeyExchangeImpl for SoftwareDHExchange {
@@ -591,64 +689,47 @@ impl DHKeyExchangeImpl for SoftwareDHExchange {
         Ok(self.public_key.as_ref().to_vec())
     }
 
-    /// Computes an intermediate shared secret with an external public key (consumes `self`)
-    fn add_external(&mut self, external_key: &[u8]) -> Result<Vec<u8>, CalError> {
-        // Parse the external public key
-        let peer_public_key = UnparsedPublicKey::new(&X25519, external_key);
-
-        if self.private_key.is_none() {
-            return Err(CalError::failed_operation(
-                "No private key available".to_string(),
-                true,
-                None,
-            ));
-        };
-
-        // Perform key agreement to produce an intermediate shared secret
-        agreement::agree_ephemeral(
-            self.private_key.take().unwrap(),
-            &peer_public_key,
-            |shared_secret| Ok(shared_secret.to_vec()),
-        )
-        .map_err(|err| CalError::failed_operation(err.to_string(), true, None))?
+    fn derive_client_session_keys(
+        &mut self,
+        server_pk: &[u8],
+    ) -> Result<(Vec<u8>, Vec<u8>), CalError> {
+        // Client mode: is_client = true
+        self.generate_session_keys(server_pk, true)
     }
 
-    /// Computes the final shared secret, derives a symmetric key, and returns it as a key handle
-    fn add_external_final(&mut self, external_key: &[u8]) -> Result<KeyHandle, CalError> {
-        // Parse the final external public key
-        let peer_public_key = UnparsedPublicKey::new(&X25519, external_key);
+    fn derive_server_session_keys(
+        &mut self,
+        client_pk: &[u8],
+    ) -> Result<(Vec<u8>, Vec<u8>), CalError> {
+        // Server mode: is_client = false
+        self.generate_session_keys(client_pk, false)
+    }
 
-        if self.private_key.is_none() {
-            return Err(CalError::failed_operation(
-                "No private key available".to_string(),
-                true,
-                None,
-            ));
-        };
+    /// Derives client session keys and returns them as key handles
+    fn derive_client_key_handles(
+        &mut self,
+        server_pk: &[u8],
+    ) -> Result<(KeyHandle, KeyHandle), CalError> {
+        let (rx_key, tx_key) = self.derive_client_session_keys(server_pk)?;
 
-        // Perform key agreement to produce the final shared secret
-        let shared_secret = agreement::agree_ephemeral(
-            self.private_key.take().unwrap(),
-            &peer_public_key,
-            <[u8]>::to_vec,
-        )
-        .map_err(|err| CalError::failed_operation(err.to_string(), true, None))?;
+        // Create key handles for the derived keys
+        let rx_handle = self.create_key_handle(rx_key, "rx")?;
+        let tx_handle = self.create_key_handle(tx_key, "tx")?;
 
-        // Derive a symmetric key (AES-256) from the shared secret
-        let key_material = &shared_secret[0..32]; // Use the first 32 bytes as AES-256 key
+        Ok((rx_handle, tx_handle))
+    }
 
-        // Return the symmetric key wrapped in KeyHandleImplEnum
-        Ok(KeyHandle {
-            implementation: KeyHandleImplEnum::SoftwareKeyHandle(SoftwareKeyHandle {
-                key_id: self.key_id.clone(),
-                key: key_material.to_vec(),
-                storage_manager: self.storage_manager.clone(),
-                spec: KeySpec {
-                    cipher: Cipher::AesGcm256,
-                    ephemeral: true,
-                    signing_hash: CryptoHash::Sha2_256,
-                },
-            }),
-        })
+    /// Derives server session keys and returns them as key handles
+    fn derive_server_key_handles(
+        &mut self,
+        client_pk: &[u8],
+    ) -> Result<(KeyHandle, KeyHandle), CalError> {
+        let (rx_key, tx_key) = self.derive_server_session_keys(client_pk)?;
+
+        // Create key handles for the derived keys
+        let rx_handle = self.create_key_handle(rx_key, "rx")?;
+        let tx_handle = self.create_key_handle(tx_key, "tx")?;
+
+        Ok((rx_handle, tx_handle))
     }
 }
