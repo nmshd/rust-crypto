@@ -14,7 +14,7 @@ tasks:
     aliases: [gen]
     cmds:
       - task: generate-types
-      - task: run-flutter-app
+      - task: generate-dart-bindings
 
   generate-types:
     desc: Generates the ts types for cal. Cargo needs to be installed.
