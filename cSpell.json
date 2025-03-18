@@ -2,10 +2,12 @@
     "words": [
         "asym",
         "Brainpool",
+        "codegen",
         "keypair",
         "kibibytes",
         "nmshd",
         "pkcs",
+        "pwsh",
         "repr",
         "thiserror"
     ]
