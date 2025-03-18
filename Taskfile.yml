@@ -49,6 +49,7 @@ tasks:
 
   run-flutter-app:
     desc: Builds and runs the flutter app. Flutter must be installed.
+    aliases: [flutter]
     dir: ./flutter_app/
     cmds:
       - flutter run
