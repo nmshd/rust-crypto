@@ -1,0 +1,55 @@
+# https://taskfile.dev
+
+version: "3"
+
+tasks:
+  prerequisites:
+    aliases: [pre]
+    desc: Installs some prerequisites.
+    cmds:
+      - cargo install flutter_rust_bridge_codegen
+
+  generate:
+    desc: Generates ts types and dart bindings.
+    aliases: [gen]
+    cmds:
+      - task: generate-types
+      - task: generate-dart-bindings
+
+  generate-types:
+    desc: Generates the ts types for cal. Cargo needs to be installed.
+    dir: ./ts-types/
+    cmds:
+      - pwsh Generate-Types.ps1
+
+  generate-dart-bindings:
+    desc: Generates the dart bindings. Cargo and rust need to be installed.
+    dir: ./flutter_plugin/
+    cmds:
+      - flutter_rust_bridge_codegen generate --rust-preamble "use std::future::Future; use std::pin::Pin;"
+
+  test:
+    desc: Execute non interactive tests.
+    cmds:
+      - task: test-cal
+      - task: test-ts-types
+
+  test-cal:
+    desc: Execute unit tests for the given platform. (currently only software on desktop)
+    cmds:
+      - cargo test -F software
+
+  test-ts-types:
+    desc: Tests if the ts types still compile. Npm needs to be installed.
+    dir: ./ts-types/
+    cmds:
+      - npm ci
+      - npm run build
+      - npm run check
+
+  run-flutter-app:
+    desc: Builds and runs the flutter app. Flutter must be installed.
+    aliases: [flutter]
+    dir: ./flutter_app/
+    cmds:
+      - flutter run
