@@ -37,7 +37,7 @@ tasks:
   test-cal:
     desc: Execute unit tests for the given platform. (currently only software on desktop)
     cmds:
-      - cargo run test -F software
+      - cargo test -F software
 
   test-ts-types:
     desc: Tests if the ts types still compile. Npm needs to be installed.
