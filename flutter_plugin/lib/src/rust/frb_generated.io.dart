@@ -342,6 +342,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ProviderImplConfig dco_decode_provider_impl_config(dynamic raw);
 
   @protected
+  (
+    KeyHandle,
+    KeyHandle
+  ) dco_decode_record_auto_owned_rust_opaque_flutter_rust_bridgefor_generated_rust_auto_opaque_inner_key_handle_auto_owned_rust_opaque_flutter_rust_bridgefor_generated_rust_auto_opaque_inner_key_handle(
+      dynamic raw);
+
+  @protected
   (Uint8List, Uint8List)
       dco_decode_record_list_prim_u_8_strict_list_prim_u_8_strict(dynamic raw);
 
@@ -642,6 +649,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   ProviderImplConfig sse_decode_provider_impl_config(
+      SseDeserializer deserializer);
+
+  @protected
+  (
+    KeyHandle,
+    KeyHandle
+  ) sse_decode_record_auto_owned_rust_opaque_flutter_rust_bridgefor_generated_rust_auto_opaque_inner_key_handle_auto_owned_rust_opaque_flutter_rust_bridgefor_generated_rust_auto_opaque_inner_key_handle(
       SseDeserializer deserializer);
 
   @protected
@@ -976,6 +990,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_provider_impl_config(
       ProviderImplConfig self, SseSerializer serializer);
+
+  @protected
+  void
+      sse_encode_record_auto_owned_rust_opaque_flutter_rust_bridgefor_generated_rust_auto_opaque_inner_key_handle_auto_owned_rust_opaque_flutter_rust_bridgefor_generated_rust_auto_opaque_inner_key_handle(
+          (KeyHandle, KeyHandle) self, SseSerializer serializer);
 
   @protected
   void sse_encode_record_list_prim_u_8_strict_list_prim_u_8_strict(

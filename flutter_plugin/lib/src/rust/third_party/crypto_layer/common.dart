@@ -15,9 +15,17 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DHExchange>>
 abstract class DhExchange implements RustOpaqueInterface {
-  Future<Uint8List> addExternal({required List<int> externalKey});
+  Future<(KeyHandle, KeyHandle)> deriveClientKeyHandles(
+      {required List<int> serverPk});
 
-  Future<KeyHandle> addExternalFinal({required List<int> externalKey});
+  Future<(Uint8List, Uint8List)> deriveClientSessionKeys(
+      {required List<int> serverPk});
+
+  Future<(KeyHandle, KeyHandle)> deriveServerKeyHandles(
+      {required List<int> clientPk});
+
+  Future<(Uint8List, Uint8List)> deriveServerSessionKeys(
+      {required List<int> clientPk});
 
   Future<Uint8List> getPublicKey();
 }
