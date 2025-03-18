@@ -18,12 +18,14 @@ tasks:
 
   generate-types:
     desc: Generates the ts types for cal. Cargo needs to be installed.
+    aliases: [gents]
     dir: ./ts-types/
     cmds:
       - pwsh Generate-Types.ps1
 
   generate-dart-bindings:
     desc: Generates the dart bindings. Cargo and rust need to be installed.
+    aliases: [gendt]
     dir: ./flutter_plugin/
     cmds:
       - flutter_rust_bridge_codegen generate --rust-preamble "use std::future::Future; use std::pin::Pin; use crypto_layer::common::config::DynFuture;"
@@ -50,6 +52,7 @@ tasks:
 
   test-dart-bindings:
     desc: Test partially generated dart bindings.
+    aliases: [testdt]
     dir: ./flutter_plugin/rust/
     cmds:
       - cargo c
