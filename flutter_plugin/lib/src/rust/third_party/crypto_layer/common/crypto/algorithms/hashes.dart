@@ -29,6 +29,7 @@ enum CryptoHash {
   sha3256,
   sha3384,
   sha3512,
+  blake2B,
   ;
 
   static Future<CryptoHash> default_() => RustLib.instance.api

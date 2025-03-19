@@ -25,11 +25,7 @@
 
 // Section: imports
 
-use std::future::Future;
-use std::pin::Pin;
-
 use crate::*;
-use crypto_layer::common::config::DynFuture;
 use crypto_layer::common::crypto::algorithms::key_derivation::*;
 use crypto_layer::common::error::*;
 use crypto_layer::common::*;
@@ -38,6 +34,10 @@ use flutter_rust_bridge::for_generated::{transform_result_dco, Lifetimeable, Loc
 use flutter_rust_bridge::{Handler, IntoIntoDart};
 
 // Section: boilerplate
+
+use crypto_layer::common::config::DynFuture;
+use std::future::Future;
+use std::pin::Pin;
 
 flutter_rust_bridge::frb_generated_boilerplate!(
     default_stream_sink_codec = SseCodec,
@@ -3335,6 +3335,7 @@ impl SseDecode for crypto_layer::common::crypto::algorithms::hashes::CryptoHash 
             7 => crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha3_256,
             8 => crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha3_384,
             9 => crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha3_512,
+            10 => crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Blake2b,
             _ => unreachable!("Invalid variant for CryptoHash: {}", inner),
         };
     }
@@ -4307,6 +4308,7 @@ impl flutter_rust_bridge::IntoDart
             crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha3_256 => 7.into_dart(),
             crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha3_384 => 8.into_dart(),
             crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha3_512 => 9.into_dart(),
+            crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Blake2b => 10.into_dart(),
             _ => unreachable!(),
         }
     }
@@ -5096,6 +5098,7 @@ impl SseEncode for crypto_layer::common::crypto::algorithms::hashes::CryptoHash 
                 crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha3_256 => 7,
                 crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha3_384 => 8,
                 crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Sha3_512 => 9,
+                crypto_layer::common::crypto::algorithms::hashes::CryptoHash::Blake2b => 10,
                 _ => {
                     unimplemented!("");
                 }
@@ -5517,6 +5520,10 @@ mod io {
 
     // Section: boilerplate
 
+    use crypto_layer::common::config::DynFuture;
+    use std::future::Future;
+    use std::pin::Pin;
+
     flutter_rust_bridge::frb_generated_boilerplate_io!();
 
     #[unsafe(no_mangle)]
@@ -5716,6 +5723,10 @@ mod web {
     use flutter_rust_bridge::{Handler, IntoIntoDart};
 
     // Section: boilerplate
+
+    use crypto_layer::common::config::DynFuture;
+    use std::future::Future;
+    use std::pin::Pin;
 
     flutter_rust_bridge::frb_generated_boilerplate_web!();
 
