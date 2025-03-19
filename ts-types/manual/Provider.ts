@@ -1,4 +1,5 @@
 import type {
+	CryptoHash,
 	KDF,
 	KeyPairSpec,
 	KeySpec,
@@ -37,4 +38,5 @@ export type Provider = {
 		spec: KeySpec,
 	): Promise<KeyHandle>;
 	getRandom: (len: number) => Promise<Uint8Array>;
+	hash: (input: Uint8Array, hash: CryptoHash) => Promise<Uint8Array>;
 };

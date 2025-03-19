@@ -44,6 +44,7 @@ tasks:
 
   test-ts-types:
     desc: Tests if the ts types still compile. Npm needs to be installed.
+    aliases: [testts]
     dir: ./ts-types/
     cmds:
       - npm ci
