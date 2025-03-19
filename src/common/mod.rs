@@ -1,5 +1,5 @@
 use crate::common::traits::key_handle::DHKeyExchangeImpl;
-use crate::prelude::KDF;
+use crate::prelude::{CryptoHash, KDF};
 use config::{KeyPairSpec, KeySpec, ProviderConfig, Spec};
 use error::CalError;
 use tracing::error;
@@ -174,6 +174,10 @@ impl Provider {
 
     delegate_enum_bare! {
         pub fn get_random(&self, len: usize) -> Vec<u8>;
+    }
+
+    delegate_enum_bare! {
+        pub fn hash(&self, input: &[u8], hash: CryptoHash) -> Result<Vec<u8>, CalError> ;
     }
 }
 
