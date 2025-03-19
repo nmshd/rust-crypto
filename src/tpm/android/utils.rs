@@ -36,6 +36,7 @@ impl From<CryptoHash> for String {
             | CryptoHash::Sha3_224
             | CryptoHash::Sha3_384
             | CryptoHash::Sha3_512 => "SHA3".to_string(),
+            CryptoHash::Blake2b => todo!(),
         }
     }
 }
