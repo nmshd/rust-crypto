@@ -564,6 +564,11 @@ impl ProviderImpl for SoftwareProvider {
             CryptoHash::Sha3_256 => Sha3_256::digest(input).to_vec(),
             CryptoHash::Sha3_384 => Sha3_384::digest(input).to_vec(),
             CryptoHash::Sha3_512 => Sha3_512::digest(input).to_vec(),
+            CryptoHash::Blake2b => {
+                let mut hasher = Blake2b512::new();
+                hasher.update(input);
+                hasher.finalize().to_vec()
+            }
             _ => unimplemented!(),
         };
 

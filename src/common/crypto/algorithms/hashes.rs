@@ -39,4 +39,5 @@ pub enum CryptoHash {
     Sha3_256,
     Sha3_384,
     Sha3_512,
+    Blake2b,
 }
