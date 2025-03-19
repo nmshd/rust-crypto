@@ -595,4 +595,35 @@ mod tests {
             assert!(!all_zero);
         }
     }
+
+    mod misc {
+        use super::*;
+
+        use std::sync::LazyLock;
+
+        use color_eyre::eyre::{Ok, Result};
+
+        use crate::prelude::*;
+        use crate::tests::{setup, TestStore};
+
+        static STORE: LazyLock<TestStore> = LazyLock::new(|| TestStore::new());
+
+        const PROVIDER: LazyLock<Provider> = LazyLock::new(|| {
+            create_provider_from_name("SoftwareProvider", STORE.impl_config().clone()).unwrap()
+        });
+
+        #[test]
+        fn test_hash() -> Result<()> {
+            setup();
+
+            let data: Vec<u8> = (0..64).collect();
+            let hash = PROVIDER.hash(&data, CryptoHash::Sha2_256)?;
+            let hash2 = PROVIDER.hash(&data, CryptoHash::Sha2_256)?;
+
+            assert!(hash.len() > 0);
+            assert_eq!(hash, hash2);
+
+            Ok(())
+        }
+    }
 }
