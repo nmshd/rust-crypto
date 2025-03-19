@@ -3,6 +3,7 @@
         "asym",
         "Brainpool",
         "codegen",
+        "Diffie",
         "keypair",
         "kibibytes",
         "nmshd",

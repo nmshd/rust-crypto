@@ -13,6 +13,7 @@ use crate::{
         error::CalError,
         DHExchange, KeyHandle, KeyPairHandle,
     },
+    prelude::CryptoHash,
     stub::{StubProvider, StubProviderFactory},
 };
 use enum_dispatch::enum_dispatch;
@@ -143,7 +144,7 @@ pub(crate) trait ProviderImpl: Send + Sync {
         algorithm: KeySpec,
         kdf: KDF,
     ) -> Result<KeyHandle, CalError> {
-        unimplemented!()
+        Err(CalError::not_implemented())
     }
 
     /// Derives a high-entropy key from a low-entropy password and a unique salt
@@ -155,7 +156,13 @@ pub(crate) trait ProviderImpl: Send + Sync {
         context: &str,
         spec: KeySpec,
     ) -> Result<KeyHandle, CalError> {
-        unimplemented!()
+        Err(CalError::not_implemented())
+    }
+
+    /// Hashes the input
+    #[allow(dead_code, unused_variables)]
+    fn hash(&self, input: &[u8], hash: CryptoHash) -> Result<Vec<u8>, CalError> {
+        Err(CalError::not_implemented())
     }
 
     /// Generates random bytes
@@ -169,7 +176,7 @@ pub(crate) trait ProviderImpl: Send + Sync {
     /// A `Vec` that, on success, contains a the requested amount of random bytes.
     #[allow(dead_code, unused_variables)]
     fn get_random(&self, len: usize) -> Vec<u8> {
-        unimplemented!()
+        unimplemented!("Random number generation is not implemented for this provider.")
     }
 }
 

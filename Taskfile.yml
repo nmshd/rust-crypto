@@ -39,11 +39,13 @@ tasks:
 
   test-cal:
     desc: Execute unit tests for the given platform. (currently only software on desktop)
+    aliases: [testrs]
     cmds:
       - cargo test -F software
 
   test-ts-types:
     desc: Tests if the ts types still compile. Npm needs to be installed.
+    aliases: [testts]
     dir: ./ts-types/
     cmds:
       - npm ci
