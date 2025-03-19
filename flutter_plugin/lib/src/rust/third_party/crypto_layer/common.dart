@@ -105,6 +105,8 @@ abstract class Provider implements RustOpaqueInterface {
 
   Future<Uint8List> getRandom({required BigInt len});
 
+  Future<Uint8List> hash({required List<int> input, required CryptoHash hash});
+
   Future<KeyHandle> importKey({required KeySpec spec, required List<int> data});
 
   Future<KeyPairHandle> importKeyPair(
