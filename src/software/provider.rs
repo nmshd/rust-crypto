@@ -13,7 +13,7 @@ use crate::{
         },
         DHExchange, KeyHandle, KeyPairHandle,
     },
-    prelude::KDF,
+    prelude::{CryptoHash, KDF},
     storage::KeyData,
 };
 use argon2::{
@@ -24,9 +24,11 @@ use nanoid::nanoid;
 use ring::{
     aead::Algorithm,
     agreement::{self, EphemeralPrivateKey, PublicKey, UnparsedPublicKey},
+    digest::{digest, SHA256, SHA384, SHA512, SHA512_256},
     rand::{SecureRandom, SystemRandom},
     signature::{EcdsaKeyPair, EcdsaSigningAlgorithm, KeyPair},
 };
+use sha3::{Sha3_224, Sha3_256, Sha3_384, Sha3_512};
 
 impl ProviderImpl for SoftwareProvider {
     fn create_key(&mut self, spec: KeySpec) -> Result<KeyHandle, CalError> {
@@ -551,6 +553,22 @@ impl ProviderImpl for SoftwareProvider {
             .expect("Failed to generate random bytes");
         random_bytes
     }
+
+    fn hash(&self, input: &[u8], hash: CryptoHash) -> Result<Vec<u8>, CalError> {
+        let result = match hash {
+            CryptoHash::Sha2_256 => digest(&SHA256, input).as_ref().to_vec(),
+            CryptoHash::Sha2_384 => digest(&SHA384, input).as_ref().to_vec(),
+            CryptoHash::Sha2_512 => digest(&SHA512, input).as_ref().to_vec(),
+            CryptoHash::Sha2_512_256 => digest(&SHA512_256, input).as_ref().to_vec(),
+            CryptoHash::Sha3_224 => Sha3_224::digest(input).to_vec(),
+            CryptoHash::Sha3_256 => Sha3_256::digest(input).to_vec(),
+            CryptoHash::Sha3_384 => Sha3_384::digest(input).to_vec(),
+            CryptoHash::Sha3_512 => Sha3_512::digest(input).to_vec(),
+            _ => unimplemented!(),
+        };
+
+        Ok(result)
+    }
 }
 
 #[derive(Debug)]
@@ -687,7 +705,7 @@ impl SoftwareDHExchange {
         let cipher = self.spec.cipher.ok_or_else(
             || CalError::bad_parameter(
                 "derive_client_key_handles and derive_server_key_handles need a KeyPairSpec supplied which cipher is not None.".to_owned(), 
-            true, 
+            true,
             None
         ))?;
 

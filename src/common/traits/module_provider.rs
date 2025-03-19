@@ -13,6 +13,7 @@ use crate::{
         error::CalError,
         DHExchange, KeyHandle, KeyPairHandle,
     },
+    prelude::CryptoHash,
     stub::{StubProvider, StubProviderFactory},
 };
 use enum_dispatch::enum_dispatch;
@@ -155,6 +156,12 @@ pub(crate) trait ProviderImpl: Send + Sync {
         context: &str,
         spec: KeySpec,
     ) -> Result<KeyHandle, CalError> {
+        unimplemented!()
+    }
+
+    /// Hashes the input
+    #[allow(dead_code, unused_variables)]
+    fn hash(&self, input: &[u8], hash: CryptoHash) -> Result<Vec<u8>, CalError> {
         unimplemented!()
     }
 
