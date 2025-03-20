@@ -21,7 +21,8 @@ jobs:
       - name: Build
         working-directory: ./ts-types
         run: |
-          npm i
+          npm ci
+          npm run prepare
           npm run build
       - name: Publish
         working-directory: ./ts-types

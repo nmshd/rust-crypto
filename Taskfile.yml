@@ -9,6 +9,14 @@ tasks:
     cmds:
       - cargo install flutter_rust_bridge_codegen
 
+  prerequisites-ts:
+    aliases: [prets]
+    desc: Installs ts prerequisites.
+    dir: ./ts-types/
+    cmds:
+      - npm ci
+      - npm run prepare
+
   generate:
     desc: Generates ts types and dart bindings.
     aliases: [gen]
@@ -48,7 +56,6 @@ tasks:
     aliases: [testts]
     dir: ./ts-types/
     cmds:
-      - npm ci
       - npm run build
       - npm run check
 
