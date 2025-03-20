@@ -219,6 +219,10 @@ impl KeyPairHandle {
     }
 
     delegate_enum! {
+        pub fn start_dh_exchange(&self) -> Result<DHExchange, CalError>;
+    }
+
+    delegate_enum! {
         pub fn id(&self) -> Result<String, CalError>;
     }
 
@@ -282,6 +286,10 @@ pub struct DHExchange {
 }
 
 impl DHExchange {
+    delegate_enum! {
+        pub fn id(&self) -> Result<String, CalError>;
+    }
+
     delegate_enum! {
         pub fn get_public_key(&self) -> Result<Vec<u8>, CalError>;
     }

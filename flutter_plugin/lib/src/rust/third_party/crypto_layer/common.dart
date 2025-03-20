@@ -28,6 +28,8 @@ abstract class DhExchange implements RustOpaqueInterface {
       {required List<int> clientPk});
 
   Future<Uint8List> getPublicKey();
+
+  Future<String> id();
 }
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<KeyHandle>>
@@ -75,6 +77,9 @@ abstract class KeyPairHandle implements RustOpaqueInterface {
 
   /// Abstraction of asymmetric key pair handles.
   Future<KeyPairSpec> spec();
+
+  /// Abstraction of asymmetric key pair handles.
+  Future<DhExchange> startDhExchange();
 
   /// Abstraction of asymmetric key pair handles.
   Future<bool> verifySignature(
