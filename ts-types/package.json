@@ -1,33 +1,33 @@
 {
-  "name": "@nmshd/rs-crypto-types",
-  "version": "0.5.0",
-  "description": "Crypto Layer TS type definitions.",
-  "homepage": "https://enmeshed.eu",
-  "repository": "github:nmshd/rust-crypto",
-  "license": "MIT",
-  "author": "j&s-soft AG",
-  "main": "./dist/index.js",
-  "exports": {
-    ".": "./dist/index.js",
-    "./checks": "./dist/checks/index.js"
-  },
-  "types": "dist/index.d.ts",
-  "scripts": {
-    "build": "tsc",
-    "check": "biome check --formatter-enabled=false ./manual",
-    "prepare": "ts-patch install"
-  },
-  "devDependencies": {
-    "@biomejs/biome": "1.9.4",
-    "@types/node": "^22.9.1",
-    "ts-patch": "^3.3.0",
-    "typescript": "~5.8.2"
-  },
-  "publishConfig": {
-    "access": "public",
-    "provenance": true
-  },
-  "dependencies": {
-    "typia": "^8.0.3"
-  }
+	"name": "@nmshd/rs-crypto-types",
+	"version": "0.5.1",
+	"description": "Crypto Layer TS type definitions.",
+	"homepage": "https://enmeshed.eu",
+	"repository": "github:nmshd/rust-crypto",
+	"license": "MIT",
+	"author": "j&s-soft AG",
+	"main": "./dist/index.js",
+	"exports": {
+		".": "./dist/index.js",
+		"./checks": "./dist/checks/index.js"
+	},
+	"types": "dist/index.d.ts",
+	"scripts": {
+		"build": "tsc",
+		"check": "biome check --formatter-enabled=false ./manual",
+		"prepare": "ts-patch install"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "1.9.4",
+		"@types/node": "^22.9.1",
+		"ts-patch": "^3.3.0",
+		"typescript": "~5.8.2"
+	},
+	"publishConfig": {
+		"access": "public",
+		"provenance": true
+	},
+	"dependencies": {
+		"typia": "^8.0.3"
+	}
 }
