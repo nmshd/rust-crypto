@@ -204,6 +204,10 @@ impl KeyHandleImpl for StubKeyHandle {
 pub(crate) struct StubDHKeyExchange;
 
 impl DHKeyExchangeImpl for StubDHKeyExchange {
+    fn id(&self) -> Result<String, CalError> {
+        todo!()
+    }
+
     /// Get the public key of the internal key pair to use for the other party
     fn get_public_key(&self) -> Result<Vec<u8>, CalError> {
         todo!()
