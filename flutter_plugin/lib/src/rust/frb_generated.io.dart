@@ -49,9 +49,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_DhExchangePtr =>
       wire._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHExchangePtr;
 
-  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_KdfPtr => wire
-      ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKDFPtr;
-
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_KeyHandlePtr =>
       wire._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandlePtr;
 
@@ -94,10 +91,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   DhExchange
       dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHExchange(
           dynamic raw);
-
-  @protected
-  Kdf dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKDF(
-      dynamic raw);
 
   @protected
   KeyHandle
@@ -201,10 +194,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
           dynamic raw);
 
   @protected
-  Kdf dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKDF(
-      dynamic raw);
-
-  @protected
   KeyHandle
       dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandle(
           dynamic raw);
@@ -252,7 +241,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
           dynamic raw);
 
   @protected
+  Argon2Options dco_decode_box_autoadd_argon_2_options(dynamic raw);
+
+  @protected
   Cipher dco_decode_box_autoadd_cipher(dynamic raw);
+
+  @protected
+  KDF dco_decode_box_autoadd_kdf(dynamic raw);
 
   @protected
   KeyPairSpec dco_decode_box_autoadd_key_pair_spec(dynamic raw);
@@ -280,6 +275,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   PlatformInt64 dco_decode_isize(dynamic raw);
+
+  @protected
+  KDF dco_decode_kdf(dynamic raw);
 
   @protected
   KeyPairSpec dco_decode_key_pair_spec(dynamic raw);
@@ -417,10 +415,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
           SseDeserializer deserializer);
 
   @protected
-  Kdf sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKDF(
-      SseDeserializer deserializer);
-
-  @protected
   KeyHandle
       sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandle(
           SseDeserializer deserializer);
@@ -504,10 +498,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
           SseDeserializer deserializer);
 
   @protected
-  Kdf sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKDF(
-      SseDeserializer deserializer);
-
-  @protected
   KeyHandle
       sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandle(
           SseDeserializer deserializer);
@@ -554,7 +544,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
           SseDeserializer deserializer);
 
   @protected
+  Argon2Options sse_decode_box_autoadd_argon_2_options(
+      SseDeserializer deserializer);
+
+  @protected
   Cipher sse_decode_box_autoadd_cipher(SseDeserializer deserializer);
+
+  @protected
+  KDF sse_decode_box_autoadd_kdf(SseDeserializer deserializer);
 
   @protected
   KeyPairSpec sse_decode_box_autoadd_key_pair_spec(
@@ -585,6 +582,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   PlatformInt64 sse_decode_isize(SseDeserializer deserializer);
+
+  @protected
+  KDF sse_decode_kdf(SseDeserializer deserializer);
 
   @protected
   KeyPairSpec sse_decode_key_pair_spec(SseDeserializer deserializer);
@@ -730,11 +730,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
-      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKDF(
-          Kdf self, SseSerializer serializer);
-
-  @protected
-  void
       sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandle(
           KeyHandle self, SseSerializer serializer);
 
@@ -837,11 +832,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
-      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKDF(
-          Kdf self, SseSerializer serializer);
-
-  @protected
-  void
       sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandle(
           KeyHandle self, SseSerializer serializer);
 
@@ -889,7 +879,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
           Provider self, SseSerializer serializer);
 
   @protected
+  void sse_encode_box_autoadd_argon_2_options(
+      Argon2Options self, SseSerializer serializer);
+
+  @protected
   void sse_encode_box_autoadd_cipher(Cipher self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_kdf(KDF self, SseSerializer serializer);
 
   @protected
   void sse_encode_box_autoadd_key_pair_spec(
@@ -920,6 +917,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_isize(PlatformInt64 self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_kdf(KDF self, SseSerializer serializer);
 
   @protected
   void sse_encode_key_pair_spec(KeyPairSpec self, SseSerializer serializer);
@@ -1237,38 +1237,6 @@ class RustLibWire implements BaseWire {
           'frbgen_cal_flutter_plugin_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHExchange');
   late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHExchange =
       _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHExchangePtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
-
-  void
-      rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKDF(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKDF(
-      ptr,
-    );
-  }
-
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKDFPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-          'frbgen_cal_flutter_plugin_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKDF');
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKDF =
-      _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKDFPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
-
-  void
-      rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKDF(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKDF(
-      ptr,
-    );
-  }
-
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKDFPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-          'frbgen_cal_flutter_plugin_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKDF');
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKDF =
-      _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKDFPtr
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   void

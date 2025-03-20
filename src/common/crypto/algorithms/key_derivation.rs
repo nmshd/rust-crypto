@@ -25,6 +25,7 @@ use serde::{Deserialize, Serialize};
 ///            parallelism: 1,
 ///        });
 /// ```
+/// flutter_rust_bridge:non_opaque
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum KDF {
@@ -34,6 +35,7 @@ pub enum KDF {
     Argon2id(Argon2Options),
 }
 
+/// flutter_rust_bridge:non_opaque
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub struct Argon2Options {
