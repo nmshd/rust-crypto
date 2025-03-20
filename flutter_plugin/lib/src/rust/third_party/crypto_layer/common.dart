@@ -102,7 +102,7 @@ abstract class Provider implements RustOpaqueInterface {
       {required String password,
       required List<int> salt,
       required KeySpec algorithm,
-      required Kdf kdf});
+      required KDF kdf});
 
   Future<List<(String, Spec)>> getAllKeys();
 
