@@ -16,6 +16,7 @@ use crate::{
     prelude::{CryptoHash, KDF},
     storage::KeyData,
 };
+use anyhow::anyhow;
 use argon2::{
     password_hash::SaltString, Argon2, Params, PasswordHasher, MAX_SALT_LEN, MIN_SALT_LEN,
 };
@@ -29,10 +30,12 @@ use ring::{
     signature::{EcdsaKeyPair, EcdsaSigningAlgorithm, KeyPair},
 };
 use sha3::{Sha3_224, Sha3_256, Sha3_384, Sha3_512};
+use tracing::error;
 
 impl ProviderImpl for SoftwareProvider {
     fn create_key(&mut self, spec: KeySpec) -> Result<KeyHandle, CalError> {
         if self.storage_manager.is_none() && !spec.ephemeral {
+            error!("This is an ephemeral provider, it cannot create non-ephemeral keys");
             return Err(CalError::failed_operation(
                 "This is an ephemeral provider, it cannot create non-ephemeral keys".to_owned(),
                 true,
@@ -49,8 +52,14 @@ impl ProviderImpl for SoftwareProvider {
 
         // Generate the symmetric key data
         let mut key_data = vec![0u8; algo.key_len()];
-        rng.fill(&mut key_data)
-            .expect("Failed to generate symmetric key");
+        rng.fill(&mut key_data).map_err(|e| {
+            error!("Failed to generate symmetric key");
+            CalError::failed_operation(
+                "Failed to generate symmetric key".to_owned(),
+                false,
+                Some(anyhow!(e)),
+            )
+        })?;
 
         let storage_data = KeyData {
             id: key_id.clone(),
@@ -89,6 +98,7 @@ impl ProviderImpl for SoftwareProvider {
 
     fn load_key(&mut self, key_id: String) -> Result<KeyHandle, CalError> {
         if self.storage_manager.is_none() {
+            error!("This is an ephemeral provider, it cannot load keys");
             return Err(CalError::failed_operation(
                 "This is an ephemeral provider, it cannot load keys".to_owned(),
                 true,
@@ -99,6 +109,7 @@ impl ProviderImpl for SoftwareProvider {
         let storage_data = self.storage_manager.as_ref().unwrap().get(key_id.clone())?;
 
         let Spec::KeySpec(spec) = storage_data.spec else {
+            error!("Trying to load KeyPair as symmetric Key");
             return Err(CalError::failed_operation(
                 "Trying to load KeyPair as symmetric Key".to_owned(),
                 true,
@@ -107,8 +118,9 @@ impl ProviderImpl for SoftwareProvider {
         };
 
         let Some(key_data) = storage_data.secret_data else {
+            error!("No sensitive data for key found.");
             return Err(CalError::failed_operation(
-                "no sensitive data for key found".to_owned(),
+                "No sensitive data for key found.".to_owned(),
                 true,
                 None,
             ));
@@ -129,6 +141,7 @@ impl ProviderImpl for SoftwareProvider {
 
     fn create_key_pair(&mut self, spec: KeyPairSpec) -> Result<KeyPairHandle, CalError> {
         if self.storage_manager.is_none() && !spec.ephemeral {
+            error!("This is an ephemeral provider, it cannot create non-ephemeral keys");
             return Err(CalError::failed_operation(
                 "This is an ephemeral provider, it cannot create non-ephemeral keys".to_owned(),
                 true,
@@ -151,12 +164,25 @@ impl ProviderImpl for SoftwareProvider {
             // Generate ECC key pair using ring's SystemRandom for asymmetric keys
             let rng = SystemRandom::new();
             let algorithm: &EcdsaSigningAlgorithm = spec.asym_spec.into();
-            let pkcs8_bytes = EcdsaKeyPair::generate_pkcs8(algorithm, &rng)
-                .expect("Failed to generate private key");
+            let pkcs8_bytes = EcdsaKeyPair::generate_pkcs8(algorithm, &rng).map_err(|e| {
+                error!("Failed to generate private key");
+                CalError::failed_operation(
+                    "Failed to generate private key".to_owned(),
+                    false,
+                    Some(anyhow!(e)),
+                )
+            })?;
 
             // Create an EcdsaKeyPair from the PKCS#8-encoded private key
             let key_pair = EcdsaKeyPair::from_pkcs8(algorithm, pkcs8_bytes.as_ref(), &rng)
-                .expect("Failed to parse key pair");
+                .map_err(|e| {
+                    error!("Failed to parse key pair");
+                    CalError::failed_operation(
+                        "Failed to parse key pair".to_owned(),
+                        false,
+                        Some(anyhow!(e)),
+                    )
+                })?;
 
             KeyData {
                 id: key_id.clone(),
@@ -196,6 +222,7 @@ impl ProviderImpl for SoftwareProvider {
 
     fn load_key_pair(&mut self, key_id: String) -> Result<KeyPairHandle, CalError> {
         if self.storage_manager.is_none() {
+            error!("This is an ephemeral provider, it cannot load keys");
             return Err(CalError::failed_operation(
                 "This is an ephemeral provider, it cannot load keys".to_owned(),
                 true,
@@ -206,6 +233,7 @@ impl ProviderImpl for SoftwareProvider {
         let storage_data = self.storage_manager.as_ref().unwrap().get(key_id.clone())?;
 
         let Spec::KeyPairSpec(spec) = storage_data.spec else {
+            error!("Trying to load symmetric Key as KeyPair");
             return Err(CalError::failed_operation(
                 "Trying to load symmetric Key as KeyPair".to_owned(),
                 true,
@@ -216,6 +244,7 @@ impl ProviderImpl for SoftwareProvider {
         let key_data = storage_data.secret_data;
 
         let Some(public_key) = storage_data.public_data else {
+            error!("no public data for KeyPair found");
             return Err(CalError::failed_operation(
                 "no public data for KeyPair found".to_owned(),
                 true,
@@ -238,6 +267,7 @@ impl ProviderImpl for SoftwareProvider {
 
     fn import_key(&mut self, spec: KeySpec, data: &[u8]) -> Result<KeyHandle, CalError> {
         if self.storage_manager.is_none() && !spec.ephemeral {
+            error!("This is an ephemeral provider, it cannot import non-ephemeral keys");
             return Err(CalError::failed_operation(
                 "This is an ephemeral provider, it cannot import non-ephemeral keys".to_owned(),
                 true,
@@ -285,6 +315,7 @@ impl ProviderImpl for SoftwareProvider {
         private_key: &[u8],
     ) -> Result<KeyPairHandle, CalError> {
         if self.storage_manager.is_none() && !spec.ephemeral {
+            error!("This is an ephemeral provider, it cannot import non-ephemeral keys");
             return Err(CalError::failed_operation(
                 "This is an ephemeral provider, it cannot import non-ephemeral keys".to_owned(),
                 true,
@@ -335,6 +366,7 @@ impl ProviderImpl for SoftwareProvider {
         public_key: &[u8],
     ) -> Result<KeyPairHandle, CalError> {
         if self.storage_manager.is_none() && !spec.ephemeral {
+            error!("This is an ephemeral provider, it cannot import non-ephemeral keys");
             return Err(CalError::failed_operation(
                 "This is an ephemeral provider, it cannot import non-ephemeral keys".to_owned(),
                 true,
@@ -380,8 +412,7 @@ impl ProviderImpl for SoftwareProvider {
         let key_id = nanoid!(10); // Generate a unique key ID
 
         // Initialize the SoftwareDHExchange instance
-        let dh_exchange =
-            SoftwareDHExchange::new(key_id, self.storage_manager.clone(), spec).unwrap();
+        let dh_exchange = SoftwareDHExchange::new(key_id, self.storage_manager.clone(), spec)?;
 
         // Wrap in DHExchange and return
         Ok(DHExchange {
@@ -471,7 +502,14 @@ impl ProviderImpl for SoftwareProvider {
         // Perform password hashing with specified parameters
         let password_hash = argon2
             .hash_password(password.as_bytes(), &salt_str)
-            .map_err(|e| CalError::failed_operation(e.to_string(), false, None))?;
+            .map_err(|e| {
+                error!("Failed derivation of key with argon2.");
+                CalError::failed_operation(
+                    "Failed derivation of key with argon2.".to_owned(),
+                    false,
+                    Some(anyhow!(e)),
+                )
+            })?;
 
         // Extract the raw hash output and truncate to the required key length
         let derived_key = password_hash.hash.unwrap().as_bytes()[..key_length].to_vec();
@@ -594,13 +632,25 @@ impl SoftwareDHExchange {
         let rng = SystemRandom::new();
 
         // Generate an ephemeral private key for DH using X25519
-        let private_key = EphemeralPrivateKey::generate(spec.asym_spec.try_into()?, &rng)
-            .expect("Failed to generate DH private key");
+        let private_key =
+            EphemeralPrivateKey::generate(spec.asym_spec.try_into()?, &rng).map_err(|e| {
+                error!("Failed generating an ephemeral key for dh exchange.");
+                CalError::failed_operation(
+                    "Failed generating an ephemeral key for dh exchange.".to_owned(),
+                    false,
+                    Some(anyhow!(e)),
+                )
+            })?;
 
         // Compute the associated public key
-        let public_key = private_key
-            .compute_public_key()
-            .expect("Failed to compute DH public key");
+        let public_key = private_key.compute_public_key().map_err(|e| {
+            error!("Failed to compute dh public key.");
+            CalError::failed_operation(
+                "Failed to compute dh public key.".to_owned(),
+                false,
+                Some(anyhow!(e)),
+            )
+        })?;
 
         Ok(Self {
             key_id,
@@ -618,17 +668,19 @@ impl SoftwareDHExchange {
             AsymmetricKeySpec::P384 => &agreement::ECDH_P384,
             AsymmetricKeySpec::Curve25519 => &agreement::X25519,
             _ => {
+                error!("Algorithm not supported");
                 return Err(CalError::failed_operation(
                     "Algorithm not supported".to_string(),
                     true,
                     None,
-                ))
+                ));
             }
         };
 
         let peer_public_key = UnparsedPublicKey::new(algo, peer_public_key_bytes);
 
         if self.private_key.is_none() {
+            error!("No private key available");
             return Err(CalError::failed_operation(
                 "No private key available".to_string(),
                 true,
@@ -643,7 +695,10 @@ impl SoftwareDHExchange {
         agreement::agree_ephemeral(private_key, &peer_public_key, |shared_secret| {
             Ok(shared_secret.to_vec())
         })
-        .map_err(|err| CalError::failed_operation(err.to_string(), true, None))?
+        .map_err(|err| {
+            error!("Failed key agreement");
+            CalError::failed_operation("Failed key agreement".to_owned(), false, Some(anyhow!(err)))
+        })?
     }
 
     // Generate session keys in the libsodium format
@@ -706,13 +761,16 @@ impl SoftwareDHExchange {
     ) -> Result<KeyHandle, CalError> {
         // Generate a unique key ID
         let key_id = format!("{}_{}", self.key_id, key_id_suffix);
-
+        
         let cipher = self.spec.cipher.ok_or_else(
-            || CalError::bad_parameter(
-                "derive_client_key_handles and derive_server_key_handles need a KeyPairSpec supplied which cipher is not None.".to_owned(), 
-            true,
-            None
-        ))?;
+            || { 
+                error!("derive_client_key_handles and derive_server_key_handles need a KeyPairSpec supplied which cipher is not None.");
+                CalError::bad_parameter(
+                    "derive_client_key_handles and derive_server_key_handles need a KeyPairSpec supplied which cipher is not None.".to_owned(), 
+                    true,
+                    None
+                )}
+        )?;
 
         // Create a SoftwareKeyHandle with the derived key
         let handle = SoftwareKeyHandle {
