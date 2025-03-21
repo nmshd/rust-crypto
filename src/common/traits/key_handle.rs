@@ -166,6 +166,9 @@ pub(crate) enum DHKeyExchangeImplEnum {
 
 #[enum_dispatch(DHKeyExchangeImplEnum)]
 pub(crate) trait DHKeyExchangeImpl: Send + Sync {
+    /// Returns the id of the key pair, which can be used with `load_key_pair`.
+    fn id(&self) -> Result<String, CalError>;
+
     /// Get the public key of the internal key pair to use for the other party
     fn get_public_key(&self) -> Result<Vec<u8>, CalError>;
 

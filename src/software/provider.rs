@@ -792,6 +792,10 @@ impl SoftwareDHExchange {
 }
 
 impl DHKeyExchangeImpl for SoftwareDHExchange {
+    fn id(&self) -> Result<String, CalError> {
+        Ok(self.key_id.clone())
+    }
+
     /// Returns the public key as bytes for sharing with the peer
     fn get_public_key(&self) -> Result<Vec<u8>, CalError> {
         Ok(self.public_key.as_ref().to_vec())
