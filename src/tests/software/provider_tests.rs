@@ -26,66 +26,95 @@ mod tests {
                 .unwrap(),
             );
 
-            // Client creates an instance of SoftwareDHExchange
-            let mut client_exchange = SoftwareDHExchange::new(
-                "key_id_client".to_string(),
-                storage_manager.clone(),
-                KeyPairSpec::default(),
-            )
-            .unwrap();
+            let key_pair_spec_list = [
+                // Key pair spec similar to ts-crypto default.
+                KeyPairSpec {
+                    asym_spec: AsymmetricKeySpec::Curve25519,
+                    cipher: Some(Cipher::XChaCha20Poly1305),
+                    signing_hash: CryptoHash::Sha2_512,
+                    ephemeral: false,
+                    non_exportable: false,
+                },
+                // Similar to new default
+                KeyPairSpec {
+                    asym_spec: AsymmetricKeySpec::P256,
+                    cipher: Some(Cipher::AesGcm256),
+                    signing_hash: CryptoHash::Sha2_512,
+                    ephemeral: false,
+                    non_exportable: true,
+                },
+                // No cipher
+                KeyPairSpec {
+                    asym_spec: AsymmetricKeySpec::P256,
+                    cipher: None,
+                    signing_hash: CryptoHash::Sha2_512,
+                    ephemeral: false,
+                    non_exportable: true,
+                },
+            ];
 
-            // Server creates an instance of SoftwareDHExchange
-            let mut server_exchange = SoftwareDHExchange::new(
-                "key_id_server".to_string(),
-                storage_manager.clone(),
-                KeyPairSpec::default(),
-            )
-            .unwrap();
+            for key_pair_spec in key_pair_spec_list {
+                // Client creates an instance of SoftwareDHExchange
+                let mut client_exchange = SoftwareDHExchange::new(
+                    "key_id_client".to_string(),
+                    storage_manager.clone(),
+                    key_pair_spec,
+                )
+                .unwrap();
 
-            // Client gets its public key
-            let client_public_key = client_exchange
-                .get_public_key()
-                .expect("Failed to get client public key");
+                // Server creates an instance of SoftwareDHExchange
+                let mut server_exchange = SoftwareDHExchange::new(
+                    "key_id_server".to_string(),
+                    storage_manager.clone(),
+                    key_pair_spec,
+                )
+                .unwrap();
 
-            // Server gets its public key
-            let server_public_key = server_exchange
-                .get_public_key()
-                .expect("Failed to get server public key");
+                // Client gets its public key
+                let client_public_key = client_exchange
+                    .get_public_key()
+                    .expect("Failed to get client public key");
 
-            // Client computes session keys using server's public key
-            let (client_rx, client_tx) = client_exchange
-                .derive_client_session_keys(&server_public_key)
-                .expect("Failed to derive client session keys");
+                // Server gets its public key
+                let server_public_key = server_exchange
+                    .get_public_key()
+                    .expect("Failed to get server public key");
 
-            // Server computes session keys using client's public key
-            let (server_rx, server_tx) = server_exchange
-                .derive_server_session_keys(&client_public_key)
-                .expect("Failed to derive server session keys");
+                // Client computes session keys using server's public key
+                let (client_rx, client_tx) = client_exchange
+                    .derive_client_session_keys(&server_public_key)
+                    .expect("Failed to derive client session keys");
 
-            // Verify complementary key derivation:
-            // Client's transmit key should equal server's receive key
-            assert_eq!(
-                client_tx, server_rx,
-                "Client's transmit key doesn't match server's receive key"
-            );
+                // Server computes session keys using client's public key
+                let (server_rx, server_tx) = server_exchange
+                    .derive_server_session_keys(&client_public_key)
+                    .expect("Failed to derive server session keys");
 
-            // Client's receive key should equal server's transmit key
-            assert_eq!(
-                client_rx, server_tx,
-                "Client's receive key doesn't match server's transmit key"
-            );
+                // Verify complementary key derivation:
+                // Client's transmit key should equal server's receive key
+                assert_eq!(
+                    client_tx, server_rx,
+                    "Client's transmit key doesn't match server's receive key"
+                );
 
-            // Verify keys are not empty or all zeros
-            assert!(!client_rx.is_empty(), "Client receive key is empty");
-            assert!(!client_tx.is_empty(), "Client transmit key is empty");
-            assert!(
-                client_rx.iter().any(|&b| b != 0),
-                "Client receive key is all zeros"
-            );
-            assert!(
-                client_tx.iter().any(|&b| b != 0),
-                "Client transmit key is all zeros"
-            );
+                // Client's receive key should equal server's transmit key
+                assert_eq!(
+                    client_rx, server_tx,
+                    "Client's receive key doesn't match server's transmit key"
+                );
+
+                // Verify keys are not empty or all zeros
+                assert!(!client_rx.is_empty(), "Client receive key is empty");
+                assert!(!client_tx.is_empty(), "Client transmit key is empty");
+                assert!(
+                    client_rx.iter().any(|&b| b != 0),
+                    "Client receive key is all zeros"
+                );
+                assert!(
+                    client_tx.iter().any(|&b| b != 0),
+                    "Client transmit key is all zeros"
+                );
+            }
         }
 
         #[test]
@@ -98,138 +127,167 @@ mod tests {
                 .unwrap(),
             );
 
-            // Client creates an instance of SoftwareDHExchange
-            let mut client_exchange = SoftwareDHExchange::new(
-                "key_id_client".to_string(),
-                storage_manager.clone(),
-                KeyPairSpec::default(),
-            )
-            .unwrap();
-
-            // Server creates an instance of SoftwareDHExchange
-            let mut server_exchange = SoftwareDHExchange::new(
-                "key_id_server".to_string(),
-                storage_manager.clone(),
-                KeyPairSpec::default(),
-            )
-            .unwrap();
-
-            // Get public keys
-            let client_public_key = client_exchange
-                .get_public_key()
-                .expect("Failed to get client public key");
-
-            let server_public_key = server_exchange
-                .get_public_key()
-                .expect("Failed to get server public key");
-
-            // Derive session keys
-            let (client_rx, client_tx) = client_exchange
-                .derive_client_session_keys(&server_public_key)
-                .expect("Failed to derive client session keys");
-
-            let (server_rx, server_tx) = server_exchange
-                .derive_server_session_keys(&client_public_key)
-                .expect("Failed to derive server session keys");
-
-            // Create key handles for encryption/decryption
-            let client_tx_key_id = nanoid!(10);
-            let client_tx_handle = SoftwareKeyHandle {
-                key_id: client_tx_key_id.clone(),
-                key: client_tx,
-                storage_manager: storage_manager.clone(),
-                spec: KeySpec {
-                    cipher: Cipher::AesGcm256,
-                    ephemeral: true,
-                    signing_hash: CryptoHash::Sha2_256,
+            let key_pair_spec_list = [
+                // Key pair spec similar to ts-crypto default.
+                KeyPairSpec {
+                    asym_spec: AsymmetricKeySpec::Curve25519,
+                    cipher: Some(Cipher::XChaCha20Poly1305),
+                    signing_hash: CryptoHash::Sha2_512,
+                    ephemeral: false,
+                    non_exportable: false,
                 },
-            };
-            let client_tx_key_handle = KeyHandle {
-                implementation: client_tx_handle.into(),
-            };
-
-            let server_rx_key_id = nanoid!(10);
-            let server_rx_handle = SoftwareKeyHandle {
-                key_id: server_rx_key_id.clone(),
-                key: server_rx,
-                storage_manager: storage_manager.clone(),
-                spec: KeySpec {
-                    cipher: Cipher::AesGcm256,
-                    ephemeral: true,
-                    signing_hash: CryptoHash::Sha2_256,
+                // Similar to new default
+                KeyPairSpec {
+                    asym_spec: AsymmetricKeySpec::P256,
+                    cipher: Some(Cipher::AesGcm256),
+                    signing_hash: CryptoHash::Sha2_512,
+                    ephemeral: false,
+                    non_exportable: true,
                 },
-            };
-            let server_rx_key_handle = KeyHandle {
-                implementation: server_rx_handle.into(),
-            };
-
-            // Test message encryption/decryption client → server
-            let plaintext = b"Message from client to server";
-
-            // Client encrypts with their tx key
-            let encrypted_data = client_tx_key_handle
-                .encrypt_data(plaintext)
-                .expect("Encryption failed on client");
-
-            // Server decrypts with their rx key
-            let decrypted_data = server_rx_key_handle
-                .decrypt_data(&encrypted_data.0, &[])
-                .expect("Decryption failed on server");
-
-            assert_eq!(
-                from_utf8(&decrypted_data).unwrap(),
-                from_utf8(plaintext).unwrap(),
-                "Decrypted data does not match plaintext"
-            );
-
-            // Also test server → client communication using the other keys
-            let server_tx_key_id = nanoid!(10);
-            let server_tx_handle = SoftwareKeyHandle {
-                key_id: server_tx_key_id.clone(),
-                key: server_tx,
-                storage_manager: storage_manager.clone(),
-                spec: KeySpec {
-                    cipher: Cipher::AesGcm256,
-                    ephemeral: true,
-                    signing_hash: CryptoHash::Sha2_256,
+                // No cipher
+                KeyPairSpec {
+                    asym_spec: AsymmetricKeySpec::P256,
+                    cipher: None,
+                    signing_hash: CryptoHash::Sha2_512,
+                    ephemeral: false,
+                    non_exportable: true,
                 },
-            };
-            let server_tx_key_handle = KeyHandle {
-                implementation: server_tx_handle.into(),
-            };
+            ];
 
-            let client_rx_key_id = nanoid!(10);
-            let client_rx_handle = SoftwareKeyHandle {
-                key_id: client_rx_key_id.clone(),
-                key: client_rx,
-                storage_manager: storage_manager.clone(),
-                spec: KeySpec {
-                    cipher: Cipher::AesGcm256,
-                    ephemeral: true,
-                    signing_hash: CryptoHash::Sha2_256,
-                },
-            };
-            let client_rx_key_handle = KeyHandle {
-                implementation: client_rx_handle.into(),
-            };
+            for key_pair_spec in key_pair_spec_list {
+                // Client creates an instance of SoftwareDHExchange
+                let mut client_exchange = SoftwareDHExchange::new(
+                    "key_id_client".to_string(),
+                    storage_manager.clone(),
+                    KeyPairSpec::default(),
+                )
+                .unwrap();
 
-            let server_plaintext = b"Message from server to client";
+                // Server creates an instance of SoftwareDHExchange
+                let mut server_exchange = SoftwareDHExchange::new(
+                    "key_id_server".to_string(),
+                    storage_manager.clone(),
+                    KeyPairSpec::default(),
+                )
+                .unwrap();
 
-            // Server encrypts with their tx key
-            let server_encrypted = server_tx_key_handle
-                .encrypt_data(server_plaintext)
-                .expect("Encryption failed on server");
+                // Get public keys
+                let client_public_key = client_exchange
+                    .get_public_key()
+                    .expect("Failed to get client public key");
 
-            // Client decrypts with their rx key
-            let client_decrypted = client_rx_key_handle
-                .decrypt_data(&server_encrypted.0, &[])
-                .expect("Decryption failed on client");
+                let server_public_key = server_exchange
+                    .get_public_key()
+                    .expect("Failed to get server public key");
 
-            assert_eq!(
-                from_utf8(&client_decrypted).unwrap(),
-                from_utf8(server_plaintext).unwrap(),
-                "Server-to-client decrypted data does not match plaintext"
-            );
+                // Derive session keys
+                let (client_rx, client_tx) = client_exchange
+                    .derive_client_session_keys(&server_public_key)
+                    .expect("Failed to derive client session keys");
+
+                let (server_rx, server_tx) = server_exchange
+                    .derive_server_session_keys(&client_public_key)
+                    .expect("Failed to derive server session keys");
+
+                // Create key handles for encryption/decryption
+                let client_tx_key_id = nanoid!(10);
+                let client_tx_handle = SoftwareKeyHandle {
+                    key_id: client_tx_key_id.clone(),
+                    key: client_tx,
+                    storage_manager: storage_manager.clone(),
+                    spec: KeySpec {
+                        cipher: Cipher::AesGcm256,
+                        ephemeral: true,
+                        signing_hash: CryptoHash::Sha2_256,
+                    },
+                };
+                let client_tx_key_handle = KeyHandle {
+                    implementation: client_tx_handle.into(),
+                };
+
+                let server_rx_key_id = nanoid!(10);
+                let server_rx_handle = SoftwareKeyHandle {
+                    key_id: server_rx_key_id.clone(),
+                    key: server_rx,
+                    storage_manager: storage_manager.clone(),
+                    spec: KeySpec {
+                        cipher: Cipher::AesGcm256,
+                        ephemeral: true,
+                        signing_hash: CryptoHash::Sha2_256,
+                    },
+                };
+                let server_rx_key_handle = KeyHandle {
+                    implementation: server_rx_handle.into(),
+                };
+
+                // Test message encryption/decryption client → server
+                let plaintext = b"Message from client to server";
+
+                // Client encrypts with their tx key
+                let encrypted_data = client_tx_key_handle
+                    .encrypt_data(plaintext)
+                    .expect("Encryption failed on client");
+
+                // Server decrypts with their rx key
+                let decrypted_data = server_rx_key_handle
+                    .decrypt_data(&encrypted_data.0, &[])
+                    .expect("Decryption failed on server");
+
+                assert_eq!(
+                    from_utf8(&decrypted_data).unwrap(),
+                    from_utf8(plaintext).unwrap(),
+                    "Decrypted data does not match plaintext"
+                );
+
+                // Also test server → client communication using the other keys
+                let server_tx_key_id = nanoid!(10);
+                let server_tx_handle = SoftwareKeyHandle {
+                    key_id: server_tx_key_id.clone(),
+                    key: server_tx,
+                    storage_manager: storage_manager.clone(),
+                    spec: KeySpec {
+                        cipher: Cipher::AesGcm256,
+                        ephemeral: true,
+                        signing_hash: CryptoHash::Sha2_256,
+                    },
+                };
+                let server_tx_key_handle = KeyHandle {
+                    implementation: server_tx_handle.into(),
+                };
+
+                let client_rx_key_id = nanoid!(10);
+                let client_rx_handle = SoftwareKeyHandle {
+                    key_id: client_rx_key_id.clone(),
+                    key: client_rx,
+                    storage_manager: storage_manager.clone(),
+                    spec: KeySpec {
+                        cipher: Cipher::AesGcm256,
+                        ephemeral: true,
+                        signing_hash: CryptoHash::Sha2_256,
+                    },
+                };
+                let client_rx_key_handle = KeyHandle {
+                    implementation: client_rx_handle.into(),
+                };
+
+                let server_plaintext = b"Message from server to client";
+
+                // Server encrypts with their tx key
+                let server_encrypted = server_tx_key_handle
+                    .encrypt_data(server_plaintext)
+                    .expect("Encryption failed on server");
+
+                // Client decrypts with their rx key
+                let client_decrypted = client_rx_key_handle
+                    .decrypt_data(&server_encrypted.0, &[])
+                    .expect("Decryption failed on client");
+
+                assert_eq!(
+                    from_utf8(&client_decrypted).unwrap(),
+                    from_utf8(server_plaintext).unwrap(),
+                    "Server-to-client decrypted data does not match plaintext"
+                );
+            }
         }
 
         #[test]

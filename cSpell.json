@@ -6,6 +6,7 @@
         "Diffie",
         "keypair",
         "kibibytes",
+        "libsodium",
         "nmshd",
         "pkcs",
         "pwsh",
