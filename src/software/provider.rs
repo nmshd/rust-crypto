@@ -634,6 +634,7 @@ impl SoftwareDHExchange {
         // Generate an ephemeral private key for DH using X25519
         let private_key =
             EphemeralPrivateKey::generate(spec.asym_spec.try_into()?, &rng).map_err(|e| {
+                error!("Failed generating an ephemeral key for dh exchange.");
                 CalError::failed_operation(
                     "Failed generating an ephemeral key for dh exchange.".to_owned(),
                     false,
@@ -643,6 +644,7 @@ impl SoftwareDHExchange {
 
         // Compute the associated public key
         let public_key = private_key.compute_public_key().map_err(|e| {
+            error!("Failed to compute dh public key.");
             CalError::failed_operation(
                 "Failed to compute dh public key.".to_owned(),
                 false,

@@ -159,7 +159,7 @@ mod tests {
                 let mut client_exchange = SoftwareDHExchange::new(
                     "key_id_client".to_string(),
                     storage_manager.clone(),
-                    KeyPairSpec::default(),
+                    key_pair_spec,
                 )
                 .unwrap();
 
@@ -167,7 +167,7 @@ mod tests {
                 let mut server_exchange = SoftwareDHExchange::new(
                     "key_id_server".to_string(),
                     storage_manager.clone(),
-                    KeyPairSpec::default(),
+                    key_pair_spec,
                 )
                 .unwrap();
 
@@ -661,7 +661,6 @@ mod tests {
 
         use color_eyre::eyre::{Ok, Result};
 
-        use crate::prelude::*;
         use crate::tests::{setup, TestStore};
 
         static STORE: LazyLock<TestStore> = LazyLock::new(|| TestStore::new());

@@ -1,17 +1,33 @@
 {
     "words": [
+        "arrayref",
         "asym",
         "Brainpool",
+        "cdylib",
+        "chacha",
         "codegen",
+        "dalek",
         "Diffie",
+        "esapi",
+        "hcvault",
+        "hmac",
         "keypair",
         "kibibytes",
+        "libloading",
         "libsodium",
         "nmshd",
         "pkcs",
         "pwsh",
+        "redb",
         "repr",
+        "reqwest",
+        "robusta",
+        "securestore",
+        "serde",
+        "sodiumoxide",
         "thiserror",
-        "typia"
+        "typia",
+        "yubi",
+        "yubikey"
     ]
 }
