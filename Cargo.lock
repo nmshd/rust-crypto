@@ -434,6 +434,7 @@ dependencies = [
  "libloading",
  "nanoid",
  "openssl",
+ "p256",
  "pkcs8",
  "pollster",
  "rand",

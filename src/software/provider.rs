@@ -20,11 +20,15 @@ use anyhow::anyhow;
 use argon2::{
     password_hash::SaltString, Argon2, Params, PasswordHasher, MAX_SALT_LEN, MIN_SALT_LEN,
 };
-use blake2::{Blake2b512, Digest};
 use nanoid::nanoid;
+use blake2::{Blake2b512, Digest};
+use p256::{
+    ecdh::diffie_hellman, elliptic_curve::rand_core::OsRng, PublicKey as P256PublicKey,
+    SecretKey as P256SecretKey,
+};
+use x25519_dalek::{PublicKey as X25519PublicKey, StaticSecret};
 use ring::{
     aead::Algorithm,
-    agreement::{self, EphemeralPrivateKey, PublicKey, UnparsedPublicKey},
     digest::{digest, SHA256, SHA384, SHA512, SHA512_256},
     rand::{SecureRandom, SystemRandom},
     signature::{EcdsaKeyPair, EcdsaSigningAlgorithm, KeyPair},
@@ -617,131 +621,160 @@ impl ProviderImpl for SoftwareProvider {
 #[derive(Debug)]
 pub(crate) struct SoftwareDHExchange {
     key_id: String,
-    private_key: Option<EphemeralPrivateKey>,
-    public_key: PublicKey,
+    private_key_bytes: Vec<u8>,
+    public_key_bytes: Vec<u8>,
     storage_manager: Option<StorageManager>,
     spec: KeyPairSpec,
 }
 
 impl SoftwareDHExchange {
+    /// Creates a new key pair based on the specified algorithm.
     pub fn new(
         key_id: String,
         storage_manager: Option<StorageManager>,
         spec: KeyPairSpec,
     ) -> Result<Self, CalError> {
-        let rng = SystemRandom::new();
+        match spec.asym_spec {
+            AsymmetricKeySpec::Curve25519 => {
+                // Generate a new Curve25519 private key using a cryptographically secure RNG
+                let private = StaticSecret::random_from_rng(OsRng);
+                // Derive the corresponding public key
+                let public = X25519PublicKey::from(&private);
 
-        // Generate an ephemeral private key for DH using X25519
-        let private_key =
-            EphemeralPrivateKey::generate(spec.asym_spec.try_into()?, &rng).map_err(|e| {
-                error!("Failed generating an ephemeral key for dh exchange.");
-                CalError::failed_operation(
-                    "Failed generating an ephemeral key for dh exchange.".to_owned(),
-                    false,
-                    Some(anyhow!(e)),
-                )
-            })?;
-
-        // Compute the associated public key
-        let public_key = private_key.compute_public_key().map_err(|e| {
-            error!("Failed to compute dh public key.");
-            CalError::failed_operation(
-                "Failed to compute dh public key.".to_owned(),
-                false,
-                Some(anyhow!(e)),
-            )
-        })?;
-
-        Ok(Self {
-            key_id,
-            private_key: Some(private_key),
-            public_key,
-            storage_manager,
-            spec,
-        })
-    }
-
-    // Compute shared secret using the given peer public key
-    fn compute_shared_secret(&mut self, peer_public_key_bytes: &[u8]) -> Result<Vec<u8>, CalError> {
-        let algo: &'static agreement::Algorithm = match self.spec.asym_spec {
-            AsymmetricKeySpec::P256 => &agreement::ECDH_P256,
-            AsymmetricKeySpec::P384 => &agreement::ECDH_P384,
-            AsymmetricKeySpec::Curve25519 => &agreement::X25519,
-            _ => {
-                error!("Algorithm not supported");
-                return Err(CalError::failed_operation(
-                    "Algorithm not supported".to_string(),
-                    true,
-                    None,
-                ));
+                Ok(Self {
+                    key_id,
+                    private_key_bytes: private.to_bytes().to_vec(),
+                    public_key_bytes: public.as_bytes().to_vec(),
+                    storage_manager,
+                    spec,
+                })
             }
-        };
+            AsymmetricKeySpec::P256 => {
+                // Generate a new P-256 private key
+                let private = P256SecretKey::random(&mut OsRng);
+                // Derive the corresponding public key
+                let public = private.public_key();
 
-        let peer_public_key = UnparsedPublicKey::new(algo, peer_public_key_bytes);
-
-        if self.private_key.is_none() {
-            error!("No private key available");
-            return Err(CalError::failed_operation(
-                "No private key available".to_string(),
+                Ok(Self {
+                    key_id,
+                    private_key_bytes: private.to_bytes().to_vec(),
+                    public_key_bytes: public.to_sec1_bytes().to_vec(),
+                    storage_manager,
+                    spec,
+                })
+            }
+            _ => Err(CalError::failed_operation(
+                "Unsupported algorithm".to_string(),
                 true,
                 None,
-            ));
+            )),
         }
-
-        // Take ownership of the private key (consumes it)
-        let private_key = self.private_key.take().unwrap();
-
-        // Perform key agreement to produce the shared secret
-        agreement::agree_ephemeral(private_key, &peer_public_key, |shared_secret| {
-            Ok(shared_secret.to_vec())
-        })
-        .map_err(|err| {
-            error!("Failed key agreement");
-            CalError::failed_operation("Failed key agreement".to_owned(), false, Some(anyhow!(err)))
-        })?
     }
 
-    // Generate session keys in the libsodium format
+    /// Computes the shared secret between the local private key and a peer's public key.
+    fn compute_shared_secret(&self, peer_public_key: &[u8]) -> Result<Vec<u8>, CalError> {
+        match self.spec.asym_spec {
+            AsymmetricKeySpec::Curve25519 => {
+                // Convert our private key bytes to a 32-byte array
+                let private_key_bytes: [u8; 32] =
+                    self.private_key_bytes.as_slice().try_into().map_err(|_| {
+                        CalError::failed_operation(
+                            "Invalid private key length".to_owned(),
+                            true,
+                            None,
+                        )
+                    })?;
+                // Create a StaticSecret from the private key bytes
+                let private = StaticSecret::from(private_key_bytes);
+
+                // Convert peer public key bytes to a 32-byte array
+                let peer_public_bytes: [u8; 32] = peer_public_key.try_into().map_err(|_| {
+                    CalError::failed_operation(
+                        "Invalid peer public key length".to_owned(),
+                        true,
+                        None,
+                    )
+                })?;
+                // Create a PublicKey from the peer public key bytes
+                let peer_public = X25519PublicKey::from(peer_public_bytes);
+
+                // Perform Diffie-Hellman key exchange
+                let shared_secret = private.diffie_hellman(&peer_public);
+                Ok(shared_secret.as_bytes().to_vec())
+            }
+            AsymmetricKeySpec::P256 => {
+                // Deserialize our P-256 private key
+                let private_key_bytes: [u8; 32] =
+                    self.private_key_bytes.as_slice().try_into().map_err(|_| {
+                        CalError::failed_operation(
+                            "Invalid private key length".to_owned(),
+                            true,
+                            None,
+                        )
+                    })?;
+
+                let private =
+                    P256SecretKey::from_bytes((&private_key_bytes).into()).map_err(|e| {
+                        CalError::failed_operation(
+                            "Failed to create P-256 private key".to_owned(),
+                            false,
+                            Some(anyhow!(e)),
+                        )
+                    })?;
+
+                // Deserialize the peer's P-256 public key (in SEC1 format)
+                let peer_public = P256PublicKey::from_sec1_bytes(peer_public_key).map_err(|e| {
+                    CalError::failed_operation(
+                        "Invalid P-256 public key format".to_owned(),
+                        true,
+                        Some(anyhow!(e)),
+                    )
+                })?;
+
+                // Perform ECDH using the low-level diffie_hellman function
+                let shared_secret =
+                    diffie_hellman(private.to_nonzero_scalar(), peer_public.as_affine());
+
+                Ok(shared_secret.raw_secret_bytes().to_vec())
+            }
+            _ => Err(CalError::failed_operation(
+                "Unsupported algorithm".to_string(),
+                true,
+                None,
+            )),
+        }
+    }
+
+    /// Generates session keys from the shared secret, matching libsodium's behavior.
     fn generate_session_keys(
-        &mut self,
+        &self,
         peer_public_key: &[u8],
         is_client: bool,
     ) -> Result<(Vec<u8>, Vec<u8>), CalError> {
-        // Compute the shared secret using X25519 or ECDH
+        // Compute the shared secret first
         let shared_secret = self.compute_shared_secret(peer_public_key)?;
 
-        // Get our public key
-        let self_pk = self.public_key.as_ref().to_vec();
+        // Initialize Blake2b hasher (512-bit/64-byte output)
+        let mut hasher = Blake2b512::new();
 
-        // Create a BLAKE2b hash context with 64-byte output
-        let mut params = blake2b_simd::Params::new();
-        params.hash_length(64);
-        let mut state = params.to_state();
-
-        // 1. FIRST update with shared secret
-        state.update(&shared_secret);
-
-        // 2. Then determine which is client_pk and which is server_pk
-        let (client_pk, server_pk) = if is_client {
-            (&self_pk, peer_public_key)
+        // Add the shared secret and public keys to the hasher
+        hasher.update(&shared_secret);
+        if is_client {
+            hasher.update(&self.public_key_bytes);
+            hasher.update(peer_public_key);
         } else {
-            (&peer_public_key.to_vec(), self_pk.as_slice())
-        };
+            hasher.update(peer_public_key);
+            hasher.update(&self.public_key_bytes);
+        }
 
-        // 3. Update hash with client_pk THEN server_pk
-        state.update(client_pk);
-        state.update(server_pk);
+        // Finalize and obtain the 64-byte key material
+        let key_material = hasher.finalize();
+        let keys = key_material.as_slice();
 
-        // Finalize the hash to get the key material
-        let key_material = state.finalize();
-        let keys = key_material.as_bytes();
-
-        // Split keys as before
+        // Split into receive (rx) and transmit (tx) keys, consistent with libsodium's implementation
         let (rx, tx) = if is_client {
-            // Client gets rx from first half, tx from second half
             (keys[0..32].to_vec(), keys[32..64].to_vec())
         } else {
-            // Server gets rx from second half, tx from first half
             (keys[32..64].to_vec(), keys[0..32].to_vec())
         };
 
@@ -793,7 +826,7 @@ impl DHKeyExchangeImpl for SoftwareDHExchange {
 
     /// Returns the public key as bytes for sharing with the peer
     fn get_public_key(&self) -> Result<Vec<u8>, CalError> {
-        Ok(self.public_key.as_ref().to_vec())
+        Ok(self.public_key_bytes.clone())
     }
 
     fn derive_client_session_keys(
