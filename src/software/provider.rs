@@ -20,13 +20,12 @@ use anyhow::anyhow;
 use argon2::{
     password_hash::SaltString, Argon2, Params, PasswordHasher, MAX_SALT_LEN, MIN_SALT_LEN,
 };
-use nanoid::nanoid;
 use blake2::{Blake2b512, Digest};
+use nanoid::nanoid;
 use p256::{
     ecdh::diffie_hellman, elliptic_curve::rand_core::OsRng, PublicKey as P256PublicKey,
     SecretKey as P256SecretKey,
 };
-use x25519_dalek::{PublicKey as X25519PublicKey, StaticSecret};
 use ring::{
     aead::Algorithm,
     digest::{digest, SHA256, SHA384, SHA512, SHA512_256},
@@ -35,6 +34,7 @@ use ring::{
 };
 use sha3::{Sha3_224, Sha3_256, Sha3_384, Sha3_512};
 use tracing::error;
+use x25519_dalek::{PublicKey as X25519PublicKey, StaticSecret};
 
 impl ProviderImpl for SoftwareProvider {
     fn create_key(&mut self, spec: KeySpec) -> Result<KeyHandle, CalError> {
@@ -424,6 +424,30 @@ impl ProviderImpl for SoftwareProvider {
         })
     }
 
+    /// Creates a DHExchange from existing key pair bytes instead of generating a new one
+    fn dh_exchange_from_keys(
+        &mut self,
+        public_key: &[u8],
+        private_key: &[u8],
+        spec: KeyPairSpec,
+    ) -> Result<DHExchange, CalError> {
+        let key_id = nanoid!(10); // Generate a unique key ID
+
+        // Initialize SoftwareDHExchange from existing keys
+        let dh_exchange = SoftwareDHExchange::from_keypair_bytes(
+            key_id,
+            private_key,
+            public_key,
+            self.storage_manager.clone(),
+            spec,
+        )?;
+
+        // Wrap in DHExchange and return
+        Ok(DHExchange {
+            implementation: dh_exchange.into(),
+        })
+    }
+
     fn get_all_keys(&self) -> Result<Vec<(String, Spec)>, CalError> {
         if self.storage_manager.is_none() {
             return Err(CalError::failed_operation(
@@ -669,6 +693,66 @@ impl SoftwareDHExchange {
                 None,
             )),
         }
+    }
+
+    /// Creates a SoftwareDHExchange instance from existing keypair bytes
+    pub fn from_keypair_bytes(
+        key_id: String,
+        private_key: &[u8],
+        public_key: &[u8],
+        storage_manager: Option<StorageManager>,
+        spec: KeyPairSpec,
+    ) -> Result<Self, CalError> {
+        // Validate that the provided key pair is valid
+        match spec.asym_spec {
+            AsymmetricKeySpec::Curve25519 => {
+                // Verify key lengths
+                if private_key.len() != 32 || public_key.len() != 32 {
+                    return Err(CalError::failed_operation(
+                        "Invalid Curve25519 key length".to_string(),
+                        true,
+                        None,
+                    ));
+                }
+            }
+            AsymmetricKeySpec::P256 => {
+                // P-256 private key should be 32 bytes
+                if private_key.len() != 32 {
+                    return Err(CalError::failed_operation(
+                        "Invalid P-256 private key length".to_string(),
+                        true,
+                        None,
+                    ));
+                }
+
+                // Public key should be in SEC1 format (uncompressed)
+                if public_key.len() < 33
+                    || (public_key[0] != 0x04 && public_key[0] != 0x02 && public_key[0] != 0x03)
+                {
+                    return Err(CalError::failed_operation(
+                        "Invalid P-256 public key format".to_string(),
+                        true,
+                        None,
+                    ));
+                }
+            }
+            _ => {
+                return Err(CalError::failed_operation(
+                    "Unsupported algorithm".to_string(),
+                    true,
+                    None,
+                ));
+            }
+        }
+
+        // Create the DH Exchange with the provided key material
+        Ok(Self {
+            key_id,
+            private_key_bytes: private_key.to_vec(),
+            public_key_bytes: public_key.to_vec(),
+            storage_manager,
+            spec,
+        })
     }
 
     /// Computes the shared secret between the local private key and a peer's public key.

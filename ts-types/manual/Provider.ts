@@ -23,6 +23,7 @@ export type Provider = {
 		publicKey: Uint8Array,
 	) => Promise<KeyPairHandle>;
 	startEphemeralDhExchange: (spec: KeyPairSpec) => Promise<DHExchange>;
+	dhExchangeFromKeys: (publicKey: Uint8Array, privateKey: Uint8Array, spec: KeyPairSpec) => Promise<DHExchange>;
 	providerName: () => Promise<string>;
 	getCapabilities: () => Promise<ProviderConfig | undefined>;
 	deriveKeyFromPassword: (

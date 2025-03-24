@@ -129,6 +129,16 @@ pub(crate) trait ProviderImpl: Send + Sync {
     /// On failure, it returns a `CalError`.
     fn start_ephemeral_dh_exchange(&mut self, spec: KeyPairSpec) -> Result<DHExchange, CalError>;
 
+    #[allow(dead_code, unused_variables)]
+    fn dh_exchange_from_keys(
+        &mut self,
+        public_key: &[u8],
+        private_key: &[u8],
+        spec: KeyPairSpec,
+    ) -> Result<DHExchange, CalError> {
+        unimplemented!()
+    }
+
     fn get_all_keys(&self) -> Result<Vec<(String, Spec)>, CalError>;
 
     fn provider_name(&self) -> String;
