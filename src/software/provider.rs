@@ -718,23 +718,25 @@ impl SoftwareDHExchange {
         params.hash_length(64);
         let mut state = params.to_state();
 
-        // Add the shared secret to the hash
+        // 1. FIRST update with shared secret
         state.update(&shared_secret);
 
-        if is_client {
-            state.update(&self_pk); // client_pk
-            state.update(peer_public_key); // server_pk
+        // 2. Then determine which is client_pk and which is server_pk
+        let (client_pk, server_pk) = if is_client {
+            (&self_pk, peer_public_key)
         } else {
-            state.update(peer_public_key); // client_pk
-            state.update(&self_pk); // server_pk
-        }
+            (&peer_public_key.to_vec(), self_pk.as_slice())
+        };
+
+        // 3. Update hash with client_pk THEN server_pk
+        state.update(client_pk);
+        state.update(server_pk);
 
         // Finalize the hash to get the key material
         let key_material = state.finalize();
         let keys = key_material.as_bytes();
 
-        // Split the 64 bytes into two 32-byte keys (rx and tx)
-        // CRITICAL: The client and server split the keys differently
+        // Split keys as before
         let (rx, tx) = if is_client {
             // Client gets rx from first half, tx from second half
             (keys[0..32].to_vec(), keys[32..64].to_vec())
