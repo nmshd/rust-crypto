@@ -707,47 +707,40 @@ impl SoftwareDHExchange {
         peer_public_key: &[u8],
         is_client: bool,
     ) -> Result<(Vec<u8>, Vec<u8>), CalError> {
-        // Compute the shared secret
+        // Compute the shared secret using X25519 or ECDH
         let shared_secret = self.compute_shared_secret(peer_public_key)?;
 
-        // Create a context for key derivation that mirrors libsodium's generichash
+        // Get our public key
         let self_pk = self.public_key.as_ref().to_vec();
 
-        // Create a BLAKE2b hash context (similar to libsodium's generichash)
-        // We need to hash: shared_secret | client_pk | server_pk
+        // Create a BLAKE2b hash context with 64-byte output
         let mut params = blake2b_simd::Params::new();
-        params.hash_length(64); // Generate 64 bytes (for two 32-byte keys)
+        params.hash_length(64);
         let mut state = params.to_state();
 
         // Add the shared secret to the hash
         state.update(&shared_secret);
 
-        // Add the public keys in the order that libsodium does:
-        // For both client and server, the order is: client_pk | server_pk
         if is_client {
-            state.update(&self_pk); // client_pk (self)
-            state.update(peer_public_key); // server_pk (peer)
+            state.update(&self_pk); // client_pk
+            state.update(peer_public_key); // server_pk
         } else {
-            state.update(peer_public_key); // client_pk (peer)
-            state.update(&self_pk); // server_pk (self)
+            state.update(peer_public_key); // client_pk
+            state.update(&self_pk); // server_pk
         }
 
-        // Finalize the hash to get the session keys
-        let keys = state.finalize().as_bytes().to_vec();
+        // Finalize the hash to get the key material
+        let key_material = state.finalize();
+        let keys = key_material.as_bytes();
 
-        // In libsodium:
-        // - Client: rx = first half, tx = second half
-        // - Server: rx = second half, tx = first half
+        // Split the 64 bytes into two 32-byte keys (rx and tx)
+        // CRITICAL: The client and server split the keys differently
         let (rx, tx) = if is_client {
-            // Client mode
-            let rx = keys[0..32].to_vec();
-            let tx = keys[32..64].to_vec();
-            (rx, tx)
+            // Client gets rx from first half, tx from second half
+            (keys[0..32].to_vec(), keys[32..64].to_vec())
         } else {
-            // Server mode
-            let rx = keys[32..64].to_vec();
-            let tx = keys[0..32].to_vec();
-            (rx, tx)
+            // Server gets rx from second half, tx from first half
+            (keys[32..64].to_vec(), keys[0..32].to_vec())
         };
 
         Ok((rx, tx))
@@ -761,9 +754,9 @@ impl SoftwareDHExchange {
     ) -> Result<KeyHandle, CalError> {
         // Generate a unique key ID
         let key_id = format!("{}_{}", self.key_id, key_id_suffix);
-        
+
         let cipher = self.spec.cipher.ok_or_else(
-            || { 
+            || {
                 error!("derive_client_key_handles and derive_server_key_handles need a KeyPairSpec supplied which cipher is not None.");
                 CalError::bad_parameter(
                     "derive_client_key_handles and derive_server_key_handles need a KeyPairSpec supplied which cipher is not None.".to_owned(), 
