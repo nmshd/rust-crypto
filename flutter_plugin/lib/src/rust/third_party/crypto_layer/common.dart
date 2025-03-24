@@ -104,6 +104,11 @@ abstract class Provider implements RustOpaqueInterface {
       required KeySpec algorithm,
       required KDF kdf});
 
+  Future<DhExchange> dhExchangeFromKeys(
+      {required List<int> publicKey,
+      required List<int> privateKey,
+      required KeyPairSpec spec});
+
   Future<List<(String, Spec)>> getAllKeys();
 
   Future<ProviderConfig?> getCapabilities();

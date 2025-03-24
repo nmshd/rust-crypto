@@ -172,12 +172,6 @@ pub(crate) trait DHKeyExchangeImpl: Send + Sync {
     /// Get the public key of the internal key pair to use for the other party
     fn get_public_key(&self) -> Result<Vec<u8>, CalError>;
 
-    // /// add an external public point and compute the shared secret. The raw secret is returned to use in another round of the key exchange
-    // fn add_external(&mut self, external_key: &[u8]) -> Result<Vec<u8>, CalError>;
-
-    // /// add the final external Keypair, derive a symmetric key from the shared secret and store the key
-    // fn add_external_final(&mut self, external_key: &[u8]) -> Result<KeyHandle, CalError>;
-
     /// Derive client session keys (rx, tx) - client is the templator in your code
     fn derive_client_session_keys(
         &mut self,

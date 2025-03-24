@@ -141,6 +141,15 @@ impl Provider {
     }
 
     delegate_enum! {
+        pub fn dh_exchange_from_keys(
+            &mut self,
+            public_key: &[u8],
+            private_key: &[u8],
+            spec: KeyPairSpec,
+        ) -> Result<DHExchange, CalError>;
+    }
+
+    delegate_enum! {
         pub fn get_all_keys(&self) -> Result<Vec<(String, Spec)>, CalError>;
     }
 
@@ -310,16 +319,16 @@ impl DHExchange {
 
     delegate_enum! {
         pub fn derive_client_key_handles(
-        &mut self,
-        server_pk: &[u8],
-    ) -> Result<(KeyHandle, KeyHandle), CalError>;
+            &mut self,
+            server_pk: &[u8],
+        ) -> Result<(KeyHandle, KeyHandle), CalError>;
     }
 
     delegate_enum! {
         pub fn derive_server_key_handles(
-        &mut self,
-        client_pk: &[u8],
-    ) -> Result<(KeyHandle, KeyHandle), CalError>;
+            &mut self,
+            client_pk: &[u8],
+        ) -> Result<(KeyHandle, KeyHandle), CalError>;
     }
 }
 

@@ -27,5 +27,6 @@ import type { Argon2Options } from "./Argon2Options";
  *            parallelism: 1,
  *        });
  * ```
+ * flutter_rust_bridge:non_opaque
  */
 export type KDF = { "Argon2d": Argon2Options } | { "Argon2id": Argon2Options };
