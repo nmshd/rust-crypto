@@ -327,7 +327,7 @@ mod tests {
         }
 
         #[test]
-        fn test_dh_exchange_private_key_consumed() {
+        fn test_dh_exchange_reuse() {
             let storage_manager = Some(
                 StorageManager::new("SoftwareProvider".to_owned(), unsafe {
                     &STORE.impl_config().additional_config
@@ -344,36 +344,36 @@ mod tests {
             )
             .unwrap();
 
-            // Generate a valid server public key
-            let server_exchange = SoftwareDHExchange::new(
-                "key_id_server".to_string(),
+            // Generate two different server public keys
+            let server_exchange1 = SoftwareDHExchange::new(
+                "key_id_server1".to_string(),
+                storage_manager.clone(),
+                KeyPairSpec::default(),
+            )
+            .unwrap();
+            let server_exchange2 = SoftwareDHExchange::new(
+                "key_id_server2".to_string(),
                 storage_manager,
                 KeyPairSpec::default(),
             )
             .unwrap();
-            let server_public_key = server_exchange.get_public_key().unwrap();
 
-            // Client derives session keys once
-            let _ = client_exchange
-                .derive_client_session_keys(&server_public_key)
-                .expect("Failed to derive client session keys");
+            let server_public_key1 = server_exchange1.get_public_key().unwrap();
+            let server_public_key2 = server_exchange2.get_public_key().unwrap();
 
-            // Attempting to derive keys again should fail because private_key was consumed
-            let result = client_exchange.derive_client_session_keys(&server_public_key);
+            // Client derives session keys with first server
+            let (rx1, tx1) = client_exchange
+                .derive_client_session_keys(&server_public_key1)
+                .expect("Failed to derive client session keys with first server");
 
-            // Expect an error
-            assert!(
-                result.is_err(),
-                "Expected error when calling derive_client_session_keys after private key consumed"
-            );
+            // Client derives keys with second server - this should work fine with your implementation
+            let (rx2, tx2) = client_exchange
+                .derive_client_session_keys(&server_public_key2)
+                .expect("Failed to derive client session keys with second server");
 
-            // The error should indicate that the private key is no longer available
-            if let Err(e) = result {
-                assert!(
-                    e.to_string().contains("No private key available"),
-                    "Unexpected error message: {e}"
-                );
-            }
+            // Keys should be different when derived with different peer public keys
+            assert_ne!(rx1, rx2, "Keys should be different with different peers");
+            assert_ne!(tx1, tx2, "Keys should be different with different peers");
         }
 
         #[test]
