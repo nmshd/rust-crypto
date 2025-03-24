@@ -176,7 +176,7 @@ impl Provider {
         pub fn get_random(&self, len: usize) -> Vec<u8>;
     }
 
-    delegate_enum_bare! {
+    delegate_enum! {
         pub fn hash(&self, input: &[u8], hash: CryptoHash) -> Result<Vec<u8>, CalError> ;
     }
 }

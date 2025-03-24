@@ -654,6 +654,8 @@ mod tests {
         }
     }
 
+    #[allow(clippy::borrow_interior_mutable_const)]
+    #[allow(clippy::declare_interior_mutable_const)]
     mod misc {
         use super::*;
 
@@ -663,7 +665,7 @@ mod tests {
 
         use crate::tests::{setup, TestStore};
 
-        static STORE: LazyLock<TestStore> = LazyLock::new(|| TestStore::new());
+        static STORE: LazyLock<TestStore> = LazyLock::new(TestStore::new);
 
         const PROVIDER: LazyLock<Provider> = LazyLock::new(|| {
             create_provider_from_name("SoftwareProvider", STORE.impl_config().clone()).unwrap()
@@ -677,7 +679,7 @@ mod tests {
             let hash = PROVIDER.hash(&data, CryptoHash::Sha2_256)?;
             let hash2 = PROVIDER.hash(&data, CryptoHash::Sha2_256)?;
 
-            assert!(hash.len() > 0);
+            assert!(!hash.is_empty());
             assert_eq!(hash, hash2);
 
             Ok(())
