@@ -2,8 +2,8 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:cal_flutter_app/kvstore_service.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:cal_flutter_plugin/cal_flutter_plugin.dart' as cal;
+import 'package:flutter_test/flutter_test.dart';
 
 void main() async {
   await cal.RustLib.init();
@@ -38,7 +38,8 @@ void main() async {
             spec: cal.KeyPairSpec(
                 asymSpec: asymSpec,
                 signingHash: cal.CryptoHash.sha2256,
-                ephemeral: true));
+                ephemeral: true,
+                nonExportable: false));
         expect(handle, isNotNull);
         expect(store.count(), 1);
 

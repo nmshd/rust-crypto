@@ -642,7 +642,7 @@ impl ProviderImpl for SoftwareProvider {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) struct SoftwareDHExchange {
     key_id: String,
     private_key_bytes: Vec<u8>,
@@ -916,28 +916,22 @@ impl DHKeyExchangeImpl for SoftwareDHExchange {
         Ok(self.public_key_bytes.clone())
     }
 
-    fn derive_client_session_keys(
-        &mut self,
-        server_pk: &[u8],
-    ) -> Result<(Vec<u8>, Vec<u8>), CalError> {
+    fn derive_client_session_keys(self, server_pk: &[u8]) -> Result<(Vec<u8>, Vec<u8>), CalError> {
         // Client mode: is_client = true
         self.generate_session_keys(server_pk, true)
     }
 
-    fn derive_server_session_keys(
-        &mut self,
-        client_pk: &[u8],
-    ) -> Result<(Vec<u8>, Vec<u8>), CalError> {
+    fn derive_server_session_keys(self, client_pk: &[u8]) -> Result<(Vec<u8>, Vec<u8>), CalError> {
         // Server mode: is_client = false
         self.generate_session_keys(client_pk, false)
     }
 
     /// Derives client session keys and returns them as key handles
     fn derive_client_key_handles(
-        &mut self,
+        self,
         server_pk: &[u8],
     ) -> Result<(KeyHandle, KeyHandle), CalError> {
-        let (rx_key, tx_key) = self.derive_client_session_keys(server_pk)?;
+        let (rx_key, tx_key) = self.generate_session_keys(server_pk, true)?;
 
         // Create key handles for the derived keys
         let rx_handle = self.create_key_handle(rx_key, "rx")?;
@@ -948,10 +942,10 @@ impl DHKeyExchangeImpl for SoftwareDHExchange {
 
     /// Derives server session keys and returns them as key handles
     fn derive_server_key_handles(
-        &mut self,
+        self,
         client_pk: &[u8],
     ) -> Result<(KeyHandle, KeyHandle), CalError> {
-        let (rx_key, tx_key) = self.derive_server_session_keys(client_pk)?;
+        let (rx_key, tx_key) = self.generate_session_keys(client_pk, false)?;
 
         // Create key handles for the derived keys
         let rx_handle = self.create_key_handle(rx_key, "rx")?;
