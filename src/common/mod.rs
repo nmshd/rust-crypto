@@ -63,6 +63,19 @@ macro_rules! delegate_enum {
             }
         )+
     };
+    ($(pub fn $method:ident(self $(,$arg:ident: $type:ty)* $(,)?) $(-> $ret:ty)?;)+) => {
+        $(
+            pub fn $method(self $(,$arg: $type)*) $(-> $ret)? {
+                match self.implementation.$method($($arg),*) {
+                    Ok(v) => Ok(v),
+                    Err(e) => {
+                        error!("Error in {}: {}", stringify!($method), e);
+                        Err(e)
+                    }
+                }
+            }
+        )+
+    };
 }
 
 macro_rules! delegate_enum_bare {
@@ -305,28 +318,28 @@ impl DHExchange {
 
     delegate_enum! {
         pub fn derive_client_session_keys(
-            &mut self,
+            self,
             server_pk: &[u8],
         ) -> Result<(Vec<u8>, Vec<u8>), CalError>;
     }
 
     delegate_enum! {
         pub fn derive_server_session_keys(
-            &mut self,
+            self,
             client_pk: &[u8],
         ) -> Result<(Vec<u8>, Vec<u8>), CalError>;
     }
 
     delegate_enum! {
         pub fn derive_client_key_handles(
-            &mut self,
+            self,
             server_pk: &[u8],
         ) -> Result<(KeyHandle, KeyHandle), CalError>;
     }
 
     delegate_enum! {
         pub fn derive_server_key_handles(
-            &mut self,
+            self,
             client_pk: &[u8],
         ) -> Result<(KeyHandle, KeyHandle), CalError>;
     }
