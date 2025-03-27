@@ -2783,6 +2783,9 @@ const _: fn() = || {
         crypto_layer::common::crypto::algorithms::key_derivation::KDF::Argon2id(field0) => {
             let _: crypto_layer::common::crypto::algorithms::key_derivation::Argon2Options = field0;
         }
+        crypto_layer::common::crypto::algorithms::key_derivation::KDF::Argon2i(field0) => {
+            let _: crypto_layer::common::crypto::algorithms::key_derivation::Argon2Options = field0;
+        }
     }
     {
         let KeyPairSpec = None::<crypto_layer::common::config::KeyPairSpec>.unwrap();
@@ -3511,6 +3514,12 @@ impl SseDecode for crypto_layer::common::crypto::algorithms::key_derivation::KDF
             1 => {
                 let mut var_field0 = <crypto_layer::common::crypto::algorithms::key_derivation::Argon2Options>::sse_decode(deserializer);
                 return crypto_layer::common::crypto::algorithms::key_derivation::KDF::Argon2id(
+                    var_field0,
+                );
+            }
+            2 => {
+                let mut var_field0 = <crypto_layer::common::crypto::algorithms::key_derivation::Argon2Options>::sse_decode(deserializer);
+                return crypto_layer::common::crypto::algorithms::key_derivation::KDF::Argon2i(
                     var_field0,
                 );
             }
@@ -4495,6 +4504,9 @@ impl flutter_rust_bridge::IntoDart
             crypto_layer::common::crypto::algorithms::key_derivation::KDF::Argon2id(field0) => {
                 [1.into_dart(), field0.into_into_dart().into_dart()].into_dart()
             }
+            crypto_layer::common::crypto::algorithms::key_derivation::KDF::Argon2i(field0) => {
+                [2.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
             _ => {
                 unimplemented!("");
             }
@@ -5304,6 +5316,10 @@ impl SseEncode for crypto_layer::common::crypto::algorithms::key_derivation::KDF
             }
             crypto_layer::common::crypto::algorithms::key_derivation::KDF::Argon2id(field0) => {
                 <i32>::sse_encode(1, serializer);
+                <crypto_layer::common::crypto::algorithms::key_derivation::Argon2Options>::sse_encode(field0, serializer);
+            }
+            crypto_layer::common::crypto::algorithms::key_derivation::KDF::Argon2i(field0) => {
+                <i32>::sse_encode(2, serializer);
                 <crypto_layer::common::crypto::algorithms::key_derivation::Argon2Options>::sse_encode(field0, serializer);
             }
             _ => {

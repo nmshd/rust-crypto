@@ -33,6 +33,7 @@ pub enum KDF {
     Argon2d(Argon2Options),
     /// Partial brute force and partial side channel resistance.
     Argon2id(Argon2Options),
+    Argon2i(Argon2Options),
 }
 
 /// flutter_rust_bridge:non_opaque

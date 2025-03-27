@@ -2723,6 +2723,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         return KDF_Argon2id(
           dco_decode_box_autoadd_argon_2_options(raw[1]),
         );
+      case 2:
+        return KDF_Argon2i(
+          dco_decode_box_autoadd_argon_2_options(raw[1]),
+        );
       default:
         throw Exception("unreachable");
     }
@@ -3470,6 +3474,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case 1:
         var var_field0 = sse_decode_box_autoadd_argon_2_options(deserializer);
         return KDF_Argon2id(var_field0);
+      case 2:
+        var var_field0 = sse_decode_box_autoadd_argon_2_options(deserializer);
+        return KDF_Argon2i(var_field0);
       default:
         throw UnimplementedError('');
     }
@@ -4306,6 +4313,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_box_autoadd_argon_2_options(field0, serializer);
       case KDF_Argon2id(field0: final field0):
         sse_encode_i_32(1, serializer);
+        sse_encode_box_autoadd_argon_2_options(field0, serializer);
+      case KDF_Argon2i(field0: final field0):
+        sse_encode_i_32(2, serializer);
         sse_encode_box_autoadd_argon_2_options(field0, serializer);
     }
   }
