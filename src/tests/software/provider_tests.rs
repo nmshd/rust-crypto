@@ -55,7 +55,7 @@ mod tests {
 
             for key_pair_spec in key_pair_spec_list {
                 // Client creates an instance of SoftwareDHExchange
-                let client_exchange = SoftwareDHExchange::new(
+                let mut client_exchange = SoftwareDHExchange::new(
                     "key_id_client".to_string(),
                     storage_manager.clone(),
                     key_pair_spec,
@@ -63,7 +63,7 @@ mod tests {
                 .unwrap();
 
                 // Server creates an instance of SoftwareDHExchange
-                let server_exchange = SoftwareDHExchange::new(
+                let mut server_exchange = SoftwareDHExchange::new(
                     "key_id_server".to_string(),
                     storage_manager.clone(),
                     key_pair_spec,
@@ -156,7 +156,7 @@ mod tests {
 
             for key_pair_spec in key_pair_spec_list {
                 // Client creates an instance of SoftwareDHExchange
-                let client_exchange = SoftwareDHExchange::new(
+                let mut client_exchange = SoftwareDHExchange::new(
                     "key_id_client".to_string(),
                     storage_manager.clone(),
                     key_pair_spec,
@@ -164,7 +164,7 @@ mod tests {
                 .unwrap();
 
                 // Server creates an instance of SoftwareDHExchange
-                let server_exchange = SoftwareDHExchange::new(
+                let mut server_exchange = SoftwareDHExchange::new(
                     "key_id_server".to_string(),
                     storage_manager.clone(),
                     key_pair_spec,
@@ -301,7 +301,7 @@ mod tests {
             );
 
             // Client creates an instance of SoftwareDHExchange
-            let client_exchange = SoftwareDHExchange::new(
+            let mut client_exchange = SoftwareDHExchange::new(
                 "key_id_client".to_string(),
                 storage_manager,
                 KeyPairSpec::default(),
@@ -337,14 +337,14 @@ mod tests {
             );
 
             // Client creates an instance of SoftwareDHExchange
-            let client_exchange = SoftwareDHExchange::new(
+            let mut client_exchange = SoftwareDHExchange::new(
                 "key_id_client".to_string(),
                 storage_manager.clone(),
                 KeyPairSpec::default(),
             )
             .unwrap();
 
-            let client_exchange2 = client_exchange.clone();
+            let mut client_exchange2 = client_exchange.clone();
 
             // Generate two different server public keys
             let server_exchange1 = SoftwareDHExchange::new(
@@ -389,7 +389,7 @@ mod tests {
             );
 
             // Client1 creates an instance of SoftwareDHExchange
-            let client1_exchange = SoftwareDHExchange::new(
+            let mut client1_exchange = SoftwareDHExchange::new(
                 "key_id_client1".to_string(),
                 storage_manager.clone(),
                 KeyPairSpec::default(),
@@ -397,7 +397,7 @@ mod tests {
             .unwrap();
 
             // Client2 creates an instance of SoftwareDHExchange
-            let client2_exchange = SoftwareDHExchange::new(
+            let mut client2_exchange = SoftwareDHExchange::new(
                 "key_id_client2".to_string(),
                 storage_manager.clone(),
                 KeyPairSpec::default(),
@@ -405,13 +405,13 @@ mod tests {
             .unwrap();
 
             // Server instances for each client
-            let server_for_client1 = SoftwareDHExchange::new(
+            let mut server_for_client1 = SoftwareDHExchange::new(
                 "key_id_server_for_client1".to_string(),
                 storage_manager.clone(),
                 KeyPairSpec::default(),
             )
             .unwrap();
-            let server_for_client2 = SoftwareDHExchange::new(
+            let mut server_for_client2 = SoftwareDHExchange::new(
                 "key_id_server_for_client2".to_string(),
                 storage_manager.clone(),
                 KeyPairSpec::default(),
