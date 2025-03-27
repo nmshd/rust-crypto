@@ -173,18 +173,18 @@ pub(crate) trait DHKeyExchangeImpl: Send + Sync {
     fn get_public_key(&self) -> Result<Vec<u8>, CalError>;
 
     /// Derive client session keys (rx, tx) - client is the templator in your code
-    fn derive_client_session_keys(self, server_pk: &[u8]) -> Result<(Vec<u8>, Vec<u8>), CalError>;
+    fn derive_client_session_keys(&mut self, server_pk: &[u8]) -> Result<(Vec<u8>, Vec<u8>), CalError>;
 
     /// Derive server session keys (rx, tx) - server is the requestor in your code
-    fn derive_server_session_keys(self, client_pk: &[u8]) -> Result<(Vec<u8>, Vec<u8>), CalError>;
+    fn derive_server_session_keys(&mut self, client_pk: &[u8]) -> Result<(Vec<u8>, Vec<u8>), CalError>;
 
     fn derive_client_key_handles(
-        self,
+        &mut self,
         server_pk: &[u8],
     ) -> Result<(KeyHandle, KeyHandle), CalError>;
 
     fn derive_server_key_handles(
-        self,
+        &mut self,
         client_pk: &[u8],
     ) -> Result<(KeyHandle, KeyHandle), CalError>;
 }

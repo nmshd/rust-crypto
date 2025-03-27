@@ -318,28 +318,28 @@ impl DHExchange {
 
     delegate_enum! {
         pub fn derive_client_session_keys(
-            self,
+            &mut self,
             server_pk: &[u8],
         ) -> Result<(Vec<u8>, Vec<u8>), CalError>;
     }
 
     delegate_enum! {
         pub fn derive_server_session_keys(
-            self,
+            &mut self,
             client_pk: &[u8],
         ) -> Result<(Vec<u8>, Vec<u8>), CalError>;
     }
 
     delegate_enum! {
         pub fn derive_client_key_handles(
-            self,
+            &mut self,
             server_pk: &[u8],
         ) -> Result<(KeyHandle, KeyHandle), CalError>;
     }
 
     delegate_enum! {
         pub fn derive_server_key_handles(
-            self,
+            &mut self,
             client_pk: &[u8],
         ) -> Result<(KeyHandle, KeyHandle), CalError>;
     }
