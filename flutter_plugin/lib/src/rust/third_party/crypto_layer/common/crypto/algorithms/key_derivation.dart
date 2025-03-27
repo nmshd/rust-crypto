@@ -57,6 +57,9 @@ sealed class KDF with _$KDF {
   const factory KDF.argon2Id(
     Argon2Options field0,
   ) = KDF_Argon2id;
+  const factory KDF.argon2I(
+    Argon2Options field0,
+  ) = KDF_Argon2i;
 
   static Future<KDF> default_() => RustLib.instance.api
       .cryptoLayerCommonCryptoAlgorithmsKeyDerivationKdfDefault();

@@ -21,18 +21,21 @@ mixin _$KDF {
   TResult when<TResult extends Object?>({
     required TResult Function(Argon2Options field0) argon2D,
     required TResult Function(Argon2Options field0) argon2Id,
+    required TResult Function(Argon2Options field0) argon2I,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(Argon2Options field0)? argon2D,
     TResult? Function(Argon2Options field0)? argon2Id,
+    TResult? Function(Argon2Options field0)? argon2I,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(Argon2Options field0)? argon2D,
     TResult Function(Argon2Options field0)? argon2Id,
+    TResult Function(Argon2Options field0)? argon2I,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -40,18 +43,21 @@ mixin _$KDF {
   TResult map<TResult extends Object?>({
     required TResult Function(KDF_Argon2d value) argon2D,
     required TResult Function(KDF_Argon2id value) argon2Id,
+    required TResult Function(KDF_Argon2i value) argon2I,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? mapOrNull<TResult extends Object?>({
     TResult? Function(KDF_Argon2d value)? argon2D,
     TResult? Function(KDF_Argon2id value)? argon2Id,
+    TResult? Function(KDF_Argon2i value)? argon2I,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeMap<TResult extends Object?>({
     TResult Function(KDF_Argon2d value)? argon2D,
     TResult Function(KDF_Argon2id value)? argon2Id,
+    TResult Function(KDF_Argon2i value)? argon2I,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -166,6 +172,7 @@ class _$KDF_Argon2dImpl extends KDF_Argon2d {
   TResult when<TResult extends Object?>({
     required TResult Function(Argon2Options field0) argon2D,
     required TResult Function(Argon2Options field0) argon2Id,
+    required TResult Function(Argon2Options field0) argon2I,
   }) {
     return argon2D(field0);
   }
@@ -175,6 +182,7 @@ class _$KDF_Argon2dImpl extends KDF_Argon2d {
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(Argon2Options field0)? argon2D,
     TResult? Function(Argon2Options field0)? argon2Id,
+    TResult? Function(Argon2Options field0)? argon2I,
   }) {
     return argon2D?.call(field0);
   }
@@ -184,6 +192,7 @@ class _$KDF_Argon2dImpl extends KDF_Argon2d {
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(Argon2Options field0)? argon2D,
     TResult Function(Argon2Options field0)? argon2Id,
+    TResult Function(Argon2Options field0)? argon2I,
     required TResult orElse(),
   }) {
     if (argon2D != null) {
@@ -197,6 +206,7 @@ class _$KDF_Argon2dImpl extends KDF_Argon2d {
   TResult map<TResult extends Object?>({
     required TResult Function(KDF_Argon2d value) argon2D,
     required TResult Function(KDF_Argon2id value) argon2Id,
+    required TResult Function(KDF_Argon2i value) argon2I,
   }) {
     return argon2D(this);
   }
@@ -206,6 +216,7 @@ class _$KDF_Argon2dImpl extends KDF_Argon2d {
   TResult? mapOrNull<TResult extends Object?>({
     TResult? Function(KDF_Argon2d value)? argon2D,
     TResult? Function(KDF_Argon2id value)? argon2Id,
+    TResult? Function(KDF_Argon2i value)? argon2I,
   }) {
     return argon2D?.call(this);
   }
@@ -215,6 +226,7 @@ class _$KDF_Argon2dImpl extends KDF_Argon2d {
   TResult maybeMap<TResult extends Object?>({
     TResult Function(KDF_Argon2d value)? argon2D,
     TResult Function(KDF_Argon2id value)? argon2Id,
+    TResult Function(KDF_Argon2i value)? argon2I,
     required TResult orElse(),
   }) {
     if (argon2D != null) {
@@ -310,6 +322,7 @@ class _$KDF_Argon2idImpl extends KDF_Argon2id {
   TResult when<TResult extends Object?>({
     required TResult Function(Argon2Options field0) argon2D,
     required TResult Function(Argon2Options field0) argon2Id,
+    required TResult Function(Argon2Options field0) argon2I,
   }) {
     return argon2Id(field0);
   }
@@ -319,6 +332,7 @@ class _$KDF_Argon2idImpl extends KDF_Argon2id {
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(Argon2Options field0)? argon2D,
     TResult? Function(Argon2Options field0)? argon2Id,
+    TResult? Function(Argon2Options field0)? argon2I,
   }) {
     return argon2Id?.call(field0);
   }
@@ -328,6 +342,7 @@ class _$KDF_Argon2idImpl extends KDF_Argon2id {
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(Argon2Options field0)? argon2D,
     TResult Function(Argon2Options field0)? argon2Id,
+    TResult Function(Argon2Options field0)? argon2I,
     required TResult orElse(),
   }) {
     if (argon2Id != null) {
@@ -341,6 +356,7 @@ class _$KDF_Argon2idImpl extends KDF_Argon2id {
   TResult map<TResult extends Object?>({
     required TResult Function(KDF_Argon2d value) argon2D,
     required TResult Function(KDF_Argon2id value) argon2Id,
+    required TResult Function(KDF_Argon2i value) argon2I,
   }) {
     return argon2Id(this);
   }
@@ -350,6 +366,7 @@ class _$KDF_Argon2idImpl extends KDF_Argon2id {
   TResult? mapOrNull<TResult extends Object?>({
     TResult? Function(KDF_Argon2d value)? argon2D,
     TResult? Function(KDF_Argon2id value)? argon2Id,
+    TResult? Function(KDF_Argon2i value)? argon2I,
   }) {
     return argon2Id?.call(this);
   }
@@ -359,6 +376,7 @@ class _$KDF_Argon2idImpl extends KDF_Argon2id {
   TResult maybeMap<TResult extends Object?>({
     TResult Function(KDF_Argon2d value)? argon2D,
     TResult Function(KDF_Argon2id value)? argon2Id,
+    TResult Function(KDF_Argon2i value)? argon2I,
     required TResult orElse(),
   }) {
     if (argon2Id != null) {
@@ -380,5 +398,155 @@ abstract class KDF_Argon2id extends KDF {
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
   _$$KDF_Argon2idImplCopyWith<_$KDF_Argon2idImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$KDF_Argon2iImplCopyWith<$Res> implements $KDFCopyWith<$Res> {
+  factory _$$KDF_Argon2iImplCopyWith(
+          _$KDF_Argon2iImpl value, $Res Function(_$KDF_Argon2iImpl) then) =
+      __$$KDF_Argon2iImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({Argon2Options field0});
+}
+
+/// @nodoc
+class __$$KDF_Argon2iImplCopyWithImpl<$Res>
+    extends _$KDFCopyWithImpl<$Res, _$KDF_Argon2iImpl>
+    implements _$$KDF_Argon2iImplCopyWith<$Res> {
+  __$$KDF_Argon2iImplCopyWithImpl(
+      _$KDF_Argon2iImpl _value, $Res Function(_$KDF_Argon2iImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of KDF
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? field0 = null,
+  }) {
+    return _then(_$KDF_Argon2iImpl(
+      null == field0
+          ? _value.field0
+          : field0 // ignore: cast_nullable_to_non_nullable
+              as Argon2Options,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$KDF_Argon2iImpl extends KDF_Argon2i {
+  const _$KDF_Argon2iImpl(this.field0) : super._();
+
+  @override
+  final Argon2Options field0;
+
+  @override
+  String toString() {
+    return 'KDF.argon2I(field0: $field0)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$KDF_Argon2iImpl &&
+            (identical(other.field0, field0) || other.field0 == field0));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, field0);
+
+  /// Create a copy of KDF
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$KDF_Argon2iImplCopyWith<_$KDF_Argon2iImpl> get copyWith =>
+      __$$KDF_Argon2iImplCopyWithImpl<_$KDF_Argon2iImpl>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(Argon2Options field0) argon2D,
+    required TResult Function(Argon2Options field0) argon2Id,
+    required TResult Function(Argon2Options field0) argon2I,
+  }) {
+    return argon2I(field0);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(Argon2Options field0)? argon2D,
+    TResult? Function(Argon2Options field0)? argon2Id,
+    TResult? Function(Argon2Options field0)? argon2I,
+  }) {
+    return argon2I?.call(field0);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(Argon2Options field0)? argon2D,
+    TResult Function(Argon2Options field0)? argon2Id,
+    TResult Function(Argon2Options field0)? argon2I,
+    required TResult orElse(),
+  }) {
+    if (argon2I != null) {
+      return argon2I(field0);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(KDF_Argon2d value) argon2D,
+    required TResult Function(KDF_Argon2id value) argon2Id,
+    required TResult Function(KDF_Argon2i value) argon2I,
+  }) {
+    return argon2I(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(KDF_Argon2d value)? argon2D,
+    TResult? Function(KDF_Argon2id value)? argon2Id,
+    TResult? Function(KDF_Argon2i value)? argon2I,
+  }) {
+    return argon2I?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(KDF_Argon2d value)? argon2D,
+    TResult Function(KDF_Argon2id value)? argon2Id,
+    TResult Function(KDF_Argon2i value)? argon2I,
+    required TResult orElse(),
+  }) {
+    if (argon2I != null) {
+      return argon2I(this);
+    }
+    return orElse();
+  }
+}
+
+abstract class KDF_Argon2i extends KDF {
+  const factory KDF_Argon2i(final Argon2Options field0) = _$KDF_Argon2iImpl;
+  const KDF_Argon2i._() : super._();
+
+  @override
+  Argon2Options get field0;
+
+  /// Create a copy of KDF
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$KDF_Argon2iImplCopyWith<_$KDF_Argon2iImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

@@ -478,6 +478,7 @@ impl ProviderImpl for SoftwareProvider {
         kdf: KDF,
     ) -> Result<KeyHandle, CalError> {
         let (argo2_algorithm, argon2_option) = match kdf {
+            KDF::Argon2i(o) => (argon2::Algorithm::Argon2i, o),
             KDF::Argon2d(o) => (argon2::Algorithm::Argon2d, o),
             KDF::Argon2id(o) => (argon2::Algorithm::Argon2id, o),
             // _ => return Err(CalError::not_implemented()),
