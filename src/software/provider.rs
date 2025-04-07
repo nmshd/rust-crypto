@@ -52,18 +52,35 @@ impl ProviderImpl for SoftwareProvider {
         // Initialize the system random generator
         let rng = SystemRandom::new();
 
-        let algo: &Algorithm = spec.cipher.into();
+        // Handle XChaCha20Poly1305 specially since it's not supported by ring
+        let key_data = if spec.cipher == Cipher::XChaCha20Poly1305 {
+            // XChaCha20Poly1305 requires a 256-bit (32-byte) key
+            let mut key_data = vec![0u8; 32];
+            rng.fill(&mut key_data).map_err(|e| {
+                error!("Failed to generate XChaCha20Poly1305 key");
+                CalError::failed_operation(
+                    "Failed to generate XChaCha20Poly1305 key".to_owned(),
+                    false,
+                    Some(anyhow!(e)),
+                )
+            })?;
+            key_data
+        } else {
+            // For ring-supported ciphers, use the existing From implementation
+            let algo: &Algorithm = spec.cipher.into();
 
-        // Generate the symmetric key data
-        let mut key_data = vec![0u8; algo.key_len()];
-        rng.fill(&mut key_data).map_err(|e| {
-            error!("Failed to generate symmetric key");
-            CalError::failed_operation(
-                "Failed to generate symmetric key".to_owned(),
-                false,
-                Some(anyhow!(e)),
-            )
-        })?;
+            // Generate the symmetric key data
+            let mut key_data = vec![0u8; algo.key_len()];
+            rng.fill(&mut key_data).map_err(|e| {
+                error!("Failed to generate symmetric key");
+                CalError::failed_operation(
+                    "Failed to generate symmetric key".to_owned(),
+                    false,
+                    Some(anyhow!(e)),
+                )
+            })?;
+            key_data
+        };
 
         let storage_data = KeyData {
             id: key_id.clone(),
@@ -87,7 +104,7 @@ impl ProviderImpl for SoftwareProvider {
             self.storage_manager.clone()
         };
 
-        // Initialize SoftwareKeyHandle with the LessSafeKey
+        // Initialize SoftwareKeyHandle with the key data
         let handle = SoftwareKeyHandle {
             key_id,
             key: key_data,
