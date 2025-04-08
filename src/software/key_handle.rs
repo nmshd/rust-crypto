@@ -1,10 +1,18 @@
-use crate::common::{
-    config::{KeyPairSpec, KeySpec},
-    crypto::algorithms::encryption::AsymmetricKeySpec,
-    error::{CalError, KeyType},
-    traits::key_handle::{KeyHandleImpl, KeyPairHandleImpl},
-    DHExchange,
+use crate::{
+    common::{
+        config::{KeyPairSpec, KeySpec},
+        crypto::algorithms::encryption::AsymmetricKeySpec,
+        error::{CalError, KeyType},
+        traits::key_handle::{KeyHandleImpl, KeyPairHandleImpl},
+        DHExchange,
+    },
+    prelude::Cipher,
 };
+use chacha20::{
+    cipher::{KeyIvInit, StreamCipher},
+    XChaCha20,
+};
+use p256::elliptic_curve::rand_core::{OsRng, RngCore};
 use ring::{
     aead::{Aad, Algorithm, LessSafeKey, Nonce, UnboundKey, MAX_TAG_LEN, NONCE_LEN},
     rand::{SecureRandom, SystemRandom},
@@ -48,83 +56,125 @@ impl SoftwareKeyHandle {
 }
 
 impl KeyHandleImpl for SoftwareKeyHandle {
-    fn encrypt_data(&self, data: &[u8]) -> Result<(Vec<u8>, std::vec::Vec<u8>), CalError> {
-        let rng = SystemRandom::new();
+    fn encrypt_data(&self, data: &[u8]) -> Result<(Vec<u8>, Vec<u8>), CalError> {
+        match self.spec.cipher {
+            Cipher::AesGcm128 | Cipher::AesGcm256 => {
+                let rng = SystemRandom::new();
+                let mut nonce_bytes = [0u8; NONCE_LEN];
+                rng.fill(&mut nonce_bytes).map_err(|_| {
+                    CalError::failed_operation("Failed to generate nonce".to_string(), true, None)
+                })?;
+                let nonce = Nonce::assume_unique_for_key(nonce_bytes);
 
-        // Generate a unique nonce for this encryption operation
-        let mut nonce_bytes = [0u8; NONCE_LEN];
-        rng.fill(&mut nonce_bytes)
-            .expect("Failed to generate nonce");
-        let nonce = Nonce::assume_unique_for_key(nonce_bytes);
+                let aad = Aad::empty();
+                let mut in_out = data.to_vec();
+                in_out.extend(vec![0u8; 16]);
 
-        // Prepare additional associated data (AAD), here as an empty slice
-        let aad = Aad::empty();
+                let algo: &Algorithm = self.spec.cipher.into();
+                let unbound_key = UnboundKey::new(algo, &self.key).map_err(|e| {
+                    CalError::failed_operation(
+                        format!("Failed to create unbound AES key: {}", e),
+                        true,
+                        None,
+                    )
+                })?;
+                let key = LessSafeKey::new(unbound_key);
+                key.seal_in_place_append_tag(nonce, aad, &mut in_out)
+                    .map_err(|_| {
+                        CalError::failed_operation("Encryption failed".to_string(), true, None)
+                    })?;
 
-        // Copy the plaintext data and prepare for encryption
-        let mut in_out = data.to_vec();
-        in_out.extend(vec![0u8; 16]); // Reserve space for the authentication tag
+                Ok((in_out, nonce_bytes.to_vec()))
+            }
+            Cipher::XChaCha20Poly1305 => {
+                let mut key = [0u8; 32];
+                key.copy_from_slice(&self.key);
 
-        let algo: &Algorithm = self.spec.cipher.into();
+                let mut nonce = [0u8; 24];
+                OsRng.fill_bytes(&mut nonce);
 
-        // Create an UnboundKey for the AES-GCM encryption
-        let unbound_key = UnboundKey::new(algo, &self.key).map_err(|e| {
-            CalError::failed_operation(
-                format!("Failed to create unbound AES key: {}", e).to_owned(),
+                let mut cipher = XChaCha20::new(&key.into(), &nonce.into());
+                let mut buffer = data.to_vec();
+                cipher.apply_keystream(&mut buffer);
+
+                Ok((buffer, nonce.to_vec()))
+            }
+            _ => Err(CalError::failed_operation(
+                "Cipher not supported".to_string(),
                 true,
                 None,
-            )
-        })?;
-
-        // Wrap it in a LessSafeKey for easier encryption/decryption
-        let key = LessSafeKey::new(unbound_key);
-
-        // Perform encryption
-        key.seal_in_place_append_tag(nonce, aad, &mut in_out)
-            .expect("Encryption failed");
-
-        // Prepend the nonce to the ciphertext
-        let mut encrypted_data = nonce_bytes.to_vec();
-        encrypted_data.extend(&in_out);
-
-        Ok((encrypted_data, vec![]))
+            )),
+        }
     }
 
-    fn decrypt_data(&self, encrypted_data: &[u8], _iv: &[u8]) -> Result<Vec<u8>, CalError> {
-        // Separate nonce and ciphertext
-        if encrypted_data.len() <= NONCE_LEN {
-            return Err(CalError::failed_operation(
-                "Data too short".to_string(),
+    fn decrypt_data(&self, encrypted_data: &[u8], iv: &[u8]) -> Result<Vec<u8>, CalError> {
+        match self.spec.cipher {
+            Cipher::AesGcm128 | Cipher::AesGcm256 => {
+                if encrypted_data.len() <= NONCE_LEN {
+                    return Err(CalError::failed_operation(
+                        "Data too short".to_string(),
+                        true,
+                        None,
+                    ));
+                }
+
+                // let (nonce_bytes, ciphertext) = encrypted_data.split_at(NONCE_LEN);
+                let nonce = Nonce::assume_unique_for_key(iv.try_into().unwrap());
+
+                // Prepare AAD as an empty slice
+                let aad = Aad::empty();
+
+                // Copy the ciphertext for in-place decryption
+                let mut in_out = encrypted_data.to_vec();
+
+                let algo: &Algorithm = self.spec.cipher.into();
+
+                // Create an UnboundKey for the AES-GCM encryption
+                let unbound_key = UnboundKey::new(algo, &self.key).map_err(|_| {
+                    CalError::failed_operation(
+                        "Failed to create unbound AES key".to_owned(),
+                        true,
+                        None,
+                    )
+                })?;
+
+                // Wrap it in a LessSafeKey for easier encryption/decryption
+                let key = LessSafeKey::new(unbound_key);
+
+                // Perform decryption
+                key.open_in_place(nonce, aad, &mut in_out)
+                    .map_err(|err| CalError::failed_operation(err.to_string(), true, None))?;
+
+                // Remove the authentication tag
+                in_out.truncate(in_out.len() - 16 - MAX_TAG_LEN);
+
+                Ok(in_out)
+            }
+
+            Cipher::XChaCha20Poly1305 => {
+                // Copy the key into a fixed-size array (32 bytes)
+                let mut key = [0u8; 32];
+                key.copy_from_slice(&self.key);
+
+                // Create the cipher
+                let mut cipher = XChaCha20::new(&key.into(), iv.into());
+
+                // Decrypt in place
+                let mut buffer = encrypted_data.to_vec();
+                cipher.apply_keystream(&mut buffer);
+
+                // No built-in authentication tag to remove, so the decrypted
+                // plaintext is now in `buffer`.
+                Ok(buffer)
+            }
+
+            // Fallback for any other ciphers you might define.
+            _ => Err(CalError::failed_operation(
+                "Cipher not supported".to_string(),
                 true,
                 None,
-            ));
+            )),
         }
-        let (nonce_bytes, ciphertext) = encrypted_data.split_at(NONCE_LEN);
-        let nonce = Nonce::assume_unique_for_key(nonce_bytes.try_into().unwrap());
-
-        // Prepare AAD as an empty slice
-        let aad = Aad::empty();
-
-        // Copy the ciphertext for in-place decryption
-        let mut in_out = ciphertext.to_vec();
-
-        let algo: &Algorithm = self.spec.cipher.into();
-
-        // Create an UnboundKey for the AES-GCM encryption
-        let unbound_key = UnboundKey::new(algo, &self.key).map_err(|_| {
-            CalError::failed_operation("Failed to create unbound AES key".to_owned(), true, None)
-        })?;
-
-        // Wrap it in a LessSafeKey for easier encryption/decryption
-        let key = LessSafeKey::new(unbound_key);
-
-        // Perform decryption
-        key.open_in_place(nonce, aad, &mut in_out)
-            .map_err(|err| CalError::failed_operation(err.to_string(), true, None))?;
-
-        // Remove the authentication tag
-        in_out.truncate(in_out.len() - 16 - MAX_TAG_LEN);
-
-        Ok(in_out)
     }
 
     fn hmac(&self, _data: &[u8]) -> Result<Vec<u8>, CalError> {
