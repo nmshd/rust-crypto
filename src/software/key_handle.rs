@@ -67,8 +67,12 @@ impl KeyHandleImpl for SoftwareKeyHandle {
         let algo: &Algorithm = self.spec.cipher.into();
 
         // Create an UnboundKey for the AES-GCM encryption
-        let unbound_key = UnboundKey::new(algo, &self.key).map_err(|_| {
-            CalError::failed_operation("Failed to create unbound AES key".to_owned(), true, None)
+        let unbound_key = UnboundKey::new(algo, &self.key).map_err(|e| {
+            CalError::failed_operation(
+                format!("Failed to create unbound AES key: {}", e).to_owned(),
+                true,
+                None,
+            )
         })?;
 
         // Wrap it in a LessSafeKey for easier encryption/decryption
