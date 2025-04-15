@@ -9,6 +9,7 @@ mod tests {
     mod dh_exchange {
         use super::*;
         use crate::software::key_handle::SoftwareKeyHandle;
+        use crate::tests::setup;
         use crate::{storage::StorageManager, tests::TestStore};
         use nanoid::nanoid;
         use std::str::from_utf8;
@@ -18,6 +19,8 @@ mod tests {
 
         #[test]
         fn test_dh_exchange_client_server_keys() {
+            setup();
+
             let storage_manager = Some(
                 StorageManager::new("SoftwareProvider".to_owned(), unsafe {
                     &STORE.impl_config().additional_config
@@ -119,6 +122,7 @@ mod tests {
 
         #[test]
         fn test_dh_exchange_encrypt_decrypt() {
+            setup();
             let storage_manager = Some(
                 StorageManager::new("SoftwareProvider".to_owned(), unsafe {
                     &STORE.impl_config().additional_config
@@ -292,6 +296,7 @@ mod tests {
 
         #[test]
         fn test_dh_exchange_with_invalid_public_key() {
+            setup();
             let storage_manager = Some(
                 StorageManager::new("SoftwareProvider".to_owned(), unsafe {
                     &STORE.impl_config().additional_config
@@ -328,6 +333,7 @@ mod tests {
 
         #[test]
         fn test_dh_exchange_reuse() {
+            setup();
             let storage_manager = Some(
                 StorageManager::new("SoftwareProvider".to_owned(), unsafe {
                     &STORE.impl_config().additional_config
@@ -380,6 +386,7 @@ mod tests {
 
         #[test]
         fn test_multiple_key_derivations() {
+            setup();
             let storage_manager = Some(
                 StorageManager::new("SoftwareProvider".to_owned(), unsafe {
                     &STORE.impl_config().additional_config
@@ -480,7 +487,7 @@ mod tests {
 
         use crate::{
             common::traits::{key_handle::KeyHandleImpl, module_provider::ProviderImpl},
-            tests::TestStore,
+            tests::{setup, TestStore},
         };
 
         static mut STORE: LazyLock<TestStore> = LazyLock::new(TestStore::new);
@@ -507,6 +514,7 @@ mod tests {
 
         #[test]
         fn test_successful_key_derivation() {
+            setup();
             let provider = setup_provider();
             let password = "test_password";
             let salt = [0u8; 16];
@@ -524,6 +532,7 @@ mod tests {
 
         #[test]
         fn test_different_passwords_yield_different_keys() {
+            setup();
             let provider = setup_provider();
             let salt = [0u8; 16];
             let algorithm = get_algorithm();
@@ -552,6 +561,7 @@ mod tests {
 
         #[test]
         fn test_different_salts_yield_different_keys() {
+            setup();
             let provider = setup_provider();
             let password = "test_password";
             let algorithm = get_algorithm();
@@ -577,6 +587,7 @@ mod tests {
 
         #[test]
         fn test_short_salt_length_fails() {
+            setup();
             let provider = setup_provider();
             let password = "test_password";
             let short_salt = [0u8; 7];
@@ -601,6 +612,7 @@ mod tests {
 
         #[test]
         fn test_long_salt_length_fails() {
+            setup();
             let provider = setup_provider();
             let password = "test_password";
             let long_salt = [0u8; 65];
@@ -625,6 +637,7 @@ mod tests {
 
         #[test]
         fn test_argon2i_variant() {
+            setup();
             let provider = setup_provider();
             let password = "test_password";
             let salt = [0u8; 16];
@@ -642,6 +655,7 @@ mod tests {
 
         #[test]
         fn test_get_random() {
+            setup();
             let provider = setup_provider();
             let len = 16;
             let random = provider.get_random(len);

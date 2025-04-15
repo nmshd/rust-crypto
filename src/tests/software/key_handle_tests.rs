@@ -10,6 +10,7 @@ mod tests {
         error::CalError,
         factory, KeyHandle, KeyPairHandle,
     };
+    use crate::tests::setup;
     use ring::rand::{SecureRandom, SystemRandom};
     use std::str::from_utf8;
 
@@ -31,6 +32,8 @@ mod tests {
 
         #[test]
         fn test_sign_and_verify() {
+            setup();
+
             // Define a KeyPairSpec for ECDSA with P256 curve
             let spec = KeyPairSpec {
                 asym_spec: AsymmetricKeySpec::P256,
@@ -60,6 +63,7 @@ mod tests {
 
         #[test]
         fn test_verify_with_wrong_data() {
+            setup();
             // Define a KeyPairSpec for ECDSA with P256 curve
             let spec = KeyPairSpec {
                 asym_spec: AsymmetricKeySpec::P256,
@@ -93,6 +97,7 @@ mod tests {
 
         #[test]
         fn test_verify_with_wrong_key() {
+            setup();
             // Define a KeyPairSpec for ECDSA with P256 curve
             let spec = KeyPairSpec {
                 asym_spec: AsymmetricKeySpec::P256,
@@ -126,6 +131,7 @@ mod tests {
 
         #[test]
         fn test_get_public_key() {
+            setup();
             // Define a KeyPairSpec for ECDSA with P256 curve
             let spec = KeyPairSpec {
                 asym_spec: AsymmetricKeySpec::P256,
@@ -148,6 +154,7 @@ mod tests {
 
         #[test]
         fn test_sign_with_public_only_key() {
+            setup();
             // Define a KeyPairSpec for ECDSA with P256 curve
             let spec = KeyPairSpec {
                 asym_spec: AsymmetricKeySpec::P256,
@@ -188,6 +195,7 @@ mod tests {
 
         #[test]
         fn test_verify_with_public_only_key() {
+            setup();
             // Define a KeyPairSpec for ECDSA with P256 curve
             let spec = KeyPairSpec {
                 asym_spec: AsymmetricKeySpec::P256,
@@ -228,6 +236,7 @@ mod tests {
 
         #[test]
         fn test_id_method() {
+            setup();
             // Define a KeyPairSpec for ECDSA with P256 curve
             let spec = KeyPairSpec {
                 asym_spec: AsymmetricKeySpec::P256,
@@ -264,6 +273,7 @@ mod tests {
 
         #[test]
         fn test_encrypt_decrypt_data() {
+            setup();
             let spec = KeySpec {
                 cipher: Cipher::AesGcm256,
                 ..Default::default()
@@ -295,6 +305,7 @@ mod tests {
 
         #[test]
         fn test_encrypt_decrypt_empty_data() {
+            setup();
             let spec = KeySpec {
                 cipher: Cipher::AesGcm128,
                 ..Default::default()
@@ -321,6 +332,7 @@ mod tests {
 
         #[test]
         fn test_decrypt_with_wrong_key() {
+            setup();
             let spec = KeySpec {
                 cipher: Cipher::AesGcm256,
                 ..Default::default()
@@ -346,6 +358,7 @@ mod tests {
 
         #[test]
         fn test_decrypt_modified_ciphertext() {
+            setup();
             let spec = KeySpec {
                 cipher: Cipher::AesGcm256,
                 ..Default::default()
@@ -372,6 +385,7 @@ mod tests {
 
         #[test]
         fn test_id_method() {
+            setup();
             let spec = KeySpec {
                 cipher: Cipher::AesGcm128,
                 ..Default::default()
@@ -386,6 +400,7 @@ mod tests {
 
         #[test]
         fn wtest_encrypt_decrypt_large_data() {
+            setup();
             let spec = KeySpec {
                 cipher: Cipher::AesGcm256,
                 ..Default::default()
@@ -412,6 +427,7 @@ mod tests {
 
         #[test]
         fn test_encrypt_same_plaintext_multiple_times() {
+            setup();
             let spec = KeySpec {
                 cipher: Cipher::AesGcm128,
                 ..Default::default()
@@ -456,6 +472,7 @@ mod tests {
 
         #[test]
         fn test_decrypt_random_data() {
+            setup();
             let spec = KeySpec {
                 cipher: Cipher::AesGcm256,
                 ..Default::default()
@@ -479,6 +496,7 @@ mod tests {
 
         #[test]
         fn test_decrypt_short_data() {
+            setup();
             let spec = KeySpec {
                 cipher: Cipher::AesGcm256,
                 ..Default::default()
@@ -498,6 +516,7 @@ mod tests {
 
         #[test]
         fn test_encrypt_decrypt_different_cipher_spec() {
+            setup();
             let spec256 = KeySpec {
                 cipher: Cipher::AesGcm256,
                 ..Default::default()
@@ -528,6 +547,7 @@ mod tests {
 
         #[test]
         fn test_encrypt_decrypt_multiple_keys() {
+            setup();
             let specs = vec![
                 KeySpec {
                     cipher: Cipher::AesGcm128,
