@@ -19,23 +19,9 @@ use ring::{
     rand::{SecureRandom, SystemRandom},
     signature::{EcdsaKeyPair, Signature, UnparsedPublicKey},
 };
-use tracing::warn;
+use tracing::{error, instrument, warn};
 
 use super::StorageManager;
-
-fn to_fixed_length_nonce(nonce: &[u8]) -> [u8; NONCE_LEN] {
-    if nonce.len() == NONCE_LEN {
-        return nonce.try_into().unwrap();
-    }
-
-    warn!(len = nonce.len(), "Nonce (iv) has wrong length.");
-
-    let mut zeroed_slice: [u8; NONCE_LEN] = [0; NONCE_LEN];
-    for i in 0..std::cmp::min(NONCE_LEN, nonce.len()) {
-        zeroed_slice[i] = nonce[i];
-    }
-    zeroed_slice
-}
 
 #[derive(Debug, Clone)]
 pub(crate) struct SoftwareKeyPairHandle {
@@ -71,6 +57,7 @@ impl SoftwareKeyHandle {
 }
 
 impl KeyHandleImpl for SoftwareKeyHandle {
+    #[instrument(level = "trace")]
     fn encrypt_data(&self, data: &[u8]) -> Result<(Vec<u8>, Vec<u8>), CalError> {
         match self.spec.cipher {
             Cipher::AesGcm128 | Cipher::AesGcm256 => {
@@ -122,6 +109,7 @@ impl KeyHandleImpl for SoftwareKeyHandle {
         }
     }
 
+    #[instrument(level = "trace")]
     fn decrypt_data(&self, encrypted_data: &[u8], iv: &[u8]) -> Result<Vec<u8>, CalError> {
         match self.spec.cipher {
             Cipher::AesGcm128 | Cipher::AesGcm256 => {
@@ -133,7 +121,21 @@ impl KeyHandleImpl for SoftwareKeyHandle {
                     ));
                 }
 
-                let nonce = Nonce::assume_unique_for_key(to_fixed_length_nonce(iv));
+                if iv.len() != NONCE_LEN {
+                    error!(
+                        iv = iv,
+                        len = iv.len(),
+                        expected = NONCE_LEN,
+                        "Nonce for AES GCM must be 96bit long."
+                    );
+                    return Err(CalError::bad_parameter(
+                        "Nonce for AES GCM must be 96bit long.".to_owned(),
+                        true,
+                        None,
+                    ));
+                }
+
+                let nonce = Nonce::assume_unique_for_key(iv.try_into().unwrap());
 
                 // Prepare AAD as an empty slice
                 let aad = Aad::empty();
