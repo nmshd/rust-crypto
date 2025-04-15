@@ -55,11 +55,16 @@ fn setup() {
 
         // Please change this subscriber as you see fit.
         fmt()
-            .with_max_level(LevelFilter::DEBUG)
-            .compact()
-            .with_span_events(FmtSpan::ACTIVE)
+            // .with_max_level(LevelFilter::DEBUG)
+            // .compact()
+            .with_line_number(true)
+            // .with_span_events(FmtSpan::ACTIVE)
             .with_writer(io::stderr)
-            .with_env_filter(EnvFilter::from_default_env())
+            .with_env_filter(
+                EnvFilter::builder()
+                    .with_default_directive(LevelFilter::DEBUG.into())
+                    .from_env_lossy(),
+            )
             .init();
     });
 }

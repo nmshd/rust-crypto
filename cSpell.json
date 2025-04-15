@@ -8,6 +8,7 @@
         "codegen",
         "dalek",
         "Diffie",
+        "ecdh",
         "esapi",
         "hcvault",
         "hmac",

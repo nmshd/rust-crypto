@@ -11,23 +11,24 @@ mod tests {
         use crate::software::key_handle::SoftwareKeyHandle;
         use crate::tests::setup;
         use crate::{storage::StorageManager, tests::TestStore};
-        use color_eyre::eyre::Result;
+        use color_eyre::eyre::{eyre, Result};
         use nanoid::nanoid;
         use std::str::from_utf8;
         use std::sync::LazyLock;
+        use tracing::instrument;
 
         static mut STORE: LazyLock<TestStore> = LazyLock::new(TestStore::new);
 
         #[test]
-        fn test_dh_exchange_client_server_keys() {
+        #[instrument]
+        fn test_dh_exchange_client_server_keys() -> Result<()> {
             setup();
 
             let storage_manager = Some(
                 StorageManager::new("SoftwareProvider".to_owned(), unsafe {
                     &STORE.impl_config().additional_config
-                })
-                .unwrap()
-                .unwrap(),
+                })?
+                .ok_or_else(|| eyre!("StorageManager creation returned None"))?,
             );
 
             let key_pair_spec_list = [
@@ -63,36 +64,28 @@ mod tests {
                     "key_id_client".to_string(),
                     storage_manager.clone(),
                     key_pair_spec,
-                )
-                .unwrap();
+                )?;
 
                 // Server creates an instance of SoftwareDHExchange
                 let mut server_exchange = SoftwareDHExchange::new(
                     "key_id_server".to_string(),
                     storage_manager.clone(),
                     key_pair_spec,
-                )
-                .unwrap();
+                )?;
 
                 // Client gets its public key
-                let client_public_key = client_exchange
-                    .get_public_key()
-                    .expect("Failed to get client public key");
+                let client_public_key = client_exchange.get_public_key()?;
 
                 // Server gets its public key
-                let server_public_key = server_exchange
-                    .get_public_key()
-                    .expect("Failed to get server public key");
+                let server_public_key = server_exchange.get_public_key()?;
 
                 // Client computes session keys using server's public key
-                let (client_rx, client_tx) = client_exchange
-                    .derive_client_session_keys(&server_public_key)
-                    .expect("Failed to derive client session keys");
+                let (client_rx, client_tx) =
+                    client_exchange.derive_client_session_keys(&server_public_key)?;
 
                 // Server computes session keys using client's public key
-                let (server_rx, server_tx) = server_exchange
-                    .derive_server_session_keys(&client_public_key)
-                    .expect("Failed to derive server session keys");
+                let (server_rx, server_tx) =
+                    server_exchange.derive_server_session_keys(&client_public_key)?;
 
                 // Verify complementary key derivation:
                 // Client's transmit key should equal server's receive key
@@ -119,16 +112,18 @@ mod tests {
                     "Client transmit key is all zeros"
                 );
             }
+            Ok(())
         }
 
         #[test]
+        #[instrument]
         fn test_dh_exchange_encrypt_decrypt() -> Result<()> {
             setup();
             let storage_manager = Some(
                 StorageManager::new("SoftwareProvider".to_owned(), unsafe {
                     &STORE.impl_config().additional_config
                 })?
-                .unwrap(),
+                .ok_or_else(|| eyre!("StorageManager creation returned None"))?,
             );
 
             let key_pair_spec_list = [
@@ -282,14 +277,14 @@ mod tests {
         }
 
         #[test]
-        fn test_dh_exchange_with_invalid_public_key() {
+        #[instrument]
+        fn test_dh_exchange_with_invalid_public_key() -> Result<()> {
             setup();
             let storage_manager = Some(
                 StorageManager::new("SoftwareProvider".to_owned(), unsafe {
                     &STORE.impl_config().additional_config
-                })
-                .unwrap()
-                .unwrap(),
+                })?
+                .ok_or_else(|| eyre!("StorageManager creation returned None"))?,
             );
 
             // Client creates an instance of SoftwareDHExchange
@@ -297,8 +292,7 @@ mod tests {
                 "key_id_client".to_string(),
                 storage_manager,
                 KeyPairSpec::default(),
-            )
-            .unwrap();
+            )?;
 
             // Generate an invalid public key (too short for X25519)
             let invalid_public_key = vec![1, 2, 3, 4, 5];
@@ -316,17 +310,18 @@ mod tests {
             if let Err(e) = result {
                 println!("Error as expected: {e}");
             }
+            Ok(())
         }
 
         #[test]
-        fn test_dh_exchange_reuse() {
+        #[instrument]
+        fn test_dh_exchange_reuse() -> Result<()> {
             setup();
             let storage_manager = Some(
                 StorageManager::new("SoftwareProvider".to_owned(), unsafe {
                     &STORE.impl_config().additional_config
-                })
-                .unwrap()
-                .unwrap(),
+                })?
+                .ok_or_else(|| eyre!("StorageManager creation returned None"))?,
             );
 
             // Client creates an instance of SoftwareDHExchange
@@ -334,8 +329,7 @@ mod tests {
                 "key_id_client".to_string(),
                 storage_manager.clone(),
                 KeyPairSpec::default(),
-            )
-            .unwrap();
+            )?;
 
             let mut client_exchange2 = client_exchange.clone();
 
@@ -344,42 +338,37 @@ mod tests {
                 "key_id_server1".to_string(),
                 storage_manager.clone(),
                 KeyPairSpec::default(),
-            )
-            .unwrap();
+            )?;
             let server_exchange2 = SoftwareDHExchange::new(
                 "key_id_server2".to_string(),
                 storage_manager,
                 KeyPairSpec::default(),
-            )
-            .unwrap();
+            )?;
 
-            let server_public_key1 = server_exchange1.get_public_key().unwrap();
-            let server_public_key2 = server_exchange2.get_public_key().unwrap();
+            let server_public_key1 = server_exchange1.get_public_key()?;
+            let server_public_key2 = server_exchange2.get_public_key()?;
 
             // Client derives session keys with first server
-            let (rx1, tx1) = client_exchange
-                .derive_client_session_keys(&server_public_key1)
-                .expect("Failed to derive client session keys with first server");
+            let (rx1, tx1) = client_exchange.derive_client_session_keys(&server_public_key1)?;
 
             // Client derives keys with second server - this should work fine with your implementation
-            let (rx2, tx2) = client_exchange2
-                .derive_client_session_keys(&server_public_key2)
-                .expect("Failed to derive client session keys with second server");
+            let (rx2, tx2) = client_exchange2.derive_client_session_keys(&server_public_key2)?;
 
             // Keys should be different when derived with different peer public keys
             assert_ne!(rx1, rx2, "Keys should be different with different peers");
             assert_ne!(tx1, tx2, "Keys should be different with different peers");
+            Ok(())
         }
 
         #[test]
-        fn test_multiple_key_derivations() {
+        #[instrument]
+        fn test_multiple_key_derivations() -> Result<()> {
             setup();
             let storage_manager = Some(
                 StorageManager::new("SoftwareProvider".to_owned(), unsafe {
                     &STORE.impl_config().additional_config
-                })
-                .unwrap()
-                .unwrap(),
+                })?
+                .ok_or_else(|| eyre!("StorageManager creation returned None"))?,
             );
 
             // Client1 creates an instance of SoftwareDHExchange
@@ -387,45 +376,39 @@ mod tests {
                 "key_id_client1".to_string(),
                 storage_manager.clone(),
                 KeyPairSpec::default(),
-            )
-            .unwrap();
+            )?;
 
             // Client2 creates an instance of SoftwareDHExchange
             let mut client2_exchange = SoftwareDHExchange::new(
                 "key_id_client2".to_string(),
                 storage_manager.clone(),
                 KeyPairSpec::default(),
-            )
-            .unwrap();
+            )?;
 
             // Server instances for each client
             let mut server_for_client1 = SoftwareDHExchange::new(
                 "key_id_server_for_client1".to_string(),
                 storage_manager.clone(),
                 KeyPairSpec::default(),
-            )
-            .unwrap();
+            )?;
             let mut server_for_client2 = SoftwareDHExchange::new(
                 "key_id_server_for_client2".to_string(),
                 storage_manager.clone(),
                 KeyPairSpec::default(),
-            )
-            .unwrap();
+            )?;
 
             // Get public keys
-            let client1_public_key = client1_exchange.get_public_key().unwrap();
-            let client2_public_key = client2_exchange.get_public_key().unwrap();
-            let server1_public_key = server_for_client1.get_public_key().unwrap();
-            let server2_public_key = server_for_client2.get_public_key().unwrap();
+            let client1_public_key = client1_exchange.get_public_key()?;
+            let client2_public_key = client2_exchange.get_public_key()?;
+            let server1_public_key = server_for_client1.get_public_key()?;
+            let server2_public_key = server_for_client2.get_public_key()?;
 
             // Derive keys for Client1 and Server1
-            let (client1_rx, client1_tx) = client1_exchange
-                .derive_client_session_keys(&server1_public_key)
-                .expect("Failed to derive client1 session keys");
+            let (client1_rx, client1_tx) =
+                client1_exchange.derive_client_session_keys(&server1_public_key)?;
 
-            let (server1_rx, server1_tx) = server_for_client1
-                .derive_server_session_keys(&client1_public_key)
-                .expect("Failed to derive server keys for client1");
+            let (server1_rx, server1_tx) =
+                server_for_client1.derive_server_session_keys(&client1_public_key)?;
 
             // Verify key complementarity for first client
             assert_eq!(
@@ -438,13 +421,11 @@ mod tests {
             );
 
             // Derive keys for Client2 and Server2
-            let (client2_rx, client2_tx) = client2_exchange
-                .derive_client_session_keys(&server2_public_key)
-                .expect("Failed to derive client2 session keys");
+            let (client2_rx, client2_tx) =
+                client2_exchange.derive_client_session_keys(&server2_public_key)?;
 
-            let (server2_rx, server2_tx) = server_for_client2
-                .derive_server_session_keys(&client2_public_key)
-                .expect("Failed to derive server keys for client2");
+            let (server2_rx, server2_tx) =
+                server_for_client2.derive_server_session_keys(&client2_public_key)?;
 
             // Verify key complementarity for second client
             assert_eq!(
@@ -465,6 +446,7 @@ mod tests {
                 client1_rx, client2_rx,
                 "Different clients should get different receive keys"
             );
+            Ok(())
         }
     }
 
@@ -476,6 +458,8 @@ mod tests {
             common::traits::{key_handle::KeyHandleImpl, module_provider::ProviderImpl},
             tests::{setup, TestStore},
         };
+        use color_eyre::eyre::Result;
+        use tracing::instrument;
 
         static mut STORE: LazyLock<TestStore> = LazyLock::new(TestStore::new);
 
@@ -500,7 +484,8 @@ mod tests {
         });
 
         #[test]
-        fn test_successful_key_derivation() {
+        #[instrument]
+        fn test_successful_key_derivation() -> Result<()> {
             setup();
             let provider = setup_provider();
             let password = "test_password";
@@ -512,13 +497,15 @@ mod tests {
                 .derive_key_from_password(password, &salt, algorithm, DEFAULT_KDF);
             assert!(key_handle_result.is_ok(), "Failed to derive key");
 
-            let key_handle = key_handle_result.unwrap();
-            let key = key_handle.implementation.extract_key().unwrap();
+            let key_handle = key_handle_result?;
+            let key = key_handle.implementation.extract_key()?;
             assert_eq!(key.len(), 32, "Derived key should be 32 bytes");
+            Ok(())
         }
 
         #[test]
-        fn test_different_passwords_yield_different_keys() {
+        #[instrument]
+        fn test_different_passwords_yield_different_keys() -> Result<()> {
             setup();
             let provider = setup_provider();
             let salt = [0u8; 16];
@@ -526,28 +513,26 @@ mod tests {
 
             let key1 = provider
                 .implementation
-                .derive_key_from_password("test_password", &salt, algorithm, DEFAULT_KDF)
-                .unwrap()
+                .derive_key_from_password("test_password", &salt, algorithm, DEFAULT_KDF)?
                 .implementation
-                .extract_key()
-                .unwrap();
+                .extract_key()?;
 
             let key2 = provider
                 .implementation
-                .derive_key_from_password("another_password", &salt, algorithm, DEFAULT_KDF)
-                .unwrap()
+                .derive_key_from_password("another_password", &salt, algorithm, DEFAULT_KDF)?
                 .implementation
-                .extract_key()
-                .unwrap();
+                .extract_key()?;
 
             assert_ne!(
                 key1, key2,
                 "Different passwords should yield different keys"
             );
+            Ok(())
         }
 
         #[test]
-        fn test_different_salts_yield_different_keys() {
+        #[instrument]
+        fn test_different_salts_yield_different_keys() -> Result<()> {
             setup();
             let provider = setup_provider();
             let password = "test_password";
@@ -555,25 +540,23 @@ mod tests {
 
             let key1 = provider
                 .implementation
-                .derive_key_from_password(password, &[0u8; 16], algorithm, DEFAULT_KDF)
-                .unwrap()
+                .derive_key_from_password(password, &[0u8; 16], algorithm, DEFAULT_KDF)?
                 .implementation
-                .extract_key()
-                .unwrap();
+                .extract_key()?;
 
             let key2 = provider
                 .implementation
-                .derive_key_from_password(password, &[1u8; 16], algorithm, DEFAULT_KDF)
-                .unwrap()
+                .derive_key_from_password(password, &[1u8; 16], algorithm, DEFAULT_KDF)?
                 .implementation
-                .extract_key()
-                .unwrap();
+                .extract_key()?;
 
             assert_ne!(key1, key2, "Different salts should yield different keys");
+            Ok(())
         }
 
         #[test]
-        fn test_short_salt_length_fails() {
+        #[instrument]
+        fn test_short_salt_length_fails() -> Result<()> {
             setup();
             let provider = setup_provider();
             let password = "test_password";
@@ -595,10 +578,13 @@ mod tests {
                 "Incorrect error message for short salt: {}",
                 e
             );
+
+            Ok(())
         }
 
         #[test]
-        fn test_long_salt_length_fails() {
+        #[instrument]
+        fn test_long_salt_length_fails() -> Result<()> {
             setup();
             let provider = setup_provider();
             let password = "test_password";
@@ -620,11 +606,15 @@ mod tests {
                 "Incorrect error message for long salt: {}",
                 e
             );
+
+            Ok(())
         }
 
         #[test]
-        fn test_argon2i_variant() {
+        #[instrument]
+        fn test_argon2i_variant() -> Result<()> {
             setup();
+
             let provider = setup_provider();
             let password = "test_password";
             let salt = [0u8; 16];
@@ -638,10 +628,12 @@ mod tests {
             );
 
             assert!(result.is_ok(), "Argon2i variant should work");
+            Ok(())
         }
 
         #[test]
-        fn test_get_random() {
+        #[instrument]
+        fn test_get_random() -> Result<()> {
             setup();
             let provider = setup_provider();
             let len = 16;
@@ -654,6 +646,7 @@ mod tests {
                 }
             });
             assert!(!all_zero);
+            Ok(())
         }
     }
 
@@ -665,6 +658,7 @@ mod tests {
         use std::sync::LazyLock;
 
         use color_eyre::eyre::{Ok, Result};
+        use tracing::instrument;
 
         use crate::tests::{setup, TestStore};
 
@@ -675,6 +669,7 @@ mod tests {
         });
 
         #[test]
+        #[instrument]
         fn test_hash() -> Result<()> {
             setup();
 
