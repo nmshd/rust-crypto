@@ -8,6 +8,7 @@ use crate::{
     },
     prelude::Cipher,
 };
+use anyhow::anyhow;
 use chacha20::{
     cipher::{KeyIvInit, StreamCipher},
     XChaCha20,
@@ -133,11 +134,11 @@ impl KeyHandleImpl for SoftwareKeyHandle {
                 let algo: &Algorithm = self.spec.cipher.into();
 
                 // Create an UnboundKey for the AES-GCM encryption
-                let unbound_key = UnboundKey::new(algo, &self.key).map_err(|_| {
+                let unbound_key = UnboundKey::new(algo, &self.key).map_err(|err| {
                     CalError::failed_operation(
                         "Failed to create unbound AES key".to_owned(),
-                        true,
-                        None,
+                        false,
+                        Some(anyhow!(err)),
                     )
                 })?;
 
@@ -145,8 +146,13 @@ impl KeyHandleImpl for SoftwareKeyHandle {
                 let key = LessSafeKey::new(unbound_key);
 
                 // Perform decryption
-                key.open_in_place(nonce, aad, &mut in_out)
-                    .map_err(|err| CalError::failed_operation(err.to_string(), true, None))?;
+                key.open_in_place(nonce, aad, &mut in_out).map_err(|err| {
+                    CalError::failed_operation(
+                        "Failed decryption with ring".to_owned(),
+                        false,
+                        Some(anyhow!(err)),
+                    )
+                })?;
 
                 // Remove the authentication tag
                 in_out.truncate(in_out.len() - 16 - MAX_TAG_LEN);

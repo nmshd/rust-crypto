@@ -11,6 +11,7 @@ mod tests {
         use crate::software::key_handle::SoftwareKeyHandle;
         use crate::tests::setup;
         use crate::{storage::StorageManager, tests::TestStore};
+        use color_eyre::eyre::Result;
         use nanoid::nanoid;
         use std::str::from_utf8;
         use std::sync::LazyLock;
@@ -121,13 +122,12 @@ mod tests {
         }
 
         #[test]
-        fn test_dh_exchange_encrypt_decrypt() {
+        fn test_dh_exchange_encrypt_decrypt() -> Result<()> {
             setup();
             let storage_manager = Some(
                 StorageManager::new("SoftwareProvider".to_owned(), unsafe {
                     &STORE.impl_config().additional_config
-                })
-                .unwrap()
+                })?
                 .unwrap(),
             );
 
@@ -164,34 +164,26 @@ mod tests {
                     "key_id_client".to_string(),
                     storage_manager.clone(),
                     key_pair_spec,
-                )
-                .unwrap();
+                )?;
 
                 // Server creates an instance of SoftwareDHExchange
                 let mut server_exchange = SoftwareDHExchange::new(
                     "key_id_server".to_string(),
                     storage_manager.clone(),
                     key_pair_spec,
-                )
-                .unwrap();
+                )?;
 
                 // Get public keys
-                let client_public_key = client_exchange
-                    .get_public_key()
-                    .expect("Failed to get client public key");
+                let client_public_key = client_exchange.get_public_key()?;
 
-                let server_public_key = server_exchange
-                    .get_public_key()
-                    .expect("Failed to get server public key");
+                let server_public_key = server_exchange.get_public_key()?;
 
                 // Derive session keys
-                let (client_rx, client_tx) = client_exchange
-                    .derive_client_session_keys(&server_public_key)
-                    .expect("Failed to derive client session keys");
+                let (client_rx, client_tx) =
+                    client_exchange.derive_client_session_keys(&server_public_key)?;
 
-                let (server_rx, server_tx) = server_exchange
-                    .derive_server_session_keys(&client_public_key)
-                    .expect("Failed to derive server session keys");
+                let (server_rx, server_tx) =
+                    server_exchange.derive_server_session_keys(&client_public_key)?;
 
                 // Create key handles for encryption/decryption
                 let client_tx_key_id = nanoid!(10);
@@ -228,18 +220,14 @@ mod tests {
                 let plaintext = b"Message from client to server";
 
                 // Client encrypts with their tx key
-                let encrypted_data = client_tx_key_handle
-                    .encrypt_data(plaintext)
-                    .expect("Encryption failed on client");
+                let encrypted_data = client_tx_key_handle.encrypt_data(plaintext)?;
 
                 // Server decrypts with their rx key
-                let decrypted_data = server_rx_key_handle
-                    .decrypt_data(&encrypted_data.0, &[])
-                    .expect("Decryption failed on server");
+                let decrypted_data = server_rx_key_handle.decrypt_data(&encrypted_data.0, &[])?;
 
                 assert_eq!(
-                    from_utf8(&decrypted_data).unwrap(),
-                    from_utf8(plaintext).unwrap(),
+                    from_utf8(&decrypted_data)?,
+                    from_utf8(plaintext)?,
                     "Decrypted data does not match plaintext"
                 );
 
@@ -277,21 +265,20 @@ mod tests {
                 let server_plaintext = b"Message from server to client";
 
                 // Server encrypts with their tx key
-                let server_encrypted = server_tx_key_handle
-                    .encrypt_data(server_plaintext)
-                    .expect("Encryption failed on server");
+                let server_encrypted = server_tx_key_handle.encrypt_data(server_plaintext)?;
 
                 // Client decrypts with their rx key
-                let client_decrypted = client_rx_key_handle
-                    .decrypt_data(&server_encrypted.0, &[])
-                    .expect("Decryption failed on client");
+                let client_decrypted =
+                    client_rx_key_handle.decrypt_data(&server_encrypted.0, &[])?;
 
                 assert_eq!(
-                    from_utf8(&client_decrypted).unwrap(),
-                    from_utf8(server_plaintext).unwrap(),
+                    from_utf8(&client_decrypted)?,
+                    from_utf8(server_plaintext)?,
                     "Server-to-client decrypted data does not match plaintext"
                 );
             }
+
+            Ok(())
         }
 
         #[test]
