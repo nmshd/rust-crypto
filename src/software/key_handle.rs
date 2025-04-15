@@ -23,6 +23,20 @@ use tracing::warn;
 
 use super::StorageManager;
 
+fn to_fixed_length_nonce(nonce: &[u8]) -> [u8; NONCE_LEN] {
+    if nonce.len() == NONCE_LEN {
+        return nonce.try_into().unwrap();
+    }
+
+    warn!(len = nonce.len(), "Nonce (iv) has wrong length.");
+
+    let mut zeroed_slice: [u8; NONCE_LEN] = [0; NONCE_LEN];
+    for i in 0..std::cmp::min(NONCE_LEN, nonce.len()) {
+        zeroed_slice[i] = nonce[i];
+    }
+    zeroed_slice
+}
+
 #[derive(Debug, Clone)]
 pub(crate) struct SoftwareKeyPairHandle {
     pub(crate) key_id: String,
@@ -119,11 +133,7 @@ impl KeyHandleImpl for SoftwareKeyHandle {
                     ));
                 }
 
-                let mut zeroed_slice: [u8; ring::aead::NONCE_LEN] = [0; ring::aead::NONCE_LEN];
-                for i in 0..std::cmp::min(ring::aead::NONCE_LEN, iv.len()) {
-                    zeroed_slice[i] = iv[i];
-                }
-                let nonce = Nonce::assume_unique_for_key(zeroed_slice);
+                let nonce = Nonce::assume_unique_for_key(to_fixed_length_nonce(iv));
 
                 // Prepare AAD as an empty slice
                 let aad = Aad::empty();

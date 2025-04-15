@@ -20,7 +20,6 @@ use color_eyre::install;
 use tracing_subscriber::{
     filter::{EnvFilter, LevelFilter},
     fmt,
-    fmt::format::FmtSpan,
 };
 
 use crate::common::config::{AdditionalConfig, ProviderImplConfig};
