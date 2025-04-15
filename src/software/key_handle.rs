@@ -118,8 +118,11 @@ impl KeyHandleImpl for SoftwareKeyHandle {
                     ));
                 }
 
-                // let (nonce_bytes, ciphertext) = encrypted_data.split_at(NONCE_LEN);
-                let nonce = Nonce::assume_unique_for_key(iv.try_into().unwrap());
+                let mut zeroed_slice: [u8; ring::aead::NONCE_LEN] = [0; ring::aead::NONCE_LEN];
+                for i in 0..std::cmp::min(ring::aead::NONCE_LEN, iv.len()) {
+                    zeroed_slice[i] = iv[i];
+                }
+                let nonce = Nonce::assume_unique_for_key(zeroed_slice);
 
                 // Prepare AAD as an empty slice
                 let aad = Aad::empty();
