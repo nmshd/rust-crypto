@@ -1,3 +1,4 @@
+use crate::software::provider::SoftwareDHExchange;
 use crate::{
     common::{
         config::{KeyPairSpec, KeySpec},
@@ -328,7 +329,17 @@ impl KeyPairHandleImpl for SoftwareKeyPairHandle {
     }
 
     fn start_dh_exchange(&self) -> Result<DHExchange, CalError> {
-        todo!("DH exchange not supported")
+        let dh_exchange = SoftwareDHExchange::from_keypair_bytes(
+            self.key_id.clone(),
+            &self.extract_key()?,
+            &self.get_public_key()?,
+            self.storage_manager.clone(),
+            self.spec,
+        )?;
+
+        Ok(DHExchange {
+            implementation: dh_exchange.into(),
+        })
     }
 
     fn id(&self) -> Result<String, CalError> {
