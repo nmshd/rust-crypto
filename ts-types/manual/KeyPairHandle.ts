@@ -1,4 +1,5 @@
 import type { KeyPairSpec } from "../generated/index.ts";
+import type { DHExchange } from "./DHExchange.ts";
 
 export type KeyPairHandle = {
 	encryptData: (data: Uint8Array) => Promise<Uint8Array>;
@@ -13,4 +14,5 @@ export type KeyPairHandle = {
 	id: () => Promise<string>;
 	delete: () => Promise<void>;
 	spec: () => Promise<KeyPairSpec>;
+	startDhExchange: () => Promise<DHExchange>;
 };

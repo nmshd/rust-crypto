@@ -23,7 +23,7 @@ export type Provider = {
 		publicKey: Uint8Array,
 	) => Promise<KeyPairHandle>;
 	startEphemeralDhExchange: (spec: KeyPairSpec) => Promise<DHExchange>;
-	/** @deprecated */
+	/** @deprecated Use {@link KeyPairHandle.startDhExchange} instead. */
 	dhExchangeFromKeys: (
 		publicKey: Uint8Array,
 		privateKey: Uint8Array,
