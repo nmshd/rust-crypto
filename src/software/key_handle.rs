@@ -329,7 +329,10 @@ impl KeyPairHandleImpl for SoftwareKeyPairHandle {
     }
 
     fn start_dh_exchange(&self) -> Result<DHExchange, CalError> {
-        let dh_exchange = SoftwareDHExchange::from_keypair_bytes(
+        return Err(CalError::not_implemented());
+
+        // TODO: The ring generated keys currently do not work with this function.
+        /* let dh_exchange = SoftwareDHExchange::from_keypair_bytes(
             self.key_id.clone(),
             &self.extract_key()?,
             &self.get_public_key()?,
@@ -339,7 +342,7 @@ impl KeyPairHandleImpl for SoftwareKeyPairHandle {
 
         Ok(DHExchange {
             implementation: dh_exchange.into(),
-        })
+        }) */
     }
 
     fn id(&self) -> Result<String, CalError> {

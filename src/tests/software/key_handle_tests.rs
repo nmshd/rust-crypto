@@ -18,6 +18,8 @@ mod tests {
     use std::str::from_utf8;
 
     mod key_pair_handle {
+        use color_eyre::eyre;
+
         use super::*;
         use crate::{common::Provider, tests::TestStore};
 
@@ -250,6 +252,49 @@ mod tests {
             assert!(!key_id.is_empty(), "Key ID should not be empty");
             Ok(())
         }
+
+        // TODO: This test does not run, as `start_dh_exchange` is not or not correctly implemented.
+        /* #[test]
+        fn test_start_dh_exchange() -> eyre::Result<()> {
+            setup();
+
+            let specs = vec![
+                KeyPairSpec {
+                    asym_spec: AsymmetricKeySpec::P256,
+                    cipher: None,
+                    signing_hash: CryptoHash::Sha2_256,
+                    ephemeral: true,
+                    non_exportable: false,
+                },
+                KeyPairSpec {
+                    asym_spec: AsymmetricKeySpec::Curve25519,
+                    cipher: None,
+                    signing_hash: CryptoHash::Sha2_256,
+                    ephemeral: true,
+                    non_exportable: false,
+                },
+            ];
+
+            for spec in specs {
+                let client_key_pair = create_key_pair_handle(spec)?;
+                let server_key_pair = create_key_pair_handle(spec)?;
+
+                let mut client_dh_exchange = client_key_pair.start_dh_exchange()?;
+                let mut server_dh_exchange = server_key_pair.start_dh_exchange()?;
+
+                let (client_rx, client_tx) = client_dh_exchange
+                    .derive_client_session_keys(&server_dh_exchange.get_public_key()?)?;
+                let (server_rx, server_tx) = server_dh_exchange
+                    .derive_server_session_keys(&client_dh_exchange.get_public_key()?)?;
+
+                assert!(!client_rx.is_empty());
+                assert!(!client_tx.is_empty());
+                assert_eq!(client_rx, server_tx);
+                assert_eq!(client_tx, server_rx);
+            }
+
+            Ok(())
+        } */
     }
     mod key_handle {
         use crate::tests::TestStore;
@@ -352,7 +397,7 @@ mod tests {
 
         #[test]
         #[instrument]
-        fn test_decrypt_modified_ciphertext() -> Result<()> {
+        fn test_decrypt_modified_cipher_text() -> Result<()> {
             setup();
             let spec = KeySpec {
                 cipher: Cipher::AesGcm256,
@@ -372,7 +417,7 @@ mod tests {
 
             assert!(
                 decrypted_result.is_err(),
-                "Decryption should fail with tampered ciphertext"
+                "Decryption should fail with tampered cipher text"
             );
             Ok(())
         }

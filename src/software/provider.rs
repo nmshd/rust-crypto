@@ -808,24 +808,13 @@ impl SoftwareDHExchange {
                 Ok(shared_secret.as_bytes().to_vec())
             }
             AsymmetricKeySpec::P256 => {
-                // Deserialize our P-256 private key
-                let private_key_bytes: [u8; 32] =
-                    self.private_key_bytes.as_slice().try_into().map_err(|_| {
-                        CalError::failed_operation(
-                            "Invalid private key length".to_owned(),
-                            true,
-                            None,
-                        )
-                    })?;
-
-                let private =
-                    P256SecretKey::from_bytes((&private_key_bytes).into()).map_err(|e| {
-                        CalError::failed_operation(
-                            "Failed to create P-256 private key".to_owned(),
-                            false,
-                            Some(anyhow!(e)),
-                        )
-                    })?;
+                let private = P256SecretKey::from_slice(&self.private_key_bytes).map_err(|e| {
+                    CalError::failed_operation(
+                        "Failed to create P-256 private key".to_owned(),
+                        false,
+                        Some(anyhow!(e)),
+                    )
+                })?;
 
                 // Deserialize the peer's P-256 public key (in SEC1 format)
                 let peer_public = P256PublicKey::from_sec1_bytes(peer_public_key).map_err(|e| {
