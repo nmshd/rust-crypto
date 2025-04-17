@@ -129,6 +129,7 @@ pub(crate) trait ProviderImpl: Send + Sync {
     /// On failure, it returns a `CalError`.
     fn start_ephemeral_dh_exchange(&mut self, spec: KeyPairSpec) -> Result<DHExchange, CalError>;
 
+    #[deprecated]
     #[allow(dead_code, unused_variables)]
     fn dh_exchange_from_keys(
         &mut self,
