@@ -153,6 +153,7 @@ impl Provider {
         ) -> Result<DHExchange, CalError>;
     }
 
+    #[deprecated(note = "Use start_dh_exchange of KeyPairHandle instead.")]
     delegate_enum! {
         pub fn dh_exchange_from_keys(
             &mut self,
