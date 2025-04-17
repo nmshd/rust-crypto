@@ -441,7 +441,7 @@ impl ProviderImpl for SoftwareProvider {
         })
     }
 
-    /// Creates a DHExchange from existing key pair bytes instead of generating a new one
+    /// [DEPRECATED]: Creates a DHExchange from existing key pair bytes instead of generating a new one.
     fn dh_exchange_from_keys(
         &mut self,
         public_key: &[u8],
