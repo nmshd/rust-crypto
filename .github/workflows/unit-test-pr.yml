@@ -10,7 +10,8 @@ on:
       - main
 
 jobs:
-  test-pr:
+  test-pr-rs:
+    name: Test Rust-Code
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -21,5 +22,12 @@ jobs:
       - uses: arduino/setup-task@v2
       - name: Unit Test Rust Code
         run: task test-cal
+
+  test-pr-ts-types:
+    name: Test TS-Types
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: arduino/setup-task@v2
       - name: Test TS Types
         run: task prerequisites-ts test-ts-types
