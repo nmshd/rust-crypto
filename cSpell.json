@@ -24,6 +24,7 @@
         "repr",
         "reqwest",
         "robusta",
+        "RUSTFLAGS",
         "rustup",
         "securestore",
         "serde",

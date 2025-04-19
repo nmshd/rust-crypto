@@ -15,13 +15,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: rustup toolchain install stable --profile minimal
       - uses: Swatinem/rust-cache@v2
         with:
           save-if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
       - uses: arduino/setup-task@v2
       - name: Unit Test Rust Code
         run: task test-cal
+        env:
+          RUSTFLAGS: -C link-arg=-fuse-ld=lld
 
   test-pr-ts-types:
     name: Test TS-Types
