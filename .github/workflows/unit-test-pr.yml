@@ -16,8 +16,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: Swatinem/rust-cache@v2
-        with:
-          save-if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        # with:
+        #   save-if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
       - name: Unit Test Rust Code
         run: cargo test -F software
 
