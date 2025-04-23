@@ -128,7 +128,7 @@ pub(crate) trait KeyPairHandleImpl: Send + Sync {
     /// with [CalErrorKind::NotImplemented](super::CalErrorKind::NotImplemented).
     fn extract_key(&self) -> Result<Vec<u8>, CalError>;
 
-    /// Starts a [DHExchange].
+    /// [DEPRECATED]: Starts a [DHExchange].
     ///
     /// Some Providers might return [CalError]
     /// with [CalErrorKind::NotImplemented](super::CalErrorKind::NotImplemented).
@@ -173,10 +173,16 @@ pub(crate) trait DHKeyExchangeImpl: Send + Sync {
     fn get_public_key(&self) -> Result<Vec<u8>, CalError>;
 
     /// Derive client session keys (rx, tx) - client is the templator in your code
-    fn derive_client_session_keys(&mut self, server_pk: &[u8]) -> Result<(Vec<u8>, Vec<u8>), CalError>;
+    fn derive_client_session_keys(
+        &mut self,
+        server_pk: &[u8],
+    ) -> Result<(Vec<u8>, Vec<u8>), CalError>;
 
     /// Derive server session keys (rx, tx) - server is the requestor in your code
-    fn derive_server_session_keys(&mut self, client_pk: &[u8]) -> Result<(Vec<u8>, Vec<u8>), CalError>;
+    fn derive_server_session_keys(
+        &mut self,
+        client_pk: &[u8],
+    ) -> Result<(Vec<u8>, Vec<u8>), CalError>;
 
     fn derive_client_key_handles(
         &mut self,
