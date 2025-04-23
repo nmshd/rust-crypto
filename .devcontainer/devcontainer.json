@@ -1,5 +1,9 @@
 // Have a look at https://github.com/devcontainers/templates/tree/main/src/rust
 {
 	"name": "Rust Debian",
-	"image": "mcr.microsoft.com/devcontainers/rust:bookworm"
+	"image": "mcr.microsoft.com/devcontainers/rust:bookworm",
+	"features": {
+		"software": true,
+		"android": true
+	}
 }
