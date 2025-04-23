@@ -14,5 +14,6 @@ export type KeyPairHandle = {
 	id: () => Promise<string>;
 	delete: () => Promise<void>;
 	spec: () => Promise<KeyPairSpec>;
+	/** @deprecated Non ephemeral dh exchange might be insecure. */
 	startDhExchange: () => Promise<DHExchange>;
 };

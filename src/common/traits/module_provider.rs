@@ -132,7 +132,6 @@ pub(crate) trait ProviderImpl: Send + Sync {
     /// [DEPRECATED]: Starts a dh exchange from a raw private key and it's public key.
     ///
     /// `start_dh_exchange` of `KeyPairHandle` is preferable for use with crypto layer.
-    #[deprecated(note = "Use start_dh_exchange of KeyPairHandle instead.")]
     #[allow(dead_code, unused_variables)]
     fn dh_exchange_from_keys(
         &mut self,

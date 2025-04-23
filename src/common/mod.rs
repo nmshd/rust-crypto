@@ -153,14 +153,16 @@ impl Provider {
         ) -> Result<DHExchange, CalError>;
     }
 
-    #[deprecated(note = "Use start_dh_exchange of KeyPairHandle instead.")]
-    delegate_enum! {
-        pub fn dh_exchange_from_keys(
-            &mut self,
-            public_key: &[u8],
-            private_key: &[u8],
-            spec: KeyPairSpec,
-        ) -> Result<DHExchange, CalError>;
+    #[deprecated(note = "Non ephemeral dh exchanges are possibly insecure.")]
+    #[allow(dead_code)]
+    fn dh_exchange_from_keys(
+        &mut self,
+        public_key: &[u8],
+        private_key: &[u8],
+        spec: KeyPairSpec,
+    ) -> Result<DHExchange, CalError> {
+        self.implementation
+            .dh_exchange_from_keys(public_key, private_key, spec)
     }
 
     delegate_enum! {
@@ -241,8 +243,10 @@ impl KeyPairHandle {
         pub fn extract_key(&self) -> Result<Vec<u8>, CalError>;
     }
 
-    delegate_enum! {
-        pub fn start_dh_exchange(&self) -> Result<DHExchange, CalError>;
+    #[deprecated(note = "Non ephemeral dh exchanges are possibly insecure.")]
+    #[allow(dead_code)]
+    fn start_dh_exchange(&self) -> Result<DHExchange, CalError> {
+        self.implementation.start_dh_exchange()
     }
 
     delegate_enum! {
