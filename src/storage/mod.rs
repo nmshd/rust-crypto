@@ -11,11 +11,9 @@ use sha2::Sha256;
 
 type HmacSha256 = Hmac<Sha256>;
 
-use crate::common::{
-    config::{AdditionalConfig, AllKeysFn, DeleteFn, GetFn, Spec, StoreFn},
-    error::{CalError, KeyType},
-    KeyHandle, KeyPairHandle,
-};
+use crate::common::config::{AdditionalConfig, AllKeysFn, DeleteFn, GetFn, Spec, StoreFn};
+use crate::common::error::KeyType;
+use crate::prelude::*;
 
 #[derive(Clone, Debug)]
 enum Storage {

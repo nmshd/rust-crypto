@@ -19,7 +19,7 @@ use crate::{
 use enum_dispatch::enum_dispatch;
 
 #[enum_dispatch(ProviderFactoryEnum)]
-pub(crate) trait ProviderFactory: Send + Sync {
+pub trait ProviderFactory: Send + Sync {
     fn get_name(&self) -> Option<String>;
 
     /// Returns security level and supported algorithms of a provider.
@@ -33,7 +33,7 @@ pub(crate) trait ProviderFactory: Send + Sync {
 }
 
 #[enum_dispatch]
-pub(crate) enum ProviderFactoryEnum {
+pub enum ProviderFactoryEnum {
     StubProviderFactory,
     #[cfg(feature = "android")]
     AndroidProviderFactory,
@@ -49,7 +49,7 @@ pub(crate) enum ProviderFactoryEnum {
 /// of security modules.
 
 #[enum_dispatch(ProviderImplEnum)]
-pub(crate) trait ProviderImpl: Send + Sync {
+pub trait ProviderImpl: Send + Sync {
     /// Creates a new symmetric key identified by `key_id`.
     ///
     /// # Arguments
@@ -195,7 +195,7 @@ pub(crate) trait ProviderImpl: Send + Sync {
 }
 
 #[enum_dispatch]
-pub(crate) enum ProviderImplEnum {
+pub enum ProviderImplEnum {
     StubProvider,
     #[cfg(feature = "android")]
     AndroidProvider,

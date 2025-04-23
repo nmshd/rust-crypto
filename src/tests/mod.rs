@@ -22,8 +22,8 @@ use tracing_subscriber::{
     fmt,
 };
 
-use crate::common::config::{AdditionalConfig, ProviderImplConfig};
-use crate::common::KeyPairHandle;
+use crate::common::traits::key_handle::KeyPairHandleImplEnum;
+use crate::prelude::*;
 
 static SETUP_INITIALIZATION: Once = Once::new();
 
@@ -34,8 +34,7 @@ struct CleanupKeyPair {
 
 impl Drop for CleanupKeyPair {
     fn drop(&mut self) {
-        self.key_pair_handle
-            .clone()
+        <KeyPairHandleImplEnum as Clone>::clone(&self.key_pair_handle)
             .delete()
             .expect("Failed cleanup of key.");
     }

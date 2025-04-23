@@ -11,5 +11,7 @@ pub use crate::common::{
     factory::{
         create_provider, create_provider_from_name, get_all_providers, get_provider_capabilities,
     },
+    traits::key_handle::{DHKeyExchangeImpl, KeyHandleImpl, KeyPairHandleImpl},
+    traits::module_provider::{ProviderFactory, ProviderImpl},
     DHExchange, KeyHandle, KeyPairHandle, Provider,
 };

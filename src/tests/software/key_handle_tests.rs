@@ -12,6 +12,7 @@ mod tests {
         error::CalError,
         factory, KeyHandle, KeyPairHandle,
     };
+    use crate::prelude::*;
     use crate::tests::setup;
     use color_eyre::eyre::Result;
     use ring::rand::{SecureRandom, SystemRandom};

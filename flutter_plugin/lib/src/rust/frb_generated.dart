@@ -19,6 +19,8 @@ import 'third_party/crypto_layer/common/crypto/algorithms/key_derivation.dart';
 import 'third_party/crypto_layer/common/crypto/pkcs/standards.dart';
 import 'third_party/crypto_layer/common/error.dart';
 import 'third_party/crypto_layer/common/factory.dart';
+import 'third_party/crypto_layer/common/traits/key_handle.dart';
+import 'third_party/crypto_layer/common/traits/module_provider.dart';
 
 /// Main entrypoint of the Rust API
 class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
@@ -77,7 +79,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.9.0';
 
   @override
-  int get rustContentHash => 266714593;
+  int get rustContentHash => 2139270950;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -95,148 +97,203 @@ abstract class RustLibApi extends BaseApi {
       {required CalError that});
 
   Future<(KeyHandle, KeyHandle)>
-      cryptoLayerCommonDhExchangeDeriveClientKeyHandles(
-          {required DhExchange that, required List<int> serverPk});
+      cryptoLayerCommonTraitsKeyHandleDhKeyExchangeImplEnumDeriveClientKeyHandles(
+          {required DhKeyExchangeImplEnum that,
+          required List<int> enumDispatchArg0});
 
   Future<(Uint8List, Uint8List)>
-      cryptoLayerCommonDhExchangeDeriveClientSessionKeys(
-          {required DhExchange that, required List<int> serverPk});
+      cryptoLayerCommonTraitsKeyHandleDhKeyExchangeImplEnumDeriveClientSessionKeys(
+          {required DhKeyExchangeImplEnum that,
+          required List<int> enumDispatchArg0});
 
   Future<(KeyHandle, KeyHandle)>
-      cryptoLayerCommonDhExchangeDeriveServerKeyHandles(
-          {required DhExchange that, required List<int> clientPk});
+      cryptoLayerCommonTraitsKeyHandleDhKeyExchangeImplEnumDeriveServerKeyHandles(
+          {required DhKeyExchangeImplEnum that,
+          required List<int> enumDispatchArg0});
 
   Future<(Uint8List, Uint8List)>
-      cryptoLayerCommonDhExchangeDeriveServerSessionKeys(
-          {required DhExchange that, required List<int> clientPk});
+      cryptoLayerCommonTraitsKeyHandleDhKeyExchangeImplEnumDeriveServerSessionKeys(
+          {required DhKeyExchangeImplEnum that,
+          required List<int> enumDispatchArg0});
 
-  Future<Uint8List> cryptoLayerCommonDhExchangeGetPublicKey(
-      {required DhExchange that});
+  Future<Uint8List>
+      cryptoLayerCommonTraitsKeyHandleDhKeyExchangeImplEnumGetPublicKey(
+          {required DhKeyExchangeImplEnum that});
 
-  Future<String> cryptoLayerCommonDhExchangeId({required DhExchange that});
+  Future<String> cryptoLayerCommonTraitsKeyHandleDhKeyExchangeImplEnumId(
+      {required DhKeyExchangeImplEnum that});
 
-  Future<Uint8List> cryptoLayerCommonKeyHandleDecryptData(
-      {required KeyHandle that,
-      required List<int> encryptedData,
-      required List<int> iv});
+  Future<Uint8List>
+      cryptoLayerCommonTraitsKeyHandleKeyHandleImplEnumDecryptData(
+          {required KeyHandleImplEnum that,
+          required List<int> enumDispatchArg0,
+          required List<int> enumDispatchArg1});
 
-  Future<void> cryptoLayerCommonKeyHandleDelete({required KeyHandle that});
+  Future<void> cryptoLayerCommonTraitsKeyHandleKeyHandleImplEnumDelete(
+      {required KeyHandleImplEnum that});
 
-  Future<(Uint8List, Uint8List)> cryptoLayerCommonKeyHandleEncryptData(
-      {required KeyHandle that, required List<int> data});
+  Future<(Uint8List, Uint8List)>
+      cryptoLayerCommonTraitsKeyHandleKeyHandleImplEnumEncryptData(
+          {required KeyHandleImplEnum that,
+          required List<int> enumDispatchArg0});
 
-  Future<Uint8List> cryptoLayerCommonKeyHandleExtractKey(
-      {required KeyHandle that});
+  Future<Uint8List> cryptoLayerCommonTraitsKeyHandleKeyHandleImplEnumExtractKey(
+      {required KeyHandleImplEnum that});
 
-  Future<Uint8List> cryptoLayerCommonKeyHandleHmac(
-      {required KeyHandle that, required List<int> data});
+  Future<Uint8List> cryptoLayerCommonTraitsKeyHandleKeyHandleImplEnumHmac(
+      {required KeyHandleImplEnum that, required List<int> enumDispatchArg0});
 
-  Future<String> cryptoLayerCommonKeyHandleId({required KeyHandle that});
+  Future<String> cryptoLayerCommonTraitsKeyHandleKeyHandleImplEnumId(
+      {required KeyHandleImplEnum that});
 
-  Future<KeySpec> cryptoLayerCommonKeyHandleSpec({required KeyHandle that});
+  Future<KeySpec> cryptoLayerCommonTraitsKeyHandleKeyHandleImplEnumSpec(
+      {required KeyHandleImplEnum that});
 
-  Future<bool> cryptoLayerCommonKeyHandleVerifyHmac(
-      {required KeyHandle that,
-      required List<int> data,
-      required List<int> hmac});
+  Future<bool> cryptoLayerCommonTraitsKeyHandleKeyHandleImplEnumVerifyHmac(
+      {required KeyHandleImplEnum that,
+      required List<int> enumDispatchArg0,
+      required List<int> enumDispatchArg1});
 
-  Future<Uint8List> cryptoLayerCommonKeyPairHandleDecryptData(
-      {required KeyPairHandle that, required List<int> data});
+  Future<Uint8List>
+      cryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumDecryptData(
+          {required KeyPairHandleImplEnum that,
+          required List<int> enumDispatchArg0});
 
-  Future<void> cryptoLayerCommonKeyPairHandleDelete(
-      {required KeyPairHandle that});
+  Future<void> cryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumDelete(
+      {required KeyPairHandleImplEnum that});
 
-  Future<Uint8List> cryptoLayerCommonKeyPairHandleEncryptData(
-      {required KeyPairHandle that, required List<int> data});
+  Future<Uint8List>
+      cryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumEncryptData(
+          {required KeyPairHandleImplEnum that,
+          required List<int> enumDispatchArg0});
 
-  Future<Uint8List> cryptoLayerCommonKeyPairHandleExtractKey(
-      {required KeyPairHandle that});
+  Future<Uint8List>
+      cryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumExtractKey(
+          {required KeyPairHandleImplEnum that});
 
-  Future<Uint8List> cryptoLayerCommonKeyPairHandleGetPublicKey(
-      {required KeyPairHandle that});
+  Future<Uint8List>
+      cryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumGetPublicKey(
+          {required KeyPairHandleImplEnum that});
 
-  Future<String> cryptoLayerCommonKeyPairHandleId(
-      {required KeyPairHandle that});
+  Future<String> cryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumId(
+      {required KeyPairHandleImplEnum that});
 
-  Future<Uint8List> cryptoLayerCommonKeyPairHandleSignData(
-      {required KeyPairHandle that, required List<int> data});
+  Future<Uint8List>
+      cryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumSignData(
+          {required KeyPairHandleImplEnum that,
+          required List<int> enumDispatchArg0});
 
-  Future<KeyPairSpec> cryptoLayerCommonKeyPairHandleSpec(
-      {required KeyPairHandle that});
+  Future<KeyPairSpec> cryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumSpec(
+      {required KeyPairHandleImplEnum that});
 
-  Future<DhExchange> cryptoLayerCommonKeyPairHandleStartDhExchange(
-      {required KeyPairHandle that});
+  Future<DhExchange>
+      cryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumStartDhExchange(
+          {required KeyPairHandleImplEnum that});
 
-  Future<bool> cryptoLayerCommonKeyPairHandleVerifySignature(
-      {required KeyPairHandle that,
-      required List<int> data,
-      required List<int> signature});
+  Future<bool>
+      cryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumVerifySignature(
+          {required KeyPairHandleImplEnum that,
+          required List<int> enumDispatchArg0,
+          required List<int> enumDispatchArg1});
 
-  Future<KeyHandle> cryptoLayerCommonProviderCreateKey(
-      {required Provider that, required KeySpec spec});
+  Future<ProviderImplEnum>
+      cryptoLayerCommonTraitsModuleProviderProviderFactoryEnumCreateProvider(
+          {required ProviderFactoryEnum that,
+          required ProviderImplConfig enumDispatchArg0});
 
-  Future<KeyPairHandle> cryptoLayerCommonProviderCreateKeyPair(
-      {required Provider that, required KeyPairSpec spec});
+  Future<ProviderConfig?>
+      cryptoLayerCommonTraitsModuleProviderProviderFactoryEnumGetCapabilities(
+          {required ProviderFactoryEnum that,
+          required ProviderImplConfig enumDispatchArg0});
 
-  Future<KeyHandle> cryptoLayerCommonProviderDeriveKeyFromBase(
-      {required Provider that,
-      required List<int> baseKey,
-      required BigInt keyId,
-      required String context,
-      required KeySpec spec});
+  Future<String?>
+      cryptoLayerCommonTraitsModuleProviderProviderFactoryEnumGetName(
+          {required ProviderFactoryEnum that});
 
-  Future<KeyHandle> cryptoLayerCommonProviderDeriveKeyFromPassword(
-      {required Provider that,
-      required String password,
-      required List<int> salt,
-      required KeySpec algorithm,
-      required KDF kdf});
+  Future<KeyHandle>
+      cryptoLayerCommonTraitsModuleProviderProviderImplEnumCreateKey(
+          {required ProviderImplEnum that, required KeySpec enumDispatchArg0});
 
-  Future<DhExchange> cryptoLayerCommonProviderDhExchangeFromKeys(
-      {required Provider that,
-      required List<int> publicKey,
-      required List<int> privateKey,
-      required KeyPairSpec spec});
+  Future<KeyPairHandle>
+      cryptoLayerCommonTraitsModuleProviderProviderImplEnumCreateKeyPair(
+          {required ProviderImplEnum that,
+          required KeyPairSpec enumDispatchArg0});
 
-  Future<List<(String, Spec)>> cryptoLayerCommonProviderGetAllKeys(
-      {required Provider that});
+  Future<KeyHandle>
+      cryptoLayerCommonTraitsModuleProviderProviderImplEnumDeriveKeyFromBase(
+          {required ProviderImplEnum that,
+          required List<int> enumDispatchArg0,
+          required BigInt enumDispatchArg1,
+          required String enumDispatchArg2,
+          required KeySpec enumDispatchArg3});
 
-  Future<ProviderConfig?> cryptoLayerCommonProviderGetCapabilities(
-      {required Provider that});
+  Future<KeyHandle>
+      cryptoLayerCommonTraitsModuleProviderProviderImplEnumDeriveKeyFromPassword(
+          {required ProviderImplEnum that,
+          required String enumDispatchArg0,
+          required List<int> enumDispatchArg1,
+          required KeySpec enumDispatchArg2,
+          required KDF enumDispatchArg3});
 
-  Future<Uint8List> cryptoLayerCommonProviderGetRandom(
-      {required Provider that, required BigInt len});
+  Future<DhExchange>
+      cryptoLayerCommonTraitsModuleProviderProviderImplEnumDhExchangeFromKeys(
+          {required ProviderImplEnum that,
+          required List<int> enumDispatchArg0,
+          required List<int> enumDispatchArg1,
+          required KeyPairSpec enumDispatchArg2});
 
-  Future<Uint8List> cryptoLayerCommonProviderHash(
-      {required Provider that,
-      required List<int> input,
-      required CryptoHash hash});
+  Future<List<(String, Spec)>>
+      cryptoLayerCommonTraitsModuleProviderProviderImplEnumGetAllKeys(
+          {required ProviderImplEnum that});
 
-  Future<KeyHandle> cryptoLayerCommonProviderImportKey(
-      {required Provider that, required KeySpec spec, required List<int> data});
+  Future<ProviderConfig?>
+      cryptoLayerCommonTraitsModuleProviderProviderImplEnumGetCapabilities(
+          {required ProviderImplEnum that});
 
-  Future<KeyPairHandle> cryptoLayerCommonProviderImportKeyPair(
-      {required Provider that,
-      required KeyPairSpec spec,
-      required List<int> publicKey,
-      required List<int> privateKey});
+  Future<Uint8List>
+      cryptoLayerCommonTraitsModuleProviderProviderImplEnumGetRandom(
+          {required ProviderImplEnum that, required BigInt enumDispatchArg0});
 
-  Future<KeyPairHandle> cryptoLayerCommonProviderImportPublicKey(
-      {required Provider that,
-      required KeyPairSpec spec,
-      required List<int> publicKey});
+  Future<Uint8List> cryptoLayerCommonTraitsModuleProviderProviderImplEnumHash(
+      {required ProviderImplEnum that,
+      required List<int> enumDispatchArg0,
+      required CryptoHash enumDispatchArg1});
 
-  Future<KeyHandle> cryptoLayerCommonProviderLoadKey(
-      {required Provider that, required String id});
+  Future<KeyHandle>
+      cryptoLayerCommonTraitsModuleProviderProviderImplEnumImportKey(
+          {required ProviderImplEnum that,
+          required KeySpec enumDispatchArg0,
+          required List<int> enumDispatchArg1});
 
-  Future<KeyPairHandle> cryptoLayerCommonProviderLoadKeyPair(
-      {required Provider that, required String id});
+  Future<KeyPairHandle>
+      cryptoLayerCommonTraitsModuleProviderProviderImplEnumImportKeyPair(
+          {required ProviderImplEnum that,
+          required KeyPairSpec enumDispatchArg0,
+          required List<int> enumDispatchArg1,
+          required List<int> enumDispatchArg2});
 
-  Future<String> cryptoLayerCommonProviderProviderName(
-      {required Provider that});
+  Future<KeyPairHandle>
+      cryptoLayerCommonTraitsModuleProviderProviderImplEnumImportPublicKey(
+          {required ProviderImplEnum that,
+          required KeyPairSpec enumDispatchArg0,
+          required List<int> enumDispatchArg1});
 
-  Future<DhExchange> cryptoLayerCommonProviderStartEphemeralDhExchange(
-      {required Provider that, required KeyPairSpec spec});
+  Future<KeyHandle>
+      cryptoLayerCommonTraitsModuleProviderProviderImplEnumLoadKey(
+          {required ProviderImplEnum that, required String enumDispatchArg0});
+
+  Future<KeyPairHandle>
+      cryptoLayerCommonTraitsModuleProviderProviderImplEnumLoadKeyPair(
+          {required ProviderImplEnum that, required String enumDispatchArg0});
+
+  Future<String>
+      cryptoLayerCommonTraitsModuleProviderProviderImplEnumProviderName(
+          {required ProviderImplEnum that});
+
+  Future<DhExchange>
+      cryptoLayerCommonTraitsModuleProviderProviderImplEnumStartEphemeralDhExchange(
+          {required ProviderImplEnum that,
+          required KeyPairSpec enumDispatchArg0});
 
   Future<Argon2Options>
       cryptoLayerCommonCryptoAlgorithmsKeyDerivationArgon2OptionsDefault();
@@ -337,12 +394,30 @@ abstract class RustLibApi extends BaseApi {
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_DhExchangePtr;
 
   RustArcIncrementStrongCountFnType
+      get rust_arc_increment_strong_count_DhKeyExchangeImplEnum;
+
+  RustArcDecrementStrongCountFnType
+      get rust_arc_decrement_strong_count_DhKeyExchangeImplEnum;
+
+  CrossPlatformFinalizerArg
+      get rust_arc_decrement_strong_count_DhKeyExchangeImplEnumPtr;
+
+  RustArcIncrementStrongCountFnType
       get rust_arc_increment_strong_count_KeyHandle;
 
   RustArcDecrementStrongCountFnType
       get rust_arc_decrement_strong_count_KeyHandle;
 
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_KeyHandlePtr;
+
+  RustArcIncrementStrongCountFnType
+      get rust_arc_increment_strong_count_KeyHandleImplEnum;
+
+  RustArcDecrementStrongCountFnType
+      get rust_arc_decrement_strong_count_KeyHandleImplEnum;
+
+  CrossPlatformFinalizerArg
+      get rust_arc_decrement_strong_count_KeyHandleImplEnumPtr;
 
   RustArcIncrementStrongCountFnType
       get rust_arc_increment_strong_count_KeyPairHandle;
@@ -354,12 +429,39 @@ abstract class RustLibApi extends BaseApi {
       get rust_arc_decrement_strong_count_KeyPairHandlePtr;
 
   RustArcIncrementStrongCountFnType
+      get rust_arc_increment_strong_count_KeyPairHandleImplEnum;
+
+  RustArcDecrementStrongCountFnType
+      get rust_arc_decrement_strong_count_KeyPairHandleImplEnum;
+
+  CrossPlatformFinalizerArg
+      get rust_arc_decrement_strong_count_KeyPairHandleImplEnumPtr;
+
+  RustArcIncrementStrongCountFnType
       get rust_arc_increment_strong_count_Provider;
 
   RustArcDecrementStrongCountFnType
       get rust_arc_decrement_strong_count_Provider;
 
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_ProviderPtr;
+
+  RustArcIncrementStrongCountFnType
+      get rust_arc_increment_strong_count_ProviderFactoryEnum;
+
+  RustArcDecrementStrongCountFnType
+      get rust_arc_decrement_strong_count_ProviderFactoryEnum;
+
+  CrossPlatformFinalizerArg
+      get rust_arc_decrement_strong_count_ProviderFactoryEnumPtr;
+
+  RustArcIncrementStrongCountFnType
+      get rust_arc_increment_strong_count_ProviderImplEnum;
+
+  RustArcDecrementStrongCountFnType
+      get rust_arc_decrement_strong_count_ProviderImplEnum;
+
+  CrossPlatformFinalizerArg
+      get rust_arc_decrement_strong_count_ProviderImplEnumPtr;
 }
 
 class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
@@ -426,14 +528,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @override
   Future<(KeyHandle, KeyHandle)>
-      cryptoLayerCommonDhExchangeDeriveClientKeyHandles(
-          {required DhExchange that, required List<int> serverPk}) {
+      cryptoLayerCommonTraitsKeyHandleDhKeyExchangeImplEnumDeriveClientKeyHandles(
+          {required DhKeyExchangeImplEnum that,
+          required List<int> enumDispatchArg0}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHExchange(
+        sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHKeyExchangeImplEnum(
             that, serializer);
-        sse_encode_list_prim_u_8_loose(serverPk, serializer);
+        sse_encode_list_prim_u_8_loose(enumDispatchArg0, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
             funcId: 3, port: port_);
       },
@@ -443,29 +546,31 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeErrorData:
             sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
-      constMeta: kCryptoLayerCommonDhExchangeDeriveClientKeyHandlesConstMeta,
-      argValues: [that, serverPk],
+      constMeta:
+          kCryptoLayerCommonTraitsKeyHandleDhKeyExchangeImplEnumDeriveClientKeyHandlesConstMeta,
+      argValues: [that, enumDispatchArg0],
       apiImpl: this,
     ));
   }
 
   TaskConstMeta
-      get kCryptoLayerCommonDhExchangeDeriveClientKeyHandlesConstMeta =>
+      get kCryptoLayerCommonTraitsKeyHandleDhKeyExchangeImplEnumDeriveClientKeyHandlesConstMeta =>
           const TaskConstMeta(
-            debugName: "DhExchange_derive_client_key_handles",
-            argNames: ["that", "serverPk"],
+            debugName: "DhKeyExchangeImplEnum_derive_client_key_handles",
+            argNames: ["that", "enumDispatchArg0"],
           );
 
   @override
   Future<(Uint8List, Uint8List)>
-      cryptoLayerCommonDhExchangeDeriveClientSessionKeys(
-          {required DhExchange that, required List<int> serverPk}) {
+      cryptoLayerCommonTraitsKeyHandleDhKeyExchangeImplEnumDeriveClientSessionKeys(
+          {required DhKeyExchangeImplEnum that,
+          required List<int> enumDispatchArg0}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHExchange(
+        sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHKeyExchangeImplEnum(
             that, serializer);
-        sse_encode_list_prim_u_8_loose(serverPk, serializer);
+        sse_encode_list_prim_u_8_loose(enumDispatchArg0, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
             funcId: 4, port: port_);
       },
@@ -475,29 +580,31 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeErrorData:
             sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
-      constMeta: kCryptoLayerCommonDhExchangeDeriveClientSessionKeysConstMeta,
-      argValues: [that, serverPk],
+      constMeta:
+          kCryptoLayerCommonTraitsKeyHandleDhKeyExchangeImplEnumDeriveClientSessionKeysConstMeta,
+      argValues: [that, enumDispatchArg0],
       apiImpl: this,
     ));
   }
 
   TaskConstMeta
-      get kCryptoLayerCommonDhExchangeDeriveClientSessionKeysConstMeta =>
+      get kCryptoLayerCommonTraitsKeyHandleDhKeyExchangeImplEnumDeriveClientSessionKeysConstMeta =>
           const TaskConstMeta(
-            debugName: "DhExchange_derive_client_session_keys",
-            argNames: ["that", "serverPk"],
+            debugName: "DhKeyExchangeImplEnum_derive_client_session_keys",
+            argNames: ["that", "enumDispatchArg0"],
           );
 
   @override
   Future<(KeyHandle, KeyHandle)>
-      cryptoLayerCommonDhExchangeDeriveServerKeyHandles(
-          {required DhExchange that, required List<int> clientPk}) {
+      cryptoLayerCommonTraitsKeyHandleDhKeyExchangeImplEnumDeriveServerKeyHandles(
+          {required DhKeyExchangeImplEnum that,
+          required List<int> enumDispatchArg0}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHExchange(
+        sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHKeyExchangeImplEnum(
             that, serializer);
-        sse_encode_list_prim_u_8_loose(clientPk, serializer);
+        sse_encode_list_prim_u_8_loose(enumDispatchArg0, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
             funcId: 5, port: port_);
       },
@@ -507,29 +614,31 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeErrorData:
             sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
-      constMeta: kCryptoLayerCommonDhExchangeDeriveServerKeyHandlesConstMeta,
-      argValues: [that, clientPk],
+      constMeta:
+          kCryptoLayerCommonTraitsKeyHandleDhKeyExchangeImplEnumDeriveServerKeyHandlesConstMeta,
+      argValues: [that, enumDispatchArg0],
       apiImpl: this,
     ));
   }
 
   TaskConstMeta
-      get kCryptoLayerCommonDhExchangeDeriveServerKeyHandlesConstMeta =>
+      get kCryptoLayerCommonTraitsKeyHandleDhKeyExchangeImplEnumDeriveServerKeyHandlesConstMeta =>
           const TaskConstMeta(
-            debugName: "DhExchange_derive_server_key_handles",
-            argNames: ["that", "clientPk"],
+            debugName: "DhKeyExchangeImplEnum_derive_server_key_handles",
+            argNames: ["that", "enumDispatchArg0"],
           );
 
   @override
   Future<(Uint8List, Uint8List)>
-      cryptoLayerCommonDhExchangeDeriveServerSessionKeys(
-          {required DhExchange that, required List<int> clientPk}) {
+      cryptoLayerCommonTraitsKeyHandleDhKeyExchangeImplEnumDeriveServerSessionKeys(
+          {required DhKeyExchangeImplEnum that,
+          required List<int> enumDispatchArg0}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHExchange(
+        sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHKeyExchangeImplEnum(
             that, serializer);
-        sse_encode_list_prim_u_8_loose(clientPk, serializer);
+        sse_encode_list_prim_u_8_loose(enumDispatchArg0, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
             funcId: 6, port: port_);
       },
@@ -539,26 +648,28 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeErrorData:
             sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
-      constMeta: kCryptoLayerCommonDhExchangeDeriveServerSessionKeysConstMeta,
-      argValues: [that, clientPk],
+      constMeta:
+          kCryptoLayerCommonTraitsKeyHandleDhKeyExchangeImplEnumDeriveServerSessionKeysConstMeta,
+      argValues: [that, enumDispatchArg0],
       apiImpl: this,
     ));
   }
 
   TaskConstMeta
-      get kCryptoLayerCommonDhExchangeDeriveServerSessionKeysConstMeta =>
+      get kCryptoLayerCommonTraitsKeyHandleDhKeyExchangeImplEnumDeriveServerSessionKeysConstMeta =>
           const TaskConstMeta(
-            debugName: "DhExchange_derive_server_session_keys",
-            argNames: ["that", "clientPk"],
+            debugName: "DhKeyExchangeImplEnum_derive_server_session_keys",
+            argNames: ["that", "enumDispatchArg0"],
           );
 
   @override
-  Future<Uint8List> cryptoLayerCommonDhExchangeGetPublicKey(
-      {required DhExchange that}) {
+  Future<Uint8List>
+      cryptoLayerCommonTraitsKeyHandleDhKeyExchangeImplEnumGetPublicKey(
+          {required DhKeyExchangeImplEnum that}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHExchange(
+        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHKeyExchangeImplEnum(
             that, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
             funcId: 7, port: port_);
@@ -568,24 +679,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeErrorData:
             sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
-      constMeta: kCryptoLayerCommonDhExchangeGetPublicKeyConstMeta,
+      constMeta:
+          kCryptoLayerCommonTraitsKeyHandleDhKeyExchangeImplEnumGetPublicKeyConstMeta,
       argValues: [that],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCryptoLayerCommonDhExchangeGetPublicKeyConstMeta =>
-      const TaskConstMeta(
-        debugName: "DhExchange_get_public_key",
-        argNames: ["that"],
-      );
+  TaskConstMeta
+      get kCryptoLayerCommonTraitsKeyHandleDhKeyExchangeImplEnumGetPublicKeyConstMeta =>
+          const TaskConstMeta(
+            debugName: "DhKeyExchangeImplEnum_get_public_key",
+            argNames: ["that"],
+          );
 
   @override
-  Future<String> cryptoLayerCommonDhExchangeId({required DhExchange that}) {
+  Future<String> cryptoLayerCommonTraitsKeyHandleDhKeyExchangeImplEnumId(
+      {required DhKeyExchangeImplEnum that}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHExchange(
+        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHKeyExchangeImplEnum(
             that, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
             funcId: 8, port: port_);
@@ -595,30 +709,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeErrorData:
             sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
-      constMeta: kCryptoLayerCommonDhExchangeIdConstMeta,
+      constMeta:
+          kCryptoLayerCommonTraitsKeyHandleDhKeyExchangeImplEnumIdConstMeta,
       argValues: [that],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCryptoLayerCommonDhExchangeIdConstMeta =>
-      const TaskConstMeta(
-        debugName: "DhExchange_id",
-        argNames: ["that"],
-      );
+  TaskConstMeta
+      get kCryptoLayerCommonTraitsKeyHandleDhKeyExchangeImplEnumIdConstMeta =>
+          const TaskConstMeta(
+            debugName: "DhKeyExchangeImplEnum_id",
+            argNames: ["that"],
+          );
 
   @override
-  Future<Uint8List> cryptoLayerCommonKeyHandleDecryptData(
-      {required KeyHandle that,
-      required List<int> encryptedData,
-      required List<int> iv}) {
+  Future<Uint8List>
+      cryptoLayerCommonTraitsKeyHandleKeyHandleImplEnumDecryptData(
+          {required KeyHandleImplEnum that,
+          required List<int> enumDispatchArg0,
+          required List<int> enumDispatchArg1}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandle(
+        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandleImplEnum(
             that, serializer);
-        sse_encode_list_prim_u_8_loose(encryptedData, serializer);
-        sse_encode_list_prim_u_8_loose(iv, serializer);
+        sse_encode_list_prim_u_8_loose(enumDispatchArg0, serializer);
+        sse_encode_list_prim_u_8_loose(enumDispatchArg1, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
             funcId: 9, port: port_);
       },
@@ -627,24 +744,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeErrorData:
             sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
-      constMeta: kCryptoLayerCommonKeyHandleDecryptDataConstMeta,
-      argValues: [that, encryptedData, iv],
+      constMeta:
+          kCryptoLayerCommonTraitsKeyHandleKeyHandleImplEnumDecryptDataConstMeta,
+      argValues: [that, enumDispatchArg0, enumDispatchArg1],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCryptoLayerCommonKeyHandleDecryptDataConstMeta =>
-      const TaskConstMeta(
-        debugName: "KeyHandle_decrypt_data",
-        argNames: ["that", "encryptedData", "iv"],
-      );
+  TaskConstMeta
+      get kCryptoLayerCommonTraitsKeyHandleKeyHandleImplEnumDecryptDataConstMeta =>
+          const TaskConstMeta(
+            debugName: "KeyHandleImplEnum_decrypt_data",
+            argNames: ["that", "enumDispatchArg0", "enumDispatchArg1"],
+          );
 
   @override
-  Future<void> cryptoLayerCommonKeyHandleDelete({required KeyHandle that}) {
+  Future<void> cryptoLayerCommonTraitsKeyHandleKeyHandleImplEnumDelete(
+      {required KeyHandleImplEnum that}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandle(
+        sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandleImplEnum(
             that, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
             funcId: 10, port: port_);
@@ -654,27 +774,31 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeErrorData:
             sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
-      constMeta: kCryptoLayerCommonKeyHandleDeleteConstMeta,
+      constMeta:
+          kCryptoLayerCommonTraitsKeyHandleKeyHandleImplEnumDeleteConstMeta,
       argValues: [that],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCryptoLayerCommonKeyHandleDeleteConstMeta =>
-      const TaskConstMeta(
-        debugName: "KeyHandle_delete",
-        argNames: ["that"],
-      );
+  TaskConstMeta
+      get kCryptoLayerCommonTraitsKeyHandleKeyHandleImplEnumDeleteConstMeta =>
+          const TaskConstMeta(
+            debugName: "KeyHandleImplEnum_delete",
+            argNames: ["that"],
+          );
 
   @override
-  Future<(Uint8List, Uint8List)> cryptoLayerCommonKeyHandleEncryptData(
-      {required KeyHandle that, required List<int> data}) {
+  Future<(Uint8List, Uint8List)>
+      cryptoLayerCommonTraitsKeyHandleKeyHandleImplEnumEncryptData(
+          {required KeyHandleImplEnum that,
+          required List<int> enumDispatchArg0}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandle(
+        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandleImplEnum(
             that, serializer);
-        sse_encode_list_prim_u_8_loose(data, serializer);
+        sse_encode_list_prim_u_8_loose(enumDispatchArg0, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
             funcId: 11, port: port_);
       },
@@ -684,25 +808,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeErrorData:
             sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
-      constMeta: kCryptoLayerCommonKeyHandleEncryptDataConstMeta,
-      argValues: [that, data],
+      constMeta:
+          kCryptoLayerCommonTraitsKeyHandleKeyHandleImplEnumEncryptDataConstMeta,
+      argValues: [that, enumDispatchArg0],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCryptoLayerCommonKeyHandleEncryptDataConstMeta =>
-      const TaskConstMeta(
-        debugName: "KeyHandle_encrypt_data",
-        argNames: ["that", "data"],
-      );
+  TaskConstMeta
+      get kCryptoLayerCommonTraitsKeyHandleKeyHandleImplEnumEncryptDataConstMeta =>
+          const TaskConstMeta(
+            debugName: "KeyHandleImplEnum_encrypt_data",
+            argNames: ["that", "enumDispatchArg0"],
+          );
 
   @override
-  Future<Uint8List> cryptoLayerCommonKeyHandleExtractKey(
-      {required KeyHandle that}) {
+  Future<Uint8List> cryptoLayerCommonTraitsKeyHandleKeyHandleImplEnumExtractKey(
+      {required KeyHandleImplEnum that}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandle(
+        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandleImplEnum(
             that, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
             funcId: 12, port: port_);
@@ -712,27 +838,29 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeErrorData:
             sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
-      constMeta: kCryptoLayerCommonKeyHandleExtractKeyConstMeta,
+      constMeta:
+          kCryptoLayerCommonTraitsKeyHandleKeyHandleImplEnumExtractKeyConstMeta,
       argValues: [that],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCryptoLayerCommonKeyHandleExtractKeyConstMeta =>
-      const TaskConstMeta(
-        debugName: "KeyHandle_extract_key",
-        argNames: ["that"],
-      );
+  TaskConstMeta
+      get kCryptoLayerCommonTraitsKeyHandleKeyHandleImplEnumExtractKeyConstMeta =>
+          const TaskConstMeta(
+            debugName: "KeyHandleImplEnum_extract_key",
+            argNames: ["that"],
+          );
 
   @override
-  Future<Uint8List> cryptoLayerCommonKeyHandleHmac(
-      {required KeyHandle that, required List<int> data}) {
+  Future<Uint8List> cryptoLayerCommonTraitsKeyHandleKeyHandleImplEnumHmac(
+      {required KeyHandleImplEnum that, required List<int> enumDispatchArg0}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandle(
+        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandleImplEnum(
             that, serializer);
-        sse_encode_list_prim_u_8_loose(data, serializer);
+        sse_encode_list_prim_u_8_loose(enumDispatchArg0, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
             funcId: 13, port: port_);
       },
@@ -741,24 +869,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeErrorData:
             sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
-      constMeta: kCryptoLayerCommonKeyHandleHmacConstMeta,
-      argValues: [that, data],
+      constMeta:
+          kCryptoLayerCommonTraitsKeyHandleKeyHandleImplEnumHmacConstMeta,
+      argValues: [that, enumDispatchArg0],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCryptoLayerCommonKeyHandleHmacConstMeta =>
-      const TaskConstMeta(
-        debugName: "KeyHandle_hmac",
-        argNames: ["that", "data"],
-      );
+  TaskConstMeta
+      get kCryptoLayerCommonTraitsKeyHandleKeyHandleImplEnumHmacConstMeta =>
+          const TaskConstMeta(
+            debugName: "KeyHandleImplEnum_hmac",
+            argNames: ["that", "enumDispatchArg0"],
+          );
 
   @override
-  Future<String> cryptoLayerCommonKeyHandleId({required KeyHandle that}) {
+  Future<String> cryptoLayerCommonTraitsKeyHandleKeyHandleImplEnumId(
+      {required KeyHandleImplEnum that}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandle(
+        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandleImplEnum(
             that, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
             funcId: 14, port: port_);
@@ -768,24 +899,26 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeErrorData:
             sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
-      constMeta: kCryptoLayerCommonKeyHandleIdConstMeta,
+      constMeta: kCryptoLayerCommonTraitsKeyHandleKeyHandleImplEnumIdConstMeta,
       argValues: [that],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCryptoLayerCommonKeyHandleIdConstMeta =>
-      const TaskConstMeta(
-        debugName: "KeyHandle_id",
-        argNames: ["that"],
-      );
+  TaskConstMeta
+      get kCryptoLayerCommonTraitsKeyHandleKeyHandleImplEnumIdConstMeta =>
+          const TaskConstMeta(
+            debugName: "KeyHandleImplEnum_id",
+            argNames: ["that"],
+          );
 
   @override
-  Future<KeySpec> cryptoLayerCommonKeyHandleSpec({required KeyHandle that}) {
+  Future<KeySpec> cryptoLayerCommonTraitsKeyHandleKeyHandleImplEnumSpec(
+      {required KeyHandleImplEnum that}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandle(
+        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandleImplEnum(
             that, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
             funcId: 15, port: port_);
@@ -794,30 +927,32 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeSuccessData: sse_decode_key_spec,
         decodeErrorData: null,
       ),
-      constMeta: kCryptoLayerCommonKeyHandleSpecConstMeta,
+      constMeta:
+          kCryptoLayerCommonTraitsKeyHandleKeyHandleImplEnumSpecConstMeta,
       argValues: [that],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCryptoLayerCommonKeyHandleSpecConstMeta =>
-      const TaskConstMeta(
-        debugName: "KeyHandle_spec",
-        argNames: ["that"],
-      );
+  TaskConstMeta
+      get kCryptoLayerCommonTraitsKeyHandleKeyHandleImplEnumSpecConstMeta =>
+          const TaskConstMeta(
+            debugName: "KeyHandleImplEnum_spec",
+            argNames: ["that"],
+          );
 
   @override
-  Future<bool> cryptoLayerCommonKeyHandleVerifyHmac(
-      {required KeyHandle that,
-      required List<int> data,
-      required List<int> hmac}) {
+  Future<bool> cryptoLayerCommonTraitsKeyHandleKeyHandleImplEnumVerifyHmac(
+      {required KeyHandleImplEnum that,
+      required List<int> enumDispatchArg0,
+      required List<int> enumDispatchArg1}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandle(
+        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandleImplEnum(
             that, serializer);
-        sse_encode_list_prim_u_8_loose(data, serializer);
-        sse_encode_list_prim_u_8_loose(hmac, serializer);
+        sse_encode_list_prim_u_8_loose(enumDispatchArg0, serializer);
+        sse_encode_list_prim_u_8_loose(enumDispatchArg1, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
             funcId: 16, port: port_);
       },
@@ -826,27 +961,31 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeErrorData:
             sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
-      constMeta: kCryptoLayerCommonKeyHandleVerifyHmacConstMeta,
-      argValues: [that, data, hmac],
+      constMeta:
+          kCryptoLayerCommonTraitsKeyHandleKeyHandleImplEnumVerifyHmacConstMeta,
+      argValues: [that, enumDispatchArg0, enumDispatchArg1],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCryptoLayerCommonKeyHandleVerifyHmacConstMeta =>
-      const TaskConstMeta(
-        debugName: "KeyHandle_verify_hmac",
-        argNames: ["that", "data", "hmac"],
-      );
+  TaskConstMeta
+      get kCryptoLayerCommonTraitsKeyHandleKeyHandleImplEnumVerifyHmacConstMeta =>
+          const TaskConstMeta(
+            debugName: "KeyHandleImplEnum_verify_hmac",
+            argNames: ["that", "enumDispatchArg0", "enumDispatchArg1"],
+          );
 
   @override
-  Future<Uint8List> cryptoLayerCommonKeyPairHandleDecryptData(
-      {required KeyPairHandle that, required List<int> data}) {
+  Future<Uint8List>
+      cryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumDecryptData(
+          {required KeyPairHandleImplEnum that,
+          required List<int> enumDispatchArg0}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle(
+        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandleImplEnum(
             that, serializer);
-        sse_encode_list_prim_u_8_loose(data, serializer);
+        sse_encode_list_prim_u_8_loose(enumDispatchArg0, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
             funcId: 17, port: port_);
       },
@@ -855,25 +994,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeErrorData:
             sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
-      constMeta: kCryptoLayerCommonKeyPairHandleDecryptDataConstMeta,
-      argValues: [that, data],
+      constMeta:
+          kCryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumDecryptDataConstMeta,
+      argValues: [that, enumDispatchArg0],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCryptoLayerCommonKeyPairHandleDecryptDataConstMeta =>
-      const TaskConstMeta(
-        debugName: "KeyPairHandle_decrypt_data",
-        argNames: ["that", "data"],
-      );
+  TaskConstMeta
+      get kCryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumDecryptDataConstMeta =>
+          const TaskConstMeta(
+            debugName: "KeyPairHandleImplEnum_decrypt_data",
+            argNames: ["that", "enumDispatchArg0"],
+          );
 
   @override
-  Future<void> cryptoLayerCommonKeyPairHandleDelete(
-      {required KeyPairHandle that}) {
+  Future<void> cryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumDelete(
+      {required KeyPairHandleImplEnum that}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle(
+        sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandleImplEnum(
             that, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
             funcId: 18, port: port_);
@@ -883,27 +1024,31 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeErrorData:
             sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
-      constMeta: kCryptoLayerCommonKeyPairHandleDeleteConstMeta,
+      constMeta:
+          kCryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumDeleteConstMeta,
       argValues: [that],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCryptoLayerCommonKeyPairHandleDeleteConstMeta =>
-      const TaskConstMeta(
-        debugName: "KeyPairHandle_delete",
-        argNames: ["that"],
-      );
+  TaskConstMeta
+      get kCryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumDeleteConstMeta =>
+          const TaskConstMeta(
+            debugName: "KeyPairHandleImplEnum_delete",
+            argNames: ["that"],
+          );
 
   @override
-  Future<Uint8List> cryptoLayerCommonKeyPairHandleEncryptData(
-      {required KeyPairHandle that, required List<int> data}) {
+  Future<Uint8List>
+      cryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumEncryptData(
+          {required KeyPairHandleImplEnum that,
+          required List<int> enumDispatchArg0}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle(
+        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandleImplEnum(
             that, serializer);
-        sse_encode_list_prim_u_8_loose(data, serializer);
+        sse_encode_list_prim_u_8_loose(enumDispatchArg0, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
             funcId: 19, port: port_);
       },
@@ -912,25 +1057,28 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeErrorData:
             sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
-      constMeta: kCryptoLayerCommonKeyPairHandleEncryptDataConstMeta,
-      argValues: [that, data],
+      constMeta:
+          kCryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumEncryptDataConstMeta,
+      argValues: [that, enumDispatchArg0],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCryptoLayerCommonKeyPairHandleEncryptDataConstMeta =>
-      const TaskConstMeta(
-        debugName: "KeyPairHandle_encrypt_data",
-        argNames: ["that", "data"],
-      );
+  TaskConstMeta
+      get kCryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumEncryptDataConstMeta =>
+          const TaskConstMeta(
+            debugName: "KeyPairHandleImplEnum_encrypt_data",
+            argNames: ["that", "enumDispatchArg0"],
+          );
 
   @override
-  Future<Uint8List> cryptoLayerCommonKeyPairHandleExtractKey(
-      {required KeyPairHandle that}) {
+  Future<Uint8List>
+      cryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumExtractKey(
+          {required KeyPairHandleImplEnum that}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle(
+        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandleImplEnum(
             that, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
             funcId: 20, port: port_);
@@ -940,25 +1088,28 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeErrorData:
             sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
-      constMeta: kCryptoLayerCommonKeyPairHandleExtractKeyConstMeta,
+      constMeta:
+          kCryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumExtractKeyConstMeta,
       argValues: [that],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCryptoLayerCommonKeyPairHandleExtractKeyConstMeta =>
-      const TaskConstMeta(
-        debugName: "KeyPairHandle_extract_key",
-        argNames: ["that"],
-      );
+  TaskConstMeta
+      get kCryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumExtractKeyConstMeta =>
+          const TaskConstMeta(
+            debugName: "KeyPairHandleImplEnum_extract_key",
+            argNames: ["that"],
+          );
 
   @override
-  Future<Uint8List> cryptoLayerCommonKeyPairHandleGetPublicKey(
-      {required KeyPairHandle that}) {
+  Future<Uint8List>
+      cryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumGetPublicKey(
+          {required KeyPairHandleImplEnum that}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle(
+        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandleImplEnum(
             that, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
             funcId: 21, port: port_);
@@ -968,25 +1119,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeErrorData:
             sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
-      constMeta: kCryptoLayerCommonKeyPairHandleGetPublicKeyConstMeta,
+      constMeta:
+          kCryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumGetPublicKeyConstMeta,
       argValues: [that],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCryptoLayerCommonKeyPairHandleGetPublicKeyConstMeta =>
-      const TaskConstMeta(
-        debugName: "KeyPairHandle_get_public_key",
-        argNames: ["that"],
-      );
+  TaskConstMeta
+      get kCryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumGetPublicKeyConstMeta =>
+          const TaskConstMeta(
+            debugName: "KeyPairHandleImplEnum_get_public_key",
+            argNames: ["that"],
+          );
 
   @override
-  Future<String> cryptoLayerCommonKeyPairHandleId(
-      {required KeyPairHandle that}) {
+  Future<String> cryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumId(
+      {required KeyPairHandleImplEnum that}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle(
+        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandleImplEnum(
             that, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
             funcId: 22, port: port_);
@@ -996,27 +1149,31 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeErrorData:
             sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
-      constMeta: kCryptoLayerCommonKeyPairHandleIdConstMeta,
+      constMeta:
+          kCryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumIdConstMeta,
       argValues: [that],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCryptoLayerCommonKeyPairHandleIdConstMeta =>
-      const TaskConstMeta(
-        debugName: "KeyPairHandle_id",
-        argNames: ["that"],
-      );
+  TaskConstMeta
+      get kCryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumIdConstMeta =>
+          const TaskConstMeta(
+            debugName: "KeyPairHandleImplEnum_id",
+            argNames: ["that"],
+          );
 
   @override
-  Future<Uint8List> cryptoLayerCommonKeyPairHandleSignData(
-      {required KeyPairHandle that, required List<int> data}) {
+  Future<Uint8List>
+      cryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumSignData(
+          {required KeyPairHandleImplEnum that,
+          required List<int> enumDispatchArg0}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle(
+        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandleImplEnum(
             that, serializer);
-        sse_encode_list_prim_u_8_loose(data, serializer);
+        sse_encode_list_prim_u_8_loose(enumDispatchArg0, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
             funcId: 23, port: port_);
       },
@@ -1025,25 +1182,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeErrorData:
             sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
-      constMeta: kCryptoLayerCommonKeyPairHandleSignDataConstMeta,
-      argValues: [that, data],
+      constMeta:
+          kCryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumSignDataConstMeta,
+      argValues: [that, enumDispatchArg0],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCryptoLayerCommonKeyPairHandleSignDataConstMeta =>
-      const TaskConstMeta(
-        debugName: "KeyPairHandle_sign_data",
-        argNames: ["that", "data"],
-      );
+  TaskConstMeta
+      get kCryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumSignDataConstMeta =>
+          const TaskConstMeta(
+            debugName: "KeyPairHandleImplEnum_sign_data",
+            argNames: ["that", "enumDispatchArg0"],
+          );
 
   @override
-  Future<KeyPairSpec> cryptoLayerCommonKeyPairHandleSpec(
-      {required KeyPairHandle that}) {
+  Future<KeyPairSpec> cryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumSpec(
+      {required KeyPairHandleImplEnum that}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle(
+        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandleImplEnum(
             that, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
             funcId: 24, port: port_);
@@ -1052,25 +1211,28 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeSuccessData: sse_decode_key_pair_spec,
         decodeErrorData: null,
       ),
-      constMeta: kCryptoLayerCommonKeyPairHandleSpecConstMeta,
+      constMeta:
+          kCryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumSpecConstMeta,
       argValues: [that],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCryptoLayerCommonKeyPairHandleSpecConstMeta =>
-      const TaskConstMeta(
-        debugName: "KeyPairHandle_spec",
-        argNames: ["that"],
-      );
+  TaskConstMeta
+      get kCryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumSpecConstMeta =>
+          const TaskConstMeta(
+            debugName: "KeyPairHandleImplEnum_spec",
+            argNames: ["that"],
+          );
 
   @override
-  Future<DhExchange> cryptoLayerCommonKeyPairHandleStartDhExchange(
-      {required KeyPairHandle that}) {
+  Future<DhExchange>
+      cryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumStartDhExchange(
+          {required KeyPairHandleImplEnum that}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle(
+        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandleImplEnum(
             that, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
             funcId: 25, port: port_);
@@ -1081,30 +1243,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeErrorData:
             sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
-      constMeta: kCryptoLayerCommonKeyPairHandleStartDhExchangeConstMeta,
+      constMeta:
+          kCryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumStartDhExchangeConstMeta,
       argValues: [that],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCryptoLayerCommonKeyPairHandleStartDhExchangeConstMeta =>
-      const TaskConstMeta(
-        debugName: "KeyPairHandle_start_dh_exchange",
-        argNames: ["that"],
-      );
+  TaskConstMeta
+      get kCryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumStartDhExchangeConstMeta =>
+          const TaskConstMeta(
+            debugName: "KeyPairHandleImplEnum_start_dh_exchange",
+            argNames: ["that"],
+          );
 
   @override
-  Future<bool> cryptoLayerCommonKeyPairHandleVerifySignature(
-      {required KeyPairHandle that,
-      required List<int> data,
-      required List<int> signature}) {
+  Future<bool>
+      cryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumVerifySignature(
+          {required KeyPairHandleImplEnum that,
+          required List<int> enumDispatchArg0,
+          required List<int> enumDispatchArg1}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle(
+        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandleImplEnum(
             that, serializer);
-        sse_encode_list_prim_u_8_loose(data, serializer);
-        sse_encode_list_prim_u_8_loose(signature, serializer);
+        sse_encode_list_prim_u_8_loose(enumDispatchArg0, serializer);
+        sse_encode_list_prim_u_8_loose(enumDispatchArg1, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
             funcId: 26, port: port_);
       },
@@ -1113,131 +1278,128 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeErrorData:
             sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
-      constMeta: kCryptoLayerCommonKeyPairHandleVerifySignatureConstMeta,
-      argValues: [that, data, signature],
+      constMeta:
+          kCryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumVerifySignatureConstMeta,
+      argValues: [that, enumDispatchArg0, enumDispatchArg1],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCryptoLayerCommonKeyPairHandleVerifySignatureConstMeta =>
-      const TaskConstMeta(
-        debugName: "KeyPairHandle_verify_signature",
-        argNames: ["that", "data", "signature"],
-      );
+  TaskConstMeta
+      get kCryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumVerifySignatureConstMeta =>
+          const TaskConstMeta(
+            debugName: "KeyPairHandleImplEnum_verify_signature",
+            argNames: ["that", "enumDispatchArg0", "enumDispatchArg1"],
+          );
 
   @override
-  Future<KeyHandle> cryptoLayerCommonProviderCreateKey(
-      {required Provider that, required KeySpec spec}) {
+  Future<ProviderImplEnum>
+      cryptoLayerCommonTraitsModuleProviderProviderFactoryEnumCreateProvider(
+          {required ProviderFactoryEnum that,
+          required ProviderImplConfig enumDispatchArg0}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
+        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderFactoryEnum(
             that, serializer);
-        sse_encode_box_autoadd_key_spec(spec, serializer);
+        sse_encode_box_autoadd_provider_impl_config(
+            enumDispatchArg0, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
             funcId: 27, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData:
-            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandle,
+            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplEnum,
         decodeErrorData:
             sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
-      constMeta: kCryptoLayerCommonProviderCreateKeyConstMeta,
-      argValues: [that, spec],
+      constMeta:
+          kCryptoLayerCommonTraitsModuleProviderProviderFactoryEnumCreateProviderConstMeta,
+      argValues: [that, enumDispatchArg0],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCryptoLayerCommonProviderCreateKeyConstMeta =>
-      const TaskConstMeta(
-        debugName: "Provider_create_key",
-        argNames: ["that", "spec"],
-      );
+  TaskConstMeta
+      get kCryptoLayerCommonTraitsModuleProviderProviderFactoryEnumCreateProviderConstMeta =>
+          const TaskConstMeta(
+            debugName: "ProviderFactoryEnum_create_provider",
+            argNames: ["that", "enumDispatchArg0"],
+          );
 
   @override
-  Future<KeyPairHandle> cryptoLayerCommonProviderCreateKeyPair(
-      {required Provider that, required KeyPairSpec spec}) {
+  Future<ProviderConfig?>
+      cryptoLayerCommonTraitsModuleProviderProviderFactoryEnumGetCapabilities(
+          {required ProviderFactoryEnum that,
+          required ProviderImplConfig enumDispatchArg0}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
+        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderFactoryEnum(
             that, serializer);
-        sse_encode_box_autoadd_key_pair_spec(spec, serializer);
+        sse_encode_box_autoadd_provider_impl_config(
+            enumDispatchArg0, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
             funcId: 28, port: port_);
       },
       codec: SseCodec(
-        decodeSuccessData:
-            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle,
-        decodeErrorData:
-            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
+        decodeSuccessData: sse_decode_opt_box_autoadd_provider_config,
+        decodeErrorData: null,
       ),
-      constMeta: kCryptoLayerCommonProviderCreateKeyPairConstMeta,
-      argValues: [that, spec],
+      constMeta:
+          kCryptoLayerCommonTraitsModuleProviderProviderFactoryEnumGetCapabilitiesConstMeta,
+      argValues: [that, enumDispatchArg0],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCryptoLayerCommonProviderCreateKeyPairConstMeta =>
-      const TaskConstMeta(
-        debugName: "Provider_create_key_pair",
-        argNames: ["that", "spec"],
-      );
+  TaskConstMeta
+      get kCryptoLayerCommonTraitsModuleProviderProviderFactoryEnumGetCapabilitiesConstMeta =>
+          const TaskConstMeta(
+            debugName: "ProviderFactoryEnum_get_capabilities",
+            argNames: ["that", "enumDispatchArg0"],
+          );
 
   @override
-  Future<KeyHandle> cryptoLayerCommonProviderDeriveKeyFromBase(
-      {required Provider that,
-      required List<int> baseKey,
-      required BigInt keyId,
-      required String context,
-      required KeySpec spec}) {
+  Future<String?>
+      cryptoLayerCommonTraitsModuleProviderProviderFactoryEnumGetName(
+          {required ProviderFactoryEnum that}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
+        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderFactoryEnum(
             that, serializer);
-        sse_encode_list_prim_u_8_loose(baseKey, serializer);
-        sse_encode_u_64(keyId, serializer);
-        sse_encode_String(context, serializer);
-        sse_encode_box_autoadd_key_spec(spec, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
             funcId: 29, port: port_);
       },
       codec: SseCodec(
-        decodeSuccessData:
-            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandle,
-        decodeErrorData:
-            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
+        decodeSuccessData: sse_decode_opt_String,
+        decodeErrorData: null,
       ),
-      constMeta: kCryptoLayerCommonProviderDeriveKeyFromBaseConstMeta,
-      argValues: [that, baseKey, keyId, context, spec],
+      constMeta:
+          kCryptoLayerCommonTraitsModuleProviderProviderFactoryEnumGetNameConstMeta,
+      argValues: [that],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCryptoLayerCommonProviderDeriveKeyFromBaseConstMeta =>
-      const TaskConstMeta(
-        debugName: "Provider_derive_key_from_base",
-        argNames: ["that", "baseKey", "keyId", "context", "spec"],
-      );
+  TaskConstMeta
+      get kCryptoLayerCommonTraitsModuleProviderProviderFactoryEnumGetNameConstMeta =>
+          const TaskConstMeta(
+            debugName: "ProviderFactoryEnum_get_name",
+            argNames: ["that"],
+          );
 
   @override
-  Future<KeyHandle> cryptoLayerCommonProviderDeriveKeyFromPassword(
-      {required Provider that,
-      required String password,
-      required List<int> salt,
-      required KeySpec algorithm,
-      required KDF kdf}) {
+  Future<KeyHandle>
+      cryptoLayerCommonTraitsModuleProviderProviderImplEnumCreateKey(
+          {required ProviderImplEnum that, required KeySpec enumDispatchArg0}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
+        sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplEnum(
             that, serializer);
-        sse_encode_String(password, serializer);
-        sse_encode_list_prim_u_8_loose(salt, serializer);
-        sse_encode_box_autoadd_key_spec(algorithm, serializer);
-        sse_encode_box_autoadd_kdf(kdf, serializer);
+        sse_encode_box_autoadd_key_spec(enumDispatchArg0, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
             funcId: 30, port: port_);
       },
@@ -1247,182 +1409,73 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeErrorData:
             sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
-      constMeta: kCryptoLayerCommonProviderDeriveKeyFromPasswordConstMeta,
-      argValues: [that, password, salt, algorithm, kdf],
+      constMeta:
+          kCryptoLayerCommonTraitsModuleProviderProviderImplEnumCreateKeyConstMeta,
+      argValues: [that, enumDispatchArg0],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCryptoLayerCommonProviderDeriveKeyFromPasswordConstMeta =>
-      const TaskConstMeta(
-        debugName: "Provider_derive_key_from_password",
-        argNames: ["that", "password", "salt", "algorithm", "kdf"],
-      );
+  TaskConstMeta
+      get kCryptoLayerCommonTraitsModuleProviderProviderImplEnumCreateKeyConstMeta =>
+          const TaskConstMeta(
+            debugName: "ProviderImplEnum_create_key",
+            argNames: ["that", "enumDispatchArg0"],
+          );
 
   @override
-  Future<DhExchange> cryptoLayerCommonProviderDhExchangeFromKeys(
-      {required Provider that,
-      required List<int> publicKey,
-      required List<int> privateKey,
-      required KeyPairSpec spec}) {
+  Future<KeyPairHandle>
+      cryptoLayerCommonTraitsModuleProviderProviderImplEnumCreateKeyPair(
+          {required ProviderImplEnum that,
+          required KeyPairSpec enumDispatchArg0}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
+        sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplEnum(
             that, serializer);
-        sse_encode_list_prim_u_8_loose(publicKey, serializer);
-        sse_encode_list_prim_u_8_loose(privateKey, serializer);
-        sse_encode_box_autoadd_key_pair_spec(spec, serializer);
+        sse_encode_box_autoadd_key_pair_spec(enumDispatchArg0, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
             funcId: 31, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData:
-            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHExchange,
+            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle,
         decodeErrorData:
             sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
-      constMeta: kCryptoLayerCommonProviderDhExchangeFromKeysConstMeta,
-      argValues: [that, publicKey, privateKey, spec],
+      constMeta:
+          kCryptoLayerCommonTraitsModuleProviderProviderImplEnumCreateKeyPairConstMeta,
+      argValues: [that, enumDispatchArg0],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCryptoLayerCommonProviderDhExchangeFromKeysConstMeta =>
-      const TaskConstMeta(
-        debugName: "Provider_dh_exchange_from_keys",
-        argNames: ["that", "publicKey", "privateKey", "spec"],
-      );
+  TaskConstMeta
+      get kCryptoLayerCommonTraitsModuleProviderProviderImplEnumCreateKeyPairConstMeta =>
+          const TaskConstMeta(
+            debugName: "ProviderImplEnum_create_key_pair",
+            argNames: ["that", "enumDispatchArg0"],
+          );
 
   @override
-  Future<List<(String, Spec)>> cryptoLayerCommonProviderGetAllKeys(
-      {required Provider that}) {
+  Future<KeyHandle>
+      cryptoLayerCommonTraitsModuleProviderProviderImplEnumDeriveKeyFromBase(
+          {required ProviderImplEnum that,
+          required List<int> enumDispatchArg0,
+          required BigInt enumDispatchArg1,
+          required String enumDispatchArg2,
+          required KeySpec enumDispatchArg3}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
+        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplEnum(
             that, serializer);
+        sse_encode_list_prim_u_8_loose(enumDispatchArg0, serializer);
+        sse_encode_u_64(enumDispatchArg1, serializer);
+        sse_encode_String(enumDispatchArg2, serializer);
+        sse_encode_box_autoadd_key_spec(enumDispatchArg3, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
             funcId: 32, port: port_);
-      },
-      codec: SseCodec(
-        decodeSuccessData: sse_decode_list_record_string_spec,
-        decodeErrorData:
-            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
-      ),
-      constMeta: kCryptoLayerCommonProviderGetAllKeysConstMeta,
-      argValues: [that],
-      apiImpl: this,
-    ));
-  }
-
-  TaskConstMeta get kCryptoLayerCommonProviderGetAllKeysConstMeta =>
-      const TaskConstMeta(
-        debugName: "Provider_get_all_keys",
-        argNames: ["that"],
-      );
-
-  @override
-  Future<ProviderConfig?> cryptoLayerCommonProviderGetCapabilities(
-      {required Provider that}) {
-    return handler.executeNormal(NormalTask(
-      callFfi: (port_) {
-        final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
-            that, serializer);
-        pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 33, port: port_);
-      },
-      codec: SseCodec(
-        decodeSuccessData: sse_decode_opt_box_autoadd_provider_config,
-        decodeErrorData: null,
-      ),
-      constMeta: kCryptoLayerCommonProviderGetCapabilitiesConstMeta,
-      argValues: [that],
-      apiImpl: this,
-    ));
-  }
-
-  TaskConstMeta get kCryptoLayerCommonProviderGetCapabilitiesConstMeta =>
-      const TaskConstMeta(
-        debugName: "Provider_get_capabilities",
-        argNames: ["that"],
-      );
-
-  @override
-  Future<Uint8List> cryptoLayerCommonProviderGetRandom(
-      {required Provider that, required BigInt len}) {
-    return handler.executeNormal(NormalTask(
-      callFfi: (port_) {
-        final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
-            that, serializer);
-        sse_encode_usize(len, serializer);
-        pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 34, port: port_);
-      },
-      codec: SseCodec(
-        decodeSuccessData: sse_decode_list_prim_u_8_strict,
-        decodeErrorData: null,
-      ),
-      constMeta: kCryptoLayerCommonProviderGetRandomConstMeta,
-      argValues: [that, len],
-      apiImpl: this,
-    ));
-  }
-
-  TaskConstMeta get kCryptoLayerCommonProviderGetRandomConstMeta =>
-      const TaskConstMeta(
-        debugName: "Provider_get_random",
-        argNames: ["that", "len"],
-      );
-
-  @override
-  Future<Uint8List> cryptoLayerCommonProviderHash(
-      {required Provider that,
-      required List<int> input,
-      required CryptoHash hash}) {
-    return handler.executeNormal(NormalTask(
-      callFfi: (port_) {
-        final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
-            that, serializer);
-        sse_encode_list_prim_u_8_loose(input, serializer);
-        sse_encode_crypto_hash(hash, serializer);
-        pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 35, port: port_);
-      },
-      codec: SseCodec(
-        decodeSuccessData: sse_decode_list_prim_u_8_strict,
-        decodeErrorData:
-            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
-      ),
-      constMeta: kCryptoLayerCommonProviderHashConstMeta,
-      argValues: [that, input, hash],
-      apiImpl: this,
-    ));
-  }
-
-  TaskConstMeta get kCryptoLayerCommonProviderHashConstMeta =>
-      const TaskConstMeta(
-        debugName: "Provider_hash",
-        argNames: ["that", "input", "hash"],
-      );
-
-  @override
-  Future<KeyHandle> cryptoLayerCommonProviderImportKey(
-      {required Provider that,
-      required KeySpec spec,
-      required List<int> data}) {
-    return handler.executeNormal(NormalTask(
-      callFfi: (port_) {
-        final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
-            that, serializer);
-        sse_encode_box_autoadd_key_spec(spec, serializer);
-        sse_encode_list_prim_u_8_loose(data, serializer);
-        pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 36, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData:
@@ -1430,95 +1483,266 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeErrorData:
             sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
-      constMeta: kCryptoLayerCommonProviderImportKeyConstMeta,
-      argValues: [that, spec, data],
+      constMeta:
+          kCryptoLayerCommonTraitsModuleProviderProviderImplEnumDeriveKeyFromBaseConstMeta,
+      argValues: [
+        that,
+        enumDispatchArg0,
+        enumDispatchArg1,
+        enumDispatchArg2,
+        enumDispatchArg3
+      ],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCryptoLayerCommonProviderImportKeyConstMeta =>
-      const TaskConstMeta(
-        debugName: "Provider_import_key",
-        argNames: ["that", "spec", "data"],
-      );
+  TaskConstMeta
+      get kCryptoLayerCommonTraitsModuleProviderProviderImplEnumDeriveKeyFromBaseConstMeta =>
+          const TaskConstMeta(
+            debugName: "ProviderImplEnum_derive_key_from_base",
+            argNames: [
+              "that",
+              "enumDispatchArg0",
+              "enumDispatchArg1",
+              "enumDispatchArg2",
+              "enumDispatchArg3"
+            ],
+          );
 
   @override
-  Future<KeyPairHandle> cryptoLayerCommonProviderImportKeyPair(
-      {required Provider that,
-      required KeyPairSpec spec,
-      required List<int> publicKey,
-      required List<int> privateKey}) {
+  Future<KeyHandle>
+      cryptoLayerCommonTraitsModuleProviderProviderImplEnumDeriveKeyFromPassword(
+          {required ProviderImplEnum that,
+          required String enumDispatchArg0,
+          required List<int> enumDispatchArg1,
+          required KeySpec enumDispatchArg2,
+          required KDF enumDispatchArg3}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
+        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplEnum(
             that, serializer);
-        sse_encode_box_autoadd_key_pair_spec(spec, serializer);
-        sse_encode_list_prim_u_8_loose(publicKey, serializer);
-        sse_encode_list_prim_u_8_loose(privateKey, serializer);
+        sse_encode_String(enumDispatchArg0, serializer);
+        sse_encode_list_prim_u_8_loose(enumDispatchArg1, serializer);
+        sse_encode_box_autoadd_key_spec(enumDispatchArg2, serializer);
+        sse_encode_box_autoadd_kdf(enumDispatchArg3, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 33, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData:
+            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandle,
+        decodeErrorData:
+            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
+      ),
+      constMeta:
+          kCryptoLayerCommonTraitsModuleProviderProviderImplEnumDeriveKeyFromPasswordConstMeta,
+      argValues: [
+        that,
+        enumDispatchArg0,
+        enumDispatchArg1,
+        enumDispatchArg2,
+        enumDispatchArg3
+      ],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta
+      get kCryptoLayerCommonTraitsModuleProviderProviderImplEnumDeriveKeyFromPasswordConstMeta =>
+          const TaskConstMeta(
+            debugName: "ProviderImplEnum_derive_key_from_password",
+            argNames: [
+              "that",
+              "enumDispatchArg0",
+              "enumDispatchArg1",
+              "enumDispatchArg2",
+              "enumDispatchArg3"
+            ],
+          );
+
+  @override
+  Future<DhExchange>
+      cryptoLayerCommonTraitsModuleProviderProviderImplEnumDhExchangeFromKeys(
+          {required ProviderImplEnum that,
+          required List<int> enumDispatchArg0,
+          required List<int> enumDispatchArg1,
+          required KeyPairSpec enumDispatchArg2}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplEnum(
+            that, serializer);
+        sse_encode_list_prim_u_8_loose(enumDispatchArg0, serializer);
+        sse_encode_list_prim_u_8_loose(enumDispatchArg1, serializer);
+        sse_encode_box_autoadd_key_pair_spec(enumDispatchArg2, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 34, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData:
+            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHExchange,
+        decodeErrorData:
+            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
+      ),
+      constMeta:
+          kCryptoLayerCommonTraitsModuleProviderProviderImplEnumDhExchangeFromKeysConstMeta,
+      argValues: [that, enumDispatchArg0, enumDispatchArg1, enumDispatchArg2],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta
+      get kCryptoLayerCommonTraitsModuleProviderProviderImplEnumDhExchangeFromKeysConstMeta =>
+          const TaskConstMeta(
+            debugName: "ProviderImplEnum_dh_exchange_from_keys",
+            argNames: [
+              "that",
+              "enumDispatchArg0",
+              "enumDispatchArg1",
+              "enumDispatchArg2"
+            ],
+          );
+
+  @override
+  Future<List<(String, Spec)>>
+      cryptoLayerCommonTraitsModuleProviderProviderImplEnumGetAllKeys(
+          {required ProviderImplEnum that}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplEnum(
+            that, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 35, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_list_record_string_spec,
+        decodeErrorData:
+            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
+      ),
+      constMeta:
+          kCryptoLayerCommonTraitsModuleProviderProviderImplEnumGetAllKeysConstMeta,
+      argValues: [that],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta
+      get kCryptoLayerCommonTraitsModuleProviderProviderImplEnumGetAllKeysConstMeta =>
+          const TaskConstMeta(
+            debugName: "ProviderImplEnum_get_all_keys",
+            argNames: ["that"],
+          );
+
+  @override
+  Future<ProviderConfig?>
+      cryptoLayerCommonTraitsModuleProviderProviderImplEnumGetCapabilities(
+          {required ProviderImplEnum that}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplEnum(
+            that, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 36, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_opt_box_autoadd_provider_config,
+        decodeErrorData: null,
+      ),
+      constMeta:
+          kCryptoLayerCommonTraitsModuleProviderProviderImplEnumGetCapabilitiesConstMeta,
+      argValues: [that],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta
+      get kCryptoLayerCommonTraitsModuleProviderProviderImplEnumGetCapabilitiesConstMeta =>
+          const TaskConstMeta(
+            debugName: "ProviderImplEnum_get_capabilities",
+            argNames: ["that"],
+          );
+
+  @override
+  Future<Uint8List>
+      cryptoLayerCommonTraitsModuleProviderProviderImplEnumGetRandom(
+          {required ProviderImplEnum that, required BigInt enumDispatchArg0}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplEnum(
+            that, serializer);
+        sse_encode_usize(enumDispatchArg0, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
             funcId: 37, port: port_);
       },
       codec: SseCodec(
-        decodeSuccessData:
-            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle,
-        decodeErrorData:
-            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
+        decodeSuccessData: sse_decode_list_prim_u_8_strict,
+        decodeErrorData: null,
       ),
-      constMeta: kCryptoLayerCommonProviderImportKeyPairConstMeta,
-      argValues: [that, spec, publicKey, privateKey],
+      constMeta:
+          kCryptoLayerCommonTraitsModuleProviderProviderImplEnumGetRandomConstMeta,
+      argValues: [that, enumDispatchArg0],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCryptoLayerCommonProviderImportKeyPairConstMeta =>
-      const TaskConstMeta(
-        debugName: "Provider_import_key_pair",
-        argNames: ["that", "spec", "publicKey", "privateKey"],
-      );
+  TaskConstMeta
+      get kCryptoLayerCommonTraitsModuleProviderProviderImplEnumGetRandomConstMeta =>
+          const TaskConstMeta(
+            debugName: "ProviderImplEnum_get_random",
+            argNames: ["that", "enumDispatchArg0"],
+          );
 
   @override
-  Future<KeyPairHandle> cryptoLayerCommonProviderImportPublicKey(
-      {required Provider that,
-      required KeyPairSpec spec,
-      required List<int> publicKey}) {
+  Future<Uint8List> cryptoLayerCommonTraitsModuleProviderProviderImplEnumHash(
+      {required ProviderImplEnum that,
+      required List<int> enumDispatchArg0,
+      required CryptoHash enumDispatchArg1}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
+        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplEnum(
             that, serializer);
-        sse_encode_box_autoadd_key_pair_spec(spec, serializer);
-        sse_encode_list_prim_u_8_loose(publicKey, serializer);
+        sse_encode_list_prim_u_8_loose(enumDispatchArg0, serializer);
+        sse_encode_crypto_hash(enumDispatchArg1, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
             funcId: 38, port: port_);
       },
       codec: SseCodec(
-        decodeSuccessData:
-            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle,
+        decodeSuccessData: sse_decode_list_prim_u_8_strict,
         decodeErrorData:
             sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
-      constMeta: kCryptoLayerCommonProviderImportPublicKeyConstMeta,
-      argValues: [that, spec, publicKey],
+      constMeta:
+          kCryptoLayerCommonTraitsModuleProviderProviderImplEnumHashConstMeta,
+      argValues: [that, enumDispatchArg0, enumDispatchArg1],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCryptoLayerCommonProviderImportPublicKeyConstMeta =>
-      const TaskConstMeta(
-        debugName: "Provider_import_public_key",
-        argNames: ["that", "spec", "publicKey"],
-      );
+  TaskConstMeta
+      get kCryptoLayerCommonTraitsModuleProviderProviderImplEnumHashConstMeta =>
+          const TaskConstMeta(
+            debugName: "ProviderImplEnum_hash",
+            argNames: ["that", "enumDispatchArg0", "enumDispatchArg1"],
+          );
 
   @override
-  Future<KeyHandle> cryptoLayerCommonProviderLoadKey(
-      {required Provider that, required String id}) {
+  Future<KeyHandle>
+      cryptoLayerCommonTraitsModuleProviderProviderImplEnumImportKey(
+          {required ProviderImplEnum that,
+          required KeySpec enumDispatchArg0,
+          required List<int> enumDispatchArg1}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
+        sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplEnum(
             that, serializer);
-        sse_encode_String(id, serializer);
+        sse_encode_box_autoadd_key_spec(enumDispatchArg0, serializer);
+        sse_encode_list_prim_u_8_loose(enumDispatchArg1, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
             funcId: 39, port: port_);
       },
@@ -1528,27 +1752,35 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeErrorData:
             sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
-      constMeta: kCryptoLayerCommonProviderLoadKeyConstMeta,
-      argValues: [that, id],
+      constMeta:
+          kCryptoLayerCommonTraitsModuleProviderProviderImplEnumImportKeyConstMeta,
+      argValues: [that, enumDispatchArg0, enumDispatchArg1],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCryptoLayerCommonProviderLoadKeyConstMeta =>
-      const TaskConstMeta(
-        debugName: "Provider_load_key",
-        argNames: ["that", "id"],
-      );
+  TaskConstMeta
+      get kCryptoLayerCommonTraitsModuleProviderProviderImplEnumImportKeyConstMeta =>
+          const TaskConstMeta(
+            debugName: "ProviderImplEnum_import_key",
+            argNames: ["that", "enumDispatchArg0", "enumDispatchArg1"],
+          );
 
   @override
-  Future<KeyPairHandle> cryptoLayerCommonProviderLoadKeyPair(
-      {required Provider that, required String id}) {
+  Future<KeyPairHandle>
+      cryptoLayerCommonTraitsModuleProviderProviderImplEnumImportKeyPair(
+          {required ProviderImplEnum that,
+          required KeyPairSpec enumDispatchArg0,
+          required List<int> enumDispatchArg1,
+          required List<int> enumDispatchArg2}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
+        sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplEnum(
             that, serializer);
-        sse_encode_String(id, serializer);
+        sse_encode_box_autoadd_key_pair_spec(enumDispatchArg0, serializer);
+        sse_encode_list_prim_u_8_loose(enumDispatchArg1, serializer);
+        sse_encode_list_prim_u_8_loose(enumDispatchArg2, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
             funcId: 40, port: port_);
       },
@@ -1558,56 +1790,170 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeErrorData:
             sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
-      constMeta: kCryptoLayerCommonProviderLoadKeyPairConstMeta,
-      argValues: [that, id],
+      constMeta:
+          kCryptoLayerCommonTraitsModuleProviderProviderImplEnumImportKeyPairConstMeta,
+      argValues: [that, enumDispatchArg0, enumDispatchArg1, enumDispatchArg2],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCryptoLayerCommonProviderLoadKeyPairConstMeta =>
-      const TaskConstMeta(
-        debugName: "Provider_load_key_pair",
-        argNames: ["that", "id"],
-      );
+  TaskConstMeta
+      get kCryptoLayerCommonTraitsModuleProviderProviderImplEnumImportKeyPairConstMeta =>
+          const TaskConstMeta(
+            debugName: "ProviderImplEnum_import_key_pair",
+            argNames: [
+              "that",
+              "enumDispatchArg0",
+              "enumDispatchArg1",
+              "enumDispatchArg2"
+            ],
+          );
 
   @override
-  Future<String> cryptoLayerCommonProviderProviderName(
-      {required Provider that}) {
+  Future<KeyPairHandle>
+      cryptoLayerCommonTraitsModuleProviderProviderImplEnumImportPublicKey(
+          {required ProviderImplEnum that,
+          required KeyPairSpec enumDispatchArg0,
+          required List<int> enumDispatchArg1}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
+        sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplEnum(
             that, serializer);
+        sse_encode_box_autoadd_key_pair_spec(enumDispatchArg0, serializer);
+        sse_encode_list_prim_u_8_loose(enumDispatchArg1, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
             funcId: 41, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData:
+            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle,
+        decodeErrorData:
+            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
+      ),
+      constMeta:
+          kCryptoLayerCommonTraitsModuleProviderProviderImplEnumImportPublicKeyConstMeta,
+      argValues: [that, enumDispatchArg0, enumDispatchArg1],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta
+      get kCryptoLayerCommonTraitsModuleProviderProviderImplEnumImportPublicKeyConstMeta =>
+          const TaskConstMeta(
+            debugName: "ProviderImplEnum_import_public_key",
+            argNames: ["that", "enumDispatchArg0", "enumDispatchArg1"],
+          );
+
+  @override
+  Future<KeyHandle>
+      cryptoLayerCommonTraitsModuleProviderProviderImplEnumLoadKey(
+          {required ProviderImplEnum that, required String enumDispatchArg0}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplEnum(
+            that, serializer);
+        sse_encode_String(enumDispatchArg0, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 42, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData:
+            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandle,
+        decodeErrorData:
+            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
+      ),
+      constMeta:
+          kCryptoLayerCommonTraitsModuleProviderProviderImplEnumLoadKeyConstMeta,
+      argValues: [that, enumDispatchArg0],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta
+      get kCryptoLayerCommonTraitsModuleProviderProviderImplEnumLoadKeyConstMeta =>
+          const TaskConstMeta(
+            debugName: "ProviderImplEnum_load_key",
+            argNames: ["that", "enumDispatchArg0"],
+          );
+
+  @override
+  Future<KeyPairHandle>
+      cryptoLayerCommonTraitsModuleProviderProviderImplEnumLoadKeyPair(
+          {required ProviderImplEnum that, required String enumDispatchArg0}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplEnum(
+            that, serializer);
+        sse_encode_String(enumDispatchArg0, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 43, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData:
+            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle,
+        decodeErrorData:
+            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
+      ),
+      constMeta:
+          kCryptoLayerCommonTraitsModuleProviderProviderImplEnumLoadKeyPairConstMeta,
+      argValues: [that, enumDispatchArg0],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta
+      get kCryptoLayerCommonTraitsModuleProviderProviderImplEnumLoadKeyPairConstMeta =>
+          const TaskConstMeta(
+            debugName: "ProviderImplEnum_load_key_pair",
+            argNames: ["that", "enumDispatchArg0"],
+          );
+
+  @override
+  Future<String>
+      cryptoLayerCommonTraitsModuleProviderProviderImplEnumProviderName(
+          {required ProviderImplEnum that}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplEnum(
+            that, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 44, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_String,
         decodeErrorData: null,
       ),
-      constMeta: kCryptoLayerCommonProviderProviderNameConstMeta,
+      constMeta:
+          kCryptoLayerCommonTraitsModuleProviderProviderImplEnumProviderNameConstMeta,
       argValues: [that],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCryptoLayerCommonProviderProviderNameConstMeta =>
-      const TaskConstMeta(
-        debugName: "Provider_provider_name",
-        argNames: ["that"],
-      );
+  TaskConstMeta
+      get kCryptoLayerCommonTraitsModuleProviderProviderImplEnumProviderNameConstMeta =>
+          const TaskConstMeta(
+            debugName: "ProviderImplEnum_provider_name",
+            argNames: ["that"],
+          );
 
   @override
-  Future<DhExchange> cryptoLayerCommonProviderStartEphemeralDhExchange(
-      {required Provider that, required KeyPairSpec spec}) {
+  Future<DhExchange>
+      cryptoLayerCommonTraitsModuleProviderProviderImplEnumStartEphemeralDhExchange(
+          {required ProviderImplEnum that,
+          required KeyPairSpec enumDispatchArg0}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
+        sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplEnum(
             that, serializer);
-        sse_encode_box_autoadd_key_pair_spec(spec, serializer);
+        sse_encode_box_autoadd_key_pair_spec(enumDispatchArg0, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 42, port: port_);
+            funcId: 45, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData:
@@ -1615,17 +1961,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeErrorData:
             sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
       ),
-      constMeta: kCryptoLayerCommonProviderStartEphemeralDhExchangeConstMeta,
-      argValues: [that, spec],
+      constMeta:
+          kCryptoLayerCommonTraitsModuleProviderProviderImplEnumStartEphemeralDhExchangeConstMeta,
+      argValues: [that, enumDispatchArg0],
       apiImpl: this,
     ));
   }
 
   TaskConstMeta
-      get kCryptoLayerCommonProviderStartEphemeralDhExchangeConstMeta =>
+      get kCryptoLayerCommonTraitsModuleProviderProviderImplEnumStartEphemeralDhExchangeConstMeta =>
           const TaskConstMeta(
-            debugName: "Provider_start_ephemeral_dh_exchange",
-            argNames: ["that", "spec"],
+            debugName: "ProviderImplEnum_start_ephemeral_dh_exchange",
+            argNames: ["that", "enumDispatchArg0"],
           );
 
   @override
@@ -1635,7 +1982,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 44, port: port_);
+            funcId: 90, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_argon_2_options,
@@ -1662,7 +2009,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 45, port: port_);
+            funcId: 91, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_asymmetric_key_spec,
@@ -1688,7 +2035,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 46, port: port_);
+            funcId: 92, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_cipher,
@@ -1717,7 +2064,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_box_autoadd_provider_config(conf, serializer);
         sse_encode_box_autoadd_provider_impl_config(implConf, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 47, port: port_);
+            funcId: 93, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData:
@@ -1745,7 +2092,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_String(name, serializer);
         sse_encode_box_autoadd_provider_impl_config(implConf, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 48, port: port_);
+            funcId: 94, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData:
@@ -1771,7 +2118,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 49, port: port_);
+            funcId: 95, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_crypto_hash,
@@ -1797,7 +2144,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 50, port: port_);
+            funcId: 96, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_list_String,
@@ -1833,7 +2180,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_DartFn_Inputs__Output_list_String_AnyhowException(
             allKeysFn, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 51, port: port_);
+            funcId: 97, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_provider_impl_config,
@@ -1860,7 +2207,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_box_autoadd_provider_impl_config(implConfig, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 52, port: port_);
+            funcId: 98, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_list_record_string_provider_config,
@@ -1884,7 +2231,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 53, port: port_);
+            funcId: 99, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -1907,7 +2254,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 54, port: port_);
+            funcId: 100, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_kdf,
@@ -1933,7 +2280,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 55, port: port_);
+            funcId: 101, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_key_pair_spec,
@@ -1957,7 +2304,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 56, port: port_);
+            funcId: 102, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_key_spec,
@@ -1983,7 +2330,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_oid_type(that, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 57, port: port_);
+            funcId: 103, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -2022,7 +2369,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             allKeysFn, serializer);
         sse_encode_list_additional_config(additionalConfig, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 58, port: port_);
+            funcId: 104, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_provider_impl_config,
@@ -2229,12 +2576,28 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHExchange;
 
   RustArcIncrementStrongCountFnType
+      get rust_arc_increment_strong_count_DhKeyExchangeImplEnum => wire
+          .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHKeyExchangeImplEnum;
+
+  RustArcDecrementStrongCountFnType
+      get rust_arc_decrement_strong_count_DhKeyExchangeImplEnum => wire
+          .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHKeyExchangeImplEnum;
+
+  RustArcIncrementStrongCountFnType
       get rust_arc_increment_strong_count_KeyHandle => wire
           .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandle;
 
   RustArcDecrementStrongCountFnType
       get rust_arc_decrement_strong_count_KeyHandle => wire
           .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandle;
+
+  RustArcIncrementStrongCountFnType
+      get rust_arc_increment_strong_count_KeyHandleImplEnum => wire
+          .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandleImplEnum;
+
+  RustArcDecrementStrongCountFnType
+      get rust_arc_decrement_strong_count_KeyHandleImplEnum => wire
+          .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandleImplEnum;
 
   RustArcIncrementStrongCountFnType
       get rust_arc_increment_strong_count_KeyPairHandle => wire
@@ -2245,12 +2608,36 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle;
 
   RustArcIncrementStrongCountFnType
+      get rust_arc_increment_strong_count_KeyPairHandleImplEnum => wire
+          .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandleImplEnum;
+
+  RustArcDecrementStrongCountFnType
+      get rust_arc_decrement_strong_count_KeyPairHandleImplEnum => wire
+          .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandleImplEnum;
+
+  RustArcIncrementStrongCountFnType
       get rust_arc_increment_strong_count_Provider => wire
           .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider;
 
   RustArcDecrementStrongCountFnType
       get rust_arc_decrement_strong_count_Provider => wire
           .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider;
+
+  RustArcIncrementStrongCountFnType
+      get rust_arc_increment_strong_count_ProviderFactoryEnum => wire
+          .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderFactoryEnum;
+
+  RustArcDecrementStrongCountFnType
+      get rust_arc_decrement_strong_count_ProviderFactoryEnum => wire
+          .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderFactoryEnum;
+
+  RustArcIncrementStrongCountFnType
+      get rust_arc_increment_strong_count_ProviderImplEnum => wire
+          .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplEnum;
+
+  RustArcDecrementStrongCountFnType
+      get rust_arc_decrement_strong_count_ProviderImplEnum => wire
+          .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplEnum;
 
   @protected
   AnyhowException dco_decode_AnyhowException(dynamic raw) {
@@ -2311,11 +2698,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  DhKeyExchangeImplEnum
+      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHKeyExchangeImplEnum(
+          dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return DhKeyExchangeImplEnumImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
   KeyHandle
       dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandle(
           dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return KeyHandleImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  KeyHandleImplEnum
+      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandleImplEnum(
+          dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return KeyHandleImplEnumImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -2327,6 +2730,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  KeyPairHandleImplEnum
+      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandleImplEnum(
+          dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return KeyPairHandleImplEnumImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
   Provider
       dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
           dynamic raw) {
@@ -2335,11 +2746,35 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  Provider
-      dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
+  ProviderFactoryEnum
+      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderFactoryEnum(
           dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return ProviderImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return ProviderFactoryEnumImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  ProviderImplEnum
+      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplEnum(
+          dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return ProviderImplEnumImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  DhKeyExchangeImplEnum
+      dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHKeyExchangeImplEnum(
+          dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return DhKeyExchangeImplEnumImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  ProviderImplEnum
+      dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplEnum(
+          dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return ProviderImplEnumImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -2351,35 +2786,43 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  DhExchange
-      dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHExchange(
+  DhKeyExchangeImplEnum
+      dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHKeyExchangeImplEnum(
           dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return DhExchangeImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return DhKeyExchangeImplEnumImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
-  KeyHandle
-      dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandle(
+  KeyHandleImplEnum
+      dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandleImplEnum(
           dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return KeyHandleImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return KeyHandleImplEnumImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
-  KeyPairHandle
-      dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle(
+  KeyPairHandleImplEnum
+      dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandleImplEnum(
           dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return KeyPairHandleImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return KeyPairHandleImplEnumImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
-  Provider
-      dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
+  ProviderFactoryEnum
+      dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderFactoryEnum(
           dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return ProviderImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return ProviderFactoryEnumImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  ProviderImplEnum
+      dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplEnum(
+          dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return ProviderImplEnumImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -2472,11 +2915,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  DhKeyExchangeImplEnum
+      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHKeyExchangeImplEnum(
+          dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return DhKeyExchangeImplEnumImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
   KeyHandle
       dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandle(
           dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return KeyHandleImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  KeyHandleImplEnum
+      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandleImplEnum(
+          dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return KeyHandleImplEnumImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -2488,11 +2947,35 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  KeyPairHandleImplEnum
+      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandleImplEnum(
+          dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return KeyPairHandleImplEnumImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
   Provider
       dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
           dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return ProviderImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  ProviderFactoryEnum
+      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderFactoryEnum(
+          dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return ProviderFactoryEnumImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  ProviderImplEnum
+      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplEnum(
+          dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return ProviderImplEnumImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -2517,6 +3000,36 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   String dco_decode_String(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as String;
+  }
+
+  @protected
+  DHKeyExchangeImpl dco_decode_TraitDef_DHKeyExchangeImpl(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    throw UnimplementedError();
+  }
+
+  @protected
+  KeyHandleImpl dco_decode_TraitDef_KeyHandleImpl(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    throw UnimplementedError();
+  }
+
+  @protected
+  KeyPairHandleImpl dco_decode_TraitDef_KeyPairHandleImpl(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    throw UnimplementedError();
+  }
+
+  @protected
+  ProviderFactory dco_decode_TraitDef_ProviderFactory(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    throw UnimplementedError();
+  }
+
+  @protected
+  ProviderImpl dco_decode_TraitDef_ProviderImpl(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    throw UnimplementedError();
   }
 
   @protected
@@ -2830,6 +3343,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  String? dco_decode_opt_String(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_String(raw);
+  }
+
+  @protected
   Provider?
       dco_decode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
           dynamic raw) {
@@ -3068,11 +3587,29 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  DhKeyExchangeImplEnum
+      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHKeyExchangeImplEnum(
+          SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return DhKeyExchangeImplEnumImpl.frbInternalSseDecode(
+        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
+  }
+
+  @protected
   KeyHandle
       sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandle(
           SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return KeyHandleImpl.frbInternalSseDecode(
+        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
+  }
+
+  @protected
+  KeyHandleImplEnum
+      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandleImplEnum(
+          SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return KeyHandleImplEnumImpl.frbInternalSseDecode(
         sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
   }
 
@@ -3086,6 +3623,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  KeyPairHandleImplEnum
+      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandleImplEnum(
+          SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return KeyPairHandleImplEnumImpl.frbInternalSseDecode(
+        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
+  }
+
+  @protected
   Provider
       sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
           SseDeserializer deserializer) {
@@ -3095,11 +3641,38 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  Provider
-      sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
+  ProviderFactoryEnum
+      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderFactoryEnum(
           SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return ProviderImpl.frbInternalSseDecode(
+    return ProviderFactoryEnumImpl.frbInternalSseDecode(
+        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
+  }
+
+  @protected
+  ProviderImplEnum
+      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplEnum(
+          SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return ProviderImplEnumImpl.frbInternalSseDecode(
+        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
+  }
+
+  @protected
+  DhKeyExchangeImplEnum
+      sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHKeyExchangeImplEnum(
+          SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return DhKeyExchangeImplEnumImpl.frbInternalSseDecode(
+        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
+  }
+
+  @protected
+  ProviderImplEnum
+      sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplEnum(
+          SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return ProviderImplEnumImpl.frbInternalSseDecode(
         sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
   }
 
@@ -3113,38 +3686,47 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  DhExchange
-      sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHExchange(
+  DhKeyExchangeImplEnum
+      sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHKeyExchangeImplEnum(
           SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return DhExchangeImpl.frbInternalSseDecode(
+    return DhKeyExchangeImplEnumImpl.frbInternalSseDecode(
         sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
   }
 
   @protected
-  KeyHandle
-      sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandle(
+  KeyHandleImplEnum
+      sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandleImplEnum(
           SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return KeyHandleImpl.frbInternalSseDecode(
+    return KeyHandleImplEnumImpl.frbInternalSseDecode(
         sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
   }
 
   @protected
-  KeyPairHandle
-      sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle(
+  KeyPairHandleImplEnum
+      sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandleImplEnum(
           SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return KeyPairHandleImpl.frbInternalSseDecode(
+    return KeyPairHandleImplEnumImpl.frbInternalSseDecode(
         sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
   }
 
   @protected
-  Provider
-      sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
+  ProviderFactoryEnum
+      sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderFactoryEnum(
           SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return ProviderImpl.frbInternalSseDecode(
+    return ProviderFactoryEnumImpl.frbInternalSseDecode(
+        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
+  }
+
+  @protected
+  ProviderImplEnum
+      sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplEnum(
+          SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return ProviderImplEnumImpl.frbInternalSseDecode(
         sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
   }
 
@@ -3210,11 +3792,29 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  DhKeyExchangeImplEnum
+      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHKeyExchangeImplEnum(
+          SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return DhKeyExchangeImplEnumImpl.frbInternalSseDecode(
+        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
+  }
+
+  @protected
   KeyHandle
       sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandle(
           SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return KeyHandleImpl.frbInternalSseDecode(
+        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
+  }
+
+  @protected
+  KeyHandleImplEnum
+      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandleImplEnum(
+          SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return KeyHandleImplEnumImpl.frbInternalSseDecode(
         sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
   }
 
@@ -3228,11 +3828,38 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  KeyPairHandleImplEnum
+      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandleImplEnum(
+          SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return KeyPairHandleImplEnumImpl.frbInternalSseDecode(
+        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
+  }
+
+  @protected
   Provider
       sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
           SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return ProviderImpl.frbInternalSseDecode(
+        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
+  }
+
+  @protected
+  ProviderFactoryEnum
+      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderFactoryEnum(
+          SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return ProviderFactoryEnumImpl.frbInternalSseDecode(
+        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
+  }
+
+  @protected
+  ProviderImplEnum
+      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplEnum(
+          SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return ProviderImplEnumImpl.frbInternalSseDecode(
         sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
   }
 
@@ -3627,6 +4254,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  String? sse_decode_opt_String(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_String(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
   Provider?
       sse_decode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
           SseDeserializer deserializer) {
@@ -3871,11 +4509,31 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
+      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHKeyExchangeImplEnum(
+          DhKeyExchangeImplEnum self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+        (self as DhKeyExchangeImplEnumImpl).frbInternalSseEncode(move: true),
+        serializer);
+  }
+
+  @protected
+  void
       sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandle(
           KeyHandle self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
         (self as KeyHandleImpl).frbInternalSseEncode(move: true), serializer);
+  }
+
+  @protected
+  void
+      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandleImplEnum(
+          KeyHandleImplEnum self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+        (self as KeyHandleImplEnumImpl).frbInternalSseEncode(move: true),
+        serializer);
   }
 
   @protected
@@ -3890,6 +4548,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
+      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandleImplEnum(
+          KeyPairHandleImplEnum self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+        (self as KeyPairHandleImplEnumImpl).frbInternalSseEncode(move: true),
+        serializer);
+  }
+
+  @protected
+  void
       sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
           Provider self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
@@ -3899,11 +4567,42 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-      sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
-          Provider self, SseSerializer serializer) {
+      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderFactoryEnum(
+          ProviderFactoryEnum self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-        (self as ProviderImpl).frbInternalSseEncode(move: false), serializer);
+        (self as ProviderFactoryEnumImpl).frbInternalSseEncode(move: true),
+        serializer);
+  }
+
+  @protected
+  void
+      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplEnum(
+          ProviderImplEnum self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+        (self as ProviderImplEnumImpl).frbInternalSseEncode(move: true),
+        serializer);
+  }
+
+  @protected
+  void
+      sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHKeyExchangeImplEnum(
+          DhKeyExchangeImplEnum self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+        (self as DhKeyExchangeImplEnumImpl).frbInternalSseEncode(move: false),
+        serializer);
+  }
+
+  @protected
+  void
+      sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplEnum(
+          ProviderImplEnum self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+        (self as ProviderImplEnumImpl).frbInternalSseEncode(move: false),
+        serializer);
   }
 
   @protected
@@ -3917,39 +4616,52 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-      sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHExchange(
-          DhExchange self, SseSerializer serializer) {
+      sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHKeyExchangeImplEnum(
+          DhKeyExchangeImplEnum self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-        (self as DhExchangeImpl).frbInternalSseEncode(move: false), serializer);
-  }
-
-  @protected
-  void
-      sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandle(
-          KeyHandle self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-        (self as KeyHandleImpl).frbInternalSseEncode(move: false), serializer);
-  }
-
-  @protected
-  void
-      sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle(
-          KeyPairHandle self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-        (self as KeyPairHandleImpl).frbInternalSseEncode(move: false),
+        (self as DhKeyExchangeImplEnumImpl).frbInternalSseEncode(move: false),
         serializer);
   }
 
   @protected
   void
-      sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
-          Provider self, SseSerializer serializer) {
+      sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandleImplEnum(
+          KeyHandleImplEnum self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-        (self as ProviderImpl).frbInternalSseEncode(move: false), serializer);
+        (self as KeyHandleImplEnumImpl).frbInternalSseEncode(move: false),
+        serializer);
+  }
+
+  @protected
+  void
+      sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandleImplEnum(
+          KeyPairHandleImplEnum self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+        (self as KeyPairHandleImplEnumImpl).frbInternalSseEncode(move: false),
+        serializer);
+  }
+
+  @protected
+  void
+      sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderFactoryEnum(
+          ProviderFactoryEnum self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+        (self as ProviderFactoryEnumImpl).frbInternalSseEncode(move: false),
+        serializer);
+  }
+
+  @protected
+  void
+      sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplEnum(
+          ProviderImplEnum self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+        (self as ProviderImplEnumImpl).frbInternalSseEncode(move: false),
+        serializer);
   }
 
   @protected
@@ -4066,11 +4778,31 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
+      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHKeyExchangeImplEnum(
+          DhKeyExchangeImplEnum self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+        (self as DhKeyExchangeImplEnumImpl).frbInternalSseEncode(move: null),
+        serializer);
+  }
+
+  @protected
+  void
       sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandle(
           KeyHandle self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
         (self as KeyHandleImpl).frbInternalSseEncode(move: null), serializer);
+  }
+
+  @protected
+  void
+      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandleImplEnum(
+          KeyHandleImplEnum self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+        (self as KeyHandleImplEnumImpl).frbInternalSseEncode(move: null),
+        serializer);
   }
 
   @protected
@@ -4085,11 +4817,41 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
+      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandleImplEnum(
+          KeyPairHandleImplEnum self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+        (self as KeyPairHandleImplEnumImpl).frbInternalSseEncode(move: null),
+        serializer);
+  }
+
+  @protected
+  void
       sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
           Provider self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
         (self as ProviderImpl).frbInternalSseEncode(move: null), serializer);
+  }
+
+  @protected
+  void
+      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderFactoryEnum(
+          ProviderFactoryEnum self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+        (self as ProviderFactoryEnumImpl).frbInternalSseEncode(move: null),
+        serializer);
+  }
+
+  @protected
+  void
+      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProviderImplEnum(
+          ProviderImplEnum self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+        (self as ProviderImplEnumImpl).frbInternalSseEncode(move: null),
+        serializer);
   }
 
   @protected
@@ -4436,6 +5198,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_opt_String(String? self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_String(self, serializer);
+    }
+  }
+
+  @protected
   void
       sse_encode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProvider(
           Provider? self, SseSerializer serializer) {
@@ -4724,33 +5496,64 @@ class DhExchangeImpl extends RustOpaque implements DhExchange {
     rustArcDecrementStrongCountPtr:
         RustLib.instance.api.rust_arc_decrement_strong_count_DhExchangePtr,
   );
+}
+
+@sealed
+class DhKeyExchangeImplEnumImpl extends RustOpaque
+    implements DhKeyExchangeImplEnum {
+  // Not to be used by end users
+  DhKeyExchangeImplEnumImpl.frbInternalDcoDecode(List<dynamic> wire)
+      : super.frbInternalDcoDecode(wire, _kStaticData);
+
+  // Not to be used by end users
+  DhKeyExchangeImplEnumImpl.frbInternalSseDecode(
+      BigInt ptr, int externalSizeOnNative)
+      : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
+
+  static final _kStaticData = RustArcStaticData(
+    rustArcIncrementStrongCount: RustLib
+        .instance.api.rust_arc_increment_strong_count_DhKeyExchangeImplEnum,
+    rustArcDecrementStrongCount: RustLib
+        .instance.api.rust_arc_decrement_strong_count_DhKeyExchangeImplEnum,
+    rustArcDecrementStrongCountPtr: RustLib
+        .instance.api.rust_arc_decrement_strong_count_DhKeyExchangeImplEnumPtr,
+  );
 
   Future<(KeyHandle, KeyHandle)> deriveClientKeyHandles(
-          {required List<int> serverPk}) =>
-      RustLib.instance.api.cryptoLayerCommonDhExchangeDeriveClientKeyHandles(
-          that: this, serverPk: serverPk);
+          {required List<int> enumDispatchArg0}) =>
+      RustLib.instance.api
+          .cryptoLayerCommonTraitsKeyHandleDhKeyExchangeImplEnumDeriveClientKeyHandles(
+              that: this, enumDispatchArg0: enumDispatchArg0);
 
+  /// Derive client session keys (rx, tx) - client is the templator in your code
   Future<(Uint8List, Uint8List)> deriveClientSessionKeys(
-          {required List<int> serverPk}) =>
-      RustLib.instance.api.cryptoLayerCommonDhExchangeDeriveClientSessionKeys(
-          that: this, serverPk: serverPk);
+          {required List<int> enumDispatchArg0}) =>
+      RustLib.instance.api
+          .cryptoLayerCommonTraitsKeyHandleDhKeyExchangeImplEnumDeriveClientSessionKeys(
+              that: this, enumDispatchArg0: enumDispatchArg0);
 
   Future<(KeyHandle, KeyHandle)> deriveServerKeyHandles(
-          {required List<int> clientPk}) =>
-      RustLib.instance.api.cryptoLayerCommonDhExchangeDeriveServerKeyHandles(
-          that: this, clientPk: clientPk);
+          {required List<int> enumDispatchArg0}) =>
+      RustLib.instance.api
+          .cryptoLayerCommonTraitsKeyHandleDhKeyExchangeImplEnumDeriveServerKeyHandles(
+              that: this, enumDispatchArg0: enumDispatchArg0);
 
+  /// Derive server session keys (rx, tx) - server is the requestor in your code
   Future<(Uint8List, Uint8List)> deriveServerSessionKeys(
-          {required List<int> clientPk}) =>
-      RustLib.instance.api.cryptoLayerCommonDhExchangeDeriveServerSessionKeys(
-          that: this, clientPk: clientPk);
+          {required List<int> enumDispatchArg0}) =>
+      RustLib.instance.api
+          .cryptoLayerCommonTraitsKeyHandleDhKeyExchangeImplEnumDeriveServerSessionKeys(
+              that: this, enumDispatchArg0: enumDispatchArg0);
 
-  Future<Uint8List> getPublicKey() =>
-      RustLib.instance.api.cryptoLayerCommonDhExchangeGetPublicKey(
+  /// Get the public key of the internal key pair to use for the other party
+  Future<Uint8List> getPublicKey() => RustLib.instance.api
+          .cryptoLayerCommonTraitsKeyHandleDhKeyExchangeImplEnumGetPublicKey(
         that: this,
       );
 
-  Future<String> id() => RustLib.instance.api.cryptoLayerCommonDhExchangeId(
+  /// Returns the id of the key pair, which can be used with `load_key_pair`.
+  Future<String> id() => RustLib.instance.api
+          .cryptoLayerCommonTraitsKeyHandleDhKeyExchangeImplEnumId(
         that: this,
       );
 }
@@ -4773,40 +5576,100 @@ class KeyHandleImpl extends RustOpaque implements KeyHandle {
     rustArcDecrementStrongCountPtr:
         RustLib.instance.api.rust_arc_decrement_strong_count_KeyHandlePtr,
   );
+}
 
+@sealed
+class KeyHandleImplEnumImpl extends RustOpaque implements KeyHandleImplEnum {
+  // Not to be used by end users
+  KeyHandleImplEnumImpl.frbInternalDcoDecode(List<dynamic> wire)
+      : super.frbInternalDcoDecode(wire, _kStaticData);
+
+  // Not to be used by end users
+  KeyHandleImplEnumImpl.frbInternalSseDecode(
+      BigInt ptr, int externalSizeOnNative)
+      : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
+
+  static final _kStaticData = RustArcStaticData(
+    rustArcIncrementStrongCount:
+        RustLib.instance.api.rust_arc_increment_strong_count_KeyHandleImplEnum,
+    rustArcDecrementStrongCount:
+        RustLib.instance.api.rust_arc_decrement_strong_count_KeyHandleImplEnum,
+    rustArcDecrementStrongCountPtr: RustLib
+        .instance.api.rust_arc_decrement_strong_count_KeyHandleImplEnumPtr,
+  );
+
+  /// Decrypts the given encrypted data using the cryptographic key.
+  ///
+  /// # Arguments
+  /// * `encrypted_data` - A byte slice representing the data to be decrypted.
+  /// * `iv` - A byte slice representing the initialization vector used for encryption.
+  ///
+  /// # Returns
+  /// A `Result` containing the decrypted data as a `Vec<u8>` on success, or a `CalError` on failure.
   Future<Uint8List> decryptData(
-          {required List<int> encryptedData, required List<int> iv}) =>
-      RustLib.instance.api.cryptoLayerCommonKeyHandleDecryptData(
-          that: this, encryptedData: encryptedData, iv: iv);
-
-  Future<void> delete() =>
-      RustLib.instance.api.cryptoLayerCommonKeyHandleDelete(
-        that: this,
-      );
-
-  Future<(Uint8List, Uint8List)> encryptData({required List<int> data}) =>
+          {required List<int> enumDispatchArg0,
+          required List<int> enumDispatchArg1}) =>
       RustLib.instance.api
-          .cryptoLayerCommonKeyHandleEncryptData(that: this, data: data);
+          .cryptoLayerCommonTraitsKeyHandleKeyHandleImplEnumDecryptData(
+              that: this,
+              enumDispatchArg0: enumDispatchArg0,
+              enumDispatchArg1: enumDispatchArg1);
 
-  Future<Uint8List> extractKey() =>
-      RustLib.instance.api.cryptoLayerCommonKeyHandleExtractKey(
+  /// Delete this key.
+  Future<void> delete() => RustLib.instance.api
+          .cryptoLayerCommonTraitsKeyHandleKeyHandleImplEnumDelete(
         that: this,
       );
 
-  Future<Uint8List> hmac({required List<int> data}) => RustLib.instance.api
-      .cryptoLayerCommonKeyHandleHmac(that: this, data: data);
+  /// Encrypts the given data using the cryptographic key.
+  ///
+  /// # Arguments
+  /// * `data` - A byte slice representing the data to be encrypted.
+  ///
+  /// # Returns
+  /// A `Result` containing the encrypted data and the used iv as a `Vec<u8>` on success,
+  /// where the first value is the data and the second the iv,
+  /// or a `CalError` on failure.
+  Future<(Uint8List, Uint8List)> encryptData(
+          {required List<int> enumDispatchArg0}) =>
+      RustLib.instance.api
+          .cryptoLayerCommonTraitsKeyHandleKeyHandleImplEnumEncryptData(
+              that: this, enumDispatchArg0: enumDispatchArg0);
 
-  Future<String> id() => RustLib.instance.api.cryptoLayerCommonKeyHandleId(
+  /// Returns the raw key as binary.
+  ///
+  /// Most hardware based providers will return [CalError]
+  /// with [CalErrorKind::NotImplemented](super::CalErrorKind::NotImplemented).
+  Future<Uint8List> extractKey() => RustLib.instance.api
+          .cryptoLayerCommonTraitsKeyHandleKeyHandleImplEnumExtractKey(
         that: this,
       );
 
-  Future<KeySpec> spec() => RustLib.instance.api.cryptoLayerCommonKeyHandleSpec(
+  Future<Uint8List> hmac({required List<int> enumDispatchArg0}) =>
+      RustLib.instance.api
+          .cryptoLayerCommonTraitsKeyHandleKeyHandleImplEnumHmac(
+              that: this, enumDispatchArg0: enumDispatchArg0);
+
+  /// Returns the id of the key, which can be used with `load_key`.
+  Future<String> id() =>
+      RustLib.instance.api.cryptoLayerCommonTraitsKeyHandleKeyHandleImplEnumId(
         that: this,
       );
 
-  Future<bool> verifyHmac({required List<int> data, required List<int> hmac}) =>
-      RustLib.instance.api.cryptoLayerCommonKeyHandleVerifyHmac(
-          that: this, data: data, hmac: hmac);
+  /// Returns the [KeySpec] the key was generated with.
+  Future<KeySpec> spec() => RustLib.instance.api
+          .cryptoLayerCommonTraitsKeyHandleKeyHandleImplEnumSpec(
+        that: this,
+      );
+
+  Future<bool> verifyHmac(
+          {required List<int> enumDispatchArg0,
+          required List<int> enumDispatchArg1}) =>
+      RustLib.instance.api
+          .cryptoLayerCommonTraitsKeyHandleKeyHandleImplEnumVerifyHmac(
+              that: this,
+              enumDispatchArg0: enumDispatchArg0,
+              enumDispatchArg1: enumDispatchArg1);
 }
 
 @sealed
@@ -4827,61 +5690,166 @@ class KeyPairHandleImpl extends RustOpaque implements KeyPairHandle {
     rustArcDecrementStrongCountPtr:
         RustLib.instance.api.rust_arc_decrement_strong_count_KeyPairHandlePtr,
   );
+}
 
-  /// Abstraction of asymmetric key pair handles.
-  Future<Uint8List> decryptData({required List<int> data}) =>
+@sealed
+class KeyPairHandleImplEnumImpl extends RustOpaque
+    implements KeyPairHandleImplEnum {
+  // Not to be used by end users
+  KeyPairHandleImplEnumImpl.frbInternalDcoDecode(List<dynamic> wire)
+      : super.frbInternalDcoDecode(wire, _kStaticData);
+
+  // Not to be used by end users
+  KeyPairHandleImplEnumImpl.frbInternalSseDecode(
+      BigInt ptr, int externalSizeOnNative)
+      : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
+
+  static final _kStaticData = RustArcStaticData(
+    rustArcIncrementStrongCount: RustLib
+        .instance.api.rust_arc_increment_strong_count_KeyPairHandleImplEnum,
+    rustArcDecrementStrongCount: RustLib
+        .instance.api.rust_arc_decrement_strong_count_KeyPairHandleImplEnum,
+    rustArcDecrementStrongCountPtr: RustLib
+        .instance.api.rust_arc_decrement_strong_count_KeyPairHandleImplEnumPtr,
+  );
+
+  /// Decrypts the given encrypted data using the cryptographic key.
+  ///
+  /// # Arguments
+  /// * `encrypted_data` - A byte slice representing the data to be decrypted.
+  ///
+  /// # Returns
+  /// A `Result` containing the decrypted data as a `Vec<u8>` on success, or a `CalError` on failure.
+  Future<Uint8List> decryptData({required List<int> enumDispatchArg0}) =>
       RustLib.instance.api
-          .cryptoLayerCommonKeyPairHandleDecryptData(that: this, data: data);
+          .cryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumDecryptData(
+              that: this, enumDispatchArg0: enumDispatchArg0);
 
-  /// Abstraction of asymmetric key pair handles.
-  Future<void> delete() =>
-      RustLib.instance.api.cryptoLayerCommonKeyPairHandleDelete(
+  /// Delete this key pair.
+  Future<void> delete() => RustLib.instance.api
+          .cryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumDelete(
         that: this,
       );
 
-  /// Abstraction of asymmetric key pair handles.
-  Future<Uint8List> encryptData({required List<int> data}) =>
+  /// Encrypts the given data using the cryptographic key.
+  ///
+  /// # Arguments
+  /// * `data` - A byte slice representing the data to be encrypted.
+  ///
+  /// # Returns
+  /// A `Result` containing the encrypted data as a `Vec<u8>` on success, or a `CalError` on failure.
+  Future<Uint8List> encryptData({required List<int> enumDispatchArg0}) =>
       RustLib.instance.api
-          .cryptoLayerCommonKeyPairHandleEncryptData(that: this, data: data);
+          .cryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumEncryptData(
+              that: this, enumDispatchArg0: enumDispatchArg0);
 
-  /// Abstraction of asymmetric key pair handles.
-  Future<Uint8List> extractKey() =>
-      RustLib.instance.api.cryptoLayerCommonKeyPairHandleExtractKey(
+  /// Returns the raw private key as binary.
+  ///
+  /// Most hardware based providers will return [CalError]
+  /// with [CalErrorKind::NotImplemented](super::CalErrorKind::NotImplemented).
+  Future<Uint8List> extractKey() => RustLib.instance.api
+          .cryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumExtractKey(
         that: this,
       );
 
-  /// Abstraction of asymmetric key pair handles.
-  Future<Uint8List> getPublicKey() =>
-      RustLib.instance.api.cryptoLayerCommonKeyPairHandleGetPublicKey(
+  /// Returns the raw public key as binary.
+  Future<Uint8List> getPublicKey() => RustLib.instance.api
+          .cryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumGetPublicKey(
         that: this,
       );
 
-  /// Abstraction of asymmetric key pair handles.
-  Future<String> id() => RustLib.instance.api.cryptoLayerCommonKeyPairHandleId(
+  /// Returns the id of the key pair, which can be used with `load_key_pair`.
+  Future<String> id() => RustLib.instance.api
+          .cryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumId(
         that: this,
       );
 
-  /// Abstraction of asymmetric key pair handles.
-  Future<Uint8List> signData({required List<int> data}) => RustLib.instance.api
-      .cryptoLayerCommonKeyPairHandleSignData(that: this, data: data);
+  /// Signs the given data using the cryptographic key.
+  ///
+  /// # Arguments
+  /// * `data` - A byte slice representing the data to be signed.
+  ///
+  /// # Returns
+  /// A `Result` containing the signature as a `Vec<u8>` on success, or a `CalError` on failure.
+  Future<Uint8List> signData({required List<int> enumDispatchArg0}) =>
+      RustLib.instance.api
+          .cryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumSignData(
+              that: this, enumDispatchArg0: enumDispatchArg0);
 
-  /// Abstraction of asymmetric key pair handles.
-  Future<KeyPairSpec> spec() =>
-      RustLib.instance.api.cryptoLayerCommonKeyPairHandleSpec(
+  /// Returns the [KeyPairSpec] the key was generated with.
+  Future<KeyPairSpec> spec() => RustLib.instance.api
+          .cryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumSpec(
         that: this,
       );
 
-  /// Abstraction of asymmetric key pair handles.
-  Future<DhExchange> startDhExchange() =>
-      RustLib.instance.api.cryptoLayerCommonKeyPairHandleStartDhExchange(
+  /// Starts a [DHExchange].
+  ///
+  /// Some Providers might return [CalError]
+  /// with [CalErrorKind::NotImplemented](super::CalErrorKind::NotImplemented).
+  Future<DhExchange> startDhExchange() => RustLib.instance.api
+          .cryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumStartDhExchange(
         that: this,
       );
 
-  /// Abstraction of asymmetric key pair handles.
+  /// Verifies the signature of the given data using the cryptographic key.
+  ///
+  /// # Arguments
+  /// * `data` - A byte slice representing the data whose signature is to be verified.
+  /// * `signature` - A byte slice representing the signature to be verified against the data.
+  ///
+  /// # Returns
+  /// A `Result` containing a boolean indicating whether the signature is valid (`true`) or not (`false`),
+  /// or a `CalError` on failure.
   Future<bool> verifySignature(
-          {required List<int> data, required List<int> signature}) =>
-      RustLib.instance.api.cryptoLayerCommonKeyPairHandleVerifySignature(
-          that: this, data: data, signature: signature);
+          {required List<int> enumDispatchArg0,
+          required List<int> enumDispatchArg1}) =>
+      RustLib.instance.api
+          .cryptoLayerCommonTraitsKeyHandleKeyPairHandleImplEnumVerifySignature(
+              that: this,
+              enumDispatchArg0: enumDispatchArg0,
+              enumDispatchArg1: enumDispatchArg1);
+}
+
+@sealed
+class ProviderFactoryEnumImpl extends RustOpaque
+    implements ProviderFactoryEnum {
+  // Not to be used by end users
+  ProviderFactoryEnumImpl.frbInternalDcoDecode(List<dynamic> wire)
+      : super.frbInternalDcoDecode(wire, _kStaticData);
+
+  // Not to be used by end users
+  ProviderFactoryEnumImpl.frbInternalSseDecode(
+      BigInt ptr, int externalSizeOnNative)
+      : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
+
+  static final _kStaticData = RustArcStaticData(
+    rustArcIncrementStrongCount: RustLib
+        .instance.api.rust_arc_increment_strong_count_ProviderFactoryEnum,
+    rustArcDecrementStrongCount: RustLib
+        .instance.api.rust_arc_decrement_strong_count_ProviderFactoryEnum,
+    rustArcDecrementStrongCountPtr: RustLib
+        .instance.api.rust_arc_decrement_strong_count_ProviderFactoryEnumPtr,
+  );
+
+  Future<ProviderImplEnum> createProvider(
+          {required ProviderImplConfig enumDispatchArg0}) =>
+      RustLib.instance.api
+          .cryptoLayerCommonTraitsModuleProviderProviderFactoryEnumCreateProvider(
+              that: this, enumDispatchArg0: enumDispatchArg0);
+
+  /// Returns security level and supported algorithms of a provider.
+  ///
+  /// [`ProviderConfig`] returned stores in `HashSets` all `Hashes`, `Ciphers` and `AsymmetricKeySpecs` a provider supports.
+  Future<ProviderConfig?> getCapabilities(
+          {required ProviderImplConfig enumDispatchArg0}) =>
+      RustLib.instance.api
+          .cryptoLayerCommonTraitsModuleProviderProviderFactoryEnumGetCapabilities(
+              that: this, enumDispatchArg0: enumDispatchArg0);
+
+  Future<String?> getName() => RustLib.instance.api
+          .cryptoLayerCommonTraitsModuleProviderProviderFactoryEnumGetName(
+        that: this,
+      );
 }
 
 @sealed
@@ -4902,93 +5870,216 @@ class ProviderImpl extends RustOpaque implements Provider {
     rustArcDecrementStrongCountPtr:
         RustLib.instance.api.rust_arc_decrement_strong_count_ProviderPtr,
   );
+}
 
-  Future<KeyHandle> createKey({required KeySpec spec}) => RustLib.instance.api
-      .cryptoLayerCommonProviderCreateKey(that: this, spec: spec);
+@sealed
+class ProviderImplEnumImpl extends RustOpaque implements ProviderImplEnum {
+  // Not to be used by end users
+  ProviderImplEnumImpl.frbInternalDcoDecode(List<dynamic> wire)
+      : super.frbInternalDcoDecode(wire, _kStaticData);
 
-  Future<KeyPairHandle> createKeyPair({required KeyPairSpec spec}) =>
+  // Not to be used by end users
+  ProviderImplEnumImpl.frbInternalSseDecode(
+      BigInt ptr, int externalSizeOnNative)
+      : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
+
+  static final _kStaticData = RustArcStaticData(
+    rustArcIncrementStrongCount:
+        RustLib.instance.api.rust_arc_increment_strong_count_ProviderImplEnum,
+    rustArcDecrementStrongCount:
+        RustLib.instance.api.rust_arc_decrement_strong_count_ProviderImplEnum,
+    rustArcDecrementStrongCountPtr: RustLib
+        .instance.api.rust_arc_decrement_strong_count_ProviderImplEnumPtr,
+  );
+
+  /// Creates a new symmetric key identified by `key_id`.
+  ///
+  /// # Arguments
+  ///
+  /// * `key_id` - A string slice that uniquely identifies the key to be created.
+  /// * `spec` - The key specification.
+  ///
+  /// # Returns
+  ///
+  /// A `Result` that, on success, contains a `KeyHandle`, allowing further operations with this key.
+  /// On failure, it returns a `CalError`.
+  Future<KeyHandle> createKey({required KeySpec enumDispatchArg0}) =>
       RustLib.instance.api
-          .cryptoLayerCommonProviderCreateKeyPair(that: this, spec: spec);
+          .cryptoLayerCommonTraitsModuleProviderProviderImplEnumCreateKey(
+              that: this, enumDispatchArg0: enumDispatchArg0);
 
+  /// Creates a new asymmetric key pair identified by `key_id`.
+  ///
+  /// # Arguments
+  ///
+  /// * `key_id` - A string slice that uniquely identifies the keypair to be created.
+  /// * `spec` - The key specification.
+  ///
+  /// # Returns
+  ///
+  /// A `Result` that, on success, contains a `KeyPairHandle`, allowing further operations with this key pair.
+  /// On failure, it returns a `CalError`.
+  Future<KeyPairHandle> createKeyPair(
+          {required KeyPairSpec enumDispatchArg0}) =>
+      RustLib.instance.api
+          .cryptoLayerCommonTraitsModuleProviderProviderImplEnumCreateKeyPair(
+              that: this, enumDispatchArg0: enumDispatchArg0);
+
+  /// Derives a high-entropy key from a low-entropy password and a unique salt
   Future<KeyHandle> deriveKeyFromBase(
-          {required List<int> baseKey,
-          required BigInt keyId,
-          required String context,
-          required KeySpec spec}) =>
-      RustLib.instance.api.cryptoLayerCommonProviderDeriveKeyFromBase(
-          that: this,
-          baseKey: baseKey,
-          keyId: keyId,
-          context: context,
-          spec: spec);
-
-  Future<KeyHandle> deriveKeyFromPassword(
-          {required String password,
-          required List<int> salt,
-          required KeySpec algorithm,
-          required KDF kdf}) =>
-      RustLib.instance.api.cryptoLayerCommonProviderDeriveKeyFromPassword(
-          that: this,
-          password: password,
-          salt: salt,
-          algorithm: algorithm,
-          kdf: kdf);
-
-  Future<DhExchange> dhExchangeFromKeys(
-          {required List<int> publicKey,
-          required List<int> privateKey,
-          required KeyPairSpec spec}) =>
-      RustLib.instance.api.cryptoLayerCommonProviderDhExchangeFromKeys(
-          that: this, publicKey: publicKey, privateKey: privateKey, spec: spec);
-
-  Future<List<(String, Spec)>> getAllKeys() =>
-      RustLib.instance.api.cryptoLayerCommonProviderGetAllKeys(
-        that: this,
-      );
-
-  Future<ProviderConfig?> getCapabilities() =>
-      RustLib.instance.api.cryptoLayerCommonProviderGetCapabilities(
-        that: this,
-      );
-
-  Future<Uint8List> getRandom({required BigInt len}) => RustLib.instance.api
-      .cryptoLayerCommonProviderGetRandom(that: this, len: len);
-
-  Future<Uint8List> hash(
-          {required List<int> input, required CryptoHash hash}) =>
+          {required List<int> enumDispatchArg0,
+          required BigInt enumDispatchArg1,
+          required String enumDispatchArg2,
+          required KeySpec enumDispatchArg3}) =>
       RustLib.instance.api
-          .cryptoLayerCommonProviderHash(that: this, input: input, hash: hash);
+          .cryptoLayerCommonTraitsModuleProviderProviderImplEnumDeriveKeyFromBase(
+              that: this,
+              enumDispatchArg0: enumDispatchArg0,
+              enumDispatchArg1: enumDispatchArg1,
+              enumDispatchArg2: enumDispatchArg2,
+              enumDispatchArg3: enumDispatchArg3);
+
+  /// Derives a high-entropy key from a low-entropy password and a unique salt
+  Future<KeyHandle> deriveKeyFromPassword(
+          {required String enumDispatchArg0,
+          required List<int> enumDispatchArg1,
+          required KeySpec enumDispatchArg2,
+          required KDF enumDispatchArg3}) =>
+      RustLib.instance.api
+          .cryptoLayerCommonTraitsModuleProviderProviderImplEnumDeriveKeyFromPassword(
+              that: this,
+              enumDispatchArg0: enumDispatchArg0,
+              enumDispatchArg1: enumDispatchArg1,
+              enumDispatchArg2: enumDispatchArg2,
+              enumDispatchArg3: enumDispatchArg3);
+
+  /// [DEPRECATED]: Starts a dh exchange from a raw private key and it's public key.
+  ///
+  /// `start_dh_exchange` of `KeyPairHandle` is preferable for use with crypto layer.
+  Future<DhExchange> dhExchangeFromKeys(
+          {required List<int> enumDispatchArg0,
+          required List<int> enumDispatchArg1,
+          required KeyPairSpec enumDispatchArg2}) =>
+      RustLib.instance.api
+          .cryptoLayerCommonTraitsModuleProviderProviderImplEnumDhExchangeFromKeys(
+              that: this,
+              enumDispatchArg0: enumDispatchArg0,
+              enumDispatchArg1: enumDispatchArg1,
+              enumDispatchArg2: enumDispatchArg2);
+
+  Future<List<(String, Spec)>> getAllKeys() => RustLib.instance.api
+          .cryptoLayerCommonTraitsModuleProviderProviderImplEnumGetAllKeys(
+        that: this,
+      );
+
+  Future<ProviderConfig?> getCapabilities() => RustLib.instance.api
+          .cryptoLayerCommonTraitsModuleProviderProviderImplEnumGetCapabilities(
+        that: this,
+      );
+
+  /// Generates random bytes
+  ///
+  /// # Arguments
+  ///
+  /// * `len` - Number of bytes to generate
+  ///
+  /// # Returns
+  ///
+  /// A `Vec` that, on success, contains a the requested amount of random bytes.
+  Future<Uint8List> getRandom({required BigInt enumDispatchArg0}) =>
+      RustLib.instance.api
+          .cryptoLayerCommonTraitsModuleProviderProviderImplEnumGetRandom(
+              that: this, enumDispatchArg0: enumDispatchArg0);
+
+  /// Hashes the input
+  Future<Uint8List> hash(
+          {required List<int> enumDispatchArg0,
+          required CryptoHash enumDispatchArg1}) =>
+      RustLib.instance.api
+          .cryptoLayerCommonTraitsModuleProviderProviderImplEnumHash(
+              that: this,
+              enumDispatchArg0: enumDispatchArg0,
+              enumDispatchArg1: enumDispatchArg1);
 
   Future<KeyHandle> importKey(
-          {required KeySpec spec, required List<int> data}) =>
-      RustLib.instance.api.cryptoLayerCommonProviderImportKey(
-          that: this, spec: spec, data: data);
+          {required KeySpec enumDispatchArg0,
+          required List<int> enumDispatchArg1}) =>
+      RustLib.instance.api
+          .cryptoLayerCommonTraitsModuleProviderProviderImplEnumImportKey(
+              that: this,
+              enumDispatchArg0: enumDispatchArg0,
+              enumDispatchArg1: enumDispatchArg1);
 
   Future<KeyPairHandle> importKeyPair(
-          {required KeyPairSpec spec,
-          required List<int> publicKey,
-          required List<int> privateKey}) =>
-      RustLib.instance.api.cryptoLayerCommonProviderImportKeyPair(
-          that: this, spec: spec, publicKey: publicKey, privateKey: privateKey);
+          {required KeyPairSpec enumDispatchArg0,
+          required List<int> enumDispatchArg1,
+          required List<int> enumDispatchArg2}) =>
+      RustLib.instance.api
+          .cryptoLayerCommonTraitsModuleProviderProviderImplEnumImportKeyPair(
+              that: this,
+              enumDispatchArg0: enumDispatchArg0,
+              enumDispatchArg1: enumDispatchArg1,
+              enumDispatchArg2: enumDispatchArg2);
 
   Future<KeyPairHandle> importPublicKey(
-          {required KeyPairSpec spec, required List<int> publicKey}) =>
-      RustLib.instance.api.cryptoLayerCommonProviderImportPublicKey(
-          that: this, spec: spec, publicKey: publicKey);
-
-  Future<KeyHandle> loadKey({required String id}) =>
-      RustLib.instance.api.cryptoLayerCommonProviderLoadKey(that: this, id: id);
-
-  Future<KeyPairHandle> loadKeyPair({required String id}) =>
+          {required KeyPairSpec enumDispatchArg0,
+          required List<int> enumDispatchArg1}) =>
       RustLib.instance.api
-          .cryptoLayerCommonProviderLoadKeyPair(that: this, id: id);
+          .cryptoLayerCommonTraitsModuleProviderProviderImplEnumImportPublicKey(
+              that: this,
+              enumDispatchArg0: enumDispatchArg0,
+              enumDispatchArg1: enumDispatchArg1);
 
-  Future<String> providerName() =>
-      RustLib.instance.api.cryptoLayerCommonProviderProviderName(
+  /// Loads an existing symmetric key identified by `key_id`.
+  ///
+  /// # Arguments
+  ///
+  /// * `key_id` - A string slice that uniquely identifies the key to be loaded.
+  /// * `spec` - The key specification.
+  ///
+  /// # Returns
+  ///
+  /// A `Result` that, on success, contains a `KeyHandle`, allowing further operations with this key.
+  /// On failure, it returns a `CalError`.
+  Future<KeyHandle> loadKey({required String enumDispatchArg0}) =>
+      RustLib.instance.api
+          .cryptoLayerCommonTraitsModuleProviderProviderImplEnumLoadKey(
+              that: this, enumDispatchArg0: enumDispatchArg0);
+
+  /// Loads an existing asymmetric keypair identified by `key_id`.
+  ///
+  /// # Arguments
+  ///
+  /// * `key_id` - A string slice that uniquely identifies the keypair to be loaded.
+  /// * `spec` - The key specification.
+  ///
+  /// # Returns
+  ///
+  /// A `Result` that, on success, contains a `KeyPairHandle`, allowing further operations with this key pair.
+  /// On failure, it returns a `CalError`.
+  Future<KeyPairHandle> loadKeyPair({required String enumDispatchArg0}) =>
+      RustLib.instance.api
+          .cryptoLayerCommonTraitsModuleProviderProviderImplEnumLoadKeyPair(
+              that: this, enumDispatchArg0: enumDispatchArg0);
+
+  Future<String> providerName() => RustLib.instance.api
+          .cryptoLayerCommonTraitsModuleProviderProviderImplEnumProviderName(
         that: this,
       );
 
-  Future<DhExchange> startEphemeralDhExchange({required KeyPairSpec spec}) =>
-      RustLib.instance.api.cryptoLayerCommonProviderStartEphemeralDhExchange(
-          that: this, spec: spec);
+  /// Generates a key pair suited for a Diffie-Hellman Key Exchange
+  ///
+  /// # Arguments
+  ///
+  /// * `spec` - A specification for the exchange process and resulting symmetric key
+  ///
+  /// # Returns
+  ///
+  /// A `Result` that, on success, contains a `DHExchange`, allowing further operations with this key pair.
+  /// On failure, it returns a `CalError`.
+  Future<DhExchange> startEphemeralDhExchange(
+          {required KeyPairSpec enumDispatchArg0}) =>
+      RustLib.instance.api
+          .cryptoLayerCommonTraitsModuleProviderProviderImplEnumStartEphemeralDhExchange(
+              that: this, enumDispatchArg0: enumDispatchArg0);
 }

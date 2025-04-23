@@ -11,6 +11,7 @@
 //! | SoftwareProvider                | ✅                    | ✅                        | ✅          | ✅         | ✅              | ✅                | ⬜         | ✅                 | ✅                |
 //!
 //!
+//!
 
 #![warn(
     rust_2024_incompatible_pat,

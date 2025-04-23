@@ -338,7 +338,7 @@ impl KeyPairHandleImpl for SoftwareKeyPairHandle {
     #[doc = " Delete this key pair."]
     fn delete(self) -> Result<(), CalError> {
         if let Some(s) = self.storage_manager {
-            s.delete(self.key_id)
+            s.delete(self.key_id.clone())
         }
         Ok(())
     }

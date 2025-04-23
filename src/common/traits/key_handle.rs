@@ -27,7 +27,7 @@ use enum_dispatch::enum_dispatch;
 /// operations across different types of security modules. Implementors of this trait
 /// must ensure thread safety.
 #[enum_dispatch(KeyHandleImplEnum)]
-pub(crate) trait KeyHandleImpl: Send + Sync {
+pub trait KeyHandleImpl: Send + Sync {
     /// Encrypts the given data using the cryptographic key.
     ///
     /// # Arguments
@@ -71,7 +71,7 @@ pub(crate) trait KeyHandleImpl: Send + Sync {
 
 #[enum_dispatch]
 #[derive(Debug, Clone)]
-pub(crate) enum KeyHandleImplEnum {
+pub enum KeyHandleImplEnum {
     StubKeyHandle,
     #[cfg(feature = "android")]
     AndroidKeyHandle,
@@ -80,7 +80,7 @@ pub(crate) enum KeyHandleImplEnum {
 }
 
 #[enum_dispatch(KeyPairHandleImplEnum)]
-pub(crate) trait KeyPairHandleImpl: Send + Sync {
+pub trait KeyPairHandleImpl: Send + Sync {
     /// Signs the given data using the cryptographic key.
     ///
     /// # Arguments
@@ -158,14 +158,14 @@ pub enum KeyPairHandleImplEnum {
 
 #[enum_dispatch]
 #[derive(Debug)]
-pub(crate) enum DHKeyExchangeImplEnum {
+pub enum DHKeyExchangeImplEnum {
     StubDHKeyExchange,
     #[cfg(feature = "software")]
     SoftwareDHExchange,
 }
 
 #[enum_dispatch(DHKeyExchangeImplEnum)]
-pub(crate) trait DHKeyExchangeImpl: Send + Sync {
+pub trait DHKeyExchangeImpl: Send + Sync {
     /// Returns the id of the key pair, which can be used with `load_key_pair`.
     fn id(&self) -> Result<String, CalError>;
 
@@ -173,10 +173,16 @@ pub(crate) trait DHKeyExchangeImpl: Send + Sync {
     fn get_public_key(&self) -> Result<Vec<u8>, CalError>;
 
     /// Derive client session keys (rx, tx) - client is the templator in your code
-    fn derive_client_session_keys(&mut self, server_pk: &[u8]) -> Result<(Vec<u8>, Vec<u8>), CalError>;
+    fn derive_client_session_keys(
+        &mut self,
+        server_pk: &[u8],
+    ) -> Result<(Vec<u8>, Vec<u8>), CalError>;
 
     /// Derive server session keys (rx, tx) - server is the requestor in your code
-    fn derive_server_session_keys(&mut self, client_pk: &[u8]) -> Result<(Vec<u8>, Vec<u8>), CalError>;
+    fn derive_server_session_keys(
+        &mut self,
+        client_pk: &[u8],
+    ) -> Result<(Vec<u8>, Vec<u8>), CalError>;
 
     fn derive_client_key_handles(
         &mut self,

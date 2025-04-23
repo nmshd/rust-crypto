@@ -1,2 +1,2 @@
-pub(crate) mod key_handle;
-pub(crate) mod module_provider;
+pub mod key_handle;
+pub mod module_provider;
