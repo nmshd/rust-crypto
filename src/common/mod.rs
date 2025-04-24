@@ -155,7 +155,7 @@ impl Provider {
 
     #[deprecated(note = "Non ephemeral dh exchanges are possibly insecure.")]
     #[allow(dead_code)]
-    fn dh_exchange_from_keys(
+    pub fn dh_exchange_from_keys(
         &mut self,
         public_key: &[u8],
         private_key: &[u8],
@@ -245,7 +245,7 @@ impl KeyPairHandle {
 
     #[deprecated(note = "Non ephemeral dh exchanges are possibly insecure.")]
     #[allow(dead_code)]
-    fn start_dh_exchange(&self) -> Result<DHExchange, CalError> {
+    pub fn start_dh_exchange(&self) -> Result<DHExchange, CalError> {
         self.implementation.start_dh_exchange()
     }
 
