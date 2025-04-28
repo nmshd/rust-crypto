@@ -41,7 +41,7 @@ impl ProviderFactory for SoftwareProviderFactory {
         let mut cipher_set = HashSet::new();
         cipher_set.insert(Cipher::AesGcm128);
         cipher_set.insert(Cipher::AesGcm256);
-        cipher_set.insert(Cipher::ChaCha20Poly1305);
+        cipher_set.insert(Cipher::XChaCha20Poly1305);
 
         let mut supported_hashes = HashSet::new();
         supported_hashes.insert(CryptoHash::Sha2_256);
