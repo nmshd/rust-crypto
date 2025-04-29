@@ -35,7 +35,7 @@ pub(crate) struct AndroidKeyPairHandle {
 }
 
 impl KeyHandleImpl for AndroidKeyHandle {
-    fn encrypt_data(&self, data: &[u8]) -> Result<(Vec<u8>, Vec<u8>), CalError> {
+    fn encrypt_data(&self, data: &[u8], iv: &[u8]) -> Result<(Vec<u8>, Vec<u8>), CalError> {
         info!("encrypting");
 
         let vm = context::android_context()?.vm();
@@ -56,7 +56,11 @@ impl KeyHandleImpl for AndroidKeyHandle {
             .getKey(&env, self.key_id.to_owned(), JObject::null())
             .err_internal()?;
         cipher.init(&env, 1, key.raw.as_obj()).err_internal()?;
-        let iv = cipher.getIV(&env).err_internal()?;
+        let iv = if !iv.is_empty() {
+            iv
+        } else {
+            cipher.getIV(&env).err_internal()?
+        };
         let encrypted = cipher.doFinal(&env, data.to_vec()).err_internal()?;
 
         Ok((encrypted, iv))
@@ -156,7 +160,7 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
     }
 
     fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, CalError> {
-        info!("verifiying");
+        info!("verifying");
 
         let vm = context::android_context()?.vm();
         let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
@@ -185,7 +189,7 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
         Ok(output)
     }
 
-    fn encrypt_data(&self, encryped_data: &[u8]) -> Result<Vec<u8>, CalError> {
+    fn encrypt_data(&self, encrypted_data: &[u8], iv: &[u8]) -> Result<Vec<u8>, CalError> {
         info!("encrypting");
 
         let vm = context::android_context()?.vm();
@@ -208,7 +212,7 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
             .err_internal()?;
         cipher.init(&env, 1, key.raw.as_obj()).err_internal()?;
         let encrypted = cipher
-            .doFinal(&env, encryped_data.to_vec())
+            .doFinal(&env, encrypted_data.to_vec())
             .err_internal()?;
 
         Ok(encrypted)

@@ -143,11 +143,11 @@ impl StorageManager {
                     self.key_handle
                         .as_ref()
                         .map(|key| {
-                            let (v, iv) = match key.encrypt_data(&secret) {
+                            let (v, iv) = match key.encrypt_data(&secret, &[]) {
                                 Ok(v) => v,
                                 Err(e) => return Err(e),
                             };
-                            Ok(StorageField::Encryped { data: v, iv })
+                            Ok(StorageField::Encrypted { data: v, iv })
                         })
                         .unwrap_or(Ok(StorageField::Raw(secret)))
                 })
@@ -234,7 +234,7 @@ impl StorageManager {
             secret_data: decoded
                 .secret_data
                 .and_then(|secret| match secret {
-                    StorageField::Encryped { data, iv } => {
+                    StorageField::Encrypted { data, iv } => {
                         self.key_handle
                             .as_ref()
                             .map(|key| match key.decrypt_data(&data, &iv) {
@@ -430,6 +430,6 @@ pub struct WithChecksum {
 
 #[derive(Serialize, Deserialize, Clone)]
 pub(crate) enum StorageField {
-    Encryped { data: Vec<u8>, iv: Vec<u8> },
+    Encrypted { data: Vec<u8>, iv: Vec<u8> },
     Raw(Vec<u8>),
 }

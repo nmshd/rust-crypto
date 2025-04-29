@@ -216,7 +216,7 @@ pub struct KeyPairHandle {
 /// Abstraction of asymmetric key pair handles.
 impl KeyPairHandle {
     delegate_enum! {
-        pub fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError>;
+        pub fn encrypt_data(&self, data: &[u8], iv: &[u8]) -> Result<Vec<u8>, CalError>;
     }
 
     delegate_enum! {
@@ -274,7 +274,7 @@ impl KeyHandle {
         pub fn extract_key(&self) -> Result<Vec<u8>, CalError>;
     }
     delegate_enum! {
-        pub fn encrypt_data(&self, data: &[u8]) -> Result<(Vec<u8>, Vec<u8>), CalError>;
+        pub fn encrypt_data(&self, data: &[u8], iv: &[u8]) -> Result<(Vec<u8>, Vec<u8>), CalError>;
     }
     delegate_enum! {
         pub fn decrypt_data(
