@@ -579,6 +579,7 @@ fn wire__crypto_layer__common__KeyHandle_encrypt_data_impl(
                 flutter_rust_bridge::for_generated::RustAutoOpaqueInner<KeyHandle>,
             >>::sse_decode(&mut deserializer);
             let api_data = <Vec<u8>>::sse_decode(&mut deserializer);
+            let api_iv = <Vec<u8>>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
                 transform_result_sse::<_, CalError>((move || {
@@ -596,8 +597,11 @@ fn wire__crypto_layer__common__KeyHandle_encrypt_data_impl(
                         }
                     }
                     let api_that_guard = api_that_guard.unwrap();
-                    let output_ok =
-                        crypto_layer::common::KeyHandle::encrypt_data(&*api_that_guard, &api_data)?;
+                    let output_ok = crypto_layer::common::KeyHandle::encrypt_data(
+                        &*api_that_guard,
+                        &api_data,
+                        &api_iv,
+                    )?;
                     Ok(output_ok)
                 })())
             }
@@ -971,6 +975,7 @@ fn wire__crypto_layer__common__KeyPairHandle_encrypt_data_impl(
                 flutter_rust_bridge::for_generated::RustAutoOpaqueInner<KeyPairHandle>,
             >>::sse_decode(&mut deserializer);
             let api_data = <Vec<u8>>::sse_decode(&mut deserializer);
+            let api_iv = <Vec<u8>>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
                 transform_result_sse::<_, CalError>((move || {
@@ -991,6 +996,7 @@ fn wire__crypto_layer__common__KeyPairHandle_encrypt_data_impl(
                     let output_ok = crypto_layer::common::KeyPairHandle::encrypt_data(
                         &*api_that_guard,
                         &api_data,
+                        &api_iv,
                     )?;
                     Ok(output_ok)
                 })())
