@@ -56,7 +56,7 @@ impl KeyPairHandleImpl for AppleSecureEnclaveKeyPair {
             .err_internal()
     }
 
-    fn encrypt_data(&self, _data: &[u8]) -> Result<Vec<u8>, CalError> {
+    fn encrypt_data(&self, _data: &[u8], iv: &[u8]) -> Result<Vec<u8>, CalError> {
         Err(CalError::not_implemented())
     }
 

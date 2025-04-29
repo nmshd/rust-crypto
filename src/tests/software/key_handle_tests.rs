@@ -280,7 +280,7 @@ mod tests {
 
             let plaintext = b"Test data for encryption and decryption via provider.";
 
-            let encrypted_data = software_key_handle.encrypt_data(plaintext)?;
+            let encrypted_data = software_key_handle.encrypt_data(plaintext, &[])?;
 
             assert_ne!(
                 encrypted_data.0, plaintext,
@@ -311,7 +311,7 @@ mod tests {
 
             let plaintext: &[u8] = &[];
 
-            let encrypted_data = software_key_handle.encrypt_data(plaintext)?;
+            let encrypted_data = software_key_handle.encrypt_data(plaintext, &[])?;
 
             let decrypted_data =
                 software_key_handle.decrypt_data(&encrypted_data.0, &encrypted_data.1)?;
@@ -338,7 +338,7 @@ mod tests {
 
             let plaintext = b"Data encrypted with key 1";
 
-            let encrypted_data = software_key_handle1.encrypt_data(plaintext)?;
+            let encrypted_data = software_key_handle1.encrypt_data(plaintext, &[])?;
 
             let decrypted_result =
                 software_key_handle2.decrypt_data(&encrypted_data.0, &encrypted_data.1);
@@ -363,7 +363,7 @@ mod tests {
 
             let plaintext = b"Data to encrypt and then tamper with.";
 
-            let mut encrypted_data = software_key_handle.encrypt_data(plaintext)?;
+            let mut encrypted_data = software_key_handle.encrypt_data(plaintext, &[])?;
 
             encrypted_data.0[15] ^= 0xFF;
 
@@ -407,7 +407,7 @@ mod tests {
 
             let plaintext = vec![0x61; 1_048_576]; // 1 MB of data
 
-            let encrypted_data = software_key_handle.encrypt_data(&plaintext)?;
+            let encrypted_data = software_key_handle.encrypt_data(&plaintext, &[])?;
 
             let decrypted_data =
                 software_key_handle.decrypt_data(&encrypted_data.0, &encrypted_data.1)?;
@@ -433,9 +433,9 @@ mod tests {
 
             let plaintext = b"Same plaintext encrypted multiple times";
 
-            let encrypted_data1 = software_key_handle.encrypt_data(plaintext)?;
+            let encrypted_data1 = software_key_handle.encrypt_data(plaintext, &[])?;
 
-            let encrypted_data2 = software_key_handle.encrypt_data(plaintext)?;
+            let encrypted_data2 = software_key_handle.encrypt_data(plaintext, &[])?;
 
             assert_ne!(
                 encrypted_data1, encrypted_data2,
@@ -528,7 +528,7 @@ mod tests {
 
             let plaintext = b"Testing encryption with different cipher specs";
 
-            let encrypted_data = software_key_handle256.encrypt_data(plaintext)?;
+            let encrypted_data = software_key_handle256.encrypt_data(plaintext, &[])?;
 
             let decrypted_result =
                 software_key_handle128.decrypt_data(&encrypted_data.0, &encrypted_data.1);
@@ -560,7 +560,7 @@ mod tests {
             for spec in specs {
                 let software_key_handle = create_software_key_handle(spec)?;
 
-                let encrypted_data = software_key_handle.encrypt_data(plaintext)?;
+                let encrypted_data = software_key_handle.encrypt_data(plaintext, &[])?;
 
                 let decrypted_data =
                     software_key_handle.decrypt_data(&encrypted_data.0, &encrypted_data.1)?;

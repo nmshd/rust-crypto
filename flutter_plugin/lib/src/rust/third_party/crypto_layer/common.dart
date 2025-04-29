@@ -39,7 +39,8 @@ abstract class KeyHandle implements RustOpaqueInterface {
 
   Future<void> delete();
 
-  Future<(Uint8List, Uint8List)> encryptData({required List<int> data});
+  Future<(Uint8List, Uint8List)> encryptData(
+      {required List<int> data, required List<int> iv});
 
   Future<Uint8List> extractKey();
 
@@ -61,7 +62,8 @@ abstract class KeyPairHandle implements RustOpaqueInterface {
   Future<void> delete();
 
   /// Abstraction of asymmetric key pair handles.
-  Future<Uint8List> encryptData({required List<int> data});
+  Future<Uint8List> encryptData(
+      {required List<int> data, required List<int> iv});
 
   /// Abstraction of asymmetric key pair handles.
   Future<Uint8List> extractKey();

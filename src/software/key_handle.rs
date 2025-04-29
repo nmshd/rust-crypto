@@ -58,15 +58,40 @@ impl SoftwareKeyHandle {
 
 impl KeyHandleImpl for SoftwareKeyHandle {
     #[instrument(level = "trace")]
-    fn encrypt_data(&self, data: &[u8]) -> Result<(Vec<u8>, Vec<u8>), CalError> {
+    fn encrypt_data(&self, data: &[u8], iv: &[u8]) -> Result<(Vec<u8>, Vec<u8>), CalError> {
         match self.spec.cipher {
             Cipher::AesGcm128 | Cipher::AesGcm256 => {
-                let rng = SystemRandom::new();
-                let mut nonce_bytes = [0u8; NONCE_LEN];
-                rng.fill(&mut nonce_bytes).map_err(|_| {
-                    CalError::failed_operation("Failed to generate nonce".to_string(), true, None)
-                })?;
-                let nonce = Nonce::assume_unique_for_key(nonce_bytes);
+                let (nonce, nonce_bytes) = if !iv.is_empty() {
+                    if iv.len() == NONCE_LEN {
+                        let nonce_array: [u8; NONCE_LEN] =
+                            iv.try_into().expect("Length already checked");
+                        (Nonce::assume_unique_for_key(nonce_array), iv.to_vec())
+                    } else {
+                        return Err(CalError::failed_operation(
+                            format!(
+                                "Invalid IV length for AES-GCM: expected {} bytes, got {}",
+                                NONCE_LEN,
+                                iv.len()
+                            ),
+                            false,
+                            None,
+                        ));
+                    }
+                } else {
+                    let rng = SystemRandom::new();
+                    let mut generated_nonce_bytes = [0u8; NONCE_LEN];
+                    rng.fill(&mut generated_nonce_bytes).map_err(|_| {
+                        CalError::failed_operation(
+                            "Failed to generate nonce".to_string(),
+                            true,
+                            None,
+                        )
+                    })?;
+                    (
+                        ring::aead::Nonce::assume_unique_for_key(generated_nonce_bytes),
+                        generated_nonce_bytes.to_vec(),
+                    )
+                };
 
                 let aad = Aad::empty();
                 let mut in_out = data.to_vec();
@@ -92,8 +117,31 @@ impl KeyHandleImpl for SoftwareKeyHandle {
                 let mut key = [0u8; 32];
                 key.copy_from_slice(&self.key);
 
-                let mut nonce = [0u8; 24];
-                OsRng.fill_bytes(&mut nonce);
+                let nonce: [u8; 24] = if !iv.is_empty() {
+                    if iv.len() == 24 {
+                        iv.try_into().map_err(|_| {
+                            CalError::failed_operation(
+                                "Internal error converting IV slice to array".to_string(),
+                                true,
+                                None,
+                            )
+                        })?
+                    } else {
+                        return Err(CalError::failed_operation(
+                            format!(
+                                "Invalid IV length for XChaCha20: expected {} bytes, got {}",
+                                24,
+                                iv.len()
+                            ),
+                            false,
+                            None,
+                        ));
+                    }
+                } else {
+                    let mut generated_bytes = [0u8; 24];
+                    OsRng.fill_bytes(&mut generated_bytes);
+                    generated_bytes
+                };
 
                 let mut cipher = XChaCha20::new(&key.into(), &nonce.into());
                 let mut buffer = data.to_vec();
@@ -301,7 +349,7 @@ impl KeyPairHandleImpl for SoftwareKeyPairHandle {
         }
     }
 
-    fn encrypt_data(&self, _data: &[u8]) -> Result<Vec<u8>, CalError> {
+    fn encrypt_data(&self, _data: &[u8], _iv: &[u8]) -> Result<Vec<u8>, CalError> {
         todo!("Encryption not supported for ECC keys")
     }
 
