@@ -59,11 +59,11 @@ impl KeyHandleImpl for AndroidKeyHandle {
         let iv = if !iv.is_empty() {
             iv
         } else {
-            cipher.getIV(&env).err_internal()?
+            &cipher.getIV(&env).err_internal()?
         };
         let encrypted = cipher.doFinal(&env, data.to_vec()).err_internal()?;
 
-        Ok((encrypted, iv))
+        Ok((encrypted, iv.to_vec()))
     }
 
     fn decrypt_data(&self, encrypted_data: &[u8], iv: &[u8]) -> Result<Vec<u8>, CalError> {
