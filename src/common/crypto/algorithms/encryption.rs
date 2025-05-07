@@ -99,7 +99,7 @@ pub enum Cipher {
 
 impl Cipher {
     /// Returns the key size in bytes.
-    pub(crate) fn len(&self) -> u32 {
+    pub(crate) fn len(&self) -> usize {
         match self {
             Self::AesCbc128 | Self::AesGcm128 => 16,
             Self::AesCbc256
