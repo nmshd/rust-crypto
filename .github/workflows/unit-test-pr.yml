@@ -19,7 +19,7 @@ jobs:
         # with:
         #   save-if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
       - name: Unit Test Rust Code
-        run: cargo test -F software
+        run: cargo test -F software,android
 
   test-pr-ts-types:
     name: Test TS-Types
