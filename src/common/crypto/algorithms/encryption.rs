@@ -96,3 +96,16 @@ pub enum Cipher {
     ChaCha20Poly1305,
     XChaCha20Poly1305,
 }
+
+impl Cipher {
+    /// Returns the key size in bytes.
+    pub(crate) fn len(&self) -> u32 {
+        match self {
+            Self::AesCbc128 | Self::AesGcm128 => 16,
+            Self::AesCbc256
+            | Self::AesGcm256
+            | Self::ChaCha20Poly1305
+            | Self::XChaCha20Poly1305 => 32,
+        }
+    }
+}
