@@ -28,7 +28,7 @@ void main() async {
       store.clear();
       var provider = await cal.createProviderFromName(
           name: providerName, implConf: implConf);
-      expect(provider, isNotNull);
+      expect(provider, isNotNull, reason: "expected $providerName");
 
       var caps = await provider!.getCapabilities();
 
