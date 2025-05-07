@@ -3,7 +3,7 @@ use crate::{
         config::{KeyPairSpec, KeySpec},
         error::{CalError, ToCalError},
         traits::key_handle::{KeyHandleImpl, KeyPairHandleImpl},
-        DHExchange,
+        DHExchange, KeyHandle,
     },
     storage::StorageManager,
     tpm::android::{
@@ -101,6 +101,10 @@ impl KeyHandleImpl for AndroidKeyHandle {
 
     fn verify_hmac(&self, _data: &[u8], _hmac: &[u8]) -> Result<bool, CalError> {
         todo!()
+    }
+
+    fn derive_key(&self, nonce: String) -> Result<KeyHandle, CalError> {
+        todo!();
     }
 
     fn extract_key(&self) -> Result<Vec<u8>, CalError> {
