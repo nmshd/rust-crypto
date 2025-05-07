@@ -143,7 +143,7 @@ impl StorageManager {
                     self.key_handle
                         .as_ref()
                         .map(|key| {
-                            let (v, iv) = match key.encrypt_data(&secret, &[]) {
+                            let (v, iv) = match key.encrypt(&secret) {
                                 Ok(v) => v,
                                 Err(e) => return Err(e),
                             };
