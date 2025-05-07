@@ -100,6 +100,7 @@ ed25519-compact = { version = "2.1.1", optional = true }
 sled = "0.34.7"
 hmac = "0.12.1"
 digest = "0.10.7"
+zeroize = "1.8.1"
 
 [dev-dependencies]
 color-eyre = "0.6.3"

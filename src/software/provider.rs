@@ -543,7 +543,7 @@ impl ProviderImpl for SoftwareProvider {
         );
 
         let salt_str = SaltString::encode_b64(salt)
-            .map_err(|_| CalError::failed_operation("Failed to encode salt".into(), true, None))?;
+            .map_err(|_| CalError::failed_operation("Failed to encode salt", true, None))?;
 
         // Perform password hashing with specified parameters
         let password_hash = argon2

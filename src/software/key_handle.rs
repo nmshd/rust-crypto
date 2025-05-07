@@ -21,6 +21,7 @@ use ring::{
     signature::{EcdsaKeyPair, Signature, UnparsedPublicKey},
 };
 use tracing::{error, instrument, warn};
+use zeroize::{Zeroize, ZeroizeOnDrop};
 
 use super::StorageManager;
 
@@ -33,10 +34,11 @@ pub(crate) struct SoftwareKeyPairHandle {
     pub(crate) storage_manager: Option<StorageManager>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Zeroize, ZeroizeOnDrop)]
 pub(crate) struct SoftwareKeyHandle {
     pub(crate) key_id: String,
     pub(crate) key: Vec<u8>,
+    #[zeroize(skip)]
     pub(crate) storage_manager: Option<StorageManager>,
     pub(crate) spec: KeySpec,
 }
@@ -327,8 +329,8 @@ impl KeyHandleImpl for SoftwareKeyHandle {
 
     #[doc = " Delete this key."]
     fn delete(self) -> Result<(), CalError> {
-        if let Some(s) = self.storage_manager {
-            s.delete(self.key_id)
+        if let Some(s) = &self.storage_manager {
+            s.delete(self.key_id.clone())
         }
         Ok(())
     }

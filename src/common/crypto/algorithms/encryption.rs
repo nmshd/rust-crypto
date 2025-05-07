@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::cmp::{Eq, PartialEq};
 use std::hash::Hash;
+use zeroize::Zeroize;
 
 use strum::{EnumString, IntoStaticStr};
 
@@ -85,6 +86,7 @@ pub enum AsymmetricKeySpec {
     Default,
     EnumString,
     IntoStaticStr,
+    Zeroize,
 )]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum Cipher {

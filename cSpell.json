@@ -32,6 +32,7 @@
         "thiserror",
         "typia",
         "yubi",
-        "yubikey"
+        "yubikey",
+        "Zeroize"
     ]
 }

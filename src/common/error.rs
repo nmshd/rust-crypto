@@ -93,13 +93,13 @@ impl CalError {
     }
 
     pub(crate) fn bad_parameter(
-        description: String,
+        description: impl Into<String>,
         internal: bool,
         source: Option<anyhow::Error>,
     ) -> Self {
         Self {
             error_kind: CalErrorKind::BadParameter {
-                description,
+                description: description.into(),
                 internal,
             },
             source: source.unwrap_or_else(|| anyhow!("Bad Parameter Error")),
@@ -113,21 +113,24 @@ impl CalError {
         }
     }
 
-    pub(crate) fn missing_key(key_id: String, key_type: KeyType) -> Self {
+    pub(crate) fn missing_key(key_id: impl Into<String>, key_type: KeyType) -> Self {
         Self {
-            error_kind: CalErrorKind::MissingKey { key_id, key_type },
+            error_kind: CalErrorKind::MissingKey {
+                key_id: key_id.into(),
+                key_type,
+            },
             source: anyhow!("Missing Key Error"),
         }
     }
 
     pub(crate) fn missing_value(
-        description: String,
+        description: impl Into<String>,
         internal: bool,
         source: Option<anyhow::Error>,
     ) -> Self {
         Self {
             error_kind: CalErrorKind::MissingValue {
-                description,
+                description: description.into(),
                 internal,
             },
             source: source.unwrap_or_else(|| anyhow!("Missing Value Error")),
@@ -135,13 +138,13 @@ impl CalError {
     }
 
     pub(crate) fn failed_operation(
-        description: String,
+        description: impl Into<String>,
         internal: bool,
         source: Option<anyhow::Error>,
     ) -> Self {
         Self {
             error_kind: CalErrorKind::FailedOperation {
-                description,
+                description: description.into(),
                 internal,
             },
             source: source.unwrap_or_else(|| anyhow!("Failed Operation")),
@@ -149,30 +152,30 @@ impl CalError {
     }
 
     pub(crate) fn failed_init(
-        description: String,
+        description: impl Into<String>,
         internal: bool,
         source: Option<anyhow::Error>,
     ) -> Self {
         CalError {
             error_kind: CalErrorKind::InitializationError {
-                description,
+                description: description.into(),
                 internal,
             },
             source: source.unwrap_or_else(|| anyhow!("Initialization Error")),
         }
     }
 
-    pub(crate) fn unsupported_algorithm(algorithm: String) -> Self {
+    pub(crate) fn unsupported_algorithm(algorithm: impl Into<String>) -> Self {
         Self {
-            error_kind: CalErrorKind::UnsupportedAlgorithm(algorithm),
+            error_kind: CalErrorKind::UnsupportedAlgorithm(algorithm.into()),
             source: anyhow!("Unsupported Algorithm Error"),
         }
     }
 
-    pub(crate) fn initialization_error(description: String) -> Self {
+    pub(crate) fn initialization_error(description: impl Into<String>) -> Self {
         Self {
             error_kind: CalErrorKind::InitializationError {
-                description,
+                description: description.into(),
                 internal: true,
             },
             source: anyhow!("Initialization Error"),
