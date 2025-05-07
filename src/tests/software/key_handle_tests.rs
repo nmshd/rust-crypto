@@ -573,5 +573,49 @@ mod tests {
             }
             Ok(())
         }
+
+        #[test]
+        #[instrument]
+        fn test_derive_key() -> Result<()> {
+            setup();
+
+            let specs = vec![
+                KeySpec {
+                    cipher: Cipher::AesGcm128,
+                    ..Default::default()
+                },
+                KeySpec {
+                    cipher: Cipher::AesGcm256,
+                    ..Default::default()
+                },
+            ];
+
+            for spec in specs {
+                let key = create_software_key_handle(spec)?;
+
+                let derive_nonce = [1, 2, 3, 4, 5, 6, 7, 8];
+                let message_nonce: Vec<u8> = (0..12).collect();
+
+                let payload = b"Hello World!";
+                let cipher_text;
+                let id;
+
+                {
+                    let derived_key = key.derive_key(&derive_nonce)?;
+
+                    id = derived_key.id()?;
+                    cipher_text = derived_key.encrypt_data(payload, &message_nonce)?;
+                }
+
+                let derived_key = key.derive_key(&derive_nonce)?;
+
+                let received_message = derived_key.decrypt_data(&cipher_text.0, &message_nonce)?;
+
+                assert_eq!(received_message, payload);
+                assert_eq!(derived_key.id()?, id);
+            }
+
+            Ok(())
+        }
     }
 }
