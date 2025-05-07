@@ -9,6 +9,7 @@ use crate::{
     prelude::Cipher,
 };
 use anyhow::anyhow;
+use base64::Engine;
 use chacha20::{
     cipher::{KeyIvInit, StreamCipher},
     XChaCha20,
@@ -54,6 +55,23 @@ impl SoftwareKeyHandle {
             spec,
         })
     }
+}
+
+/// Hashes and encodes a buffer to a string.
+///
+/// This is meant to generate deterministic ids from variable length nonces and contexts in derive key.
+fn id_from_buffer(buff: &[u8]) -> Result<String, CalError> {
+    // `digest` and `blake2` crate have both update functions that get each other int the way.
+    use blake2::{Blake2b, Digest};
+    use digest::consts::U8;
+
+    type Blake2b64 = Blake2b<U8>;
+
+    let mut hasher = Blake2b64::new();
+    hasher.update(buff);
+    let hash = hasher.finalize();
+    let hash_vec = hash.to_vec();
+    Ok(base64::prelude::BASE64_STANDARD.encode(hash_vec))
 }
 
 impl KeyHandleImpl for SoftwareKeyHandle {
@@ -254,8 +272,53 @@ impl KeyHandleImpl for SoftwareKeyHandle {
         todo!("HMAC not supported for AES keys")
     }
 
-    fn derive_key(&self, _nonce: &[u8]) -> Result<KeyHandle, CalError> {
-        todo!()
+    fn derive_key(&self, nonce: &[u8]) -> Result<KeyHandle, CalError> {
+        // `digest` and `blake2` crate have both update functions that get each other int the way.
+        use blake2::Blake2bVar;
+        use digest::{Update, VariableOutput};
+
+        let spec = self.spec.clone();
+        let key_length = spec.cipher.len();
+
+        let mut hasher = Blake2bVar::new(key_length).map_err(|e| {
+            let cal_err = CalError::bad_parameter(
+                "Blake2b failed to initialize".to_owned(),
+                false,
+                Some(anyhow!(e)),
+            );
+            error!(err = %cal_err, "Failed Blake2b init.");
+            cal_err
+        })?;
+
+        hasher.update(nonce);
+        hasher.update(&self.key);
+
+        let mut derived_key = vec![0u8; key_length];
+
+        hasher
+            .finalize_variable(derived_key.as_mut_slice())
+            .map_err(|e| {
+                let cal_err = CalError::bad_parameter(
+                    "Blake2b failed to write hash.".to_owned(),
+                    false,
+                    Some(anyhow!(e)),
+                );
+                error!(err = %cal_err, "Failed Blake2b init.");
+                cal_err
+            })?;
+
+        let id = id_from_buffer(nonce)?;
+
+        Ok(KeyHandle {
+            implementation: SoftwareKeyHandle::new(
+                id,
+                spec,
+                derived_key,
+                self.storage_manager.clone(),
+            )
+            .unwrap()
+            .into(),
+        })
     }
 
     fn extract_key(&self) -> Result<Vec<u8>, CalError> {

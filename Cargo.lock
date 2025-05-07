@@ -426,6 +426,7 @@ dependencies = [
  "color-eyre",
  "core-foundation 0.10.0",
  "der",
+ "digest",
  "ed25519-compact",
  "ed25519-dalek",
  "enum_dispatch",
