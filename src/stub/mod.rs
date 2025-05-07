@@ -183,6 +183,10 @@ impl KeyHandleImpl for StubKeyHandle {
         todo!()
     }
 
+    fn derive_key(&self, nonce: String) -> Result<KeyHandle, CalError> {
+        todo!()
+    }
+
     fn extract_key(&self) -> Result<Vec<u8>, CalError> {
         todo!()
     }

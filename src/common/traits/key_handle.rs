@@ -53,6 +53,8 @@ pub(crate) trait KeyHandleImpl: Send + Sync {
 
     fn verify_hmac(&self, data: &[u8], hmac: &[u8]) -> Result<bool, CalError>;
 
+    fn derive_key(&self, nonce: String) -> Result<KeyHandle, CalError>;
+
     /// Returns the raw key as binary.
     ///
     /// Most hardware based providers will return [CalError]

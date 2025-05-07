@@ -4,7 +4,7 @@ use crate::{
         crypto::algorithms::encryption::AsymmetricKeySpec,
         error::{CalError, KeyType},
         traits::key_handle::{KeyHandleImpl, KeyPairHandleImpl},
-        DHExchange,
+        DHExchange, KeyHandle,
     },
     prelude::Cipher,
 };
@@ -252,6 +252,10 @@ impl KeyHandleImpl for SoftwareKeyHandle {
 
     fn verify_hmac(&self, _data: &[u8], _hmac: &[u8]) -> Result<bool, CalError> {
         todo!("HMAC not supported for AES keys")
+    }
+
+    fn derive_key(&self, nonce: String) -> Result<KeyHandle, CalError> {
+        todo!()
     }
 
     fn extract_key(&self) -> Result<Vec<u8>, CalError> {

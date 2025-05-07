@@ -292,6 +292,10 @@ impl KeyHandle {
     }
 
     delegate_enum! {
+        pub fn derive_key(&self, nonce: String) -> Result<KeyHandle, CalError>;
+    }
+
+    delegate_enum! {
         pub fn id(&self) -> Result<String, CalError>;
     }
 
