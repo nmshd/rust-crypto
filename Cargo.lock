@@ -466,6 +466,7 @@ dependencies = [
  "x25519-dalek",
  "x509-cert",
  "yubikey",
+ "zeroize",
 ]
 
 [[package]]

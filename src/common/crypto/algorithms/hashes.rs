@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use strum::{EnumString, IntoStaticStr};
+use zeroize::Zeroize;
 
 /// Represents the available hashing algorithms.
 ///
@@ -25,6 +26,7 @@ use strum::{EnumString, IntoStaticStr};
     Default,
     EnumString,
     IntoStaticStr,
+    Zeroize,
 )]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub enum CryptoHash {

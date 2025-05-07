@@ -215,7 +215,7 @@ mod tests {
                 let plaintext = b"Message from client to server";
 
                 // Client encrypts with their tx key
-                let (encrypted_data, iv) = client_tx_key_handle.encrypt_data(plaintext, &[])?;
+                let (encrypted_data, iv) = client_tx_key_handle.encrypt(plaintext)?;
 
                 // Server decrypts with their rx key
                 let decrypted_data = server_rx_key_handle.decrypt_data(&encrypted_data, &iv)?;
@@ -260,8 +260,7 @@ mod tests {
                 let server_plaintext = b"Message from server to client";
 
                 // Server encrypts with their tx key
-                let (server_encrypted, iv) =
-                    server_tx_key_handle.encrypt_data(server_plaintext, &[])?;
+                let (server_encrypted, iv) = server_tx_key_handle.encrypt(server_plaintext)?;
 
                 // Client decrypts with their rx key
                 let client_decrypted = client_rx_key_handle.decrypt_data(&server_encrypted, &iv)?;

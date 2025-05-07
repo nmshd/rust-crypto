@@ -21,6 +21,7 @@ use ring::{
     signature::{EcdsaKeyPair, Signature, UnparsedPublicKey},
 };
 use tracing::{error, instrument, warn};
+use zeroize::{Zeroize, ZeroizeOnDrop};
 
 use super::StorageManager;
 
@@ -33,10 +34,11 @@ pub(crate) struct SoftwareKeyPairHandle {
     pub(crate) storage_manager: Option<StorageManager>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Zeroize, ZeroizeOnDrop)]
 pub(crate) struct SoftwareKeyHandle {
     pub(crate) key_id: String,
     pub(crate) key: Vec<u8>,
+    #[zeroize(skip)]
     pub(crate) storage_manager: Option<StorageManager>,
     pub(crate) spec: KeySpec,
 }
@@ -277,7 +279,8 @@ impl KeyHandleImpl for SoftwareKeyHandle {
         use blake2::Blake2bVar;
         use digest::{Update, VariableOutput};
 
-        let spec = self.spec.clone();
+        let mut spec = self.spec.clone();
+        spec.ephemeral = true;
         let key_length = spec.cipher.len();
 
         let mut hasher = Blake2bVar::new(key_length).map_err(|e| {
@@ -310,14 +313,9 @@ impl KeyHandleImpl for SoftwareKeyHandle {
         let id = id_from_buffer(nonce)?;
 
         Ok(KeyHandle {
-            implementation: SoftwareKeyHandle::new(
-                id,
-                spec,
-                derived_key,
-                self.storage_manager.clone(),
-            )
-            .unwrap()
-            .into(),
+            implementation: SoftwareKeyHandle::new(id, spec, derived_key, None)
+                .unwrap()
+                .into(),
         })
     }
 
@@ -331,8 +329,8 @@ impl KeyHandleImpl for SoftwareKeyHandle {
 
     #[doc = " Delete this key."]
     fn delete(self) -> Result<(), CalError> {
-        if let Some(s) = self.storage_manager {
-            s.delete(self.key_id)
+        if let Some(s) = &self.storage_manager {
+            s.delete(self.key_id.clone())
         }
         Ok(())
     }

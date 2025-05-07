@@ -11,6 +11,7 @@ use std::{
 use serde::{Deserialize, Serialize};
 
 use strum::{EnumDiscriminants, EnumIter, EnumString, IntoStaticStr};
+use zeroize::Zeroize;
 
 use super::crypto::algorithms::{
     encryption::{AsymmetricKeySpec, Cipher},
@@ -86,7 +87,7 @@ pub enum Spec {
 }
 
 /// Struct used to configure keys.
-#[derive(Clone, Copy, Debug, Serialize, Deserialize, Default)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, Zeroize)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 /// flutter_rust_bridge:non_opaque
 pub struct KeySpec {

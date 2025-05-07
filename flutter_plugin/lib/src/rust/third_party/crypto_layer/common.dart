@@ -41,7 +41,12 @@ abstract class KeyHandle implements RustOpaqueInterface {
 
   Future<KeyHandle> deriveKey({required List<int> nonce});
 
+  Future<(Uint8List, Uint8List)> encrypt({required List<int> data});
+
   Future<(Uint8List, Uint8List)> encryptData(
+      {required List<int> data, required List<int> iv});
+
+  Future<Uint8List> encryptWithIv(
       {required List<int> data, required List<int> iv});
 
   Future<Uint8List> extractKey();

@@ -277,9 +277,22 @@ impl KeyHandle {
     delegate_enum! {
         pub fn extract_key(&self) -> Result<Vec<u8>, CalError>;
     }
-    delegate_enum! {
-        pub fn encrypt_data(&self, data: &[u8], iv: &[u8]) -> Result<(Vec<u8>, Vec<u8>), CalError>;
+
+    #[deprecated(
+        note = "Deprecated in favor of the more specific `encrypt` and `encrypt_with_iv` methods."
+    )]
+    pub fn encrypt_data(&self, data: &[u8], iv: &[u8]) -> Result<(Vec<u8>, Vec<u8>), CalError> {
+        self.implementation.encrypt_data(data, iv)
     }
+
+    delegate_enum! {
+        pub fn encrypt(&self, data: &[u8]) -> Result<(Vec<u8>, Vec<u8>), CalError>;
+    }
+
+    delegate_enum! {
+        pub fn encrypt_with_iv(&self, data: &[u8], iv: &[u8]) -> Result<Vec<u8>, CalError>;
+    }
+
     delegate_enum! {
         pub fn decrypt_data(
             &self,
