@@ -277,7 +277,8 @@ impl KeyHandleImpl for SoftwareKeyHandle {
         use blake2::Blake2bVar;
         use digest::{Update, VariableOutput};
 
-        let spec = self.spec.clone();
+        let mut spec = self.spec.clone();
+        spec.ephemeral = true;
         let key_length = spec.cipher.len();
 
         let mut hasher = Blake2bVar::new(key_length).map_err(|e| {
@@ -310,14 +311,9 @@ impl KeyHandleImpl for SoftwareKeyHandle {
         let id = id_from_buffer(nonce)?;
 
         Ok(KeyHandle {
-            implementation: SoftwareKeyHandle::new(
-                id,
-                spec,
-                derived_key,
-                self.storage_manager.clone(),
-            )
-            .unwrap()
-            .into(),
+            implementation: SoftwareKeyHandle::new(id, spec, derived_key, None)
+                .unwrap()
+                .into(),
         })
     }
 
