@@ -37,6 +37,7 @@ export type Provider = {
 		algorithm: KeySpec,
 		kdf: KDF,
 	) => Promise<KeyHandle>;
+	/** @deprecated Deprecated in favor of {@link KeyHandle.deriveKey} */
 	deriveKeyFromBase(
 		baseKey: Uint8Array,
 		keyId: number,

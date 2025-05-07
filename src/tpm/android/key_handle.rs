@@ -68,7 +68,7 @@ impl KeyHandleImpl for AndroidKeyHandle {
         };
         let encrypted = cipher.doFinal(&env, data.to_vec()).err_internal()?;
 
-        Ok((encrypted, iv))
+        Ok((encrypted, iv.to_vec()))
     }
 
     fn decrypt_data(&self, encrypted_data: &[u8], iv: &[u8]) -> Result<Vec<u8>, CalError> {
@@ -108,7 +108,7 @@ impl KeyHandleImpl for AndroidKeyHandle {
         todo!()
     }
 
-    fn derive_key(&self, nonce: String) -> Result<KeyHandle, CalError> {
+    fn derive_key(&self, nonce: &[u8]) -> Result<KeyHandle, CalError> {
         todo!();
     }
 

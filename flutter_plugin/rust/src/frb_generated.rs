@@ -578,7 +578,7 @@ fn wire__crypto_layer__common__KeyHandle_derive_key_impl(
             let api_that = <RustOpaqueMoi<
                 flutter_rust_bridge::for_generated::RustAutoOpaqueInner<KeyHandle>,
             >>::sse_decode(&mut deserializer);
-            let api_nonce = <String>::sse_decode(&mut deserializer);
+            let api_nonce = <Vec<u8>>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
                 transform_result_sse::<_, CalError>((move || {
@@ -597,7 +597,7 @@ fn wire__crypto_layer__common__KeyHandle_derive_key_impl(
                     }
                     let api_that_guard = api_that_guard.unwrap();
                     let output_ok =
-                        crypto_layer::common::KeyHandle::derive_key(&*api_that_guard, api_nonce)?;
+                        crypto_layer::common::KeyHandle::derive_key(&*api_that_guard, &api_nonce)?;
                     Ok(output_ok)
                 })())
             }

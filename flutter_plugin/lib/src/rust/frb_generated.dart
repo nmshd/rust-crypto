@@ -123,7 +123,7 @@ abstract class RustLibApi extends BaseApi {
   Future<void> cryptoLayerCommonKeyHandleDelete({required KeyHandle that});
 
   Future<KeyHandle> cryptoLayerCommonKeyHandleDeriveKey(
-      {required KeyHandle that, required String nonce});
+      {required KeyHandle that, required List<int> nonce});
 
   Future<(Uint8List, Uint8List)> cryptoLayerCommonKeyHandleEncryptData(
       {required KeyHandle that,
@@ -675,13 +675,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @override
   Future<KeyHandle> cryptoLayerCommonKeyHandleDeriveKey(
-      {required KeyHandle that, required String nonce}) {
+      {required KeyHandle that, required List<int> nonce}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandle(
             that, serializer);
-        sse_encode_String(nonce, serializer);
+        sse_encode_list_prim_u_8_loose(nonce, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
             funcId: 11, port: port_);
       },
@@ -4853,8 +4853,9 @@ class KeyHandleImpl extends RustOpaque implements KeyHandle {
         that: this,
       );
 
-  Future<KeyHandle> deriveKey({required String nonce}) => RustLib.instance.api
-      .cryptoLayerCommonKeyHandleDeriveKey(that: this, nonce: nonce);
+  Future<KeyHandle> deriveKey({required List<int> nonce}) =>
+      RustLib.instance.api
+          .cryptoLayerCommonKeyHandleDeriveKey(that: this, nonce: nonce);
 
   Future<(Uint8List, Uint8List)> encryptData(
           {required List<int> data, required List<int> iv}) =>

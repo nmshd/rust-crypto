@@ -187,14 +187,18 @@ impl Provider {
         ) -> Result<KeyHandle, CalError>;
     }
 
-    delegate_enum! {
-        pub fn derive_key_from_base(
-            &self,
-            base_key: &[u8],
-            key_id: u64,
-            context: &str,
-            spec: KeySpec,
-        ) -> Result<KeyHandle, CalError>;
+    #[deprecated(
+        note = "This function was deprecated in favor of the [KeyHandle::derive_key] method."
+    )]
+    pub fn derive_key_from_base(
+        &self,
+        base_key: &[u8],
+        key_id: u64,
+        context: &str,
+        spec: KeySpec,
+    ) -> Result<KeyHandle, CalError> {
+        self.implementation
+            .derive_key_from_base(base_key, key_id, context, spec)
     }
 
     delegate_enum_bare! {
@@ -292,7 +296,7 @@ impl KeyHandle {
     }
 
     delegate_enum! {
-        pub fn derive_key(&self, nonce: String) -> Result<KeyHandle, CalError>;
+        pub fn derive_key(&self, nonce: &[u8]) -> Result<KeyHandle, CalError>;
     }
 
     delegate_enum! {

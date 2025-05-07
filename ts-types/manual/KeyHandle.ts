@@ -10,4 +10,5 @@ export type KeyHandle = {
 	id: () => Promise<string>;
 	delete: () => Promise<void>;
 	spec: () => Promise<KeySpec>;
+	deriveKey: (nonce: Uint8Array) => Promise<KeyHandle>;
 };
