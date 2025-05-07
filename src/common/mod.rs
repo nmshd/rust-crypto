@@ -296,7 +296,7 @@ impl KeyHandle {
     }
 
     delegate_enum! {
-        pub fn derive_key(&self, nonce: String) -> Result<KeyHandle, CalError>;
+        pub fn derive_key(&self, nonce: &[u8]) -> Result<KeyHandle, CalError>;
     }
 
     delegate_enum! {

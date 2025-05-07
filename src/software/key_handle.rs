@@ -254,7 +254,7 @@ impl KeyHandleImpl for SoftwareKeyHandle {
         todo!("HMAC not supported for AES keys")
     }
 
-    fn derive_key(&self, nonce: String) -> Result<KeyHandle, CalError> {
+    fn derive_key(&self, _nonce: &[u8]) -> Result<KeyHandle, CalError> {
         todo!()
     }
 

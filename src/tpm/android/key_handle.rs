@@ -103,7 +103,7 @@ impl KeyHandleImpl for AndroidKeyHandle {
         todo!()
     }
 
-    fn derive_key(&self, nonce: String) -> Result<KeyHandle, CalError> {
+    fn derive_key(&self, nonce: &[u8]) -> Result<KeyHandle, CalError> {
         todo!();
     }
 
