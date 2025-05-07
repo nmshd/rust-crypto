@@ -55,10 +55,15 @@ impl KeyHandleImpl for AndroidKeyHandle {
         let key = key_store
             .getKey(&env, self.key_id.to_owned(), JObject::null())
             .err_internal()?;
-        cipher.init(&env, 1, key.raw.as_obj()).err_internal()?;
+
         let iv = if !iv.is_empty() {
-            iv
+            let iv_spec = IvParameterSpec::new(&env, &iv).err_internal()?;
+            cipher
+                .init2(&env, 1, key, iv_spec.raw.as_obj())
+                .err_internal()?;
+            iv.to_vec()
         } else {
+            cipher.init(&env, 1, key.raw.as_obj()).err_internal()?;
             cipher.getIV(&env).err_internal()?
         };
         let encrypted = cipher.doFinal(&env, data.to_vec()).err_internal()?;
