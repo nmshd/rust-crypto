@@ -26,6 +26,8 @@ class _EncryptionPageState extends State<EncryptionPage> {
       TextEditingController();
   final TextEditingController _dataToDecryptController =
       TextEditingController();
+  final TextEditingController _ivToEncryptController = TextEditingController();
+  final TextEditingController _ivToDecryptController = TextEditingController();
 
   @override
   void initState() {
@@ -86,7 +88,8 @@ class _EncryptionPageState extends State<EncryptionPage> {
     print(
         "Encrypting data: ${Uint8List.fromList(_dataToEncryptController.text.codeUnits)}");
     var (data, iv) = await _keyHandle!.encryptData(
-        data: Uint8List.fromList(_dataToEncryptController.text.codeUnits));
+        data: Uint8List.fromList(_dataToEncryptController.text.codeUnits),
+        iv: Uint8List.fromList(_ivToEncryptController.text.codeUnits));
 
     setState(() {
       _encryptedData = base64Encode(data);
@@ -97,6 +100,7 @@ class _EncryptionPageState extends State<EncryptionPage> {
   void moveDataToDecrypt() {
     setState(() {
       _dataToDecryptController.text = _encryptedData ?? '';
+      _ivToDecryptController.text = _iv ?? '';
     });
   }
 
@@ -212,6 +216,15 @@ class _EncryptionPageState extends State<EncryptionPage> {
                       ),
                     ),
                   ),
+                  TextField(
+                    controller: _ivToEncryptController,
+                    decoration: InputDecoration(
+                      labelText: 'IV to encrypt',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                    ),
+                  ),
                   Container(
                     margin: const EdgeInsets.only(top: 10.00),
                     child: InputDecorator(
@@ -257,6 +270,15 @@ class _EncryptionPageState extends State<EncryptionPage> {
                     controller: _dataToDecryptController,
                     decoration: InputDecoration(
                       labelText: 'Data to decrypt',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                    ),
+                  ),
+                  TextField(
+                    controller: _ivToDecryptController,
+                    decoration: InputDecoration(
+                      labelText: 'IV to decrypt',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10.0),
                       ),
