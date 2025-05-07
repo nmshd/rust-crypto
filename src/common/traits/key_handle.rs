@@ -53,7 +53,7 @@ pub(crate) trait KeyHandleImpl: Send + Sync {
 
     fn verify_hmac(&self, data: &[u8], hmac: &[u8]) -> Result<bool, CalError>;
 
-    /// Derives a key from this key as base.
+    /// Derives a key from this key as base with the same spec as the base key.
     ///
     /// This operation is deterministic, meaning the same nonce and key are always going to result in the same [KeyHandle].
     fn derive_key(&self, nonce: &[u8]) -> Result<KeyHandle, CalError>;
