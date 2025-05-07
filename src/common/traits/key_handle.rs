@@ -37,7 +37,26 @@ pub(crate) trait KeyHandleImpl: Send + Sync {
     /// A `Result` containing the encrypted data and the used iv as a `Vec<u8>` on success,
     /// where the first value is the data and the second the iv,
     /// or a `CalError` on failure.
+    ///
+    /// If the iv argument is empty, a new iv is generated.
     fn encrypt_data(&self, data: &[u8], iv: &[u8]) -> Result<(Vec<u8>, Vec<u8>), CalError>;
+
+    /// Encrypt data.
+    ///
+    /// The iv is randomly generated.
+    ///
+    /// The resulting output is a pair of cipher text and generated iv: `(cipher_text, iv)`
+    fn encrypt(&self, data: &[u8]) -> Result<(Vec<u8>, Vec<u8>), CalError> {
+        self.encrypt_data(data, &vec![])
+    }
+
+    /// Encrypt data with the given iv.
+    ///
+    /// Some providers panic, if the iv is not the correct length.
+    fn encrypt_with_iv(&self, data: &[u8], iv: &[u8]) -> Result<Vec<u8>, CalError> {
+        let (cipher_text, _) = self.encrypt_data(data, iv)?;
+        Ok(cipher_text)
+    }
 
     /// Decrypts the given encrypted data using the cryptographic key.
     ///
