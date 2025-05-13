@@ -2,12 +2,13 @@ use crate::common::traits::key_handle::DHKeyExchangeImpl;
 use crate::prelude::{CryptoHash, KDF};
 use config::{KeyPairSpec, KeySpec, ProviderConfig, Spec};
 use error::CalError;
-use tracing::error;
 use traits::key_handle::DHKeyExchangeImplEnum;
 use traits::key_handle::{
-    KeyHandleImpl, KeyHandleImplEnum, KeyPairHandleImpl, KeyPairHandleImplEnum,
+    KeyHandleError, KeyHandleImpl, KeyHandleImplEnum, KeyPairHandleImpl, KeyPairHandleImplEnum,
 };
 use traits::module_provider::{ProviderImpl, ProviderImplEnum};
+
+use error_stack::Result;
 
 /// Structs and enumerations used for configuring providers, key and key pairs.
 pub mod config;
@@ -27,52 +28,28 @@ macro_rules! delegate_enum {
     ($(pub fn $method:ident(self $(,$arg:ident: $type:ty)* $(,)?) $(-> $ret:ty)?;)+) => {
         $(
             pub fn $method(self $(,$arg: $type)*) $(-> $ret)? {
-                match self.implementation.$method($($arg),*) {
-                    Ok(v) => Ok(v),
-                    Err(e) => {
-                        error!("Error in {}: {}", stringify!($method), e);
-                        Err(e)
-                    }
-                }
+                self.implementation.$method($($arg),*)
             }
         )+
     };
     ($(pub fn $method:ident(&self $(,$arg:ident: $type:ty)* $(,)?) $(-> $ret:ty)?;)+) => {
         $(
             pub fn $method(&self $(,$arg: $type)*) $(-> $ret)? {
-                match self.implementation.$method($($arg),*) {
-                    Ok(v) => Ok(v),
-                    Err(e) => {
-                        error!("Error in {}: {}", stringify!($method), e);
-                        Err(e)
-                    }
-                }
+                self.implementation.$method($($arg),*)
             }
         )+
     };
     ($(pub fn $method:ident(&mut self $(,$arg:ident: $type:ty)* $(,)?) $(-> $ret:ty)?;)+) => {
         $(
             pub fn $method(&mut self $(,$arg: $type)*) $(-> $ret)? {
-                match self.implementation.$method($($arg),*) {
-                    Ok(v) => Ok(v),
-                    Err(e) => {
-                        error!("Error in {}: {}", stringify!($method), e);
-                        Err(e)
-                    }
-                }
+                self.implementation.$method($($arg),*)
             }
         )+
     };
     ($(pub fn $method:ident(self $(,$arg:ident: $type:ty)* $(,)?) $(-> $ret:ty)?;)+) => {
         $(
             pub fn $method(self $(,$arg: $type)*) $(-> $ret)? {
-                match self.implementation.$method($($arg),*) {
-                    Ok(v) => Ok(v),
-                    Err(e) => {
-                        error!("Error in {}: {}", stringify!($method), e);
-                        Err(e)
-                    }
-                }
+                self.implementation.$method($($arg),*)
             }
         )+
     };
@@ -275,22 +252,26 @@ pub struct KeyHandle {
 
 impl KeyHandle {
     delegate_enum! {
-        pub fn extract_key(&self) -> Result<Vec<u8>, CalError>;
+        pub fn extract_key(&self) -> Result<Vec<u8>, KeyHandleError>;
     }
 
     #[deprecated(
         note = "Deprecated in favor of the more specific `encrypt` and `encrypt_with_iv` methods."
     )]
-    pub fn encrypt_data(&self, data: &[u8], iv: &[u8]) -> Result<(Vec<u8>, Vec<u8>), CalError> {
+    pub fn encrypt_data(
+        &self,
+        data: &[u8],
+        iv: &[u8],
+    ) -> Result<(Vec<u8>, Vec<u8>), KeyHandleError> {
         self.implementation.encrypt_data(data, iv)
     }
 
     delegate_enum! {
-        pub fn encrypt(&self, data: &[u8]) -> Result<(Vec<u8>, Vec<u8>), CalError>;
+        pub fn encrypt(&self, data: &[u8]) -> Result<(Vec<u8>, Vec<u8>), KeyHandleError>;
     }
 
     delegate_enum! {
-        pub fn encrypt_with_iv(&self, data: &[u8], iv: &[u8]) -> Result<Vec<u8>, CalError>;
+        pub fn encrypt_with_iv(&self, data: &[u8], iv: &[u8]) -> Result<Vec<u8>, KeyHandleError>;
     }
 
     delegate_enum! {
@@ -298,26 +279,26 @@ impl KeyHandle {
             &self,
             encrypted_data: &[u8],
             iv: &[u8],
-        ) -> Result<Vec<u8>, CalError>;
+        ) -> Result<Vec<u8>, KeyHandleError>;
     }
 
     delegate_enum! {
-        pub fn hmac(&self, data: &[u8]) -> Result<Vec<u8>, CalError>;
+        pub fn hmac(&self, data: &[u8]) -> Result<Vec<u8>, KeyHandleError>;
     }
     delegate_enum! {
-        pub fn verify_hmac(&self, data: &[u8], hmac: &[u8]) -> Result<bool, CalError>;
-    }
-
-    delegate_enum! {
-        pub fn derive_key(&self, nonce: &[u8]) -> Result<KeyHandle, CalError>;
+        pub fn verify_hmac(&self, data: &[u8], hmac: &[u8]) -> Result<bool, KeyHandleError>;
     }
 
     delegate_enum! {
-        pub fn id(&self) -> Result<String, CalError>;
+        pub fn derive_key(&self, nonce: &[u8]) -> Result<KeyHandle, KeyHandleError>;
     }
 
     delegate_enum! {
-        pub fn delete(self) -> Result<(), CalError>;
+        pub fn id(&self) -> Result<String, KeyHandleError>;
+    }
+
+    delegate_enum! {
+        pub fn delete(self) -> Result<(), KeyHandleError>;
     }
 
     delegate_enum_bare! {

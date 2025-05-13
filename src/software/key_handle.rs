@@ -20,10 +20,21 @@ use ring::{
     rand::{SecureRandom, SystemRandom},
     signature::{EcdsaKeyPair, Signature, UnparsedPublicKey},
 };
+use thiserror::Error;
 use tracing::{error, instrument, warn};
 use zeroize::{Zeroize, ZeroizeOnDrop};
 
 use super::StorageManager;
+
+use error_stack::{ensure, Result, ResultExt};
+
+#[derive(Debug, Clone, Copy, Error)]
+pub enum SoftwareKeyHandleError {
+    #[error("Input iv has wrong length.")]
+    WrongLengthIv,
+    #[error("Failed to generate an iv.")]
+    FailedToGenerateIv,
+}
 
 #[derive(Debug, Clone)]
 pub(crate) struct SoftwareKeyPairHandle {
@@ -62,7 +73,7 @@ impl SoftwareKeyHandle {
 /// Hashes and encodes a buffer to a string.
 ///
 /// This is meant to generate deterministic ids from variable length nonces and contexts in derive key.
-fn id_from_buffer(buff: &[u8]) -> Result<String, CalError> {
+fn id_from_buffer(buff: &[u8]) -> String {
     // `digest` and `blake2` crate have both update functions that get each other int the way.
     use blake2::{Blake2b, Digest};
     use digest::consts::U8;
@@ -73,40 +84,37 @@ fn id_from_buffer(buff: &[u8]) -> Result<String, CalError> {
     hasher.update(buff);
     let hash = hasher.finalize();
     let hash_vec = hash.to_vec();
-    Ok(base64::prelude::BASE64_STANDARD.encode(hash_vec))
+    base64::prelude::BASE64_STANDARD.encode(hash_vec)
 }
 
 impl KeyHandleImpl for SoftwareKeyHandle {
     #[instrument(level = "trace")]
-    fn encrypt_data(&self, data: &[u8], iv: &[u8]) -> Result<(Vec<u8>, Vec<u8>), CalError> {
+    fn encrypt_data(
+        &self,
+        data: &[u8],
+        iv: &[u8],
+    ) -> Result<(Vec<u8>, Vec<u8>), SoftwareKeyHandleError> {
         match self.spec.cipher {
             Cipher::AesGcm128 | Cipher::AesGcm256 => {
                 let (nonce, nonce_bytes) = if !iv.is_empty() {
-                    if iv.len() == NONCE_LEN {
-                        let nonce_array: [u8; NONCE_LEN] =
-                            iv.try_into().expect("Length already checked");
-                        (Nonce::assume_unique_for_key(nonce_array), iv.to_vec())
-                    } else {
-                        return Err(CalError::failed_operation(
-                            format!(
-                                "Invalid IV length for AES-GCM: expected {} bytes, got {}",
-                                NONCE_LEN,
-                                iv.len()
-                            ),
-                            false,
-                            None,
-                        ));
-                    }
+                    ensure!(
+                        iv.len() != NONCE_LEN,
+                        Report::new(SoftwareKeyHandleError::WrongLengthIv).attach_printable(
+                            CGivenExpected {
+                                expected: NONCE_LEN,
+                                given: iv.len()
+                            }
+                        )
+                    );
+
+                    let nonce_array: [u8; NONCE_LEN] =
+                        iv.try_into().expect("Length already checked");
+                    (Nonce::assume_unique_for_key(nonce_array), iv.to_vec())
                 } else {
                     let rng = SystemRandom::new();
                     let mut generated_nonce_bytes = [0u8; NONCE_LEN];
-                    rng.fill(&mut generated_nonce_bytes).map_err(|_| {
-                        CalError::failed_operation(
-                            "Failed to generate nonce".to_string(),
-                            true,
-                            None,
-                        )
-                    })?;
+                    rng.fill(&mut generated_nonce_bytes)
+                        .change_context(SoftwareKeyHandleError::FailedToGenerateIv)?;
                     (
                         ring::aead::Nonce::assume_unique_for_key(generated_nonce_bytes),
                         generated_nonce_bytes.to_vec(),

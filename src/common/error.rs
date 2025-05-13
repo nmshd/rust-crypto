@@ -1,5 +1,8 @@
 use std::convert::From;
 use std::fmt;
+use std::fmt::Debug;
+use std::fmt::Display;
+use std::path::PathBuf;
 
 use anyhow::anyhow;
 use sled;
@@ -234,5 +237,74 @@ impl From<sled::Error> for CalError {
             ),
             _ => CalError::other(anyhow!(value)),
         }
+    }
+}
+
+#[derive(Debug)]
+pub struct CGivenExpected<T>
+where
+    T: Debug + Display + Send,
+{
+    pub expected: T,
+    pub given: T,
+}
+
+impl<T> fmt::Display for CGivenExpected<T>
+where
+    T: Debug + Display + Send,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        writeln!(f, "expected <> given: {} <> {}", self.expected, self.given)
+    }
+}
+
+#[derive(Debug)]
+pub struct CPath {
+    pub path: PathBuf,
+}
+
+impl<T> From<T> for CPath
+where
+    T: Into<PathBuf>,
+{
+    fn from(value: T) -> Self {
+        CPath { path: value.into() }
+    }
+}
+
+impl Display for CPath {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "path: {}", self.path.display())
+    }
+}
+
+#[derive(Debug)]
+pub struct CId {
+    pub id: String,
+}
+
+/* impl<T> From<T> for CId
+where
+    T: Into<String>,
+{
+    fn from(value: T) -> Self {
+        CId { id: value.into() }
+    }
+} */
+
+impl<T> From<T> for CId
+where
+    T: AsRef<str>,
+{
+    fn from(value: T) -> Self {
+        CId {
+            id: value.as_ref().to_owned(),
+        }
+    }
+}
+
+impl Display for CId {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "id: {}", self.id)
     }
 }

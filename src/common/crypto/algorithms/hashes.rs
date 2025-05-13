@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
+use zeroize::Zeroize;
 
 use strum::{EnumString, IntoStaticStr};
-use zeroize::Zeroize;
 
 /// Represents the available hashing algorithms.
 ///

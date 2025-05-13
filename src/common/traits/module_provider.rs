@@ -18,6 +18,8 @@ use crate::{
 };
 use enum_dispatch::enum_dispatch;
 
+use error_stack::{report, Report, Result};
+
 #[enum_dispatch(ProviderFactoryEnum)]
 pub(crate) trait ProviderFactory: Send + Sync {
     fn get_name(&self) -> Option<String>;
@@ -157,7 +159,7 @@ pub(crate) trait ProviderImpl: Send + Sync {
         algorithm: KeySpec,
         kdf: KDF,
     ) -> Result<KeyHandle, CalError> {
-        Err(CalError::not_implemented())
+        Err(Report::new(CalError::not_implemented()))
     }
 
     /// Derives a high-entropy key from a low-entropy password and a unique salt
@@ -169,13 +171,13 @@ pub(crate) trait ProviderImpl: Send + Sync {
         context: &str,
         spec: KeySpec,
     ) -> Result<KeyHandle, CalError> {
-        Err(CalError::not_implemented())
+        Err(Report::new(CalError::not_implemented()))
     }
 
     /// Hashes the input
     #[allow(dead_code, unused_variables)]
     fn hash(&self, input: &[u8], hash: CryptoHash) -> Result<Vec<u8>, CalError> {
-        Err(CalError::not_implemented())
+        Err(report!(CalError::not_implemented()))
     }
 
     /// Generates random bytes

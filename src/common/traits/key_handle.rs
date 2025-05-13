@@ -19,6 +19,31 @@ use crate::{
 };
 use enum_dispatch::enum_dispatch;
 
+use error_stack::Result;
+use thiserror::Error;
+
+#[derive(Debug, Clone, Copy, Error)]
+pub enum KeyHandleError {
+    #[error("Encryption failed")]
+    EncryptDataError,
+    #[error("Decryption failed")]
+    DecryptDataError,
+    #[error("HMAC calculation failed")]
+    HmacError,
+    #[error("HMAC verification failed")]
+    VerifyHmacError,
+    #[error("Key derivation failed")]
+    DeriveKeyError,
+    #[error("Key extraction failed")]
+    ExtractKeyError,
+    #[error("Failed to get key id")]
+    IdError,
+    #[error("Key deletion failed")]
+    DeleteError,
+    #[error("Failed to get key spec")]
+    SpecError,
+}
+
 /// Defines a common interface for cryptographic key operations.
 ///
 /// This trait specifies methods for key operations such as signing data, encrypting,
@@ -39,21 +64,21 @@ pub(crate) trait KeyHandleImpl: Send + Sync {
     /// or a `CalError` on failure.
     ///
     /// If the iv argument is empty, a new iv is generated.
-    fn encrypt_data(&self, data: &[u8], iv: &[u8]) -> Result<(Vec<u8>, Vec<u8>), CalError>;
+    fn encrypt_data(&self, data: &[u8], iv: &[u8]) -> Result<(Vec<u8>, Vec<u8>), KeyHandleError>;
 
     /// Encrypt data.
     ///
     /// The iv is randomly generated.
     ///
     /// The resulting output is a pair of cipher text and generated iv: `(cipher_text, iv)`
-    fn encrypt(&self, data: &[u8]) -> Result<(Vec<u8>, Vec<u8>), CalError> {
+    fn encrypt(&self, data: &[u8]) -> Result<(Vec<u8>, Vec<u8>), KeyHandleError> {
         self.encrypt_data(data, &vec![])
     }
 
     /// Encrypt data with the given iv.
     ///
     /// Some providers panic, if the iv is not the correct length.
-    fn encrypt_with_iv(&self, data: &[u8], iv: &[u8]) -> Result<Vec<u8>, CalError> {
+    fn encrypt_with_iv(&self, data: &[u8], iv: &[u8]) -> Result<Vec<u8>, KeyHandleError> {
         let (cipher_text, _) = self.encrypt_data(data, iv)?;
         Ok(cipher_text)
     }
@@ -66,28 +91,28 @@ pub(crate) trait KeyHandleImpl: Send + Sync {
     ///
     /// # Returns
     /// A `Result` containing the decrypted data as a `Vec<u8>` on success, or a `CalError` on failure.
-    fn decrypt_data(&self, encrypted_data: &[u8], iv: &[u8]) -> Result<Vec<u8>, CalError>;
+    fn decrypt_data(&self, encrypted_data: &[u8], iv: &[u8]) -> Result<Vec<u8>, KeyHandleError>;
 
-    fn hmac(&self, data: &[u8]) -> Result<Vec<u8>, CalError>;
+    fn hmac(&self, data: &[u8]) -> Result<Vec<u8>, KeyHandleError>;
 
-    fn verify_hmac(&self, data: &[u8], hmac: &[u8]) -> Result<bool, CalError>;
+    fn verify_hmac(&self, data: &[u8], hmac: &[u8]) -> Result<bool, KeyHandleError>;
 
     /// Derives an ephemeral key from this key as base with the same spec as the base key.
     ///
     /// This operation is deterministic, meaning the same nonce and key are always going to result in the same [KeyHandle].
-    fn derive_key(&self, nonce: &[u8]) -> Result<KeyHandle, CalError>;
+    fn derive_key(&self, nonce: &[u8]) -> Result<KeyHandle, KeyHandleError>;
 
     /// Returns the raw key as binary.
     ///
     /// Most hardware based providers will return [CalError]
     /// with [CalErrorKind::NotImplemented](super::CalErrorKind::NotImplemented).
-    fn extract_key(&self) -> Result<Vec<u8>, CalError>;
+    fn extract_key(&self) -> Result<Vec<u8>, KeyHandleError>;
 
     /// Returns the id of the key, which can be used with `load_key`.
-    fn id(&self) -> Result<String, CalError>;
+    fn id(&self) -> Result<String, KeyHandleError>;
 
     /// Delete this key.
-    fn delete(self) -> Result<(), CalError>;
+    fn delete(self) -> Result<(), KeyHandleError>;
 
     /// Returns the [KeySpec] the key was generated with.
     fn spec(&self) -> KeySpec;

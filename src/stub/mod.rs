@@ -3,6 +3,7 @@
 
 use std::{collections::HashSet, hash::Hash};
 
+use error_stack::{report, Result};
 use serde_json::error;
 
 use crate::{
@@ -10,7 +11,7 @@ use crate::{
         config::{KeyPairSpec, KeySpec, ProviderConfig, ProviderImplConfig, SecurityLevel, Spec},
         error::CalError,
         traits::{
-            key_handle::{DHKeyExchangeImpl, KeyHandleImpl, KeyPairHandleImpl},
+            key_handle::{DHKeyExchangeImpl, KeyHandleError, KeyHandleImpl, KeyPairHandleImpl},
             module_provider::{ProviderFactory, ProviderImpl, ProviderImplEnum},
         },
         DHExchange, KeyHandle, KeyPairHandle,
@@ -52,7 +53,7 @@ pub(crate) struct StubProvider {
 
 impl ProviderImpl for StubProvider {
     fn create_key(&mut self, spec: KeySpec) -> Result<KeyHandle, CalError> {
-        Err(CalError::not_implemented())
+        Err(report!(CalError::not_implemented()))
     }
 
     fn load_key(&mut self, id: String) -> Result<KeyHandle, CalError> {
@@ -167,35 +168,35 @@ impl KeyPairHandleImpl for StubKeyPairHandle {
 pub(crate) struct StubKeyHandle {}
 
 impl KeyHandleImpl for StubKeyHandle {
-    fn encrypt_data(&self, data: &[u8], iv: &[u8]) -> Result<(Vec<u8>, Vec<u8>), CalError> {
+    fn encrypt_data(&self, data: &[u8], iv: &[u8]) -> Result<(Vec<u8>, Vec<u8>), KeyHandleError> {
         todo!()
     }
 
-    fn decrypt_data(&self, encrypted_data: &[u8], iv: &[u8]) -> Result<Vec<u8>, CalError> {
+    fn decrypt_data(&self, encrypted_data: &[u8], iv: &[u8]) -> Result<Vec<u8>, KeyHandleError> {
         todo!()
     }
 
-    fn hmac(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
+    fn hmac(&self, data: &[u8]) -> Result<Vec<u8>, KeyHandleError> {
         todo!()
     }
 
-    fn verify_hmac(&self, data: &[u8], hmac: &[u8]) -> Result<bool, CalError> {
+    fn verify_hmac(&self, data: &[u8], hmac: &[u8]) -> Result<bool, KeyHandleError> {
         todo!()
     }
 
-    fn derive_key(&self, nonce: &[u8]) -> Result<KeyHandle, CalError> {
+    fn derive_key(&self, nonce: &[u8]) -> Result<KeyHandle, KeyHandleError> {
         todo!()
     }
 
-    fn extract_key(&self) -> Result<Vec<u8>, CalError> {
+    fn extract_key(&self) -> Result<Vec<u8>, KeyHandleError> {
         todo!()
     }
 
-    fn id(&self) -> Result<String, CalError> {
+    fn id(&self) -> Result<String, KeyHandleError> {
         Ok("RANDOM_KEY_ID".to_owned())
     }
 
-    fn delete(self) -> Result<(), CalError> {
+    fn delete(self) -> Result<(), KeyHandleError> {
         todo!()
     }
 
