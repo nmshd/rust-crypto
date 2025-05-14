@@ -17,7 +17,7 @@ use crate::{
         DHExchange, KeyHandle, KeyPairHandle,
     },
     prelude::KDF,
-    storage::KeyData,
+    storage::{KeyData, StorageManagerError},
 };
 
 const PROVIDER_NAME: &str = "STUB_PROVIDER";
@@ -95,7 +95,7 @@ impl ProviderImpl for StubProvider {
         todo!()
     }
 
-    fn get_all_keys(&self) -> Result<Vec<(String, Spec)>, CalError> {
+    fn get_all_keys(&self) -> Result<Vec<Result<(String, Spec), StorageManagerError>>, CalError> {
         todo!()
     }
 

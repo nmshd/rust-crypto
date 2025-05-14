@@ -1,7 +1,7 @@
 #![allow(clippy::upper_case_acronyms)]
 use std::{fmt, path::Path};
 
-use error_stack::{ensure, report, Report, Result, ResultExt};
+use error_stack::{ensure, report, Result, ResultExt};
 use hmac::Mac;
 use serde::{Deserialize, Serialize};
 use sled::{open, Db};
@@ -15,7 +15,7 @@ type HmacSha256 = Hmac<Sha256>;
 
 use crate::common::{
     config::{AdditionalConfig, AllKeysFn, DeleteFn, GetFn, Spec, StoreFn},
-    error::{CId, CPath, CalError, KeyType},
+    error::{CId, CPath},
     KeyHandle, KeyPairHandle,
 };
 

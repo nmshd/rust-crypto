@@ -2,13 +2,12 @@ use crate::{
     common::{
         config::{KeyPairSpec, KeySpec},
         crypto::algorithms::encryption::AsymmetricKeySpec,
-        error::{CalError, KeyType},
-        traits::key_handle::{KeyHandleImpl, KeyPairHandleImpl},
+        error::{CGivenExpected, CalError, KeyType},
+        traits::key_handle::{KeyHandleError, KeyHandleImpl, KeyPairHandleImpl},
         DHExchange, KeyHandle,
     },
     prelude::Cipher,
 };
-use anyhow::anyhow;
 use base64::Engine;
 use chacha20::{
     cipher::{KeyIvInit, StreamCipher},
@@ -20,21 +19,12 @@ use ring::{
     rand::{SecureRandom, SystemRandom},
     signature::{EcdsaKeyPair, Signature, UnparsedPublicKey},
 };
-use thiserror::Error;
-use tracing::{error, instrument, warn};
+use tracing::{instrument, warn};
 use zeroize::{Zeroize, ZeroizeOnDrop};
 
 use super::StorageManager;
 
-use error_stack::{ensure, Result, ResultExt};
-
-#[derive(Debug, Clone, Copy, Error)]
-pub enum SoftwareKeyHandleError {
-    #[error("Input iv has wrong length.")]
-    WrongLengthIv,
-    #[error("Failed to generate an iv.")]
-    FailedToGenerateIv,
-}
+use error_stack::{ensure, report, Result, ResultExt};
 
 #[derive(Debug, Clone)]
 pub(crate) struct SoftwareKeyPairHandle {
@@ -60,13 +50,13 @@ impl SoftwareKeyHandle {
         spec: KeySpec,
         key_data: Vec<u8>,
         storage_manager: Option<StorageManager>,
-    ) -> Result<Self, CalError> {
-        Ok(Self {
+    ) -> Self {
+        Self {
             key_id,
             key: key_data,
             storage_manager,
             spec,
-        })
+        }
     }
 }
 
@@ -89,22 +79,16 @@ fn id_from_buffer(buff: &[u8]) -> String {
 
 impl KeyHandleImpl for SoftwareKeyHandle {
     #[instrument(level = "trace")]
-    fn encrypt_data(
-        &self,
-        data: &[u8],
-        iv: &[u8],
-    ) -> Result<(Vec<u8>, Vec<u8>), SoftwareKeyHandleError> {
+    fn encrypt_data(&self, data: &[u8], iv: &[u8]) -> Result<(Vec<u8>, Vec<u8>), KeyHandleError> {
         match self.spec.cipher {
             Cipher::AesGcm128 | Cipher::AesGcm256 => {
                 let (nonce, nonce_bytes) = if !iv.is_empty() {
                     ensure!(
                         iv.len() != NONCE_LEN,
-                        Report::new(SoftwareKeyHandleError::WrongLengthIv).attach_printable(
-                            CGivenExpected {
-                                expected: NONCE_LEN,
-                                given: iv.len()
-                            }
-                        )
+                        report!(KeyHandleError::WrongIvLength).attach_printable(CGivenExpected {
+                            expected: NONCE_LEN,
+                            given: iv.len()
+                        })
                     );
 
                     let nonce_array: [u8; NONCE_LEN] =
@@ -114,7 +98,7 @@ impl KeyHandleImpl for SoftwareKeyHandle {
                     let rng = SystemRandom::new();
                     let mut generated_nonce_bytes = [0u8; NONCE_LEN];
                     rng.fill(&mut generated_nonce_bytes)
-                        .change_context(SoftwareKeyHandleError::FailedToGenerateIv)?;
+                        .change_context(KeyHandleError::FailedToGenerateIv)?;
                     (
                         ring::aead::Nonce::assume_unique_for_key(generated_nonce_bytes),
                         generated_nonce_bytes.to_vec(),
@@ -126,18 +110,13 @@ impl KeyHandleImpl for SoftwareKeyHandle {
                 in_out.extend(vec![0u8; 16]);
 
                 let algo: &Algorithm = self.spec.cipher.into();
-                let unbound_key = UnboundKey::new(algo, &self.key).map_err(|e| {
-                    CalError::failed_operation(
-                        format!("Failed to create unbound AES key: {}", e),
-                        true,
-                        None,
-                    )
-                })?;
+                let unbound_key = UnboundKey::new(algo, &self.key)
+                    .change_context(KeyHandleError::DecryptDataError)
+                    .attach_printable("Failed to create unbound AES key")?;
+
                 let key = LessSafeKey::new(unbound_key);
                 key.seal_in_place_append_tag(nonce, aad, &mut in_out)
-                    .map_err(|_| {
-                        CalError::failed_operation("Encryption failed".to_string(), true, None)
-                    })?;
+                    .change_context(KeyHandleError::DecryptDataError)?;
 
                 Ok((in_out, nonce_bytes.to_vec()))
             }
@@ -147,22 +126,16 @@ impl KeyHandleImpl for SoftwareKeyHandle {
 
                 let nonce: [u8; 24] = if !iv.is_empty() {
                     if iv.len() == 24 {
-                        iv.try_into().map_err(|_| {
-                            CalError::failed_operation(
-                                "Internal error converting IV slice to array".to_string(),
-                                true,
-                                None,
-                            )
-                        })?
+                        <&[u8] as TryInto<[u8; 24]>>::try_into(iv)
+                            .change_context(KeyHandleError::InternalError)
+                            .attach_printable("error converting IV slice to array")?
                     } else {
-                        return Err(CalError::failed_operation(
+                        return Err(report!(KeyHandleError::InternalError).attach_printable(
                             format!(
                                 "Invalid IV length for XChaCha20: expected {} bytes, got {}",
                                 24,
                                 iv.len()
                             ),
-                            false,
-                            None,
                         ));
                     }
                 } else {
@@ -177,38 +150,27 @@ impl KeyHandleImpl for SoftwareKeyHandle {
 
                 Ok((buffer, nonce.to_vec()))
             }
-            _ => Err(CalError::failed_operation(
-                "Cipher not supported".to_string(),
-                true,
-                None,
-            )),
+            _ => Err(report!(KeyHandleError::UnsupportedCipher)),
         }
     }
 
     #[instrument(level = "trace")]
-    fn decrypt_data(&self, encrypted_data: &[u8], iv: &[u8]) -> Result<Vec<u8>, CalError> {
+    fn decrypt_data(&self, encrypted_data: &[u8], iv: &[u8]) -> Result<Vec<u8>, KeyHandleError> {
         match self.spec.cipher {
             Cipher::AesGcm128 | Cipher::AesGcm256 => {
                 if encrypted_data.len() <= NONCE_LEN {
-                    return Err(CalError::failed_operation(
-                        "Data too short".to_string(),
-                        true,
-                        None,
+                    return Err(report!(KeyHandleError::DecryptDataError).attach_printable(
+                        "Data is too short, it should be at least as long as the nonce",
                     ));
                 }
 
                 if iv.len() != NONCE_LEN {
-                    error!(
-                        iv = iv,
-                        len = iv.len(),
-                        expected = NONCE_LEN,
-                        "Nonce for AES GCM must be 96bit long."
-                    );
-                    return Err(CalError::bad_parameter(
-                        "Nonce for AES GCM must be 96bit long.".to_owned(),
-                        true,
-                        None,
-                    ));
+                    return Err(report!(KeyHandleError::WrongIvLength)
+                        .attach_printable("Nonce for AES GCM must be 96bit long.")
+                        .attach_printable(CGivenExpected {
+                            expected: NONCE_LEN,
+                            given: iv.len(),
+                        }));
                 }
 
                 let nonce = Nonce::assume_unique_for_key(iv.try_into().unwrap());
@@ -222,25 +184,16 @@ impl KeyHandleImpl for SoftwareKeyHandle {
                 let algo: &Algorithm = self.spec.cipher.into();
 
                 // Create an UnboundKey for the AES-GCM encryption
-                let unbound_key = UnboundKey::new(algo, &self.key).map_err(|err| {
-                    CalError::failed_operation(
-                        "Failed to create unbound AES key".to_owned(),
-                        false,
-                        Some(anyhow!(err)),
-                    )
-                })?;
+                let unbound_key = UnboundKey::new(algo, &self.key)
+                    .change_context(KeyHandleError::InternalError)
+                    .attach_printable("Failed to create unbound AES key")?;
 
                 // Wrap it in a LessSafeKey for easier encryption/decryption
                 let key = LessSafeKey::new(unbound_key);
 
                 // Perform decryption
-                key.open_in_place(nonce, aad, &mut in_out).map_err(|err| {
-                    CalError::failed_operation(
-                        "Failed decryption with ring".to_owned(),
-                        false,
-                        Some(anyhow!(err)),
-                    )
-                })?;
+                key.open_in_place(nonce, aad, &mut in_out)
+                    .change_context(KeyHandleError::DecryptDataError)?;
 
                 // Remove the authentication tag
                 in_out.truncate(in_out.len() - 16 - MAX_TAG_LEN);
@@ -266,23 +219,22 @@ impl KeyHandleImpl for SoftwareKeyHandle {
             }
 
             // Fallback for any other ciphers you might define.
-            _ => Err(CalError::failed_operation(
-                "Cipher not supported".to_string(),
-                true,
-                None,
-            )),
+            _ => Err(report!(KeyHandleError::UnsupportedCipher)
+                .attach_printable("Cipher not supported for decryption")),
         }
     }
 
-    fn hmac(&self, _data: &[u8]) -> Result<Vec<u8>, CalError> {
-        todo!("HMAC not supported for AES keys")
+    fn hmac(&self, _data: &[u8]) -> Result<Vec<u8>, KeyHandleError> {
+        Err(report!(KeyHandleError::UnsupportedOperation)
+            .attach_printable("HMAC not supported for AES keys"))
     }
 
-    fn verify_hmac(&self, _data: &[u8], _hmac: &[u8]) -> Result<bool, CalError> {
-        todo!("HMAC not supported for AES keys")
+    fn verify_hmac(&self, _data: &[u8], _hmac: &[u8]) -> Result<bool, KeyHandleError> {
+        Err(report!(KeyHandleError::UnsupportedOperation)
+            .attach_printable("HMAC not supported for AES keys"))
     }
 
-    fn derive_key(&self, nonce: &[u8]) -> Result<KeyHandle, CalError> {
+    fn derive_key(&self, nonce: &[u8]) -> Result<KeyHandle, KeyHandleError> {
         // `digest` and `blake2` crate have both update functions that get each other int the way.
         use blake2::Blake2bVar;
         use digest::{Update, VariableOutput};
@@ -291,15 +243,9 @@ impl KeyHandleImpl for SoftwareKeyHandle {
         spec.ephemeral = true;
         let key_length = spec.cipher.len();
 
-        let mut hasher = Blake2bVar::new(key_length).map_err(|e| {
-            let cal_err = CalError::bad_parameter(
-                "Blake2b failed to initialize".to_owned(),
-                false,
-                Some(anyhow!(e)),
-            );
-            error!(err = %cal_err, "Failed Blake2b init.");
-            cal_err
-        })?;
+        let mut hasher = Blake2bVar::new(key_length)
+            .change_context(KeyHandleError::InternalError)
+            .attach_printable("Internal: bad key length for blake2b, key length is set by spec")?;
 
         hasher.update(nonce);
         hasher.update(&self.key);
@@ -308,35 +254,25 @@ impl KeyHandleImpl for SoftwareKeyHandle {
 
         hasher
             .finalize_variable(derived_key.as_mut_slice())
-            .map_err(|e| {
-                let cal_err = CalError::bad_parameter(
-                    "Blake2b failed to write hash.".to_owned(),
-                    false,
-                    Some(anyhow!(e)),
-                );
-                error!(err = %cal_err, "Failed Blake2b init.");
-                cal_err
-            })?;
+            .change_context(KeyHandleError::InternalError)?;
 
-        let id = id_from_buffer(nonce)?;
+        let id = id_from_buffer(nonce);
 
         Ok(KeyHandle {
-            implementation: SoftwareKeyHandle::new(id, spec, derived_key, None)
-                .unwrap()
-                .into(),
+            implementation: SoftwareKeyHandle::new(id, spec, derived_key, None).into(),
         })
     }
 
-    fn extract_key(&self) -> Result<Vec<u8>, CalError> {
+    fn extract_key(&self) -> Result<Vec<u8>, KeyHandleError> {
         Ok(self.key.clone())
     }
 
-    fn id(&self) -> Result<String, CalError> {
+    fn id(&self) -> Result<String, KeyHandleError> {
         Ok(self.key_id.clone())
     }
 
     #[doc = " Delete this key."]
-    fn delete(self) -> Result<(), CalError> {
+    fn delete(self) -> Result<(), KeyHandleError> {
         if let Some(s) = &self.storage_manager {
             s.delete(self.key_id.clone())
         }
@@ -351,11 +287,11 @@ impl KeyHandleImpl for SoftwareKeyHandle {
 impl KeyPairHandleImpl for SoftwareKeyPairHandle {
     fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
         let Some(signing_key) = self.signing_key.as_ref() else {
-            return Err(CalError::failed_operation(
+            return Err(report!(CalError::failed_operation(
                 "No private key available for signing".to_string(),
                 true,
                 None,
-            ));
+            )));
         };
 
         match self.spec.asym_spec {
@@ -364,7 +300,7 @@ impl KeyPairHandleImpl for SoftwareKeyPairHandle {
                     key.sign(data, Some(ed25519_compact::Noise::generate()))
                         .to_vec()
                 })
-                .map_err(|_| {
+                .change_context_lazy(|| {
                     CalError::failed_operation("Failed to use signing key".to_string(), true, None)
                 }),
             AsymmetricKeySpec::P256 | AsymmetricKeySpec::P384 => {
@@ -376,14 +312,19 @@ impl KeyPairHandleImpl for SoftwareKeyPairHandle {
                     signing_key.as_slice(),
                     &rng,
                 )
-                .map_err(|_| {
+                .change_context_lazy(|| {
                     CalError::failed_operation("Failed to use signing key".to_string(), true, None)
                 })?;
 
                 // Sign the data
-                let signature: Signature = signing_key.sign(&rng, data).map_err(|_| {
-                    CalError::failed_operation("Failed to use signing key".to_string(), true, None)
-                })?;
+                let signature: Signature =
+                    signing_key.sign(&rng, data).change_context_lazy(|| {
+                        CalError::failed_operation(
+                            "Failed to use signing key".to_string(),
+                            true,
+                            None,
+                        )
+                    })?;
 
                 Ok(signature.as_ref().to_vec())
             }
@@ -401,7 +342,7 @@ impl KeyPairHandleImpl for SoftwareKeyPairHandle {
                             .map(|signature| (key, signature))
                     })
                     .map(|(key, signature)| key.verify(data, &signature).is_ok())
-                    .map_err(|_| {
+                    .change_context_lazy(|| {
                         CalError::failed_operation(
                             "Failed to use public key".to_string(),
                             true,
@@ -436,15 +377,15 @@ impl KeyPairHandleImpl for SoftwareKeyPairHandle {
 
     fn extract_key(&self) -> Result<Vec<u8>, CalError> {
         if !self.spec.non_exportable {
-            self.signing_key
-                .clone()
-                .ok_or_else(|| CalError::missing_key(self.key_id.clone(), KeyType::Private))
+            self.signing_key.clone().ok_or_else(|| {
+                report!(CalError::missing_key(self.key_id.clone(), KeyType::Private))
+            })
         } else {
-            Err(CalError::failed_operation(
+            Err(report!(CalError::failed_operation(
                 "The private key is not exportable".to_string(),
                 true,
                 None,
-            ))
+            )))
         }
     }
 

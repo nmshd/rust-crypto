@@ -10,6 +10,7 @@ use crate::{
     },
     storage::StorageManager,
 };
+use error_stack::ResultExt;
 use ring::{
     aead, agreement,
     signature::{
@@ -60,9 +61,10 @@ impl ProviderFactory for SoftwareProviderFactory {
     fn create_provider(
         &self,
         impl_config: ProviderImplConfig,
-    ) -> Result<ProviderImplEnum, CalError> {
+    ) -> error_stack::Result<ProviderImplEnum, CalError> {
         let storage_manager =
-            StorageManager::new(self.get_name().unwrap(), &impl_config.additional_config)?;
+            StorageManager::new(self.get_name().unwrap(), &impl_config.additional_config)
+                .change_context(CalError::failed_operation("Storage failed", true, None))?;
         Ok(Into::into(SoftwareProvider {
             impl_config,
             storage_manager,

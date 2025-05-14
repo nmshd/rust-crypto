@@ -14,13 +14,15 @@ use crate::{
         DHExchange, KeyHandle, KeyPairHandle,
     },
     prelude::{CryptoHash, KDF},
-    storage::KeyData,
+    storage::{KeyData, StorageManagerError},
 };
 use anyhow::anyhow;
 use argon2::{
     password_hash::SaltString, Argon2, Params, PasswordHasher, MAX_SALT_LEN, MIN_SALT_LEN,
 };
 use blake2::{Blake2b512, Digest};
+use error_stack::Result;
+use error_stack::{report, ResultExt};
 use nanoid::nanoid;
 use p256::{
     ecdh::diffie_hellman, elliptic_curve::rand_core::OsRng, PublicKey as P256PublicKey,
@@ -40,11 +42,11 @@ impl ProviderImpl for SoftwareProvider {
     fn create_key(&mut self, spec: KeySpec) -> Result<KeyHandle, CalError> {
         if self.storage_manager.is_none() && !spec.ephemeral {
             error!("This is an ephemeral provider, it cannot create non-ephemeral keys");
-            return Err(CalError::failed_operation(
+            return Err(report!(CalError::failed_operation(
                 "This is an ephemeral provider, it cannot create non-ephemeral keys".to_owned(),
                 true,
                 None,
-            ));
+            )));
         }
 
         let key_id = nanoid!(10);
@@ -94,7 +96,8 @@ impl ProviderImpl for SoftwareProvider {
             self.storage_manager
                 .as_ref()
                 .unwrap()
-                .store(key_id.clone(), storage_data)?;
+                .store(key_id.clone(), storage_data)
+                .change_context(CalError::failed_operation("storing key failed", true, None))?;
         }
 
         // If the key is ephemeral, don't even pass the storage manager
@@ -120,31 +123,36 @@ impl ProviderImpl for SoftwareProvider {
     fn load_key(&mut self, key_id: String) -> Result<KeyHandle, CalError> {
         if self.storage_manager.is_none() {
             error!("This is an ephemeral provider, it cannot load keys");
-            return Err(CalError::failed_operation(
+            return Err(report!(CalError::failed_operation(
                 "This is an ephemeral provider, it cannot load keys".to_owned(),
                 true,
                 None,
-            ));
+            )));
         }
 
-        let storage_data = self.storage_manager.as_ref().unwrap().get(key_id.clone())?;
+        let storage_data = self
+            .storage_manager
+            .as_ref()
+            .unwrap()
+            .get(key_id.clone())
+            .change_context(CalError::failed_operation("storage failed", true, None))?;
 
         let Spec::KeySpec(spec) = storage_data.spec else {
             error!("Trying to load KeyPair as symmetric Key");
-            return Err(CalError::failed_operation(
+            return Err(report!(CalError::failed_operation(
                 "Trying to load KeyPair as symmetric Key".to_owned(),
                 true,
                 None,
-            ));
+            )));
         };
 
         let Some(key_data) = storage_data.secret_data else {
             error!("No sensitive data for key found.");
-            return Err(CalError::failed_operation(
+            return Err(report!(CalError::failed_operation(
                 "No sensitive data for key found.".to_owned(),
                 true,
                 None,
-            ));
+            )));
         };
 
         // Initialize SoftwareKeyHandle with the LessSafeKey
@@ -163,11 +171,11 @@ impl ProviderImpl for SoftwareProvider {
     fn create_key_pair(&mut self, spec: KeyPairSpec) -> Result<KeyPairHandle, CalError> {
         if self.storage_manager.is_none() && !spec.ephemeral {
             error!("This is an ephemeral provider, it cannot create non-ephemeral keys");
-            return Err(CalError::failed_operation(
+            return Err(report!(CalError::failed_operation(
                 "This is an ephemeral provider, it cannot create non-ephemeral keys".to_owned(),
                 true,
                 None,
-            ));
+            )));
         }
 
         let key_id = nanoid!(10);
@@ -218,7 +226,8 @@ impl ProviderImpl for SoftwareProvider {
             self.storage_manager
                 .as_ref()
                 .unwrap()
-                .store(key_id.clone(), storage_data.clone())?;
+                .store(key_id.clone(), storage_data.clone())
+                .change_context(CalError::failed_operation("storage failed", false, None))?;
         }
 
         let storage_manager = if spec.ephemeral {
@@ -244,33 +253,38 @@ impl ProviderImpl for SoftwareProvider {
     fn load_key_pair(&mut self, key_id: String) -> Result<KeyPairHandle, CalError> {
         if self.storage_manager.is_none() {
             error!("This is an ephemeral provider, it cannot load keys");
-            return Err(CalError::failed_operation(
+            return Err(report!(CalError::failed_operation(
                 "This is an ephemeral provider, it cannot load keys".to_owned(),
                 true,
                 None,
-            ));
+            )));
         }
 
-        let storage_data = self.storage_manager.as_ref().unwrap().get(key_id.clone())?;
+        let storage_data = self
+            .storage_manager
+            .as_ref()
+            .unwrap()
+            .get(key_id.clone())
+            .change_context(CalError::failed_operation("storage failed", false, None))?;
 
         let Spec::KeyPairSpec(spec) = storage_data.spec else {
             error!("Trying to load symmetric Key as KeyPair");
-            return Err(CalError::failed_operation(
+            return Err(report!(CalError::failed_operation(
                 "Trying to load symmetric Key as KeyPair".to_owned(),
                 true,
                 None,
-            ));
+            )));
         };
 
         let key_data = storage_data.secret_data;
 
         let Some(public_key) = storage_data.public_data else {
             error!("no public data for KeyPair found");
-            return Err(CalError::failed_operation(
+            return Err(report!(CalError::failed_operation(
                 "no public data for KeyPair found".to_owned(),
                 true,
                 None,
-            ));
+            )));
         };
 
         let handle = SoftwareKeyPairHandle {
@@ -289,11 +303,11 @@ impl ProviderImpl for SoftwareProvider {
     fn import_key(&mut self, spec: KeySpec, data: &[u8]) -> Result<KeyHandle, CalError> {
         if self.storage_manager.is_none() && !spec.ephemeral {
             error!("This is an ephemeral provider, it cannot import non-ephemeral keys");
-            return Err(CalError::failed_operation(
+            return Err(report!(CalError::failed_operation(
                 "This is an ephemeral provider, it cannot import non-ephemeral keys".to_owned(),
                 true,
                 None,
-            ));
+            )));
         }
 
         let key_id = nanoid!(10);
@@ -306,7 +320,7 @@ impl ProviderImpl for SoftwareProvider {
 
         // Initialize SoftwareKeyHandle with the raw key data
         let handle =
-            SoftwareKeyHandle::new(key_id.clone(), spec, data.to_vec(), storage_manager.clone())?;
+            SoftwareKeyHandle::new(key_id.clone(), spec, data.to_vec(), storage_manager.clone());
 
         // store key
         let storage_data = KeyData {
@@ -321,7 +335,8 @@ impl ProviderImpl for SoftwareProvider {
             self.storage_manager
                 .as_ref()
                 .unwrap()
-                .store(key_id.clone(), storage_data)?;
+                .store(key_id.clone(), storage_data)
+                .change_context(CalError::failed_operation("storage failed", true, None))?;
         }
 
         Ok(KeyHandle {
@@ -337,11 +352,11 @@ impl ProviderImpl for SoftwareProvider {
     ) -> Result<KeyPairHandle, CalError> {
         if self.storage_manager.is_none() && !spec.ephemeral {
             error!("This is an ephemeral provider, it cannot import non-ephemeral keys");
-            return Err(CalError::failed_operation(
+            return Err(report!(CalError::failed_operation(
                 "This is an ephemeral provider, it cannot import non-ephemeral keys".to_owned(),
                 true,
                 None,
-            ));
+            )));
         }
 
         let key_id = nanoid!(10);
@@ -373,7 +388,8 @@ impl ProviderImpl for SoftwareProvider {
             self.storage_manager
                 .as_ref()
                 .unwrap()
-                .store(key_id.clone(), storage_data)?;
+                .store(key_id.clone(), storage_data)
+                .change_context(CalError::failed_operation("storage failed", true, None))?;
         }
 
         Ok(KeyPairHandle {
@@ -388,11 +404,11 @@ impl ProviderImpl for SoftwareProvider {
     ) -> Result<KeyPairHandle, CalError> {
         if self.storage_manager.is_none() && !spec.ephemeral {
             error!("This is an ephemeral provider, it cannot import non-ephemeral keys");
-            return Err(CalError::failed_operation(
+            return Err(report!(CalError::failed_operation(
                 "This is an ephemeral provider, it cannot import non-ephemeral keys".to_owned(),
                 true,
                 None,
-            ));
+            )));
         }
 
         let key_id = nanoid!(10);
@@ -422,7 +438,8 @@ impl ProviderImpl for SoftwareProvider {
         storage_manager
             .as_ref()
             .map(|s| s.store(key_id.clone(), storage_data))
-            .transpose()?;
+            .transpose()
+            .change_context(CalError::failed_operation("storage failed", true, None))?;
 
         Ok(KeyPairHandle {
             implementation: handle.into(),
@@ -465,13 +482,13 @@ impl ProviderImpl for SoftwareProvider {
         })
     }
 
-    fn get_all_keys(&self) -> Result<Vec<(String, Spec)>, CalError> {
+    fn get_all_keys(&self) -> Result<Vec<Result<(String, Spec), StorageManagerError>>, CalError> {
         if self.storage_manager.is_none() {
-            return Err(CalError::failed_operation(
+            return Err(report!(CalError::failed_operation(
                 "This is an ephemeral provider, it cannot have stored keys".to_owned(),
                 true,
                 None,
-            ));
+            )));
         }
         Ok(self.storage_manager.as_ref().unwrap().get_all_keys())
     }
@@ -502,7 +519,7 @@ impl ProviderImpl for SoftwareProvider {
         };
 
         if salt.len() < 8 || salt.len() > 64 {
-            return Err(CalError::bad_parameter(
+            return Err(report!(CalError::bad_parameter(
                 format!(
                     "Wrong salt length. Does not match requirement: {} <= {} <= {}",
                     MIN_SALT_LEN,
@@ -511,7 +528,7 @@ impl ProviderImpl for SoftwareProvider {
                 ),
                 true,
                 None,
-            ));
+            )));
         }
 
         // Determine key length based on cipher
@@ -519,11 +536,11 @@ impl ProviderImpl for SoftwareProvider {
             Cipher::AesGcm128 => 16,
             Cipher::AesGcm256 | Cipher::XChaCha20Poly1305 => 32,
             _ => {
-                return Err(CalError::bad_parameter(
+                return Err(report!(CalError::bad_parameter(
                     "Unsupported cipher for key derivation".to_string(),
                     true,
                     None,
-                ))
+                )));
             }
         };
 
@@ -582,11 +599,11 @@ impl ProviderImpl for SoftwareProvider {
     ) -> Result<KeyHandle, CalError> {
         // Validate context is exactly 8 characters
         if context.len() != 8 {
-            return Err(CalError::failed_operation(
+            return Err(report!(CalError::failed_operation(
                 "Context must be exactly 8 characters long".to_string(),
                 true,
                 None,
-            ));
+            )));
         }
 
         // Determine key length based on cipher
@@ -594,11 +611,11 @@ impl ProviderImpl for SoftwareProvider {
             Cipher::AesGcm128 => 16,
             Cipher::AesGcm256 | Cipher::XChaCha20Poly1305 => 32,
             _ => {
-                return Err(CalError::failed_operation(
+                return Err(report!(CalError::failed_operation(
                     "Unsupported cipher for key derivation".to_string(),
                     true,
                     None,
-                ))
+                )));
             }
         };
 
@@ -705,11 +722,11 @@ impl SoftwareDHExchange {
                     spec,
                 })
             }
-            _ => Err(CalError::failed_operation(
+            _ => Err(report!(CalError::failed_operation(
                 "Unsupported algorithm".to_string(),
                 true,
                 None,
-            )),
+            ))),
         }
     }
 
@@ -729,40 +746,40 @@ impl SoftwareDHExchange {
             AsymmetricKeySpec::Curve25519 => {
                 // Verify key lengths
                 if private_key.len() != 32 || public_key.len() != 32 {
-                    return Err(CalError::failed_operation(
+                    return Err(report!(CalError::failed_operation(
                         "Invalid Curve25519 key length".to_string(),
                         true,
                         None,
-                    ));
+                    )));
                 }
             }
             AsymmetricKeySpec::P256 => {
                 // P-256 private key should be 32 bytes
                 if private_key.len() != 32 {
-                    return Err(CalError::failed_operation(
+                    return Err(report!(CalError::failed_operation(
                         "Invalid P-256 private key length".to_string(),
                         true,
                         None,
-                    ));
+                    )));
                 }
 
                 // Public key should be in SEC1 format (uncompressed)
                 if public_key.len() < 33
                     || (public_key[0] != 0x04 && public_key[0] != 0x02 && public_key[0] != 0x03)
                 {
-                    return Err(CalError::failed_operation(
+                    return Err(report!(CalError::failed_operation(
                         "Invalid P-256 public key format".to_string(),
                         true,
                         None,
-                    ));
+                    )));
                 }
             }
             _ => {
-                return Err(CalError::failed_operation(
+                return Err(report!(CalError::failed_operation(
                     "Unsupported algorithm".to_string(),
                     true,
                     None,
-                ));
+                )));
             }
         }
 
@@ -842,11 +859,11 @@ impl SoftwareDHExchange {
 
                 Ok(shared_secret.raw_secret_bytes().to_vec())
             }
-            _ => Err(CalError::failed_operation(
+            _ => Err(report!(CalError::failed_operation(
                 "Unsupported algorithm".to_string(),
                 true,
                 None,
-            )),
+            ))),
         }
     }
 
@@ -899,7 +916,7 @@ impl SoftwareDHExchange {
             || {
                 error!("derive_client_key_handles and derive_server_key_handles need a KeyPairSpec supplied which cipher is not None.");
                 CalError::bad_parameter(
-                    "derive_client_key_handles and derive_server_key_handles need a KeyPairSpec supplied which cipher is not None.".to_owned(), 
+                    "derive_client_key_handles and derive_server_key_handles need a KeyPairSpec supplied which cipher is not None.".to_owned(),
                     true,
                     None
                 )}

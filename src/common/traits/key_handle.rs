@@ -42,6 +42,16 @@ pub enum KeyHandleError {
     DeleteError,
     #[error("Failed to get key spec")]
     SpecError,
+    #[error("Input iv has wrong length.")]
+    WrongIvLength,
+    #[error("Failed to generate an iv.")]
+    FailedToGenerateIv,
+    #[error("Unsupported cipher")]
+    UnsupportedCipher,
+    #[error("Unsupported operation")]
+    UnsupportedOperation,
+    #[error("Internal error")]
+    InternalError,
 }
 
 /// Defines a common interface for cryptographic key operations.

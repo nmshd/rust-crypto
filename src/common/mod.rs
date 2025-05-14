@@ -1,5 +1,6 @@
 use crate::common::traits::key_handle::DHKeyExchangeImpl;
 use crate::prelude::{CryptoHash, KDF};
+use crate::storage::StorageManagerError;
 use config::{KeyPairSpec, KeySpec, ProviderConfig, Spec};
 use error::CalError;
 use traits::key_handle::DHKeyExchangeImplEnum;
@@ -143,7 +144,7 @@ impl Provider {
     }
 
     delegate_enum! {
-        pub fn get_all_keys(&self) -> Result<Vec<(String, Spec)>, CalError>;
+        pub fn get_all_keys(&self) -> Result<Vec<Result<(String, Spec), StorageManagerError>>, CalError>;
     }
 
     delegate_enum_bare! {
