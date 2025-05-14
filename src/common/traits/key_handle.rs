@@ -54,6 +54,34 @@ pub enum KeyHandleError {
     InternalError,
 }
 
+#[derive(Debug, Clone, Copy, Error)]
+pub enum KeyPairHandleError {
+    #[error("Signing data failed")]
+    SignDataError,
+    #[error("Signature verification failed")]
+    VerifySignatureError,
+    #[error("Encryption failed")]
+    EncryptDataError,
+    #[error("Decryption failed")]
+    DecryptDataError,
+    #[error("Failed to get public key")]
+    GetPublicKeyError,
+    #[error("Private key extraction failed")]
+    ExtractKeyError,
+    #[error("DH exchange operation failed")]
+    DHExchangeError,
+    #[error("Failed to get key pair id")]
+    IdError,
+    #[error("Key pair deletion failed")]
+    DeleteError,
+    #[error("Unsupported algorithm")]
+    UnsupportedAlgorithm,
+    #[error("Unsupported operation")]
+    UnsupportedOperation,
+    #[error("Internal error in key pair operation")]
+    InternalError,
+}
+
 /// Defines a common interface for cryptographic key operations.
 ///
 /// This trait specifies methods for key operations such as signing data, encrypting,
@@ -146,8 +174,8 @@ pub(crate) trait KeyPairHandleImpl: Send + Sync {
     /// * `data` - A byte slice representing the data to be signed.
     ///
     /// # Returns
-    /// A `Result` containing the signature as a `Vec<u8>` on success, or a `CalError` on failure.
-    fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError>;
+    /// A `Result` containing the signature as a `Vec<u8>` on success, or a `KeyPairHandleError` on failure.
+    fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, KeyPairHandleError>;
 
     /// Verifies the signature of the given data using the cryptographic key.
     ///
@@ -157,8 +185,8 @@ pub(crate) trait KeyPairHandleImpl: Send + Sync {
     ///
     /// # Returns
     /// A `Result` containing a boolean indicating whether the signature is valid (`true`) or not (`false`),
-    /// or a `CalError` on failure.
-    fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, CalError>;
+    /// or a `KeyPairHandleError` on failure.
+    fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, KeyPairHandleError>;
 
     /// Encrypts the given data using the cryptographic key.
     ///
@@ -166,8 +194,8 @@ pub(crate) trait KeyPairHandleImpl: Send + Sync {
     /// * `data` - A byte slice representing the data to be encrypted.
     ///
     /// # Returns
-    /// A `Result` containing the encrypted data as a `Vec<u8>` on success, or a `CalError` on failure.
-    fn encrypt_data(&self, data: &[u8], iv: &[u8]) -> Result<Vec<u8>, CalError>;
+    /// A `Result` containing the encrypted data as a `Vec<u8>` on success, or a `KeyPairHandleError` on failure.
+    fn encrypt_data(&self, data: &[u8], iv: &[u8]) -> Result<Vec<u8>, KeyPairHandleError>;
 
     /// Decrypts the given encrypted data using the cryptographic key.
     ///
@@ -175,29 +203,29 @@ pub(crate) trait KeyPairHandleImpl: Send + Sync {
     /// * `encrypted_data` - A byte slice representing the data to be decrypted.
     ///
     /// # Returns
-    /// A `Result` containing the decrypted data as a `Vec<u8>` on success, or a `CalError` on failure.
-    fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, CalError>;
+    /// A `Result` containing the decrypted data as a `Vec<u8>` on success, or a `KeyPairHandleError` on failure.
+    fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, KeyPairHandleError>;
 
     /// Returns the raw public key as binary.
-    fn get_public_key(&self) -> Result<Vec<u8>, CalError>;
+    fn get_public_key(&self) -> Result<Vec<u8>, KeyPairHandleError>;
 
     /// Returns the raw private key as binary.
     ///
-    /// Most hardware based providers will return [CalError]
-    /// with [CalErrorKind::NotImplemented](super::CalErrorKind::NotImplemented).
-    fn extract_key(&self) -> Result<Vec<u8>, CalError>;
+    /// Most hardware based providers will return [KeyPairHandleError]
+    /// with `KeyPairHandleError::UnsupportedOperation`.
+    fn extract_key(&self) -> Result<Vec<u8>, KeyPairHandleError>;
 
     /// [DEPRECATED]: Starts a [DHExchange].
     ///
-    /// Some Providers might return [CalError]
-    /// with [CalErrorKind::NotImplemented](super::CalErrorKind::NotImplemented).
-    fn start_dh_exchange(&self) -> Result<DHExchange, CalError>;
+    /// Some Providers might return [KeyPairHandleError]
+    /// with `KeyPairHandleError::UnsupportedOperation`.
+    fn start_dh_exchange(&self) -> Result<DHExchange, KeyPairHandleError>;
 
     /// Returns the id of the key pair, which can be used with `load_key_pair`.
-    fn id(&self) -> Result<String, CalError>;
+    fn id(&self) -> Result<String, KeyPairHandleError>;
 
     /// Delete this key pair.
-    fn delete(self) -> Result<(), CalError>;
+    fn delete(self) -> Result<(), KeyPairHandleError>;
 
     /// Returns the [KeyPairSpec] the key was generated with.
     fn spec(&self) -> KeyPairSpec;

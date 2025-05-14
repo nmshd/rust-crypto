@@ -1,4 +1,5 @@
 use crate::common::traits::key_handle::DHKeyExchangeImpl;
+use crate::common::traits::key_handle::KeyPairHandleError;
 use crate::prelude::{CryptoHash, KDF};
 use crate::storage::StorageManagerError;
 use config::{KeyPairSpec, KeySpec, ProviderConfig, Spec};
@@ -198,15 +199,15 @@ pub struct KeyPairHandle {
 /// Abstraction of asymmetric key pair handles.
 impl KeyPairHandle {
     delegate_enum! {
-        pub fn encrypt_data(&self, data: &[u8], iv: &[u8]) -> Result<Vec<u8>, CalError>;
+        pub fn encrypt_data(&self, data: &[u8], iv: &[u8]) -> Result<Vec<u8>, KeyPairHandleError>;
     }
 
     delegate_enum! {
-        pub fn decrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError>;
+        pub fn decrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, KeyPairHandleError>;
     }
 
     delegate_enum! {
-        pub fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError>;
+        pub fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, KeyPairHandleError>;
     }
 
     delegate_enum! {
@@ -214,29 +215,29 @@ impl KeyPairHandle {
             &self,
             data: &[u8],
             signature: &[u8],
-        ) -> Result<bool, CalError>;
+        ) -> Result<bool, KeyPairHandleError>;
     }
 
     delegate_enum! {
-        pub fn get_public_key(&self) -> Result<Vec<u8>, CalError>;
+        pub fn get_public_key(&self) -> Result<Vec<u8>, KeyPairHandleError>;
     }
 
     delegate_enum! {
-        pub fn extract_key(&self) -> Result<Vec<u8>, CalError>;
+        pub fn extract_key(&self) -> Result<Vec<u8>, KeyPairHandleError>;
     }
 
     #[deprecated(note = "Non ephemeral dh exchanges are possibly insecure.")]
     #[allow(dead_code)]
-    pub fn start_dh_exchange(&self) -> Result<DHExchange, CalError> {
+    pub fn start_dh_exchange(&self) -> Result<DHExchange, KeyPairHandleError> {
         self.implementation.start_dh_exchange()
     }
 
     delegate_enum! {
-        pub fn id(&self) -> Result<String, CalError>;
+        pub fn id(&self) -> Result<String, KeyPairHandleError>;
     }
 
     delegate_enum! {
-        pub fn delete(self) -> Result<(), CalError>;
+        pub fn delete(self) -> Result<(), KeyPairHandleError>;
     }
 
     delegate_enum_bare! {

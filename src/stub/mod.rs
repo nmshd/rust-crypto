@@ -1,6 +1,7 @@
 #![allow(unused)]
 #![allow(dead_code)]
 
+use crate::common::traits::key_handle::KeyPairHandleError;
 use std::{collections::HashSet, hash::Hash};
 
 use error_stack::{report, Result};
@@ -123,39 +124,39 @@ impl ProviderImpl for StubProvider {
 pub(crate) struct StubKeyPairHandle {}
 
 impl KeyPairHandleImpl for StubKeyPairHandle {
-    fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
+    fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, KeyPairHandleError> {
         Ok(data.to_vec())
     }
 
-    fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, CalError> {
+    fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, KeyPairHandleError> {
         Ok(data == signature)
     }
 
-    fn encrypt_data(&self, data: &[u8], iv: &[u8]) -> Result<Vec<u8>, CalError> {
+    fn encrypt_data(&self, data: &[u8], iv: &[u8]) -> Result<Vec<u8>, KeyPairHandleError> {
         todo!()
     }
 
-    fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, CalError> {
+    fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, KeyPairHandleError> {
         todo!()
     }
 
-    fn get_public_key(&self) -> Result<Vec<u8>, CalError> {
+    fn get_public_key(&self) -> Result<Vec<u8>, KeyPairHandleError> {
         todo!()
     }
 
-    fn extract_key(&self) -> Result<Vec<u8>, CalError> {
+    fn extract_key(&self) -> Result<Vec<u8>, KeyPairHandleError> {
         todo!()
     }
 
-    fn start_dh_exchange(&self) -> Result<DHExchange, CalError> {
+    fn start_dh_exchange(&self) -> Result<DHExchange, KeyPairHandleError> {
         todo!()
     }
 
-    fn id(&self) -> Result<String, CalError> {
+    fn id(&self) -> Result<String, KeyPairHandleError> {
         Ok("RANDOM_KEY_ID".to_owned())
     }
 
-    fn delete(self) -> Result<(), CalError> {
+    fn delete(self) -> Result<(), KeyPairHandleError> {
         todo!()
     }
 

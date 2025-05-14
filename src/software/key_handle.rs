@@ -2,8 +2,10 @@ use crate::{
     common::{
         config::{KeyPairSpec, KeySpec},
         crypto::algorithms::encryption::AsymmetricKeySpec,
-        error::{CGivenExpected, CalError, KeyType},
-        traits::key_handle::{KeyHandleError, KeyHandleImpl, KeyPairHandleImpl},
+        error::CGivenExpected,
+        traits::key_handle::{
+            KeyHandleError, KeyHandleImpl, KeyPairHandleError, KeyPairHandleImpl,
+        },
         DHExchange, KeyHandle,
     },
     prelude::Cipher,
@@ -19,7 +21,7 @@ use ring::{
     rand::{SecureRandom, SystemRandom},
     signature::{EcdsaKeyPair, Signature, UnparsedPublicKey},
 };
-use tracing::{instrument, warn};
+use tracing::{instrument, trace, warn};
 use zeroize::{Zeroize, ZeroizeOnDrop};
 
 use super::StorageManager;
@@ -285,13 +287,10 @@ impl KeyHandleImpl for SoftwareKeyHandle {
 }
 
 impl KeyPairHandleImpl for SoftwareKeyPairHandle {
-    fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
+    fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, KeyPairHandleError> {
         let Some(signing_key) = self.signing_key.as_ref() else {
-            return Err(report!(CalError::failed_operation(
-                "No private key available for signing".to_string(),
-                true,
-                None,
-            )));
+            return Err(report!(KeyPairHandleError::SignDataError)
+                .attach_printable("No private key available for signing"));
         };
 
         match self.spec.asym_spec {
@@ -300,9 +299,8 @@ impl KeyPairHandleImpl for SoftwareKeyPairHandle {
                     key.sign(data, Some(ed25519_compact::Noise::generate()))
                         .to_vec()
                 })
-                .change_context_lazy(|| {
-                    CalError::failed_operation("Failed to use signing key".to_string(), true, None)
-                }),
+                .change_context(KeyPairHandleError::SignDataError)
+                .attach_printable("Failed to use ed25519 signing key"),
             AsymmetricKeySpec::P256 | AsymmetricKeySpec::P384 => {
                 // Secure random generator for signing
                 let rng = SystemRandom::new();
@@ -312,28 +310,23 @@ impl KeyPairHandleImpl for SoftwareKeyPairHandle {
                     signing_key.as_slice(),
                     &rng,
                 )
-                .change_context_lazy(|| {
-                    CalError::failed_operation("Failed to use signing key".to_string(), true, None)
-                })?;
+                .change_context(KeyPairHandleError::SignDataError)
+                .attach_printable("Failed to parse ECDSA key for signing")?;
 
                 // Sign the data
-                let signature: Signature =
-                    signing_key.sign(&rng, data).change_context_lazy(|| {
-                        CalError::failed_operation(
-                            "Failed to use signing key".to_string(),
-                            true,
-                            None,
-                        )
-                    })?;
+                let signature: Signature = signing_key
+                    .sign(&rng, data)
+                    .change_context(KeyPairHandleError::SignDataError)
+                    .attach_printable("ECDSA signing operation failed")?;
 
                 Ok(signature.as_ref().to_vec())
             }
-            _ => todo!(),
+            _ => Err(report!(KeyPairHandleError::UnsupportedAlgorithm)),
         }
     }
 
-    fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, CalError> {
-        warn!("Verifying signature");
+    fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, KeyPairHandleError> {
+        trace!("Verifying signature");
         match self.spec.asym_spec {
             AsymmetricKeySpec::Curve25519 => {
                 ed25519_compact::PublicKey::from_slice(self.public_key.as_slice())
@@ -342,13 +335,8 @@ impl KeyPairHandleImpl for SoftwareKeyPairHandle {
                             .map(|signature| (key, signature))
                     })
                     .map(|(key, signature)| key.verify(data, &signature).is_ok())
-                    .change_context_lazy(|| {
-                        CalError::failed_operation(
-                            "Failed to use public key".to_string(),
-                            true,
-                            None,
-                        )
-                    })
+                    .change_context(KeyPairHandleError::VerifySignatureError)
+                    .attach_printable("Failed to use ed25519 public key for verification")
             }
             AsymmetricKeySpec::P256 | AsymmetricKeySpec::P384 => {
                 // Create an UnparsedPublicKey using the algorithm and the public key bytes
@@ -359,46 +347,47 @@ impl KeyPairHandleImpl for SoftwareKeyPairHandle {
                         .is_ok(),
                 )
             }
-            _ => todo!(),
+            _ => Err(report!(KeyPairHandleError::UnsupportedAlgorithm)),
         }
     }
 
-    fn encrypt_data(&self, _data: &[u8], _iv: &[u8]) -> Result<Vec<u8>, CalError> {
-        todo!("Encryption not supported for ECC keys")
+    fn encrypt_data(&self, _data: &[u8], _iv: &[u8]) -> Result<Vec<u8>, KeyPairHandleError> {
+        Err(report!(KeyPairHandleError::UnsupportedOperation)
+            .attach_printable("Encryption not supported for ECC keys"))
     }
 
-    fn decrypt_data(&self, _encrypted_data: &[u8]) -> Result<Vec<u8>, CalError> {
-        todo!("Decryption not supported for ECC keys")
+    fn decrypt_data(&self, _encrypted_data: &[u8]) -> Result<Vec<u8>, KeyPairHandleError> {
+        Err(report!(KeyPairHandleError::UnsupportedOperation)
+            .attach_printable("Decryption not supported for ECC keys"))
     }
 
-    fn get_public_key(&self) -> Result<Vec<u8>, CalError> {
+    fn get_public_key(&self) -> Result<Vec<u8>, KeyPairHandleError> {
         Ok(self.public_key.clone())
     }
 
-    fn extract_key(&self) -> Result<Vec<u8>, CalError> {
+    fn extract_key(&self) -> Result<Vec<u8>, KeyPairHandleError> {
         if !self.spec.non_exportable {
             self.signing_key.clone().ok_or_else(|| {
-                report!(CalError::missing_key(self.key_id.clone(), KeyType::Private))
+                report!(KeyPairHandleError::ExtractKeyError)
+                    .attach_printable(format!("Missing private key for id: {}", self.key_id))
             })
         } else {
-            Err(report!(CalError::failed_operation(
-                "The private key is not exportable".to_string(),
-                true,
-                None,
-            )))
+            Err(report!(KeyPairHandleError::UnsupportedOperation)
+                .attach_printable("The private key is not exportable"))
         }
     }
 
-    fn start_dh_exchange(&self) -> Result<DHExchange, CalError> {
-        todo!("DH exchange not supported")
+    fn start_dh_exchange(&self) -> Result<DHExchange, KeyPairHandleError> {
+        Err(report!(KeyPairHandleError::UnsupportedOperation)
+            .attach_printable("DH exchange not supported"))
     }
 
-    fn id(&self) -> Result<String, CalError> {
+    fn id(&self) -> Result<String, KeyPairHandleError> {
         Ok(self.key_id.clone())
     }
 
     #[doc = " Delete this key pair."]
-    fn delete(self) -> Result<(), CalError> {
+    fn delete(self) -> Result<(), KeyPairHandleError> {
         if let Some(s) = self.storage_manager {
             s.delete(self.key_id)
         }
