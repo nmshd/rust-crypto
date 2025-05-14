@@ -13,7 +13,7 @@ mod tests {
         factory, KeyHandle, KeyPairHandle,
     };
     use crate::tests::setup;
-    use color_eyre::eyre::Result;
+    use error_stack::Result;
     use ring::rand::{SecureRandom, SystemRandom};
     use std::str::from_utf8;
 
@@ -36,7 +36,7 @@ mod tests {
 
         #[test]
         #[instrument]
-        fn test_sign_and_verify() -> Result<()> {
+        fn test_sign_and_verify() -> Result<(), CalError> {
             setup();
 
             // Define a KeyPairSpec for ECDSA with P256 curve
@@ -65,7 +65,7 @@ mod tests {
 
         #[test]
         #[instrument]
-        fn test_verify_with_wrong_data() -> Result<()> {
+        fn test_verify_with_wrong_data() -> Result<(), CalError> {
             setup();
             // Define a KeyPairSpec for ECDSA with P256 curve
             let spec = KeyPairSpec {
@@ -97,7 +97,7 @@ mod tests {
 
         #[test]
         #[instrument]
-        fn test_verify_with_wrong_key() -> Result<()> {
+        fn test_verify_with_wrong_key() -> Result<(), CalError> {
             setup();
             // Define a KeyPairSpec for ECDSA with P256 curve
             let spec = KeyPairSpec {
@@ -129,7 +129,7 @@ mod tests {
 
         #[test]
         #[instrument]
-        fn test_get_public_key() -> Result<()> {
+        fn test_get_public_key() -> Result<(), CalError> {
             setup();
             // Define a KeyPairSpec for ECDSA with P256 curve
             let spec = KeyPairSpec {
@@ -152,7 +152,7 @@ mod tests {
 
         #[test]
         #[instrument]
-        fn test_sign_with_public_only_key() -> Result<()> {
+        fn test_sign_with_public_only_key() -> Result<(), CalError> {
             setup();
             // Define a KeyPairSpec for ECDSA with P256 curve
             let spec = KeyPairSpec {
@@ -192,7 +192,7 @@ mod tests {
 
         #[test]
         #[instrument]
-        fn test_verify_with_public_only_key() -> Result<()> {
+        fn test_verify_with_public_only_key() -> Result<(), CalError> {
             setup();
             // Define a KeyPairSpec for ECDSA with P256 curve
             let spec = KeyPairSpec {
@@ -230,7 +230,7 @@ mod tests {
 
         #[test]
         #[instrument]
-        fn test_id_method() -> Result<()> {
+        fn test_id_method() -> Result<(), CalError> {
             setup();
             // Define a KeyPairSpec for ECDSA with P256 curve
             let spec = KeyPairSpec {
@@ -252,6 +252,7 @@ mod tests {
         }
     }
     mod key_handle {
+        use crate::common::traits::key_handle::KeyHandleError;
         use crate::tests::TestStore;
 
         use super::*;
@@ -259,17 +260,17 @@ mod tests {
         static mut STORE: std::sync::LazyLock<TestStore> = std::sync::LazyLock::new(TestStore::new);
 
         /// Helper function to create a new key and extract the `SoftwareKeyHandle`
-        fn create_software_key_handle(spec: KeySpec) -> Result<KeyHandle, CalError> {
+        fn create_software_key_handle(spec: KeySpec) -> Result<KeyHandle, KeyHandleError> {
             let impl_config = unsafe { STORE.impl_config().clone() };
 
             let mut provider = factory::create_provider_from_name("SoftwareProvider", impl_config)
                 .expect("Failed initializing SoftwareProvider");
-            provider.create_key(spec)
+            Ok(provider.create_key(spec).expect("Failed create_key"))
         }
 
         #[test]
         #[instrument]
-        fn test_encrypt_decrypt_data() -> Result<()> {
+        fn test_encrypt_decrypt_data() -> Result<(), KeyHandleError> {
             setup();
             let spec = KeySpec {
                 cipher: Cipher::AesGcm256,
@@ -291,8 +292,8 @@ mod tests {
                 software_key_handle.decrypt_data(&encrypted_data.0, &encrypted_data.1)?;
 
             assert_eq!(
-                from_utf8(&decrypted_data)?,
-                from_utf8(plaintext)?,
+                from_utf8(&decrypted_data).unwrap(),
+                from_utf8(plaintext).unwrap(),
                 "Decrypted data does not match original plaintext"
             );
             Ok(())
@@ -300,7 +301,7 @@ mod tests {
 
         #[test]
         #[instrument]
-        fn test_encrypt_decrypt_empty_data() -> Result<()> {
+        fn test_encrypt_decrypt_empty_data() -> Result<(), KeyHandleError> {
             setup();
             let spec = KeySpec {
                 cipher: Cipher::AesGcm128,
@@ -317,8 +318,8 @@ mod tests {
                 software_key_handle.decrypt_data(&encrypted_data.0, &encrypted_data.1)?;
 
             assert_eq!(
-                from_utf8(&decrypted_data)?,
-                from_utf8(plaintext)?,
+                from_utf8(&decrypted_data).unwrap(),
+                from_utf8(plaintext).unwrap(),
                 "Decrypted data does not match original plaintext"
             );
             Ok(())
@@ -326,7 +327,7 @@ mod tests {
 
         #[test]
         #[instrument]
-        fn test_decrypt_with_wrong_key() -> Result<()> {
+        fn test_decrypt_with_wrong_key() -> Result<(), KeyHandleError> {
             setup();
             let spec = KeySpec {
                 cipher: Cipher::AesGcm256,
@@ -352,7 +353,7 @@ mod tests {
 
         #[test]
         #[instrument]
-        fn test_decrypt_modified_ciphertext() -> Result<()> {
+        fn test_decrypt_modified_ciphertext() -> Result<(), KeyHandleError> {
             setup();
             let spec = KeySpec {
                 cipher: Cipher::AesGcm256,
@@ -379,7 +380,7 @@ mod tests {
 
         #[test]
         #[instrument]
-        fn test_id_method() -> Result<()> {
+        fn test_id_method() -> Result<(), KeyHandleError> {
             setup();
             let spec = KeySpec {
                 cipher: Cipher::AesGcm128,
@@ -396,7 +397,7 @@ mod tests {
 
         #[test]
         #[instrument]
-        fn test_encrypt_decrypt_large_data() -> Result<()> {
+        fn test_encrypt_decrypt_large_data() -> Result<(), KeyHandleError> {
             setup();
             let spec = KeySpec {
                 cipher: Cipher::AesGcm256,
@@ -413,8 +414,8 @@ mod tests {
                 software_key_handle.decrypt_data(&encrypted_data.0, &encrypted_data.1)?;
 
             assert_eq!(
-                from_utf8(&plaintext)?,
-                from_utf8(&decrypted_data)?,
+                from_utf8(&plaintext).unwrap(),
+                from_utf8(&decrypted_data).unwrap(),
                 "Decrypted data does not match original plaintext"
             );
             Ok(())
@@ -422,7 +423,7 @@ mod tests {
 
         #[test]
         #[instrument]
-        fn test_encrypt_same_plaintext_multiple_times() -> Result<()> {
+        fn test_encrypt_same_plaintext_multiple_times() -> Result<(), KeyHandleError> {
             setup();
             let spec = KeySpec {
                 cipher: Cipher::AesGcm128,
@@ -449,13 +450,13 @@ mod tests {
                 software_key_handle.decrypt_data(&encrypted_data2.0, &encrypted_data2.1)?;
 
             assert_eq!(
-                from_utf8(&decrypted_data1)?,
-                from_utf8(plaintext)?,
+                from_utf8(&decrypted_data1).unwrap(),
+                from_utf8(plaintext).unwrap(),
                 "First decrypted data does not match plaintext"
             );
             assert_eq!(
-                from_utf8(&decrypted_data2)?,
-                from_utf8(plaintext)?,
+                from_utf8(&decrypted_data2).unwrap(),
+                from_utf8(plaintext).unwrap(),
                 "Second decrypted data does not match plaintext"
             );
             Ok(())
@@ -463,7 +464,7 @@ mod tests {
 
         #[test]
         #[instrument]
-        fn test_decrypt_random_data() -> Result<()> {
+        fn test_decrypt_random_data() -> Result<(), KeyHandleError> {
             setup();
             let spec = KeySpec {
                 cipher: Cipher::AesGcm256,
@@ -489,7 +490,7 @@ mod tests {
 
         #[test]
         #[instrument]
-        fn test_decrypt_short_data() -> Result<()> {
+        fn test_decrypt_short_data() -> Result<(), KeyHandleError> {
             setup();
             let spec = KeySpec {
                 cipher: Cipher::AesGcm256,
@@ -511,7 +512,7 @@ mod tests {
 
         #[test]
         #[instrument]
-        fn test_encrypt_decrypt_different_cipher_spec() -> Result<()> {
+        fn test_encrypt_decrypt_different_cipher_spec() -> Result<(), KeyHandleError> {
             setup();
             let spec256 = KeySpec {
                 cipher: Cipher::AesGcm256,
@@ -542,7 +543,7 @@ mod tests {
 
         #[test]
         #[instrument]
-        fn test_encrypt_decrypt_multiple_keys() -> Result<()> {
+        fn test_encrypt_decrypt_multiple_keys() -> Result<(), KeyHandleError> {
             setup();
             let specs = vec![
                 KeySpec {
@@ -566,8 +567,8 @@ mod tests {
                     software_key_handle.decrypt_data(&encrypted_data.0, &encrypted_data.1)?;
 
                 assert_eq!(
-                    from_utf8(&decrypted_data)?,
-                    from_utf8(plaintext)?,
+                    from_utf8(&decrypted_data).unwrap(),
+                    from_utf8(plaintext).unwrap(),
                     "Decrypted data does not match plaintext"
                 );
             }
@@ -576,7 +577,7 @@ mod tests {
 
         #[test]
         #[instrument]
-        fn test_derive_key() -> Result<()> {
+        fn test_derive_key() -> Result<(), KeyHandleError> {
             setup();
 
             let specs = vec![

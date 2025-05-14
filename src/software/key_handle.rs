@@ -84,7 +84,7 @@ impl KeyHandleImpl for SoftwareKeyHandle {
             Cipher::AesGcm128 | Cipher::AesGcm256 => {
                 let (nonce, nonce_bytes) = if !iv.is_empty() {
                     ensure!(
-                        iv.len() != NONCE_LEN,
+                        iv.len() == NONCE_LEN,
                         report!(KeyHandleError::WrongIvLength).attach_printable(CGivenExpected {
                             expected: NONCE_LEN,
                             given: iv.len()

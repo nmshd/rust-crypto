@@ -11,7 +11,7 @@ mod tests {
         use crate::software::key_handle::SoftwareKeyHandle;
         use crate::tests::setup;
         use crate::{storage::StorageManager, tests::TestStore};
-        use color_eyre::eyre::{eyre, Result};
+        use error_stack::Result;
         use nanoid::nanoid;
         use std::str::from_utf8;
         use std::sync::LazyLock;
@@ -21,15 +21,13 @@ mod tests {
 
         #[test]
         #[instrument]
-        fn test_dh_exchange_client_server_keys() -> Result<()> {
+        fn test_dh_exchange_client_server_keys() -> Result<(), CalError> {
             setup();
 
-            let storage_manager = Some(
-                StorageManager::new("SoftwareProvider".to_owned(), unsafe {
-                    &STORE.impl_config().additional_config
-                })?
-                .ok_or_else(|| eyre!("StorageManager creation returned None"))?,
-            );
+            let storage_manager = StorageManager::new("SoftwareProvider".to_owned(), unsafe {
+                &STORE.impl_config().additional_config
+            })
+            .expect("StorageManager creation returned None");
 
             let key_pair_spec_list = [
                 // Key pair spec similar to ts-crypto default.
@@ -64,14 +62,16 @@ mod tests {
                     "key_id_client".to_string(),
                     storage_manager.clone(),
                     key_pair_spec,
-                )?;
+                )
+                .unwrap();
 
                 // Server creates an instance of SoftwareDHExchange
                 let mut server_exchange = SoftwareDHExchange::new(
                     "key_id_server".to_string(),
                     storage_manager.clone(),
                     key_pair_spec,
-                )?;
+                )
+                .unwrap();
 
                 // Client gets its public key
                 let client_public_key = client_exchange.get_public_key()?;
@@ -117,14 +117,12 @@ mod tests {
 
         #[test]
         #[instrument]
-        fn test_dh_exchange_encrypt_decrypt() -> Result<()> {
+        fn test_dh_exchange_encrypt_decrypt() -> Result<(), CalError> {
             setup();
-            let storage_manager = Some(
-                StorageManager::new("SoftwareProvider".to_owned(), unsafe {
-                    &STORE.impl_config().additional_config
-                })?
-                .ok_or_else(|| eyre!("StorageManager creation returned None"))?,
-            );
+            let storage_manager = StorageManager::new("SoftwareProvider".to_owned(), unsafe {
+                &STORE.impl_config().additional_config
+            })
+            .unwrap();
 
             let key_pair_spec_list = [
                 // Key pair spec similar to ts-crypto default.
@@ -215,14 +213,16 @@ mod tests {
                 let plaintext = b"Message from client to server";
 
                 // Client encrypts with their tx key
-                let (encrypted_data, iv) = client_tx_key_handle.encrypt(plaintext)?;
+                let (encrypted_data, iv) = client_tx_key_handle.encrypt(plaintext).unwrap();
 
                 // Server decrypts with their rx key
-                let decrypted_data = server_rx_key_handle.decrypt_data(&encrypted_data, &iv)?;
+                let decrypted_data = server_rx_key_handle
+                    .decrypt_data(&encrypted_data, &iv)
+                    .unwrap();
 
                 assert_eq!(
-                    from_utf8(&decrypted_data)?,
-                    from_utf8(plaintext)?,
+                    from_utf8(&decrypted_data).unwrap(),
+                    from_utf8(plaintext).unwrap(),
                     "Decrypted data does not match plaintext"
                 );
 
@@ -260,14 +260,17 @@ mod tests {
                 let server_plaintext = b"Message from server to client";
 
                 // Server encrypts with their tx key
-                let (server_encrypted, iv) = server_tx_key_handle.encrypt(server_plaintext)?;
+                let (server_encrypted, iv) =
+                    server_tx_key_handle.encrypt(server_plaintext).unwrap();
 
                 // Client decrypts with their rx key
-                let client_decrypted = client_rx_key_handle.decrypt_data(&server_encrypted, &iv)?;
+                let client_decrypted = client_rx_key_handle
+                    .decrypt_data(&server_encrypted, &iv)
+                    .unwrap();
 
                 assert_eq!(
-                    from_utf8(&client_decrypted)?,
-                    from_utf8(server_plaintext)?,
+                    from_utf8(&client_decrypted).unwrap(),
+                    from_utf8(server_plaintext).unwrap(),
                     "Server-to-client decrypted data does not match plaintext"
                 );
             }
@@ -277,14 +280,12 @@ mod tests {
 
         #[test]
         #[instrument]
-        fn test_dh_exchange_with_invalid_public_key() -> Result<()> {
+        fn test_dh_exchange_with_invalid_public_key() -> Result<(), CalError> {
             setup();
-            let storage_manager = Some(
-                StorageManager::new("SoftwareProvider".to_owned(), unsafe {
-                    &STORE.impl_config().additional_config
-                })?
-                .ok_or_else(|| eyre!("StorageManager creation returned None"))?,
-            );
+            let storage_manager = StorageManager::new("SoftwareProvider".to_owned(), unsafe {
+                &STORE.impl_config().additional_config
+            })
+            .unwrap();
 
             // Client creates an instance of SoftwareDHExchange
             let mut client_exchange = SoftwareDHExchange::new(
@@ -314,14 +315,12 @@ mod tests {
 
         #[test]
         #[instrument]
-        fn test_dh_exchange_reuse() -> Result<()> {
+        fn test_dh_exchange_reuse() -> Result<(), CalError> {
             setup();
-            let storage_manager = Some(
-                StorageManager::new("SoftwareProvider".to_owned(), unsafe {
-                    &STORE.impl_config().additional_config
-                })?
-                .ok_or_else(|| eyre!("StorageManager creation returned None"))?,
-            );
+            let storage_manager = StorageManager::new("SoftwareProvider".to_owned(), unsafe {
+                &STORE.impl_config().additional_config
+            })
+            .unwrap();
 
             // Client creates an instance of SoftwareDHExchange
             let mut client_exchange = SoftwareDHExchange::new(
@@ -361,14 +360,12 @@ mod tests {
 
         #[test]
         #[instrument]
-        fn test_multiple_key_derivations() -> Result<()> {
+        fn test_multiple_key_derivations() -> Result<(), CalError> {
             setup();
-            let storage_manager = Some(
-                StorageManager::new("SoftwareProvider".to_owned(), unsafe {
-                    &STORE.impl_config().additional_config
-                })?
-                .ok_or_else(|| eyre!("StorageManager creation returned None"))?,
-            );
+            let storage_manager = StorageManager::new("SoftwareProvider".to_owned(), unsafe {
+                &STORE.impl_config().additional_config
+            })
+            .unwrap();
 
             // Client1 creates an instance of SoftwareDHExchange
             let mut client1_exchange = SoftwareDHExchange::new(
@@ -451,13 +448,17 @@ mod tests {
 
     mod derive_key {
         use super::*;
+        use error_stack::Result;
         use std::sync::LazyLock;
 
         use crate::{
-            common::traits::{key_handle::KeyHandleImpl, module_provider::ProviderImpl},
+            common::traits::{
+                key_handle::{KeyHandleError, KeyHandleImpl},
+                module_provider::ProviderImpl,
+            },
             tests::{setup, TestStore},
         };
-        use color_eyre::eyre::Result;
+
         use tracing::instrument;
 
         static mut STORE: LazyLock<TestStore> = LazyLock::new(TestStore::new);
@@ -484,7 +485,7 @@ mod tests {
 
         #[test]
         #[instrument]
-        fn test_successful_key_derivation() -> Result<()> {
+        fn test_successful_key_derivation() -> Result<(), KeyHandleError> {
             setup();
             let provider = setup_provider();
             let password = "test_password";
@@ -496,7 +497,7 @@ mod tests {
                 .derive_key_from_password(password, &salt, algorithm, DEFAULT_KDF);
             assert!(key_handle_result.is_ok(), "Failed to derive key");
 
-            let key_handle = key_handle_result?;
+            let key_handle = key_handle_result.unwrap();
             let key = key_handle.implementation.extract_key()?;
             assert_eq!(key.len(), 32, "Derived key should be 32 bytes");
             Ok(())
@@ -504,7 +505,7 @@ mod tests {
 
         #[test]
         #[instrument]
-        fn test_different_passwords_yield_different_keys() -> Result<()> {
+        fn test_different_passwords_yield_different_keys() -> Result<(), CalError> {
             setup();
             let provider = setup_provider();
             let salt = [0u8; 16];
@@ -514,13 +515,15 @@ mod tests {
                 .implementation
                 .derive_key_from_password("test_password", &salt, algorithm, DEFAULT_KDF)?
                 .implementation
-                .extract_key()?;
+                .extract_key()
+                .unwrap();
 
             let key2 = provider
                 .implementation
                 .derive_key_from_password("another_password", &salt, algorithm, DEFAULT_KDF)?
                 .implementation
-                .extract_key()?;
+                .extract_key()
+                .unwrap();
 
             assert_ne!(
                 key1, key2,
@@ -531,7 +534,7 @@ mod tests {
 
         #[test]
         #[instrument]
-        fn test_different_salts_yield_different_keys() -> Result<()> {
+        fn test_different_salts_yield_different_keys() -> Result<(), CalError> {
             setup();
             let provider = setup_provider();
             let password = "test_password";
@@ -541,13 +544,15 @@ mod tests {
                 .implementation
                 .derive_key_from_password(password, &[0u8; 16], algorithm, DEFAULT_KDF)?
                 .implementation
-                .extract_key()?;
+                .extract_key()
+                .unwrap();
 
             let key2 = provider
                 .implementation
                 .derive_key_from_password(password, &[1u8; 16], algorithm, DEFAULT_KDF)?
                 .implementation
-                .extract_key()?;
+                .extract_key()
+                .unwrap();
 
             assert_ne!(key1, key2, "Different salts should yield different keys");
             Ok(())
@@ -555,7 +560,7 @@ mod tests {
 
         #[test]
         #[instrument]
-        fn test_short_salt_length_fails() -> Result<()> {
+        fn test_short_salt_length_fails() -> Result<(), CalError> {
             setup();
             let provider = setup_provider();
             let password = "test_password";
@@ -571,7 +576,10 @@ mod tests {
 
             assert!(result.is_err(), "Deriving key with short salt should fail");
             let e = result.unwrap_err();
-            assert!(matches!(e.error_kind(), CalErrorKind::BadParameter { .. }));
+            assert!(matches!(
+                e.current_context().error_kind(),
+                CalErrorKind::BadParameter { .. }
+            ));
             assert!(
                 e.to_string().contains("Wrong salt length."),
                 "Incorrect error message for short salt: {}",
@@ -583,7 +591,7 @@ mod tests {
 
         #[test]
         #[instrument]
-        fn test_long_salt_length_fails() -> Result<()> {
+        fn test_long_salt_length_fails() -> Result<(), CalError> {
             setup();
             let provider = setup_provider();
             let password = "test_password";
@@ -599,7 +607,10 @@ mod tests {
 
             assert!(result.is_err(), "Deriving key with long salt should fail");
             let e = result.unwrap_err();
-            assert!(matches!(e.error_kind(), CalErrorKind::BadParameter { .. }));
+            assert!(matches!(
+                e.current_context().error_kind(),
+                CalErrorKind::BadParameter { .. }
+            ));
             assert!(
                 e.to_string().contains("Wrong salt length."),
                 "Incorrect error message for long salt: {}",
@@ -611,7 +622,7 @@ mod tests {
 
         #[test]
         #[instrument]
-        fn test_argon2i_variant() -> Result<()> {
+        fn test_argon2i_variant() -> Result<(), CalError> {
             setup();
 
             let provider = setup_provider();
@@ -632,7 +643,7 @@ mod tests {
 
         #[test]
         #[instrument]
-        fn test_get_random() -> Result<()> {
+        fn test_get_random() -> Result<(), CalError> {
             setup();
             let provider = setup_provider();
             let len = 16;
@@ -656,7 +667,7 @@ mod tests {
 
         use std::sync::LazyLock;
 
-        use color_eyre::eyre::{Ok, Result};
+        use error_stack::Result;
         use tracing::instrument;
 
         use crate::tests::{setup, TestStore};
@@ -669,7 +680,7 @@ mod tests {
 
         #[test]
         #[instrument]
-        fn test_hash() -> Result<()> {
+        fn test_hash() -> Result<(), CalError> {
             setup();
 
             let data: Vec<u8> = (0..64).collect();
