@@ -1,18 +1,20 @@
 #![allow(unused)]
 #![allow(dead_code)]
 
-use crate::common::traits::key_handle::KeyPairHandleError;
 use std::{collections::HashSet, hash::Hash};
 
 use error_stack::{report, Result};
 use serde_json::error;
+
+use crate::common::KeyHandleError;
+use crate::common::KeyPairHandleError;
 
 use crate::{
     common::{
         config::{KeyPairSpec, KeySpec, ProviderConfig, ProviderImplConfig, SecurityLevel, Spec},
         error::CalError,
         traits::{
-            key_handle::{DHKeyExchangeImpl, KeyHandleError, KeyHandleImpl, KeyPairHandleImpl},
+            key_handle::{DHKeyExchangeImpl, KeyHandleImpl, KeyPairHandleImpl},
             module_provider::{ProviderFactory, ProviderImpl, ProviderImplEnum},
         },
         DHExchange, KeyHandle, KeyPairHandle,
@@ -96,7 +98,7 @@ impl ProviderImpl for StubProvider {
         todo!()
     }
 
-    fn get_all_keys(&self) -> Result<Vec<Result<(String, Spec), StorageManagerError>>, CalError> {
+    fn get_all_keys(&self) -> Result<Vec<(String, Spec)>, CalError> {
         todo!()
     }
 

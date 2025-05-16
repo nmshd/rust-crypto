@@ -36,6 +36,7 @@ use flutter_rust_bridge::{Handler, IntoIntoDart};
 
 use crypto_layer::common::config::DynFuture;
 use std::future::Future;
+use std::path::PathBuf;
 use std::pin::Pin;
 
 flutter_rust_bridge::frb_generated_boilerplate!(
@@ -44,7 +45,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.9.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1296864754;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1328835663;
 
 // Section: executor
 
@@ -52,6 +53,103 @@ flutter_rust_bridge::frb_generated_default_handler!();
 
 // Section: wire_funcs
 
+fn wire__crypto_layer__common__error__CPath_auto_accessor_get_path_impl(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "CPath_auto_accessor_get_path",
+            port: None,
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <RustOpaqueMoi<
+                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CPath>,
+            >>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, ()>((move || {
+                let mut api_that_guard = None;
+                let decode_indices_ =
+                    flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
+                        flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                            &api_that, 0, false,
+                        ),
+                    ]);
+                for i in decode_indices_ {
+                    match i {
+                        0 => api_that_guard = Some(api_that.lockable_decode_sync_ref()),
+                        _ => unreachable!(),
+                    }
+                }
+                let api_that_guard = api_that_guard.unwrap();
+                let output_ok = Result::<_, ()>::Ok(api_that_guard.path.clone())?;
+                Ok(output_ok)
+            })())
+        },
+    )
+}
+fn wire__crypto_layer__common__error__CPath_auto_accessor_set_path_impl(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "CPath_auto_accessor_set_path",
+            port: None,
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <RustOpaqueMoi<
+                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CPath>,
+            >>::sse_decode(&mut deserializer);
+            let api_path = <PathBuf>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, ()>((move || {
+                let mut api_that_guard = None;
+                let decode_indices_ =
+                    flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
+                        flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                            &api_that, 0, true,
+                        ),
+                    ]);
+                for i in decode_indices_ {
+                    match i {
+                        0 => api_that_guard = Some(api_that.lockable_decode_sync_ref_mut()),
+                        _ => unreachable!(),
+                    }
+                }
+                let mut api_that_guard = api_that_guard.unwrap();
+                let output_ok = Result::<_, ()>::Ok({
+                    {
+                        api_that_guard.path = api_path;
+                    };
+                })?;
+                Ok(output_ok)
+            })())
+        },
+    )
+}
 fn wire__crypto_layer__common__error__CalError_backtrace_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -494,7 +592,7 @@ fn wire__crypto_layer__common__KeyHandle_decrypt_data_impl(
             let api_iv = <Vec<u8>>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, CalError>((move || {
+                transform_result_sse::<_, crypto_layer::common::KeyHandleError>((move || {
                     let mut api_that_guard = None;
                     let decode_indices_ =
                         flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -515,7 +613,8 @@ fn wire__crypto_layer__common__KeyHandle_decrypt_data_impl(
                         &api_iv,
                     )?;
                     Ok(output_ok)
-                })())
+                })(
+                ))
             }
         },
     )
@@ -545,10 +644,11 @@ fn wire__crypto_layer__common__KeyHandle_delete_impl(
             let api_that = <KeyHandle>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, CalError>((move || {
+                transform_result_sse::<_, crypto_layer::common::KeyHandleError>((move || {
                     let output_ok = crypto_layer::common::KeyHandle::delete(api_that)?;
                     Ok(output_ok)
-                })())
+                })(
+                ))
             }
         },
     )
@@ -581,7 +681,7 @@ fn wire__crypto_layer__common__KeyHandle_derive_key_impl(
             let api_nonce = <Vec<u8>>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, CalError>((move || {
+                transform_result_sse::<_, crypto_layer::common::KeyHandleError>((move || {
                     let mut api_that_guard = None;
                     let decode_indices_ =
                         flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -599,7 +699,8 @@ fn wire__crypto_layer__common__KeyHandle_derive_key_impl(
                     let output_ok =
                         crypto_layer::common::KeyHandle::derive_key(&*api_that_guard, &api_nonce)?;
                     Ok(output_ok)
-                })())
+                })(
+                ))
             }
         },
     )
@@ -632,7 +733,7 @@ fn wire__crypto_layer__common__KeyHandle_encrypt_impl(
             let api_data = <Vec<u8>>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, CalError>((move || {
+                transform_result_sse::<_, crypto_layer::common::KeyHandleError>((move || {
                     let mut api_that_guard = None;
                     let decode_indices_ =
                         flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -650,7 +751,8 @@ fn wire__crypto_layer__common__KeyHandle_encrypt_impl(
                     let output_ok =
                         crypto_layer::common::KeyHandle::encrypt(&*api_that_guard, &api_data)?;
                     Ok(output_ok)
-                })())
+                })(
+                ))
             }
         },
     )
@@ -684,7 +786,7 @@ fn wire__crypto_layer__common__KeyHandle_encrypt_data_impl(
             let api_iv = <Vec<u8>>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, CalError>((move || {
+                transform_result_sse::<_, crypto_layer::common::KeyHandleError>((move || {
                     let mut api_that_guard = None;
                     let decode_indices_ =
                         flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -705,7 +807,8 @@ fn wire__crypto_layer__common__KeyHandle_encrypt_data_impl(
                         &api_iv,
                     )?;
                     Ok(output_ok)
-                })())
+                })(
+                ))
             }
         },
     )
@@ -739,7 +842,7 @@ fn wire__crypto_layer__common__KeyHandle_encrypt_with_iv_impl(
             let api_iv = <Vec<u8>>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, CalError>((move || {
+                transform_result_sse::<_, crypto_layer::common::KeyHandleError>((move || {
                     let mut api_that_guard = None;
                     let decode_indices_ =
                         flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -760,7 +863,8 @@ fn wire__crypto_layer__common__KeyHandle_encrypt_with_iv_impl(
                         &api_iv,
                     )?;
                     Ok(output_ok)
-                })())
+                })(
+                ))
             }
         },
     )
@@ -792,7 +896,7 @@ fn wire__crypto_layer__common__KeyHandle_extract_key_impl(
             >>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, CalError>((move || {
+                transform_result_sse::<_, crypto_layer::common::KeyHandleError>((move || {
                     let mut api_that_guard = None;
                     let decode_indices_ =
                         flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -809,7 +913,8 @@ fn wire__crypto_layer__common__KeyHandle_extract_key_impl(
                     let api_that_guard = api_that_guard.unwrap();
                     let output_ok = crypto_layer::common::KeyHandle::extract_key(&*api_that_guard)?;
                     Ok(output_ok)
-                })())
+                })(
+                ))
             }
         },
     )
@@ -842,7 +947,7 @@ fn wire__crypto_layer__common__KeyHandle_hmac_impl(
             let api_data = <Vec<u8>>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, CalError>((move || {
+                transform_result_sse::<_, crypto_layer::common::KeyHandleError>((move || {
                     let mut api_that_guard = None;
                     let decode_indices_ =
                         flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -860,7 +965,8 @@ fn wire__crypto_layer__common__KeyHandle_hmac_impl(
                     let output_ok =
                         crypto_layer::common::KeyHandle::hmac(&*api_that_guard, &api_data)?;
                     Ok(output_ok)
-                })())
+                })(
+                ))
             }
         },
     )
@@ -892,7 +998,7 @@ fn wire__crypto_layer__common__KeyHandle_id_impl(
             >>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, CalError>((move || {
+                transform_result_sse::<_, crypto_layer::common::KeyHandleError>((move || {
                     let mut api_that_guard = None;
                     let decode_indices_ =
                         flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -909,7 +1015,8 @@ fn wire__crypto_layer__common__KeyHandle_id_impl(
                     let api_that_guard = api_that_guard.unwrap();
                     let output_ok = crypto_layer::common::KeyHandle::id(&*api_that_guard)?;
                     Ok(output_ok)
-                })())
+                })(
+                ))
             }
         },
     )
@@ -994,7 +1101,7 @@ fn wire__crypto_layer__common__KeyHandle_verify_hmac_impl(
             let api_hmac = <Vec<u8>>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, CalError>((move || {
+                transform_result_sse::<_, crypto_layer::common::KeyHandleError>((move || {
                     let mut api_that_guard = None;
                     let decode_indices_ =
                         flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1015,7 +1122,8 @@ fn wire__crypto_layer__common__KeyHandle_verify_hmac_impl(
                         &api_hmac,
                     )?;
                     Ok(output_ok)
-                })())
+                })(
+                ))
             }
         },
     )
@@ -1048,7 +1156,7 @@ fn wire__crypto_layer__common__KeyPairHandle_decrypt_data_impl(
             let api_data = <Vec<u8>>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, CalError>((move || {
+                transform_result_sse::<_, crypto_layer::common::KeyPairHandleError>((move || {
                     let mut api_that_guard = None;
                     let decode_indices_ =
                         flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1068,7 +1176,8 @@ fn wire__crypto_layer__common__KeyPairHandle_decrypt_data_impl(
                         &api_data,
                     )?;
                     Ok(output_ok)
-                })())
+                })(
+                ))
             }
         },
     )
@@ -1098,10 +1207,11 @@ fn wire__crypto_layer__common__KeyPairHandle_delete_impl(
             let api_that = <KeyPairHandle>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, CalError>((move || {
+                transform_result_sse::<_, crypto_layer::common::KeyPairHandleError>((move || {
                     let output_ok = crypto_layer::common::KeyPairHandle::delete(api_that)?;
                     Ok(output_ok)
-                })())
+                })(
+                ))
             }
         },
     )
@@ -1135,7 +1245,7 @@ fn wire__crypto_layer__common__KeyPairHandle_encrypt_data_impl(
             let api_iv = <Vec<u8>>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, CalError>((move || {
+                transform_result_sse::<_, crypto_layer::common::KeyPairHandleError>((move || {
                     let mut api_that_guard = None;
                     let decode_indices_ =
                         flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1156,7 +1266,8 @@ fn wire__crypto_layer__common__KeyPairHandle_encrypt_data_impl(
                         &api_iv,
                     )?;
                     Ok(output_ok)
-                })())
+                })(
+                ))
             }
         },
     )
@@ -1188,7 +1299,7 @@ fn wire__crypto_layer__common__KeyPairHandle_extract_key_impl(
             >>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, CalError>((move || {
+                transform_result_sse::<_, crypto_layer::common::KeyPairHandleError>((move || {
                     let mut api_that_guard = None;
                     let decode_indices_ =
                         flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1206,7 +1317,8 @@ fn wire__crypto_layer__common__KeyPairHandle_extract_key_impl(
                     let output_ok =
                         crypto_layer::common::KeyPairHandle::extract_key(&*api_that_guard)?;
                     Ok(output_ok)
-                })())
+                })(
+                ))
             }
         },
     )
@@ -1238,7 +1350,7 @@ fn wire__crypto_layer__common__KeyPairHandle_get_public_key_impl(
             >>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, CalError>((move || {
+                transform_result_sse::<_, crypto_layer::common::KeyPairHandleError>((move || {
                     let mut api_that_guard = None;
                     let decode_indices_ =
                         flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1256,7 +1368,8 @@ fn wire__crypto_layer__common__KeyPairHandle_get_public_key_impl(
                     let output_ok =
                         crypto_layer::common::KeyPairHandle::get_public_key(&*api_that_guard)?;
                     Ok(output_ok)
-                })())
+                })(
+                ))
             }
         },
     )
@@ -1288,7 +1401,7 @@ fn wire__crypto_layer__common__KeyPairHandle_id_impl(
             >>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, CalError>((move || {
+                transform_result_sse::<_, crypto_layer::common::KeyPairHandleError>((move || {
                     let mut api_that_guard = None;
                     let decode_indices_ =
                         flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1305,7 +1418,8 @@ fn wire__crypto_layer__common__KeyPairHandle_id_impl(
                     let api_that_guard = api_that_guard.unwrap();
                     let output_ok = crypto_layer::common::KeyPairHandle::id(&*api_that_guard)?;
                     Ok(output_ok)
-                })())
+                })(
+                ))
             }
         },
     )
@@ -1338,7 +1452,7 @@ fn wire__crypto_layer__common__KeyPairHandle_sign_data_impl(
             let api_data = <Vec<u8>>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, CalError>((move || {
+                transform_result_sse::<_, crypto_layer::common::KeyPairHandleError>((move || {
                     let mut api_that_guard = None;
                     let decode_indices_ =
                         flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1358,7 +1472,8 @@ fn wire__crypto_layer__common__KeyPairHandle_sign_data_impl(
                         &api_data,
                     )?;
                     Ok(output_ok)
-                })())
+                })(
+                ))
             }
         },
     )
@@ -1441,7 +1556,7 @@ fn wire__crypto_layer__common__KeyPairHandle_start_dh_exchange_impl(
             >>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, CalError>((move || {
+                transform_result_sse::<_, crypto_layer::common::KeyPairHandleError>((move || {
                     let mut api_that_guard = None;
                     let decode_indices_ =
                         flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1459,7 +1574,8 @@ fn wire__crypto_layer__common__KeyPairHandle_start_dh_exchange_impl(
                     let output_ok =
                         crypto_layer::common::KeyPairHandle::start_dh_exchange(&*api_that_guard)?;
                     Ok(output_ok)
-                })())
+                })(
+                ))
             }
         },
     )
@@ -1493,7 +1609,7 @@ fn wire__crypto_layer__common__KeyPairHandle_verify_signature_impl(
             let api_signature = <Vec<u8>>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, CalError>((move || {
+                transform_result_sse::<_, crypto_layer::common::KeyPairHandleError>((move || {
                     let mut api_that_guard = None;
                     let decode_indices_ =
                         flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1514,7 +1630,8 @@ fn wire__crypto_layer__common__KeyPairHandle_verify_signature_impl(
                         &api_signature,
                     )?;
                     Ok(output_ok)
-                })())
+                })(
+                ))
             }
         },
     )
@@ -3219,6 +3336,9 @@ flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
     >
 );
 flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
+    flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CPath>
+);
+flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
     flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CalError>
 );
 flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
@@ -3229,6 +3349,9 @@ flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
 );
 flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
     flutter_rust_bridge::for_generated::RustAutoOpaqueInner<KeyPairHandle>
+);
+flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
+    flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PathBuf>
 );
 flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
     flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Provider>
@@ -3292,6 +3415,16 @@ impl SseDecode for Arc<dyn Fn(String, Vec<u8>) -> DynFuture<bool> + Send + Sync>
     }
 }
 
+impl SseDecode for CPath {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <RustOpaqueMoi<
+            flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CPath>,
+        >>::sse_decode(deserializer);
+        return flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(inner);
+    }
+}
+
 impl SseDecode for CalError {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3327,6 +3460,16 @@ impl SseDecode for KeyPairHandle {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <RustOpaqueMoi<
             flutter_rust_bridge::for_generated::RustAutoOpaqueInner<KeyPairHandle>,
+        >>::sse_decode(deserializer);
+        return flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(inner);
+    }
+}
+
+impl SseDecode for PathBuf {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <RustOpaqueMoi<
+            flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PathBuf>,
         >>::sse_decode(deserializer);
         return flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(inner);
     }
@@ -3406,6 +3549,14 @@ impl SseDecode
     }
 }
 
+impl SseDecode for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CPath>> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <usize>::sse_decode(deserializer);
+        return decode_rust_opaque_moi(inner);
+    }
+}
+
 impl SseDecode
     for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CalError>>
 {
@@ -3439,6 +3590,14 @@ impl SseDecode
 impl SseDecode
     for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<KeyPairHandle>>
 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <usize>::sse_decode(deserializer);
+        return decode_rust_opaque_moi(inner);
+    }
+}
+
+impl SseDecode for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PathBuf>> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <usize>::sse_decode(deserializer);
@@ -3754,6 +3913,52 @@ impl SseDecode for crypto_layer::common::crypto::algorithms::key_derivation::KDF
                 unimplemented!("");
             }
         }
+    }
+}
+
+impl SseDecode for crypto_layer::common::KeyHandleError {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <i32>::sse_decode(deserializer);
+        return match inner {
+            0 => crypto_layer::common::KeyHandleError::EncryptDataError,
+            1 => crypto_layer::common::KeyHandleError::DecryptDataError,
+            2 => crypto_layer::common::KeyHandleError::HmacError,
+            3 => crypto_layer::common::KeyHandleError::VerifyHmacError,
+            4 => crypto_layer::common::KeyHandleError::DeriveKeyError,
+            5 => crypto_layer::common::KeyHandleError::ExtractKeyError,
+            6 => crypto_layer::common::KeyHandleError::IdError,
+            7 => crypto_layer::common::KeyHandleError::DeleteError,
+            8 => crypto_layer::common::KeyHandleError::SpecError,
+            9 => crypto_layer::common::KeyHandleError::WrongIvLength,
+            10 => crypto_layer::common::KeyHandleError::FailedToGenerateIv,
+            11 => crypto_layer::common::KeyHandleError::UnsupportedCipher,
+            12 => crypto_layer::common::KeyHandleError::UnsupportedOperation,
+            13 => crypto_layer::common::KeyHandleError::InternalError,
+            _ => unreachable!("Invalid variant for KeyHandleError: {}", inner),
+        };
+    }
+}
+
+impl SseDecode for crypto_layer::common::KeyPairHandleError {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <i32>::sse_decode(deserializer);
+        return match inner {
+            0 => crypto_layer::common::KeyPairHandleError::SignDataError,
+            1 => crypto_layer::common::KeyPairHandleError::VerifySignatureError,
+            2 => crypto_layer::common::KeyPairHandleError::EncryptDataError,
+            3 => crypto_layer::common::KeyPairHandleError::DecryptDataError,
+            4 => crypto_layer::common::KeyPairHandleError::GetPublicKeyError,
+            5 => crypto_layer::common::KeyPairHandleError::ExtractKeyError,
+            6 => crypto_layer::common::KeyPairHandleError::DHExchangeError,
+            7 => crypto_layer::common::KeyPairHandleError::IdError,
+            8 => crypto_layer::common::KeyPairHandleError::DeleteError,
+            9 => crypto_layer::common::KeyPairHandleError::UnsupportedAlgorithm,
+            10 => crypto_layer::common::KeyPairHandleError::UnsupportedOperation,
+            11 => crypto_layer::common::KeyPairHandleError::InternalError,
+            _ => unreachable!("Invalid variant for KeyPairHandleError: {}", inner),
+        };
     }
 }
 
@@ -4195,66 +4400,66 @@ fn pde_ffi_dispatcher_primary_impl(
 ) {
     // Codec=Pde (Serialization + dispatch), see doc to use other codecs
     match func_id {
-                        1 => wire__crypto_layer__common__error__CalError_backtrace_impl(port, ptr, rust_vec_len, data_len),
-2 => wire__crypto_layer__common__error__CalError_error_kind_impl(port, ptr, rust_vec_len, data_len),
-3 => wire__crypto_layer__common__DhExchange_derive_client_key_handles_impl(port, ptr, rust_vec_len, data_len),
-4 => wire__crypto_layer__common__DhExchange_derive_client_session_keys_impl(port, ptr, rust_vec_len, data_len),
-5 => wire__crypto_layer__common__DhExchange_derive_server_key_handles_impl(port, ptr, rust_vec_len, data_len),
-6 => wire__crypto_layer__common__DhExchange_derive_server_session_keys_impl(port, ptr, rust_vec_len, data_len),
-7 => wire__crypto_layer__common__DhExchange_get_public_key_impl(port, ptr, rust_vec_len, data_len),
-8 => wire__crypto_layer__common__DhExchange_id_impl(port, ptr, rust_vec_len, data_len),
-9 => wire__crypto_layer__common__KeyHandle_decrypt_data_impl(port, ptr, rust_vec_len, data_len),
-10 => wire__crypto_layer__common__KeyHandle_delete_impl(port, ptr, rust_vec_len, data_len),
-11 => wire__crypto_layer__common__KeyHandle_derive_key_impl(port, ptr, rust_vec_len, data_len),
-12 => wire__crypto_layer__common__KeyHandle_encrypt_impl(port, ptr, rust_vec_len, data_len),
-13 => wire__crypto_layer__common__KeyHandle_encrypt_data_impl(port, ptr, rust_vec_len, data_len),
-14 => wire__crypto_layer__common__KeyHandle_encrypt_with_iv_impl(port, ptr, rust_vec_len, data_len),
-15 => wire__crypto_layer__common__KeyHandle_extract_key_impl(port, ptr, rust_vec_len, data_len),
-16 => wire__crypto_layer__common__KeyHandle_hmac_impl(port, ptr, rust_vec_len, data_len),
-17 => wire__crypto_layer__common__KeyHandle_id_impl(port, ptr, rust_vec_len, data_len),
-18 => wire__crypto_layer__common__KeyHandle_spec_impl(port, ptr, rust_vec_len, data_len),
-19 => wire__crypto_layer__common__KeyHandle_verify_hmac_impl(port, ptr, rust_vec_len, data_len),
-20 => wire__crypto_layer__common__KeyPairHandle_decrypt_data_impl(port, ptr, rust_vec_len, data_len),
-21 => wire__crypto_layer__common__KeyPairHandle_delete_impl(port, ptr, rust_vec_len, data_len),
-22 => wire__crypto_layer__common__KeyPairHandle_encrypt_data_impl(port, ptr, rust_vec_len, data_len),
-23 => wire__crypto_layer__common__KeyPairHandle_extract_key_impl(port, ptr, rust_vec_len, data_len),
-24 => wire__crypto_layer__common__KeyPairHandle_get_public_key_impl(port, ptr, rust_vec_len, data_len),
-25 => wire__crypto_layer__common__KeyPairHandle_id_impl(port, ptr, rust_vec_len, data_len),
-26 => wire__crypto_layer__common__KeyPairHandle_sign_data_impl(port, ptr, rust_vec_len, data_len),
-27 => wire__crypto_layer__common__KeyPairHandle_spec_impl(port, ptr, rust_vec_len, data_len),
-28 => wire__crypto_layer__common__KeyPairHandle_start_dh_exchange_impl(port, ptr, rust_vec_len, data_len),
-29 => wire__crypto_layer__common__KeyPairHandle_verify_signature_impl(port, ptr, rust_vec_len, data_len),
-30 => wire__crypto_layer__common__Provider_create_key_impl(port, ptr, rust_vec_len, data_len),
-31 => wire__crypto_layer__common__Provider_create_key_pair_impl(port, ptr, rust_vec_len, data_len),
-32 => wire__crypto_layer__common__Provider_derive_key_from_base_impl(port, ptr, rust_vec_len, data_len),
-33 => wire__crypto_layer__common__Provider_derive_key_from_password_impl(port, ptr, rust_vec_len, data_len),
-34 => wire__crypto_layer__common__Provider_dh_exchange_from_keys_impl(port, ptr, rust_vec_len, data_len),
-35 => wire__crypto_layer__common__Provider_get_all_keys_impl(port, ptr, rust_vec_len, data_len),
-36 => wire__crypto_layer__common__Provider_get_capabilities_impl(port, ptr, rust_vec_len, data_len),
-37 => wire__crypto_layer__common__Provider_get_random_impl(port, ptr, rust_vec_len, data_len),
-38 => wire__crypto_layer__common__Provider_hash_impl(port, ptr, rust_vec_len, data_len),
-39 => wire__crypto_layer__common__Provider_import_key_impl(port, ptr, rust_vec_len, data_len),
-40 => wire__crypto_layer__common__Provider_import_key_pair_impl(port, ptr, rust_vec_len, data_len),
-41 => wire__crypto_layer__common__Provider_import_public_key_impl(port, ptr, rust_vec_len, data_len),
-42 => wire__crypto_layer__common__Provider_load_key_impl(port, ptr, rust_vec_len, data_len),
-43 => wire__crypto_layer__common__Provider_load_key_pair_impl(port, ptr, rust_vec_len, data_len),
-44 => wire__crypto_layer__common__Provider_provider_name_impl(port, ptr, rust_vec_len, data_len),
-45 => wire__crypto_layer__common__Provider_start_ephemeral_dh_exchange_impl(port, ptr, rust_vec_len, data_len),
-47 => wire__crypto_layer__common__crypto__algorithms__key_derivation__argon_2_options_default_impl(port, ptr, rust_vec_len, data_len),
-48 => wire__crypto_layer__common__crypto__algorithms__encryption__asymmetric_key_spec_default_impl(port, ptr, rust_vec_len, data_len),
-49 => wire__crypto_layer__common__crypto__algorithms__encryption__cipher_default_impl(port, ptr, rust_vec_len, data_len),
-50 => wire__crypto_layer__common__factory__create_provider_impl(port, ptr, rust_vec_len, data_len),
-51 => wire__crypto_layer__common__factory__create_provider_from_name_impl(port, ptr, rust_vec_len, data_len),
-52 => wire__crypto_layer__common__crypto__algorithms__hashes__crypto_hash_default_impl(port, ptr, rust_vec_len, data_len),
-53 => wire__crypto_layer__common__factory__get_all_providers_impl(port, ptr, rust_vec_len, data_len),
-54 => wire__crate__api__crypto__get_default_config_impl(port, ptr, rust_vec_len, data_len),
-55 => wire__crypto_layer__common__factory__get_provider_capabilities_impl(port, ptr, rust_vec_len, data_len),
-56 => wire__crate__api__simple__init_app_impl(port, ptr, rust_vec_len, data_len),
-57 => wire__crypto_layer__common__crypto__algorithms__key_derivation__kdf_default_impl(port, ptr, rust_vec_len, data_len),
-58 => wire__crypto_layer__common__config__key_pair_spec_default_impl(port, ptr, rust_vec_len, data_len),
-59 => wire__crypto_layer__common__config__key_spec_default_impl(port, ptr, rust_vec_len, data_len),
-60 => wire__crypto_layer__common__crypto__pkcs__standards__oid_type_as_str_impl(port, ptr, rust_vec_len, data_len),
-61 => wire__crypto_layer__common__config__provider_impl_config_new_impl(port, ptr, rust_vec_len, data_len),
+                        3 => wire__crypto_layer__common__error__CalError_backtrace_impl(port, ptr, rust_vec_len, data_len),
+4 => wire__crypto_layer__common__error__CalError_error_kind_impl(port, ptr, rust_vec_len, data_len),
+5 => wire__crypto_layer__common__DhExchange_derive_client_key_handles_impl(port, ptr, rust_vec_len, data_len),
+6 => wire__crypto_layer__common__DhExchange_derive_client_session_keys_impl(port, ptr, rust_vec_len, data_len),
+7 => wire__crypto_layer__common__DhExchange_derive_server_key_handles_impl(port, ptr, rust_vec_len, data_len),
+8 => wire__crypto_layer__common__DhExchange_derive_server_session_keys_impl(port, ptr, rust_vec_len, data_len),
+9 => wire__crypto_layer__common__DhExchange_get_public_key_impl(port, ptr, rust_vec_len, data_len),
+10 => wire__crypto_layer__common__DhExchange_id_impl(port, ptr, rust_vec_len, data_len),
+11 => wire__crypto_layer__common__KeyHandle_decrypt_data_impl(port, ptr, rust_vec_len, data_len),
+12 => wire__crypto_layer__common__KeyHandle_delete_impl(port, ptr, rust_vec_len, data_len),
+13 => wire__crypto_layer__common__KeyHandle_derive_key_impl(port, ptr, rust_vec_len, data_len),
+14 => wire__crypto_layer__common__KeyHandle_encrypt_impl(port, ptr, rust_vec_len, data_len),
+15 => wire__crypto_layer__common__KeyHandle_encrypt_data_impl(port, ptr, rust_vec_len, data_len),
+16 => wire__crypto_layer__common__KeyHandle_encrypt_with_iv_impl(port, ptr, rust_vec_len, data_len),
+17 => wire__crypto_layer__common__KeyHandle_extract_key_impl(port, ptr, rust_vec_len, data_len),
+18 => wire__crypto_layer__common__KeyHandle_hmac_impl(port, ptr, rust_vec_len, data_len),
+19 => wire__crypto_layer__common__KeyHandle_id_impl(port, ptr, rust_vec_len, data_len),
+20 => wire__crypto_layer__common__KeyHandle_spec_impl(port, ptr, rust_vec_len, data_len),
+21 => wire__crypto_layer__common__KeyHandle_verify_hmac_impl(port, ptr, rust_vec_len, data_len),
+22 => wire__crypto_layer__common__KeyPairHandle_decrypt_data_impl(port, ptr, rust_vec_len, data_len),
+23 => wire__crypto_layer__common__KeyPairHandle_delete_impl(port, ptr, rust_vec_len, data_len),
+24 => wire__crypto_layer__common__KeyPairHandle_encrypt_data_impl(port, ptr, rust_vec_len, data_len),
+25 => wire__crypto_layer__common__KeyPairHandle_extract_key_impl(port, ptr, rust_vec_len, data_len),
+26 => wire__crypto_layer__common__KeyPairHandle_get_public_key_impl(port, ptr, rust_vec_len, data_len),
+27 => wire__crypto_layer__common__KeyPairHandle_id_impl(port, ptr, rust_vec_len, data_len),
+28 => wire__crypto_layer__common__KeyPairHandle_sign_data_impl(port, ptr, rust_vec_len, data_len),
+29 => wire__crypto_layer__common__KeyPairHandle_spec_impl(port, ptr, rust_vec_len, data_len),
+30 => wire__crypto_layer__common__KeyPairHandle_start_dh_exchange_impl(port, ptr, rust_vec_len, data_len),
+31 => wire__crypto_layer__common__KeyPairHandle_verify_signature_impl(port, ptr, rust_vec_len, data_len),
+32 => wire__crypto_layer__common__Provider_create_key_impl(port, ptr, rust_vec_len, data_len),
+33 => wire__crypto_layer__common__Provider_create_key_pair_impl(port, ptr, rust_vec_len, data_len),
+34 => wire__crypto_layer__common__Provider_derive_key_from_base_impl(port, ptr, rust_vec_len, data_len),
+35 => wire__crypto_layer__common__Provider_derive_key_from_password_impl(port, ptr, rust_vec_len, data_len),
+36 => wire__crypto_layer__common__Provider_dh_exchange_from_keys_impl(port, ptr, rust_vec_len, data_len),
+37 => wire__crypto_layer__common__Provider_get_all_keys_impl(port, ptr, rust_vec_len, data_len),
+38 => wire__crypto_layer__common__Provider_get_capabilities_impl(port, ptr, rust_vec_len, data_len),
+39 => wire__crypto_layer__common__Provider_get_random_impl(port, ptr, rust_vec_len, data_len),
+40 => wire__crypto_layer__common__Provider_hash_impl(port, ptr, rust_vec_len, data_len),
+41 => wire__crypto_layer__common__Provider_import_key_impl(port, ptr, rust_vec_len, data_len),
+42 => wire__crypto_layer__common__Provider_import_key_pair_impl(port, ptr, rust_vec_len, data_len),
+43 => wire__crypto_layer__common__Provider_import_public_key_impl(port, ptr, rust_vec_len, data_len),
+44 => wire__crypto_layer__common__Provider_load_key_impl(port, ptr, rust_vec_len, data_len),
+45 => wire__crypto_layer__common__Provider_load_key_pair_impl(port, ptr, rust_vec_len, data_len),
+46 => wire__crypto_layer__common__Provider_provider_name_impl(port, ptr, rust_vec_len, data_len),
+47 => wire__crypto_layer__common__Provider_start_ephemeral_dh_exchange_impl(port, ptr, rust_vec_len, data_len),
+49 => wire__crypto_layer__common__crypto__algorithms__key_derivation__argon_2_options_default_impl(port, ptr, rust_vec_len, data_len),
+50 => wire__crypto_layer__common__crypto__algorithms__encryption__asymmetric_key_spec_default_impl(port, ptr, rust_vec_len, data_len),
+51 => wire__crypto_layer__common__crypto__algorithms__encryption__cipher_default_impl(port, ptr, rust_vec_len, data_len),
+52 => wire__crypto_layer__common__factory__create_provider_impl(port, ptr, rust_vec_len, data_len),
+53 => wire__crypto_layer__common__factory__create_provider_from_name_impl(port, ptr, rust_vec_len, data_len),
+54 => wire__crypto_layer__common__crypto__algorithms__hashes__crypto_hash_default_impl(port, ptr, rust_vec_len, data_len),
+55 => wire__crypto_layer__common__factory__get_all_providers_impl(port, ptr, rust_vec_len, data_len),
+56 => wire__crate__api__crypto__get_default_config_impl(port, ptr, rust_vec_len, data_len),
+57 => wire__crypto_layer__common__factory__get_provider_capabilities_impl(port, ptr, rust_vec_len, data_len),
+58 => wire__crate__api__simple__init_app_impl(port, ptr, rust_vec_len, data_len),
+59 => wire__crypto_layer__common__crypto__algorithms__key_derivation__kdf_default_impl(port, ptr, rust_vec_len, data_len),
+60 => wire__crypto_layer__common__config__key_pair_spec_default_impl(port, ptr, rust_vec_len, data_len),
+61 => wire__crypto_layer__common__config__key_spec_default_impl(port, ptr, rust_vec_len, data_len),
+62 => wire__crypto_layer__common__crypto__pkcs__standards__oid_type_as_str_impl(port, ptr, rust_vec_len, data_len),
+63 => wire__crypto_layer__common__config__provider_impl_config_new_impl(port, ptr, rust_vec_len, data_len),
                         _ => unreachable!(),
                     }
 }
@@ -4267,6 +4472,16 @@ fn pde_ffi_dispatcher_sync_impl(
 ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
     // Codec=Pde (Serialization + dispatch), see doc to use other codecs
     match func_id {
+        1 => wire__crypto_layer__common__error__CPath_auto_accessor_get_path_impl(
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        2 => wire__crypto_layer__common__error__CPath_auto_accessor_set_path_impl(
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
         _ => unreachable!(),
     }
 }
@@ -4377,6 +4592,21 @@ impl
 }
 
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<CPath> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self.0)
+            .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<CPath> {}
+
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<CPath>> for CPath {
+    fn into_into_dart(self) -> FrbWrapper<CPath> {
+        self.into()
+    }
+}
+
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for FrbWrapper<CalError> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self.0)
@@ -4432,6 +4662,21 @@ impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<
 
 impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<KeyPairHandle>> for KeyPairHandle {
     fn into_into_dart(self) -> FrbWrapper<KeyPairHandle> {
+        self.into()
+    }
+}
+
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<PathBuf> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self.0)
+            .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<PathBuf> {}
+
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<PathBuf>> for PathBuf {
+    fn into_into_dart(self) -> FrbWrapper<PathBuf> {
         self.into()
     }
 }
@@ -4755,6 +5000,70 @@ impl
     fn into_into_dart(
         self,
     ) -> FrbWrapper<crypto_layer::common::crypto::algorithms::key_derivation::KDF> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crypto_layer::common::KeyHandleError> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self.0 {
+            crypto_layer::common::KeyHandleError::EncryptDataError => 0.into_dart(),
+            crypto_layer::common::KeyHandleError::DecryptDataError => 1.into_dart(),
+            crypto_layer::common::KeyHandleError::HmacError => 2.into_dart(),
+            crypto_layer::common::KeyHandleError::VerifyHmacError => 3.into_dart(),
+            crypto_layer::common::KeyHandleError::DeriveKeyError => 4.into_dart(),
+            crypto_layer::common::KeyHandleError::ExtractKeyError => 5.into_dart(),
+            crypto_layer::common::KeyHandleError::IdError => 6.into_dart(),
+            crypto_layer::common::KeyHandleError::DeleteError => 7.into_dart(),
+            crypto_layer::common::KeyHandleError::SpecError => 8.into_dart(),
+            crypto_layer::common::KeyHandleError::WrongIvLength => 9.into_dart(),
+            crypto_layer::common::KeyHandleError::FailedToGenerateIv => 10.into_dart(),
+            crypto_layer::common::KeyHandleError::UnsupportedCipher => 11.into_dart(),
+            crypto_layer::common::KeyHandleError::UnsupportedOperation => 12.into_dart(),
+            crypto_layer::common::KeyHandleError::InternalError => 13.into_dart(),
+            _ => unreachable!(),
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<crypto_layer::common::KeyHandleError>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crypto_layer::common::KeyHandleError>>
+    for crypto_layer::common::KeyHandleError
+{
+    fn into_into_dart(self) -> FrbWrapper<crypto_layer::common::KeyHandleError> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crypto_layer::common::KeyPairHandleError> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self.0 {
+            crypto_layer::common::KeyPairHandleError::SignDataError => 0.into_dart(),
+            crypto_layer::common::KeyPairHandleError::VerifySignatureError => 1.into_dart(),
+            crypto_layer::common::KeyPairHandleError::EncryptDataError => 2.into_dart(),
+            crypto_layer::common::KeyPairHandleError::DecryptDataError => 3.into_dart(),
+            crypto_layer::common::KeyPairHandleError::GetPublicKeyError => 4.into_dart(),
+            crypto_layer::common::KeyPairHandleError::ExtractKeyError => 5.into_dart(),
+            crypto_layer::common::KeyPairHandleError::DHExchangeError => 6.into_dart(),
+            crypto_layer::common::KeyPairHandleError::IdError => 7.into_dart(),
+            crypto_layer::common::KeyPairHandleError::DeleteError => 8.into_dart(),
+            crypto_layer::common::KeyPairHandleError::UnsupportedAlgorithm => 9.into_dart(),
+            crypto_layer::common::KeyPairHandleError::UnsupportedOperation => 10.into_dart(),
+            crypto_layer::common::KeyPairHandleError::InternalError => 11.into_dart(),
+            _ => unreachable!(),
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<crypto_layer::common::KeyPairHandleError>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crypto_layer::common::KeyPairHandleError>>
+    for crypto_layer::common::KeyPairHandleError
+{
+    fn into_into_dart(self) -> FrbWrapper<crypto_layer::common::KeyPairHandleError> {
         self.into()
     }
 }
@@ -5124,6 +5433,16 @@ impl SseEncode for Arc<dyn Fn(String, Vec<u8>) -> DynFuture<bool> + Send + Sync>
     }
 }
 
+impl SseEncode for CPath {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CPath>>>::sse_encode(
+            flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self),
+            serializer,
+        );
+    }
+}
+
 impl SseEncode for CalError {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -5149,6 +5468,13 @@ impl SseEncode for KeyPairHandle {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<KeyPairHandle>>>::sse_encode(flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self), serializer);
+    }
+}
+
+impl SseEncode for PathBuf {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PathBuf>>>::sse_encode(flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self), serializer);
     }
 }
 
@@ -5226,6 +5552,15 @@ impl SseEncode
     }
 }
 
+impl SseEncode for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CPath>> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        let (ptr, size) = self.sse_encode_raw();
+        <usize>::sse_encode(ptr, serializer);
+        <i32>::sse_encode(size, serializer);
+    }
+}
+
 impl SseEncode
     for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CalError>>
 {
@@ -5262,6 +5597,15 @@ impl SseEncode
 impl SseEncode
     for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<KeyPairHandle>>
 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        let (ptr, size) = self.sse_encode_raw();
+        <usize>::sse_encode(ptr, serializer);
+        <i32>::sse_encode(size, serializer);
+    }
+}
+
+impl SseEncode for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PathBuf>> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         let (ptr, size) = self.sse_encode_raw();
@@ -5556,6 +5900,60 @@ impl SseEncode for crypto_layer::common::crypto::algorithms::key_derivation::KDF
                 unimplemented!("");
             }
         }
+    }
+}
+
+impl SseEncode for crypto_layer::common::KeyHandleError {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(
+            match self {
+                crypto_layer::common::KeyHandleError::EncryptDataError => 0,
+                crypto_layer::common::KeyHandleError::DecryptDataError => 1,
+                crypto_layer::common::KeyHandleError::HmacError => 2,
+                crypto_layer::common::KeyHandleError::VerifyHmacError => 3,
+                crypto_layer::common::KeyHandleError::DeriveKeyError => 4,
+                crypto_layer::common::KeyHandleError::ExtractKeyError => 5,
+                crypto_layer::common::KeyHandleError::IdError => 6,
+                crypto_layer::common::KeyHandleError::DeleteError => 7,
+                crypto_layer::common::KeyHandleError::SpecError => 8,
+                crypto_layer::common::KeyHandleError::WrongIvLength => 9,
+                crypto_layer::common::KeyHandleError::FailedToGenerateIv => 10,
+                crypto_layer::common::KeyHandleError::UnsupportedCipher => 11,
+                crypto_layer::common::KeyHandleError::UnsupportedOperation => 12,
+                crypto_layer::common::KeyHandleError::InternalError => 13,
+                _ => {
+                    unimplemented!("");
+                }
+            },
+            serializer,
+        );
+    }
+}
+
+impl SseEncode for crypto_layer::common::KeyPairHandleError {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(
+            match self {
+                crypto_layer::common::KeyPairHandleError::SignDataError => 0,
+                crypto_layer::common::KeyPairHandleError::VerifySignatureError => 1,
+                crypto_layer::common::KeyPairHandleError::EncryptDataError => 2,
+                crypto_layer::common::KeyPairHandleError::DecryptDataError => 3,
+                crypto_layer::common::KeyPairHandleError::GetPublicKeyError => 4,
+                crypto_layer::common::KeyPairHandleError::ExtractKeyError => 5,
+                crypto_layer::common::KeyPairHandleError::DHExchangeError => 6,
+                crypto_layer::common::KeyPairHandleError::IdError => 7,
+                crypto_layer::common::KeyPairHandleError::DeleteError => 8,
+                crypto_layer::common::KeyPairHandleError::UnsupportedAlgorithm => 9,
+                crypto_layer::common::KeyPairHandleError::UnsupportedOperation => 10,
+                crypto_layer::common::KeyPairHandleError::InternalError => 11,
+                _ => {
+                    unimplemented!("");
+                }
+            },
+            serializer,
+        );
     }
 }
 
@@ -6048,6 +6446,20 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
+    pub extern "C" fn frbgen_cal_flutter_plugin_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCPath(
+        ptr: *const std::ffi::c_void,
+    ) {
+        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CPath>>::increment_strong_count(ptr as _);
+    }
+
+    #[unsafe(no_mangle)]
+    pub extern "C" fn frbgen_cal_flutter_plugin_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCPath(
+        ptr: *const std::ffi::c_void,
+    ) {
+        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CPath>>::decrement_strong_count(ptr as _);
+    }
+
+    #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_cal_flutter_plugin_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError(
         ptr: *const std::ffi::c_void,
     ) {
@@ -6101,6 +6513,20 @@ mod io {
         ptr: *const std::ffi::c_void,
     ) {
         MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<KeyPairHandle>>::decrement_strong_count(ptr as _);
+    }
+
+    #[unsafe(no_mangle)]
+    pub extern "C" fn frbgen_cal_flutter_plugin_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPathBuf(
+        ptr: *const std::ffi::c_void,
+    ) {
+        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PathBuf>>::increment_strong_count(ptr as _);
+    }
+
+    #[unsafe(no_mangle)]
+    pub extern "C" fn frbgen_cal_flutter_plugin_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPathBuf(
+        ptr: *const std::ffi::c_void,
+    ) {
+        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PathBuf>>::decrement_strong_count(ptr as _);
     }
 
     #[unsafe(no_mangle)]
@@ -6237,6 +6663,20 @@ mod web {
     }
 
     #[wasm_bindgen]
+    pub fn rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCPath(
+        ptr: *const std::ffi::c_void,
+    ) {
+        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CPath>>::increment_strong_count(ptr as _);
+    }
+
+    #[wasm_bindgen]
+    pub fn rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCPath(
+        ptr: *const std::ffi::c_void,
+    ) {
+        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CPath>>::decrement_strong_count(ptr as _);
+    }
+
+    #[wasm_bindgen]
     pub fn rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError(
         ptr: *const std::ffi::c_void,
     ) {
@@ -6290,6 +6730,20 @@ mod web {
         ptr: *const std::ffi::c_void,
     ) {
         MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<KeyPairHandle>>::decrement_strong_count(ptr as _);
+    }
+
+    #[wasm_bindgen]
+    pub fn rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPathBuf(
+        ptr: *const std::ffi::c_void,
+    ) {
+        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PathBuf>>::increment_strong_count(ptr as _);
+    }
+
+    #[wasm_bindgen]
+    pub fn rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPathBuf(
+        ptr: *const std::ffi::c_void,
+    ) {
+        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PathBuf>>::decrement_strong_count(ptr as _);
     }
 
     #[wasm_bindgen]

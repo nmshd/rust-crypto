@@ -19,68 +19,10 @@ use crate::{
 };
 use enum_dispatch::enum_dispatch;
 
+use crate::common::KeyHandleError;
+use crate::common::KeyPairHandleError;
+
 use error_stack::Result;
-use thiserror::Error;
-
-#[derive(Debug, Clone, Copy, Error)]
-pub enum KeyHandleError {
-    #[error("Encryption failed")]
-    EncryptDataError,
-    #[error("Decryption failed")]
-    DecryptDataError,
-    #[error("HMAC calculation failed")]
-    HmacError,
-    #[error("HMAC verification failed")]
-    VerifyHmacError,
-    #[error("Key derivation failed")]
-    DeriveKeyError,
-    #[error("Key extraction failed")]
-    ExtractKeyError,
-    #[error("Failed to get key id")]
-    IdError,
-    #[error("Key deletion failed")]
-    DeleteError,
-    #[error("Failed to get key spec")]
-    SpecError,
-    #[error("Input iv has wrong length.")]
-    WrongIvLength,
-    #[error("Failed to generate an iv.")]
-    FailedToGenerateIv,
-    #[error("Unsupported cipher")]
-    UnsupportedCipher,
-    #[error("Unsupported operation")]
-    UnsupportedOperation,
-    #[error("Internal error")]
-    InternalError,
-}
-
-#[derive(Debug, Clone, Copy, Error)]
-pub enum KeyPairHandleError {
-    #[error("Signing data failed")]
-    SignDataError,
-    #[error("Signature verification failed")]
-    VerifySignatureError,
-    #[error("Encryption failed")]
-    EncryptDataError,
-    #[error("Decryption failed")]
-    DecryptDataError,
-    #[error("Failed to get public key")]
-    GetPublicKeyError,
-    #[error("Private key extraction failed")]
-    ExtractKeyError,
-    #[error("DH exchange operation failed")]
-    DHExchangeError,
-    #[error("Failed to get key pair id")]
-    IdError,
-    #[error("Key pair deletion failed")]
-    DeleteError,
-    #[error("Unsupported algorithm")]
-    UnsupportedAlgorithm,
-    #[error("Unsupported operation")]
-    UnsupportedOperation,
-    #[error("Internal error in key pair operation")]
-    InternalError,
-}
 
 /// Defines a common interface for cryptographic key operations.
 ///

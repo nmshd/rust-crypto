@@ -17,3 +17,6 @@ abstract class ArcFnStringPinBoxFutureOutput implements RustOpaqueInterface {}
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc < dyn Fn (String , Vec < u8 >) -> DynFuture < bool > + Send + Sync >>>
 abstract class ArcFnStringVecU8DynFutureBool implements RustOpaqueInterface {}
+
+// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PathBuf>>
+abstract class PathBuf implements RustOpaqueInterface {}

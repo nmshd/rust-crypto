@@ -14,7 +14,7 @@ use crate::{
         DHExchange, KeyHandle, KeyPairHandle,
     },
     prelude::{CryptoHash, KDF},
-    storage::{KeyData, StorageManagerError},
+    storage::KeyData,
 };
 use anyhow::anyhow;
 use argon2::{
@@ -482,7 +482,7 @@ impl ProviderImpl for SoftwareProvider {
         })
     }
 
-    fn get_all_keys(&self) -> Result<Vec<Result<(String, Spec), StorageManagerError>>, CalError> {
+    fn get_all_keys(&self) -> Result<Vec<(String, Spec)>, CalError> {
         if self.storage_manager.is_none() {
             return Err(report!(CalError::failed_operation(
                 "This is an ephemeral provider, it cannot have stored keys".to_owned(),
@@ -490,7 +490,14 @@ impl ProviderImpl for SoftwareProvider {
                 None,
             )));
         }
-        Ok(self.storage_manager.as_ref().unwrap().get_all_keys())
+        Ok(self
+            .storage_manager
+            .as_ref()
+            .unwrap()
+            .get_all_keys()
+            .into_iter()
+            .filter_map(|key_result| key_result.ok())
+            .collect())
     }
 
     fn provider_name(&self) -> String {

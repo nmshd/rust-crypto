@@ -1,12 +1,11 @@
 use crate::common::traits::key_handle::DHKeyExchangeImpl;
-use crate::common::traits::key_handle::KeyPairHandleError;
 use crate::prelude::{CryptoHash, KDF};
-use crate::storage::StorageManagerError;
 use config::{KeyPairSpec, KeySpec, ProviderConfig, Spec};
 use error::CalError;
+use thiserror::Error;
 use traits::key_handle::DHKeyExchangeImplEnum;
 use traits::key_handle::{
-    KeyHandleError, KeyHandleImpl, KeyHandleImplEnum, KeyPairHandleImpl, KeyPairHandleImplEnum,
+    KeyHandleImpl, KeyHandleImplEnum, KeyPairHandleImpl, KeyPairHandleImplEnum,
 };
 use traits::module_provider::{ProviderImpl, ProviderImplEnum};
 
@@ -72,6 +71,66 @@ macro_rules! delegate_enum_bare {
             }
         )+
     };
+}
+
+#[derive(Debug, Clone, Copy, Error)]
+pub enum KeyHandleError {
+    #[error("Encryption failed")]
+    EncryptDataError,
+    #[error("Decryption failed")]
+    DecryptDataError,
+    #[error("HMAC calculation failed")]
+    HmacError,
+    #[error("HMAC verification failed")]
+    VerifyHmacError,
+    #[error("Key derivation failed")]
+    DeriveKeyError,
+    #[error("Key extraction failed")]
+    ExtractKeyError,
+    #[error("Failed to get key id")]
+    IdError,
+    #[error("Key deletion failed")]
+    DeleteError,
+    #[error("Failed to get key spec")]
+    SpecError,
+    #[error("Input iv has wrong length.")]
+    WrongIvLength,
+    #[error("Failed to generate an iv.")]
+    FailedToGenerateIv,
+    #[error("Unsupported cipher")]
+    UnsupportedCipher,
+    #[error("Unsupported operation")]
+    UnsupportedOperation,
+    #[error("Internal error")]
+    InternalError,
+}
+
+#[derive(Debug, Clone, Copy, Error)]
+pub enum KeyPairHandleError {
+    #[error("Signing data failed")]
+    SignDataError,
+    #[error("Signature verification failed")]
+    VerifySignatureError,
+    #[error("Encryption failed")]
+    EncryptDataError,
+    #[error("Decryption failed")]
+    DecryptDataError,
+    #[error("Failed to get public key")]
+    GetPublicKeyError,
+    #[error("Private key extraction failed")]
+    ExtractKeyError,
+    #[error("DH exchange operation failed")]
+    DHExchangeError,
+    #[error("Failed to get key pair id")]
+    IdError,
+    #[error("Key pair deletion failed")]
+    DeleteError,
+    #[error("Unsupported algorithm")]
+    UnsupportedAlgorithm,
+    #[error("Unsupported operation")]
+    UnsupportedOperation,
+    #[error("Internal error in key pair operation")]
+    InternalError,
 }
 
 /// Abstraction of cryptographic providers.
@@ -145,7 +204,7 @@ impl Provider {
     }
 
     delegate_enum! {
-        pub fn get_all_keys(&self) -> Result<Vec<Result<(String, Spec), StorageManagerError>>, CalError>;
+        pub fn get_all_keys(&self) -> Result<Vec<(String, Spec)>, CalError>;
     }
 
     delegate_enum_bare! {

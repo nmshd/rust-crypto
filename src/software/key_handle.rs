@@ -3,10 +3,8 @@ use crate::{
         config::{KeyPairSpec, KeySpec},
         crypto::algorithms::encryption::AsymmetricKeySpec,
         error::CGivenExpected,
-        traits::key_handle::{
-            KeyHandleError, KeyHandleImpl, KeyPairHandleError, KeyPairHandleImpl,
-        },
-        DHExchange, KeyHandle,
+        traits::key_handle::{KeyHandleImpl, KeyPairHandleImpl},
+        DHExchange, KeyHandle, KeyHandleError, KeyPairHandleError,
     },
     prelude::Cipher,
 };

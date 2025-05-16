@@ -14,7 +14,6 @@ use crate::{
         DHExchange, KeyHandle, KeyPairHandle,
     },
     prelude::CryptoHash,
-    storage::StorageManagerError,
     stub::{StubProvider, StubProviderFactory},
 };
 use enum_dispatch::enum_dispatch;
@@ -145,7 +144,7 @@ pub(crate) trait ProviderImpl: Send + Sync {
         unimplemented!()
     }
 
-    fn get_all_keys(&self) -> Result<Vec<Result<(String, Spec), StorageManagerError>>, CalError>;
+    fn get_all_keys(&self) -> Result<Vec<(String, Spec)>, CalError>;
 
     fn provider_name(&self) -> String;
 

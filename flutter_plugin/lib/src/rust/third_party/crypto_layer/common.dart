@@ -11,7 +11,7 @@ import 'common/crypto/algorithms/key_derivation.dart';
 import 'common/error.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `fmt`, `fmt`, `fmt`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DHExchange>>
 abstract class DhExchange implements RustOpaqueInterface {
@@ -143,6 +143,40 @@ abstract class Provider implements RustOpaqueInterface {
   Future<String> providerName();
 
   Future<DhExchange> startEphemeralDhExchange({required KeyPairSpec spec});
+}
+
+enum KeyHandleError {
+  encryptDataError,
+  decryptDataError,
+  hmacError,
+  verifyHmacError,
+  deriveKeyError,
+  extractKeyError,
+  idError,
+  deleteError,
+  specError,
+  wrongIvLength,
+  failedToGenerateIv,
+  unsupportedCipher,
+  unsupportedOperation,
+  internalError,
+  ;
+}
+
+enum KeyPairHandleError {
+  signDataError,
+  verifySignatureError,
+  encryptDataError,
+  decryptDataError,
+  getPublicKeyError,
+  extractKeyError,
+  dhExchangeError,
+  idError,
+  deleteError,
+  unsupportedAlgorithm,
+  unsupportedOperation,
+  internalError,
+  ;
 }
 
 /// ¯\_(ツ)_/¯
