@@ -253,6 +253,7 @@ mod tests {
     }
     mod key_handle {
         use crate::tests::TestStore;
+        use test_case::test_case;
 
         use super::*;
 
@@ -267,12 +268,14 @@ mod tests {
             provider.create_key(spec)
         }
 
-        #[test]
+        #[test_case(Cipher::AesGcm128)]
+        #[test_case(Cipher::AesGcm256)]
+        #[test_case(Cipher::XChaCha20Poly1305)]
         #[instrument]
-        fn test_encrypt_decrypt_data() -> Result<()> {
+        fn test_encrypt_decrypt_data(cipher: Cipher) -> Result<()> {
             setup();
             let spec = KeySpec {
-                cipher: Cipher::AesGcm256,
+                cipher: cipher,
                 ..Default::default()
             };
 
@@ -298,12 +301,14 @@ mod tests {
             Ok(())
         }
 
-        #[test]
+        #[test_case(Cipher::AesGcm128)]
+        #[test_case(Cipher::AesGcm256)]
+        #[test_case(Cipher::XChaCha20Poly1305)]
         #[instrument]
-        fn test_encrypt_decrypt_empty_data() -> Result<()> {
+        fn test_encrypt_decrypt_empty_data(cipher: Cipher) -> Result<()> {
             setup();
             let spec = KeySpec {
-                cipher: Cipher::AesGcm128,
+                cipher: cipher,
                 ..Default::default()
             };
 
@@ -324,12 +329,14 @@ mod tests {
             Ok(())
         }
 
-        #[test]
+        #[test_case(Cipher::AesGcm128)]
+        #[test_case(Cipher::AesGcm256)]
+        #[test_case(Cipher::XChaCha20Poly1305)]
         #[instrument]
-        fn test_decrypt_with_wrong_key() -> Result<()> {
+        fn test_decrypt_with_wrong_key(cipher: Cipher) -> Result<()> {
             setup();
             let spec = KeySpec {
-                cipher: Cipher::AesGcm256,
+                cipher: cipher,
                 ..Default::default()
             };
 
@@ -350,12 +357,14 @@ mod tests {
             Ok(())
         }
 
-        #[test]
+        #[test_case(Cipher::AesGcm128)]
+        #[test_case(Cipher::AesGcm256)]
+        #[test_case(Cipher::XChaCha20Poly1305)]
         #[instrument]
-        fn test_decrypt_modified_ciphertext() -> Result<()> {
+        fn test_decrypt_modified_ciphertext(cipher: Cipher) -> Result<()> {
             setup();
             let spec = KeySpec {
-                cipher: Cipher::AesGcm256,
+                cipher: cipher,
                 ..Default::default()
             };
 
@@ -377,12 +386,14 @@ mod tests {
             Ok(())
         }
 
-        #[test]
+        #[test_case(Cipher::AesGcm128)]
+        #[test_case(Cipher::AesGcm256)]
+        #[test_case(Cipher::XChaCha20Poly1305)]
         #[instrument]
-        fn test_id_method() -> Result<()> {
+        fn test_id_method(cipher: Cipher) -> Result<()> {
             setup();
             let spec = KeySpec {
-                cipher: Cipher::AesGcm128,
+                cipher: cipher,
                 ..Default::default()
             };
 
@@ -394,12 +405,14 @@ mod tests {
             Ok(())
         }
 
-        #[test]
+        #[test_case(Cipher::AesGcm128)]
+        #[test_case(Cipher::AesGcm256)]
+        #[test_case(Cipher::XChaCha20Poly1305)]
         #[instrument]
-        fn test_encrypt_decrypt_large_data() -> Result<()> {
+        fn test_encrypt_decrypt_large_data(cipher: Cipher) -> Result<()> {
             setup();
             let spec = KeySpec {
-                cipher: Cipher::AesGcm256,
+                cipher: cipher,
                 ..Default::default()
             };
 
@@ -420,12 +433,14 @@ mod tests {
             Ok(())
         }
 
-        #[test]
+        #[test_case(Cipher::AesGcm128)]
+        #[test_case(Cipher::AesGcm256)]
+        #[test_case(Cipher::XChaCha20Poly1305)]
         #[instrument]
-        fn test_encrypt_same_plaintext_multiple_times() -> Result<()> {
+        fn test_encrypt_same_plaintext_multiple_times(cipher: Cipher) -> Result<()> {
             setup();
             let spec = KeySpec {
-                cipher: Cipher::AesGcm128,
+                cipher: cipher,
                 ..Default::default()
             };
 
@@ -461,19 +476,21 @@ mod tests {
             Ok(())
         }
 
-        #[test]
+        #[test_case(Cipher::AesGcm128)]
+        #[test_case(Cipher::AesGcm256)]
+        #[test_case(Cipher::XChaCha20Poly1305)]
         #[instrument]
-        fn test_decrypt_random_data() -> Result<()> {
+        fn test_decrypt_random_data(cipher: Cipher) -> Result<()> {
             setup();
             let spec = KeySpec {
-                cipher: Cipher::AesGcm256,
+                cipher: cipher,
                 ..Default::default()
             };
 
             let software_key_handle = create_software_key_handle(spec)?;
 
             let mut random_data = vec![0u8; 50];
-            let mut nonce = vec![0u8; 12];
+            let mut nonce = vec![0u8; spec.cipher.iv_len()];
             let rng = SystemRandom::new();
             rng.fill(&mut random_data).unwrap();
             rng.fill(&mut nonce).unwrap();
@@ -487,20 +504,23 @@ mod tests {
             Ok(())
         }
 
-        #[test]
+        #[test_case(Cipher::AesGcm128)]
+        #[test_case(Cipher::AesGcm256)]
+        #[test_case(Cipher::XChaCha20Poly1305)]
         #[instrument]
-        fn test_decrypt_short_data() -> Result<()> {
+        fn test_decrypt_short_data(cipher: Cipher) -> Result<()> {
             setup();
             let spec = KeySpec {
-                cipher: Cipher::AesGcm256,
+                cipher: cipher,
                 ..Default::default()
             };
 
             let software_key_handle = create_software_key_handle(spec)?;
 
             let short_data = vec![0u8; 10];
+            let mut nonce = vec![0u8; spec.cipher.iv_len()];
 
-            let decrypted_result = software_key_handle.decrypt_data(&short_data, &[]);
+            let decrypted_result = software_key_handle.decrypt_data(&short_data, &nonce);
 
             assert!(
                 decrypted_result.is_err(),
@@ -540,80 +560,40 @@ mod tests {
             Ok(())
         }
 
-        #[test]
+        #[test_case(Cipher::AesGcm128)]
+        #[test_case(Cipher::AesGcm256)]
+        #[test_case(Cipher::XChaCha20Poly1305)]
         #[instrument]
-        fn test_encrypt_decrypt_multiple_keys() -> Result<()> {
-            setup();
-            let specs = vec![
-                KeySpec {
-                    cipher: Cipher::AesGcm128,
-                    ..Default::default()
-                },
-                KeySpec {
-                    cipher: Cipher::AesGcm256,
-                    ..Default::default()
-                },
-            ];
-
-            let plaintext = b"Testing multiple keys";
-
-            for spec in specs {
-                let software_key_handle = create_software_key_handle(spec)?;
-
-                let encrypted_data = software_key_handle.encrypt(plaintext)?;
-
-                let decrypted_data =
-                    software_key_handle.decrypt_data(&encrypted_data.0, &encrypted_data.1)?;
-
-                assert_eq!(
-                    from_utf8(&decrypted_data)?,
-                    from_utf8(plaintext)?,
-                    "Decrypted data does not match plaintext"
-                );
-            }
-            Ok(())
-        }
-
-        #[test]
-        #[instrument]
-        fn test_derive_key() -> Result<()> {
+        fn test_derive_key(cipher: Cipher) -> Result<()> {
             setup();
 
-            let specs = vec![
-                KeySpec {
-                    cipher: Cipher::AesGcm128,
-                    ..Default::default()
-                },
-                KeySpec {
-                    cipher: Cipher::AesGcm256,
-                    ..Default::default()
-                },
-            ];
+            let spec = KeySpec {
+                cipher: cipher,
+                ..Default::default()
+            };
 
-            for spec in specs {
-                let key = create_software_key_handle(spec)?;
+            let key = create_software_key_handle(spec)?;
 
-                let derive_nonce = [1, 2, 3, 4, 5, 6, 7, 8];
-                let message_nonce: Vec<u8> = (0..12).collect();
+            let derive_nonce = [1, 2, 3, 4, 5, 6, 7, 8];
+            let message_nonce: Vec<u8> = (0..(cipher.iv_len() as u8)).collect();
 
-                let payload = b"Hello World!";
-                let cipher_text;
-                let id;
+            let payload = b"Hello World!";
+            let cipher_text;
+            let id;
 
-                {
-                    let derived_key = key.derive_key(&derive_nonce)?;
-
-                    id = derived_key.id()?;
-                    cipher_text = derived_key.encrypt_with_iv(payload, &message_nonce)?;
-                }
-
+            {
                 let derived_key = key.derive_key(&derive_nonce)?;
 
-                let received_message = derived_key.decrypt_data(&cipher_text, &message_nonce)?;
-
-                assert_eq!(received_message, payload);
-                assert_eq!(derived_key.id()?, id);
+                id = derived_key.id()?;
+                cipher_text = derived_key.encrypt_with_iv(payload, &message_nonce)?;
             }
+
+            let derived_key = key.derive_key(&derive_nonce)?;
+
+            let received_message = derived_key.decrypt_data(&cipher_text, &message_nonce)?;
+
+            assert_eq!(received_message, payload);
+            assert_eq!(derived_key.id()?, id);
 
             Ok(())
         }
