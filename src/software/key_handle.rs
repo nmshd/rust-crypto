@@ -250,7 +250,7 @@ impl KeyHandleImpl for SoftwareKeyHandle {
                 let cipher = XChaCha20Poly1305::new(&key.into());
 
                 let result = cipher.decrypt(iv.into(), encrypted_data).map_err(|e| {
-                    CalError::failed_operation("failed encrypting", false, Some(anyhow!(e)))
+                    CalError::failed_operation("failed decrypting", false, Some(anyhow!(e)))
                 })?;
 
                 // No built-in authentication tag to remove, so the decrypted
@@ -406,7 +406,7 @@ impl KeyPairHandleImpl for SoftwareKeyPairHandle {
                 Ok(
                     UnparsedPublicKey::new(self.spec.asym_spec.into(), &self.public_key)
                         .verify(data, signature)
-                        .inspect_err(|e| error!("Failed to verify signature: {e:?}"))
+                        .inspect_err(|e| warn!("Failed to verify signature: {e:?}"))
                         .is_ok(),
                 )
             }
