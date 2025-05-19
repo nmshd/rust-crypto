@@ -385,7 +385,6 @@ impl KeyPairHandleImpl for SoftwareKeyPairHandle {
     }
 
     fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, CalError> {
-        warn!("Verifying signature");
         match self.spec.asym_spec {
             AsymmetricKeySpec::Curve25519 => {
                 ed25519_compact::PublicKey::from_slice(self.public_key.as_slice())
@@ -407,7 +406,7 @@ impl KeyPairHandleImpl for SoftwareKeyPairHandle {
                 Ok(
                     UnparsedPublicKey::new(self.spec.asym_spec.into(), &self.public_key)
                         .verify(data, signature)
-                        .inspect_err(|e| warn!("Failed to verify signature: {e:?}"))
+                        .inspect_err(|e| error!("Failed to verify signature: {e:?}"))
                         .is_ok(),
                 )
             }
