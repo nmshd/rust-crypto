@@ -110,4 +110,15 @@ impl Cipher {
             | Self::XChaCha20Poly1305 => 32,
         }
     }
+
+    pub(crate) fn iv_len(&self) -> usize {
+        match self {
+            Self::AesCbc128
+            | Self::AesGcm128
+            | Self::AesCbc256
+            | Self::AesGcm256
+            | Self::ChaCha20Poly1305 => 12,
+            Self::XChaCha20Poly1305 => 24,
+        }
+    }
 }
