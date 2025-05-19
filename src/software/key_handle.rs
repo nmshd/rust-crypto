@@ -10,9 +10,9 @@ use crate::{
 };
 use anyhow::anyhow;
 use base64::Engine;
-use chacha20::{
-    cipher::{KeyIvInit, StreamCipher},
-    XChaCha20,
+use chacha20poly1305::{
+    aead::{Aead, KeyInit},
+    XChaCha20Poly1305,
 };
 use p256::elliptic_curve::rand_core::{OsRng, RngCore};
 use ring::{
@@ -163,11 +163,12 @@ impl KeyHandleImpl for SoftwareKeyHandle {
                     generated_bytes
                 };
 
-                let mut cipher = XChaCha20::new(&key.into(), &nonce.into());
-                let mut buffer = data.to_vec();
-                cipher.apply_keystream(&mut buffer);
+                let cipher = XChaCha20Poly1305::new(&key.into());
+                let ciphertext = cipher.encrypt((&nonce).into(), data).map_err(|e| {
+                    CalError::failed_operation("failed encrypting", false, Some(anyhow!(e)))
+                })?;
 
-                Ok((buffer, nonce.to_vec()))
+                Ok((ciphertext, nonce.to_vec()))
             }
             _ => Err(CalError::failed_operation(
                 "Cipher not supported".to_string(),
@@ -246,15 +247,15 @@ impl KeyHandleImpl for SoftwareKeyHandle {
                 key.copy_from_slice(&self.key);
 
                 // Create the cipher
-                let mut cipher = XChaCha20::new(&key.into(), iv.into());
+                let cipher = XChaCha20Poly1305::new(&key.into());
 
-                // Decrypt in place
-                let mut buffer = encrypted_data.to_vec();
-                cipher.apply_keystream(&mut buffer);
+                let result = cipher.decrypt(iv.into(), encrypted_data).map_err(|e| {
+                    CalError::failed_operation("failed encrypting", false, Some(anyhow!(e)))
+                })?;
 
                 // No built-in authentication tag to remove, so the decrypted
                 // plaintext is now in `buffer`.
-                Ok(buffer)
+                Ok(result)
             }
 
             // Fallback for any other ciphers you might define.
