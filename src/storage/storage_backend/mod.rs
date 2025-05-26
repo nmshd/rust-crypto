@@ -1,5 +1,8 @@
 use thiserror::Error;
 
+mod file_store;
+mod kv_store;
+
 #[derive(Debug, Error)]
 pub enum StorageBackendError {
     #[error("Failed to store data: {description}")]

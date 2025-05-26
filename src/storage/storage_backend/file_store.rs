@@ -7,7 +7,7 @@ use anyhow::anyhow;
 use itertools::Itertools;
 use sled::{open, Db};
 
-use super::storage_trait::{StorageBackend, StorageBackendError};
+use super::{StorageBackend, StorageBackendError};
 
 /// Sled can only open a file once. This static holds the absolute path of a file and the open [Db].
 static FILE_STORAGE_BACKEND_MAP: LazyLock<RwLock<HashMap<PathBuf, Db>>> =

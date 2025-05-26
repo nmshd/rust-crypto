@@ -4,8 +4,7 @@ use itertools::{Either, Itertools};
 
 use crate::common::config::{AllKeysFn, DeleteFn, GetFn, StoreFn};
 
-use super::storage_trait::StorageBackend;
-use super::storage_trait::StorageBackendError;
+use super::{StorageBackend, StorageBackendError};
 
 fn encode_key(key: &[u8]) -> String {
     BASE64_URL_SAFE.encode(key)
