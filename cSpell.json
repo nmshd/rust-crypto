@@ -12,6 +12,7 @@
         "esapi",
         "hcvault",
         "hmac",
+        "Itertools",
         "jobject",
         "keypair",
         "kibibytes",

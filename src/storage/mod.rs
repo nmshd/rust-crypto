@@ -19,6 +19,7 @@ use crate::common::{
 
 mod file_store;
 mod kv_store;
+mod storage_trait;
 
 use file_store::FileStore;
 use kv_store::KVStore;

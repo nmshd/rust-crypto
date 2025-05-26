@@ -1,78 +1,63 @@
-use std::fmt;
+use anyhow::anyhow;
+use base64::prelude::*;
+use itertools::{Either, Itertools};
 
-use tracing::trace;
+use crate::common::config::{AllKeysFn, DeleteFn, GetFn, StoreFn};
 
-use crate::{
-    common::{
-        config::{AllKeysFn, DeleteFn, GetFn, StoreFn},
-        error::KeyType,
-    },
-    prelude::CalError,
-};
+use super::storage_trait::StorageBackend;
+use super::storage_trait::StorageBackendError;
+
+fn encode_key(key: &[u8]) -> String {
+    BASE64_URL_SAFE.encode(key)
+}
+
+fn decode_key(encoded_key: String) -> Result<Vec<u8>, StorageBackendError> {
+    BASE64_URL_SAFE
+        .decode(encoded_key)
+        .map_err(|e| StorageBackendError::KeyDecode { source: anyhow!(e) })
+}
 
 #[derive(Clone)]
-pub struct KVStore {
+pub struct KvStorageBackend {
     pub get_fn: GetFn,
     pub store_fn: StoreFn,
     pub delete_fn: DeleteFn,
     pub all_keys_fn: AllKeysFn,
 }
 
-impl fmt::Debug for KVStore {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "KVStore {{}}")
-    }
-}
-
-impl KVStore {
-    pub fn store(
-        &self,
-        scope: impl AsRef<str>,
-        key: impl AsRef<str>,
-        value: Vec<u8>,
-    ) -> Result<(), CalError> {
-        let valid = pollster::block_on((self.store_fn)(
-            format!("{}:{}", scope.as_ref(), key.as_ref()),
-            value,
-        ));
-        if valid {
+impl StorageBackend for KvStorageBackend {
+    fn store(&mut self, key: &[u8], data: &[u8]) -> Result<(), StorageBackendError> {
+        if pollster::block_on((self.store_fn)(encode_key(key), data.to_owned())) {
             Ok(())
         } else {
-            Err(CalError::failed_operation(
-                "Storing key failed, the handle may still be valid".to_owned(),
-                false,
-                None,
-            ))
+            Err(StorageBackendError::StoreUnknown)
         }
     }
 
-    pub fn get(&self, scope: impl AsRef<str>, key: impl AsRef<str>) -> Result<Vec<u8>, CalError> {
-        let value = pollster::block_on((self.get_fn)(format!(
-            "{}:{}",
-            scope.as_ref(),
-            key.as_ref()
-        )));
-        match value {
-            Some(data) => Ok(data),
-            None => Err(CalError::missing_key(key.as_ref(), KeyType::Private)),
-        }
+    fn get(&self, key: &[u8]) -> Result<Vec<u8>, StorageBackendError> {
+        pollster::block_on((self.get_fn)(encode_key(key)))
+            .ok_or_else(|| StorageBackendError::GetUnknown)
     }
 
-    pub fn delete(&self, scope: impl AsRef<str>, key: impl AsRef<str>) {
-        pollster::block_on((self.delete_fn)(format!(
-            "{}:{}",
-            scope.as_ref(),
-            key.as_ref()
-        )));
+    fn delete(&mut self, key: &[u8]) -> Result<(), StorageBackendError> {
+        Ok(pollster::block_on((self.delete_fn)(encode_key(key))))
     }
 
-    pub fn get_all_keys(&self, scope: String) -> Vec<Vec<u8>> {
+    fn keys(&self) -> Result<Vec<Vec<u8>>, StorageBackendError> {
         let keys = pollster::block_on((self.all_keys_fn)());
-        trace!("get_all_keys_kv: {:?}", keys);
-        keys.into_iter()
-            .filter(|k| k.starts_with(&format!("{}:", scope.clone())))
-            .map(|k| k.split(':').last().unwrap().to_owned())
-            .filter_map(|k| self.get(scope.clone(), k).ok())
-            .collect()
+
+        let (decoded_keys, mut errors): (Vec<_>, Vec<_>) = keys
+            .into_iter()
+            .map(|e| decode_key(e))
+            .partition_map(|e| match e {
+                Ok(key) => Either::Left(key),
+                Err(err) => Either::Right(err),
+            });
+
+        if let Some(err) = errors.pop() {
+            Err(err)
+        } else {
+            Ok(decoded_keys)
+        }
     }
 }
