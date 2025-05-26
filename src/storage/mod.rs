@@ -17,6 +17,12 @@ use crate::common::{
     KeyHandle, KeyPairHandle,
 };
 
+mod file_store;
+mod kv_store;
+
+use file_store::FileStore;
+use kv_store::KVStore;
+
 #[derive(Clone, Debug)]
 enum Storage {
     KVStore(KVStore),
@@ -282,140 +288,6 @@ impl StorageManager {
                     .expect("Could not decode key data, this should never happen")
             })
             .map(|v| (v.id, v.spec))
-            .collect()
-    }
-}
-
-#[derive(Clone)]
-struct KVStore {
-    get_fn: GetFn,
-    store_fn: StoreFn,
-    delete_fn: DeleteFn,
-    all_keys_fn: AllKeysFn,
-}
-
-impl fmt::Debug for KVStore {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "KVStore {{}}")
-    }
-}
-
-impl KVStore {
-    fn store(
-        &self,
-        scope: impl AsRef<str>,
-        key: impl AsRef<str>,
-        value: Vec<u8>,
-    ) -> Result<(), CalError> {
-        let valid = pollster::block_on((self.store_fn)(
-            format!("{}:{}", scope.as_ref(), key.as_ref()),
-            value,
-        ));
-        if valid {
-            Ok(())
-        } else {
-            Err(CalError::failed_operation(
-                "Storing key failed, the handle may still be valid".to_owned(),
-                false,
-                None,
-            ))
-        }
-    }
-
-    fn get(&self, scope: impl AsRef<str>, key: impl AsRef<str>) -> Result<Vec<u8>, CalError> {
-        let value = pollster::block_on((self.get_fn)(format!(
-            "{}:{}",
-            scope.as_ref(),
-            key.as_ref()
-        )));
-        match value {
-            Some(data) => Ok(data),
-            None => Err(CalError::missing_key(key.as_ref(), KeyType::Private)),
-        }
-    }
-
-    fn delete(&self, scope: impl AsRef<str>, key: impl AsRef<str>) {
-        pollster::block_on((self.delete_fn)(format!(
-            "{}:{}",
-            scope.as_ref(),
-            key.as_ref()
-        )));
-    }
-
-    fn get_all_keys(&self, scope: String) -> Vec<Vec<u8>> {
-        let keys = pollster::block_on((self.all_keys_fn)());
-        trace!("get_all_keys_kv: {:?}", keys);
-        keys.into_iter()
-            .filter(|k| k.starts_with(&format!("{}:", scope.clone())))
-            .map(|k| k.split(':').last().unwrap().to_owned())
-            .filter_map(|k| self.get(scope.clone(), k).ok())
-            .collect()
-    }
-}
-
-fn file_store_key_id(provider: impl AsRef<str>, key: impl AsRef<str>) -> Vec<u8> {
-    format!("{}:{}", provider.as_ref(), key.as_ref())
-        .as_bytes()
-        .to_vec()
-}
-
-#[allow(dead_code)]
-#[derive(Clone, Debug)]
-struct FileStore {
-    db: Db,
-}
-
-impl FileStore {
-    fn new(db_dir: impl AsRef<Path>) -> Result<Self, CalError> {
-        Ok(Self { db: open(db_dir)? })
-    }
-
-    fn store(
-        &self,
-        provider: impl AsRef<str>,
-        key: impl AsRef<str>,
-        value: Vec<u8>,
-    ) -> Result<(), CalError> {
-        let id = file_store_key_id(provider, key);
-        self.db.insert(id, value)?;
-        Ok(())
-    }
-
-    fn get(&self, provider: impl AsRef<str>, key: impl AsRef<str>) -> Result<Vec<u8>, CalError> {
-        let id = file_store_key_id(provider, key.as_ref());
-        match self.db.get(id)? {
-            Some(data) => Ok(data.as_ref().to_vec()),
-            None => Err(CalError::missing_value(
-                format!("Sled (db): No data found for key: {}", key.as_ref()),
-                true,
-                None,
-            )),
-        }
-    }
-
-    fn delete(&self, provider: impl AsRef<str>, key: impl AsRef<str>) {
-        let id = file_store_key_id(provider, key.as_ref());
-        match self.db.remove(id) {
-            Ok(_) => {}
-            Err(e) => {
-                // TODO: Change delete to return result?
-                tracing::error!(error = %e, "Storage Manager: Failed deletion of data for key {}", key.as_ref())
-            }
-        }
-    }
-
-    fn get_all_keys(&self, scope: impl AsRef<str>) -> Vec<Vec<u8>> {
-        self.db
-            .scan_prefix(file_store_key_id(scope, ""))
-            .values()
-            .filter(|result| match result {
-                Ok(_) => true,
-                Err(e) => {
-                    tracing::warn!(error = %e, "Sled (db): Failed reading entry.");
-                    false
-                }
-            })
-            .map(|result| result.unwrap().as_ref().to_vec())
             .collect()
     }
 }
