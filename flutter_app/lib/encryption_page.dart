@@ -73,12 +73,7 @@ class _EncryptionPageState extends State<EncryptionPage> {
         setState(() {
           _keyHandle = key;
         });
-      } on cal.CalErrorImpl catch (e) {
-        debugPrint('Exception:\n$e');
-        var errorKind = await e.errorKind();
-        debugPrint("Error Kind: $errorKind");
-        var backtrace = await e.backtrace();
-        debugPrint('Back trace:\n $backtrace');
+      } catch (e) {
         rethrow;
       }
     }
