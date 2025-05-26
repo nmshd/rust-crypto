@@ -17,6 +17,7 @@ use crate::common::{
     KeyHandle, KeyPairHandle,
 };
 
+mod key;
 mod storage_backend;
 
 #[derive(Clone, Debug)]
