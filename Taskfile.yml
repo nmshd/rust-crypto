@@ -34,7 +34,7 @@ tasks:
   generate-dart-bindings:
     desc: Generates the dart bindings. Cargo and rust need to be installed.
     aliases: [gendt]
-    dir: ./flutter_plugin/
+    dir: ./cal_flutter_plugin/
     cmds:
       - flutter_rust_bridge_codegen generate --rust-preamble "use std::future::Future; use std::pin::Pin; use crypto_layer::common::config::DynFuture;"
 

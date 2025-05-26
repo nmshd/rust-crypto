@@ -1,4 +1,0 @@
-rust_input: crate::api,crypto-layer
-rust_root: rust/
-dart_output: lib/src/rust
-enable_lifetime: true
