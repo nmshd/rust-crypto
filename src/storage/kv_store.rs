@@ -26,7 +26,7 @@ pub struct KvStorageBackend {
 }
 
 impl StorageBackend for KvStorageBackend {
-    fn store(&mut self, key: &[u8], data: &[u8]) -> Result<(), StorageBackendError> {
+    fn store(&self, key: &[u8], data: &[u8]) -> Result<(), StorageBackendError> {
         if pollster::block_on((self.store_fn)(encode_key(key), data.to_owned())) {
             Ok(())
         } else {
@@ -39,7 +39,7 @@ impl StorageBackend for KvStorageBackend {
             .ok_or_else(|| StorageBackendError::GetUnknown)
     }
 
-    fn delete(&mut self, key: &[u8]) -> Result<(), StorageBackendError> {
+    fn delete(&self, key: &[u8]) -> Result<(), StorageBackendError> {
         Ok(pollster::block_on((self.delete_fn)(encode_key(key))))
     }
 
