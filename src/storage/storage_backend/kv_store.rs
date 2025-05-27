@@ -1,19 +1,6 @@
-use anyhow::anyhow;
-use base64::prelude::*;
-
 use crate::common::config::{AllKeysFn, DeleteFn, GetFn, StoreFn};
 
 use super::{StorageBackend, StorageBackendError};
-
-fn encode_key(key: &[u8]) -> String {
-    BASE64_URL_SAFE.encode(key)
-}
-
-fn decode_key(encoded_key: String) -> Result<Vec<u8>, StorageBackendError> {
-    BASE64_URL_SAFE
-        .decode(encoded_key)
-        .map_err(|e| StorageBackendError::KeyDecode { source: anyhow!(e) })
-}
 
 #[derive(Clone)]
 pub struct KvStorageBackend {
