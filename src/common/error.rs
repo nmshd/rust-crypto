@@ -2,8 +2,9 @@ use std::convert::From;
 use std::fmt;
 
 use anyhow::anyhow;
-use sled;
 use thiserror;
+
+use crate::storage::StorageManagerError;
 
 // Feel free to add more items to error.
 
@@ -224,15 +225,14 @@ pub(crate) trait ToCalError<T> {
     fn err_internal(self) -> Result<T, CalError>;
 }
 
-impl From<sled::Error> for CalError {
-    fn from(value: sled::Error) -> Self {
-        match value {
-            sled::Error::CollectionNotFound(_) => CalError::missing_value(
-                "Sled (db): Collection not found.".to_owned(),
-                false,
-                Some(anyhow!(value)),
-            ),
-            _ => CalError::other(anyhow!(value)),
-        }
+impl From<anyhow::Error> for CalError {
+    fn from(value: anyhow::Error) -> Self {
+        CalError::other(value)
+    }
+}
+
+impl From<StorageManagerError> for CalError {
+    fn from(value: StorageManagerError) -> Self {
+        CalError::from(anyhow!(value))
     }
 }

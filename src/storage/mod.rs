@@ -1,9 +1,11 @@
 #![allow(clippy::upper_case_acronyms)]
 use std::{fmt, path::Path};
 
+use anyhow::anyhow;
 use hmac::Mac;
 use serde::{Deserialize, Serialize};
 use sled::{open, Db};
+use thiserror::Error;
 use tracing::trace;
 
 use hmac::Hmac;
@@ -19,6 +21,38 @@ use crate::common::{
 
 mod key;
 mod storage_backend;
+
+#[derive(Debug, Clone, Copy, Error)]
+pub enum StorageManagerError {
+    #[error("Error during kv store operation.")]
+    KvStore,
+    #[error("Error during file store operation.")]
+    FileStore,
+    #[error("Multiple additional configs for backend initialization provided, while only one is accepted.")]
+    MultipleConfigForBackendInitialization,
+    #[error("Missing configs to initialize storage backends.")]
+    MissingConfigForStorageBackend,
+    #[error("Multiple security configs where provided, while only one is accepted.")]
+    MultipleSecurityConfigs,
+    #[error("No security configs where provided.")]
+    NoSecurityConfigs,
+    #[error("Error during encryption.")]
+    EncryptError,
+    #[error("Error during decryption.")]
+    DecryptError,
+    #[error("Failed to sign metadata and payload.")]
+    FailedSigning,
+    #[error("Failed to validate metadata and payload.")]
+    FailedValidation,
+    #[error("Failed to serialize payload.")]
+    FailedSerialization,
+    #[error("Failed to deserialize payload.")]
+    FailedDeserialization,
+    #[error("Failed to store payload with backend.")]
+    FailedToStoreWithBackend,
+    #[error("Failed to get payload with backend.")]
+    FailedToGetWithBackend,
+}
 
 #[derive(Clone, Debug)]
 enum Storage {
@@ -40,59 +74,48 @@ pub(crate) struct StorageManager {
     scope: String,
 }
 
-fn extract_storage_method(config: &[AdditionalConfig]) -> Result<Option<Storage>, CalError> {
-    let db_store = config
+fn extract_storage_method(config: &[AdditionalConfig]) -> Result<Storage, StorageManagerError> {
+    let config: Vec<&AdditionalConfig> = config
         .iter()
-        .filter_map(|c| {
-            if let AdditionalConfig::FileStoreConfig { db_dir } = c.clone() {
-                // TODO: Have new function return result instead?
-                match FileStore::new(db_dir) {
-                    Ok(db) => Some(db),
-                    Err(e) => {
-                        tracing::error!(error = %e, "Failed initializing database.");
-                        None
-                    }
-                }
-            } else {
-                None
-            }
+        .filter(|e| {
+            matches!(
+                e,
+                AdditionalConfig::FileStoreConfig { .. } | AdditionalConfig::KVStoreConfig { .. }
+            )
         })
-        .last();
-    let kv_store = config
-        .iter()
-        .filter_map(|c| {
-            if let AdditionalConfig::KVStoreConfig {
-                get_fn,
-                store_fn,
-                delete_fn,
-                all_keys_fn,
-            } = c.clone()
-            {
-                Some(KVStore {
-                    get_fn,
-                    store_fn,
-                    delete_fn,
-                    all_keys_fn,
-                })
-            } else {
-                None
-            }
-        })
-        .last();
+        .collect();
 
-    match (db_store, kv_store) {
-        (Some(db_store), None) => Ok(Some(Storage::FileStore(db_store))),
-        (None, Some(kv_store)) => Ok(Some(Storage::KVStore(kv_store))),
-        (None, None) => Ok(None),
-        _ => Err(CalError::failed_operation(
-            "both KV Store and DB store were initialised".to_owned(),
-            true,
-            None,
-        )),
-    }
+    ensure!(
+        config.len() > 0,
+        StorageManagerError::MissingConfigForStorageBackend
+    );
+    ensure!(
+        config.len() < 2,
+        StorageManagerError::MultipleConfigForBackendInitialization
+    );
+
+    Ok(match config[0] {
+        AdditionalConfig::FileStoreConfig { db_dir } => Storage::FileStore(
+            FileStore::new(db_dir).change_context(StorageManagerError::FileStore)?,
+        ),
+        AdditionalConfig::KVStoreConfig {
+            get_fn,
+            store_fn,
+            delete_fn,
+            all_keys_fn,
+        } => Storage::KVStore(KVStore {
+            get_fn: get_fn.clone(),
+            store_fn: store_fn.clone(),
+            delete_fn: delete_fn.clone(),
+            all_keys_fn: all_keys_fn.clone(),
+        }),
+        _ => unreachable!(),
+    })
 }
 
-fn extract_security_method(config: &[AdditionalConfig]) -> Result<ChecksumProvider, CalError> {
+fn extract_security_method(
+    config: &[AdditionalConfig],
+) -> Result<ChecksumProvider, StorageManagerError> {
     let key_pair_handle = config.iter().find_map(|c| match c {
         AdditionalConfig::StorageConfigDSA(key_handle) => Some(key_handle.clone()),
         _ => None,
@@ -103,13 +126,12 @@ fn extract_security_method(config: &[AdditionalConfig]) -> Result<ChecksumProvid
     });
 
     match (key_pair_handle, hmac_pass) {
-        (Some(key_pair_handle), None) => Ok(ChecksumProvider::KeyPairHandle(Box::new(key_pair_handle))),
+        (Some(key_pair_handle), None) => {
+            Ok(ChecksumProvider::KeyPairHandle(Box::new(key_pair_handle)))
+        }
         (None, Some(hmac_pass)) => Ok(ChecksumProvider::HMAC(hmac_pass)),
-        _ => Err(CalError::failed_operation(
-            "exactly one of AdditionalConfig::KeyHandle, AdditionalConfig::KeyPairHandle and AdditionalConfig::HMAC".to_owned(),
-            true,
-            None,
-        )),
+        (None, None) => Err(report!(StorageManagerError::NoSecurityConfigs)),
+        (Some(_), Some(_)) => Err(report!(StorageManagerError::MultipleSecurityConfigs)),
     }
 }
 
@@ -117,25 +139,42 @@ impl StorageManager {
     pub(crate) fn new(
         scope: impl Into<String>,
         config: &[AdditionalConfig],
-    ) -> Result<Option<Self>, CalError> {
-        let storage = extract_storage_method(config)?;
-        let checksum_provider = extract_security_method(config)?;
-        Ok(storage.map(|storage| {
-            let key_handle = config.iter().find_map(|c| match c {
-                AdditionalConfig::StorageConfigHMAC(key_handle) => Some(key_handle.clone()),
-                _ => None,
-            });
-
-            StorageManager {
-                checksum_provider,
-                key_handle: key_handle.map(Box::new),
-                storage,
-                scope: scope.into(),
+    ) -> Result<Option<Self>, StorageManagerError> {
+        let storage = match extract_storage_method(config) {
+            Ok(s) => s,
+            Err(e)
+                if matches!(
+                    e.current_context(),
+                    StorageManagerError::MissingConfigForStorageBackend
+                ) =>
+            {
+                return Ok(None);
             }
+            Err(e) => {
+                return Err(e);
+            }
+        };
+
+        let checksum_provider = extract_security_method(config)?;
+
+        let key_handle = config.iter().find_map(|c| match c {
+            AdditionalConfig::StorageConfigHMAC(key_handle) => Some(key_handle.clone()),
+            _ => None,
+        });
+
+        Ok(Some(StorageManager {
+            checksum_provider,
+            key_handle: key_handle.map(Box::new),
+            storage,
+            scope: scope.into(),
         }))
     }
 
-    pub(crate) fn store(&self, id: impl AsRef<str>, data: KeyData) -> Result<(), CalError> {
+    pub(crate) fn store(
+        &self,
+        id: impl AsRef<str>,
+        data: KeyData,
+    ) -> Result<(), StorageManagerError> {
         // encrypt secret data if KeyHandle is available
 
         let encrypted_data = KeyDataEncrypted {
@@ -146,11 +185,10 @@ impl StorageManager {
                     self.key_handle
                         .as_ref()
                         .map(|key| {
-                            let (v, iv) = match key.encrypt(&secret) {
-                                Ok(v) => v,
-                                Err(e) => return Err(e),
-                            };
-                            Ok(StorageField::Encrypted { data: v, iv })
+                            let (v, iv) = key
+                                .encrypt(&secret)
+                                .change_context(StorageManagerError::EncryptError)?;
+                            Result::<StorageField, _>::Ok(StorageField::Encrypted { data: v, iv })
                         })
                         .unwrap_or(Ok(StorageField::Raw(secret)))
                 })
@@ -161,17 +199,19 @@ impl StorageManager {
         };
 
         let encoded = serde_json::to_vec(&encrypted_data)
-            .expect("Failed to encode key data, this should never happen");
+            .change_context(StorageManagerError::FailedSerialization)?;
 
         // generate checksum
         let (checksum, ctype) = match self.checksum_provider {
             ChecksumProvider::KeyPairHandle(ref key_pair_handle) => {
-                let checksum = key_pair_handle.sign_data(&encoded)?;
+                let checksum = key_pair_handle
+                    .sign_data(&encoded)
+                    .change_context(StorageManagerError::FailedSigning)?;
                 (checksum, ChecksumType::DSA)
             }
             ChecksumProvider::HMAC(ref pass) => {
-                let mut hmac =
-                    HmacSha256::new_from_slice(pass.as_bytes()).expect("Failed to create HMAC");
+                let mut hmac = HmacSha256::new_from_slice(pass.as_bytes())
+                    .change_context(StorageManagerError::FailedSigning)?;
                 hmac.update(&encoded);
                 let result = hmac.finalize();
                 (result.into_bytes().to_vec(), ChecksumType::HMAC)
@@ -183,68 +223,64 @@ impl StorageManager {
             checksum,
             checksum_type: ctype,
         })
-        .expect("Failed to encode key data, this should never happen");
+        .change_context(StorageManagerError::FailedDeserialization)?;
 
         // choose storage Strategy
         match self.storage {
-            Storage::KVStore(ref store) => store.store(self.scope.clone(), id.as_ref(), encoded),
-            Storage::FileStore(ref store) => store.store(self.scope.clone(), id.as_ref(), encoded),
+            Storage::KVStore(ref store) => store
+                .store(self.scope.clone(), id.as_ref(), encoded)
+                .change_context(StorageManagerError::FailedToStoreWithBackend),
+            Storage::FileStore(ref store) => store
+                .store(self.scope.clone(), id.as_ref(), encoded)
+                .change_context(StorageManagerError::FailedToStoreWithBackend),
         }
     }
 
-    pub(crate) fn get(&self, id: impl AsRef<str>) -> Result<KeyData, CalError> {
+    pub(crate) fn get(&self, id: impl AsRef<str>) -> Result<KeyData, StorageManagerError> {
         let value = match self.storage {
-            Storage::KVStore(ref store) => store.get(self.scope.clone(), id.as_ref()),
-            Storage::FileStore(ref store) => store.get(self.scope.clone(), id.as_ref()),
+            Storage::KVStore(ref store) => store
+                .get(self.scope.clone(), id.as_ref())
+                .change_context(StorageManagerError::KvStore),
+            Storage::FileStore(ref store) => store
+                .get(self.scope.clone(), id.as_ref())
+                .change_context(StorageManagerError::FileStore),
         }?;
 
-        let decoded = serde_json::from_slice::<WithChecksum>(&value).map_err(|e| {
-            CalError::failed_operation(format!("Failed to decode key data: {}", e), true, None)
-        })?;
+        let decoded = serde_json::from_slice::<WithChecksum>(&value)
+            .change_context(StorageManagerError::FailedDeserialization)?;
 
         // verify checksum
         match self.checksum_provider {
             ChecksumProvider::KeyPairHandle(ref key_pair_handle) => {
-                if key_pair_handle.verify_signature(&decoded.data, &decoded.checksum)? {
+                if key_pair_handle
+                    .verify_signature(&decoded.data, &decoded.checksum)
+                    .change_context(StorageManagerError::FailedValidation)?
+                {
                 } else {
-                    return Err(CalError::failed_operation(
-                        "Checksum verification failed".to_owned(),
-                        true,
-                        None,
-                    ));
+                    return Err(report!(StorageManagerError::FailedValidation));
                 }
             }
             ChecksumProvider::HMAC(ref pass) => {
-                let mut hmac =
-                    HmacSha256::new_from_slice(pass.as_bytes()).expect("Failed to create HMAC");
+                let mut hmac = HmacSha256::new_from_slice(pass.as_bytes())
+                    .change_context(StorageManagerError::FailedValidation)?;
                 hmac.update(&decoded.data);
-                hmac.verify_slice(&decoded.checksum).map_err(|_| {
-                    CalError::failed_operation(
-                        "Checksum verification failed".to_owned(),
-                        true,
-                        None,
-                    )
-                })?;
+                hmac.verify_slice(&decoded.checksum)
+                    .change_context(StorageManagerError::FailedValidation)?;
             }
         };
 
-        let decoded = serde_json::from_slice::<KeyDataEncrypted>(&decoded.data).map_err(|e| {
-            CalError::failed_operation(format!("Failed to decode key data: {}", e), true, None)
-        })?;
+        let decoded = serde_json::from_slice::<KeyDataEncrypted>(&decoded.data)
+            .change_context(StorageManagerError::FailedDeserialization)?;
 
         let decrypted = KeyData {
             id: decoded.id.clone(),
             secret_data: decoded
                 .secret_data
                 .and_then(|secret| match secret {
-                    StorageField::Encrypted { data, iv } => {
-                        self.key_handle
-                            .as_ref()
-                            .map(|key| match key.decrypt_data(&data, &iv) {
-                                Ok(v) => Ok(v),
-                                Err(e) => Err(e),
-                            })
-                    }
+                    StorageField::Encrypted { data, iv } => self.key_handle.as_ref().map(|key| {
+                        key.decrypt_data(&data, &iv)
+                            .change_context(StorageManagerError::DecryptError)
+                    }),
                     StorageField::Raw(data) => Some(Ok(data)),
                 })
                 .transpose()?,
@@ -262,7 +298,7 @@ impl StorageManager {
         }
     }
 
-    pub fn get_all_keys(&self) -> Vec<(String, Spec)> {
+    pub fn get_all_keys(&self) -> Vec<Result<(String, Spec), StorageManagerError>> {
         // get keys from all available storage methods
         let mut keys = Vec::new();
 
@@ -278,13 +314,18 @@ impl StorageManager {
         keys.iter()
             .map(|v| {
                 serde_json::from_slice::<WithChecksum>(v.as_slice())
-                    .expect("Could not decode key data, this should never happen")
+                    .change_context(StorageManagerError::FailedDeserialization)
+                    .attach_printable("Could not decode data blob.")
             })
-            .map(|with_checksum| {
-                serde_json::from_slice::<KeyDataEncrypted>(with_checksum.data.as_slice())
-                    .expect("Could not decode key data, this should never happen")
+            .map(|result| {
+                result.map(|with_checksum| {
+                    serde_json::from_slice::<KeyDataEncrypted>(with_checksum.data.as_slice())
+                        .change_context(StorageManagerError::FailedDeserialization)
+                        .attach_printable("Could not decode key data.")
+                })
             })
-            .map(|v| (v.id, v.spec))
+            .flatten()
+            .map(|result| result.map(|v| (v.id, v.spec)))
             .collect()
     }
 }
