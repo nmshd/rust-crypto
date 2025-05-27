@@ -24,6 +24,22 @@ pub struct StorageManagerKey {
 }
 
 impl StorageManagerKey {
+    pub fn key_generator<K>(
+        provider_name: String,
+        security_key_id: Option<String>,
+    ) -> impl Fn(String) -> StorageManagerKey {
+        move |key_id: String| {
+            let provider_name = provider_name.clone();
+            let security_key_id = security_key_id.clone();
+
+            StorageManagerKey {
+                key_id,
+                provider_name,
+                security_key_id,
+            }
+        }
+    }
+
     pub fn serialize(&self) -> Result<String, StorageManagerKeyError> {
         to_string(self).map_err(|e| StorageManagerKeyError::Serialize { source: anyhow!(e) })
     }

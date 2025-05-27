@@ -5,6 +5,7 @@ use anyhow::anyhow;
 use hmac::Mac;
 use serde::{Deserialize, Serialize};
 use sled::{open, Db};
+use storage_backend::StorageBackend;
 use thiserror::Error;
 use tracing::trace;
 
@@ -55,26 +56,22 @@ pub enum StorageManagerError {
 }
 
 #[derive(Clone, Debug)]
-enum Storage {
-    KVStore(KVStore),
-    FileStore(FileStore),
-}
-
-#[derive(Clone, Debug)]
 enum ChecksumProvider {
     KeyPairHandle(Box<KeyPairHandle>),
     HMAC(String),
 }
 
 #[derive(Clone, Debug)]
-pub(crate) struct StorageManager {
+pub(crate) struct StorageManager<S: StorageBackend> {
     checksum_provider: ChecksumProvider,
     key_handle: Option<Box<KeyHandle>>,
-    storage: Storage,
+    storage: S,
     scope: String,
 }
 
-fn extract_storage_method(config: &[AdditionalConfig]) -> Result<Storage, StorageManagerError> {
+fn extract_storage_method(
+    config: &[AdditionalConfig],
+) -> Result<impl StorageBackend, StorageManagerError> {
     let config: Vec<&AdditionalConfig> = config
         .iter()
         .filter(|e| {
