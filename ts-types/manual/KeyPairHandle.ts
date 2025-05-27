@@ -2,7 +2,7 @@ import type { KeyPairSpec } from "../generated/index.ts";
 import type { DHExchange } from "./DHExchange.ts";
 
 export type KeyPairHandle = {
-	encryptData: (data: Uint8Array, iv: Uint8Array) => Promise<Uint8Array>;
+	encryptData: (data: Uint8Array) => Promise<Uint8Array>;
 	decryptData: (encryptedData: Uint8Array) => Promise<Uint8Array>;
 	signData: (data: Uint8Array) => Promise<Uint8Array>;
 	verifySignature: (

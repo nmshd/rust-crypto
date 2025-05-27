@@ -414,7 +414,7 @@ impl KeyPairHandleImpl for SoftwareKeyPairHandle {
         }
     }
 
-    fn encrypt_data(&self, _data: &[u8], _iv: &[u8]) -> Result<Vec<u8>, CalError> {
+    fn encrypt_data(&self, _data: &[u8]) -> Result<Vec<u8>, CalError> {
         todo!("Encryption not supported for ECC keys")
     }
 
