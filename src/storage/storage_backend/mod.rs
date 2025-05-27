@@ -36,8 +36,8 @@ pub enum StorageBackendError {
 }
 
 pub trait StorageBackend: Sync {
-    fn store(&self, key: &[u8], data: &[u8]) -> Result<(), StorageBackendError>;
-    fn get(&self, key: &[u8]) -> Result<Vec<u8>, StorageBackendError>;
-    fn delete(&self, key: &[u8]) -> Result<(), StorageBackendError>;
-    fn keys(&self) -> Result<Vec<Vec<u8>>, StorageBackendError>;
+    fn store(&self, key: String, data: &[u8]) -> Result<(), StorageBackendError>;
+    fn get(&self, key: String) -> Result<Vec<u8>, StorageBackendError>;
+    fn delete(&self, key: String) -> Result<(), StorageBackendError>;
+    fn keys(&self) -> Result<Vec<String>, StorageBackendError>;
 }

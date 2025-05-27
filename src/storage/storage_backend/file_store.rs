@@ -69,7 +69,7 @@ impl FileStorageBackend {
 }
 
 impl StorageBackend for FileStorageBackend {
-    fn store(&self, key: &[u8], data: &[u8]) -> Result<(), StorageBackendError> {
+    fn store(&self, key: String, data: &[u8]) -> Result<(), StorageBackendError> {
         self.db
             .insert(key, data)
             .map_err(|err| StorageBackendError::Store {
@@ -79,7 +79,7 @@ impl StorageBackend for FileStorageBackend {
         Ok(())
     }
 
-    fn get(&self, key: &[u8]) -> Result<Vec<u8>, StorageBackendError> {
+    fn get(&self, key: String) -> Result<Vec<u8>, StorageBackendError> {
         match self.db.get(key).map_err(|err| StorageBackendError::Get {
             description: "Get for sled db failed.",
             source: anyhow!(err),
@@ -89,7 +89,7 @@ impl StorageBackend for FileStorageBackend {
         }
     }
 
-    fn delete(&self, key: &[u8]) -> Result<(), StorageBackendError> {
+    fn delete(&self, key: String) -> Result<(), StorageBackendError> {
         self.db
             .remove(key)
             .map_err(|err| StorageBackendError::Delete {
@@ -100,7 +100,7 @@ impl StorageBackend for FileStorageBackend {
         Ok(())
     }
 
-    fn keys(&self) -> Result<Vec<Vec<u8>>, StorageBackendError> {
+    fn keys(&self) -> Result<Vec<String>, StorageBackendError> {
         let (raw_keys, mut errors): (Vec<_>, Vec<_>) = self.db.iter().partition_result();
 
         if let Some(last_error) = errors.pop() {
@@ -110,10 +110,18 @@ impl StorageBackend for FileStorageBackend {
             });
         }
 
-        Ok(raw_keys
+        let (keys, mut conversion_errors): (Vec<_>, Vec<_>) = raw_keys
             .into_iter()
             .map(|e| e.0)
-            .map(|e| e.as_ref().to_vec())
-            .collect())
+            .map(|e| String::from_utf8(e.to_vec()))
+            .partition_result();
+
+        if let Some(error) = conversion_errors.pop() {
+            return Err(StorageBackendError::KeyDecode {
+                source: anyhow!(error),
+            });
+        }
+
+        Ok(keys)
     }
 }
