@@ -198,7 +198,7 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
         Ok(output)
     }
 
-    fn encrypt_data(&self, encrypted_data: &[u8], iv: &[u8]) -> Result<Vec<u8>, CalError> {
+    fn encrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, CalError> {
         info!("encrypting");
 
         let vm = context::android_context()?.vm();

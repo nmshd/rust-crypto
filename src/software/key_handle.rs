@@ -414,12 +414,12 @@ impl KeyPairHandleImpl for SoftwareKeyPairHandle {
         }
     }
 
-    fn encrypt_data(&self, _data: &[u8], _iv: &[u8]) -> Result<Vec<u8>, CalError> {
-        todo!("Encryption not supported for ECC keys")
+    fn encrypt_data(&self, _data: &[u8]) -> Result<Vec<u8>, CalError> {
+        Err(CalError::not_implemented())
     }
 
     fn decrypt_data(&self, _encrypted_data: &[u8]) -> Result<Vec<u8>, CalError> {
-        todo!("Decryption not supported for ECC keys")
+        Err(CalError::not_implemented())
     }
 
     fn get_public_key(&self) -> Result<Vec<u8>, CalError> {
