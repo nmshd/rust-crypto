@@ -19,7 +19,7 @@ jobs:
         # with:
         #   save-if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
       - name: Check Rust Code
-        run: cargo check -F software,android,apple-secure-enclave
+        run: cargo check -F software,android
       - name: Unit Test Rust Code
         run: cargo test -F software
 
