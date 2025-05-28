@@ -44,6 +44,7 @@ export type CalErrorKind =
       internal: boolean;
     };
   }
+  | "NonExportable"
   | { "UnsupportedAlgorithm": string }
   | "EphemeralKeyError"
   | "Other";
