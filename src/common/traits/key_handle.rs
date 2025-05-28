@@ -74,6 +74,8 @@ pub(crate) trait KeyHandleImpl: Send + Sync {
 
     /// Derives an ephemeral key from this key as base with the same spec as the base key.
     ///
+    /// A derived key is exportable if the base key (self) is exportable.
+    ///
     /// This operation is deterministic, meaning the same nonce and key are always going to result in the same [KeyHandle].
     fn derive_key(&self, nonce: &[u8]) -> Result<KeyHandle, CalError>;
 

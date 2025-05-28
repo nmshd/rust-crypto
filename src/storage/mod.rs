@@ -1,5 +1,5 @@
 #![allow(clippy::upper_case_acronyms)]
-use std::{fmt, path::Path};
+use std::{cell::Cell, fmt, path::Path, sync::Arc};
 
 use anyhow::anyhow;
 use hmac::Mac;
@@ -21,6 +21,7 @@ use crate::common::{
 };
 
 mod key;
+mod security;
 mod storage_backend;
 
 #[derive(Debug, Clone, Copy, Error)]
@@ -62,10 +63,10 @@ enum ChecksumProvider {
 }
 
 #[derive(Clone, Debug)]
-pub(crate) struct StorageManager<S: StorageBackend> {
+pub(crate) struct StorageManager {
     checksum_provider: ChecksumProvider,
     key_handle: Option<Box<KeyHandle>>,
-    storage: S,
+    storage: Arc<dyn StorageBackend>,
     scope: String,
 }
 

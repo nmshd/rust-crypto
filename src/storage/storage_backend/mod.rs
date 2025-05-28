@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 use thiserror::Error;
 
 mod file_store;
@@ -35,7 +37,7 @@ pub enum StorageBackendError {
     },
 }
 
-pub trait StorageBackend: Sync {
+pub trait StorageBackend: Debug {
     fn store(&self, key: String, data: &[u8]) -> Result<(), StorageBackendError>;
     fn get(&self, key: String) -> Result<Vec<u8>, StorageBackendError>;
     fn delete(&self, key: String) -> Result<(), StorageBackendError>;

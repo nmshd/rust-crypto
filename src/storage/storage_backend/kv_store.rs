@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 use crate::common::config::{AllKeysFn, DeleteFn, GetFn, StoreFn};
 
 use super::{StorageBackend, StorageBackendError};
@@ -31,5 +33,11 @@ impl StorageBackend for KvStorageBackend {
         let keys = pollster::block_on((self.all_keys_fn)());
 
         Ok(keys)
+    }
+}
+
+impl Debug for KvStorageBackend {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "StorageBackend {{ .. }}")
     }
 }
