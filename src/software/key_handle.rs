@@ -321,7 +321,11 @@ impl KeyHandleImpl for SoftwareKeyHandle {
     }
 
     fn extract_key(&self) -> Result<Vec<u8>, CalError> {
-        Ok(self.key.clone())
+        if self.spec.non_exportable {
+            Err(CalError::non_exportable())
+        } else {
+            Ok(self.key.clone())
+        }
     }
 
     fn id(&self) -> Result<String, CalError> {
@@ -432,11 +436,7 @@ impl KeyPairHandleImpl for SoftwareKeyPairHandle {
                 .clone()
                 .ok_or_else(|| CalError::missing_key(self.key_id.clone(), KeyType::Private))
         } else {
-            Err(CalError::failed_operation(
-                "The private key is not exportable".to_string(),
-                true,
-                None,
-            ))
+            Err(CalError::non_exportable())
         }
     }
 

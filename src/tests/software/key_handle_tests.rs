@@ -252,7 +252,7 @@ mod tests {
         }
     }
     mod key_handle {
-        use crate::tests::TestStore;
+        use crate::{prelude::CalErrorKind, tests::TestStore};
         use test_case::test_case;
 
         use super::*;
@@ -518,7 +518,7 @@ mod tests {
             let software_key_handle = create_software_key_handle(spec)?;
 
             let short_data = vec![0u8; 10];
-            let mut nonce = vec![0u8; spec.cipher.iv_len()];
+            let nonce = vec![0u8; spec.cipher.iv_len()];
 
             let decrypted_result = software_key_handle.decrypt_data(&short_data, &nonce);
 
@@ -594,6 +594,40 @@ mod tests {
 
             assert_eq!(received_message, payload);
             assert_eq!(derived_key.id()?, id);
+
+            Ok(())
+        }
+
+        #[test]
+        fn test_extract_key() -> Result<()> {
+            setup();
+
+            let spec = KeySpec {
+                non_exportable: false,
+                ..Default::default()
+            };
+
+            let key = create_software_key_handle(spec)?;
+
+            let raw_key = key.extract_key()?;
+
+            Ok(())
+        }
+
+        #[test]
+        fn test_extract_key_non_exportable() -> Result<()> {
+            setup();
+
+            let spec = KeySpec {
+                non_exportable: true,
+                ..Default::default()
+            };
+
+            let key = create_software_key_handle(spec)?;
+
+            let error = key.extract_key().unwrap_err();
+
+            assert!(matches!(error.error_kind(), CalErrorKind::NonExportable));
 
             Ok(())
         }
