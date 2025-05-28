@@ -62,7 +62,7 @@ tasks:
   test-dart-bindings:
     desc: Test partially generated dart bindings.
     aliases: [testdt]
-    dir: ./flutter_plugin/rust/
+    dir: ./cal_flutter_plugin/rust/
     cmds:
       - cargo c
 
