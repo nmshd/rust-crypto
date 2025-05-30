@@ -132,7 +132,7 @@ pub(crate) trait KeyPairHandleImpl: Send + Sync {
     ///
     /// # Returns
     /// A `Result` containing the encrypted data as a `Vec<u8>` on success, or a `CalError` on failure.
-    fn encrypt_data(&self, data: &[u8], iv: &[u8]) -> Result<Vec<u8>, CalError>;
+    fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError>;
 
     /// Decrypts the given encrypted data using the cryptographic key.
     ///

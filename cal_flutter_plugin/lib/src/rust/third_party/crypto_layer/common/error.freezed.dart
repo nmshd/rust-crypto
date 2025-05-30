@@ -421,6 +421,38 @@ as bool,
 /// @nodoc
 
 
+class CalErrorKind_NonExportable extends CalErrorKind {
+  const CalErrorKind_NonExportable(): super._();
+  
+
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CalErrorKind_NonExportable);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'CalErrorKind.nonExportable()';
+}
+
+
+}
+
+
+
+
+/// @nodoc
+
+
 class CalErrorKind_UnsupportedAlgorithm extends CalErrorKind {
   const CalErrorKind_UnsupportedAlgorithm(this.field0): super._();
   

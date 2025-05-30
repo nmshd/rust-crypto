@@ -1132,7 +1132,6 @@ fn wire__crypto_layer__common__KeyPairHandle_encrypt_data_impl(
                 flutter_rust_bridge::for_generated::RustAutoOpaqueInner<KeyPairHandle>,
             >>::sse_decode(&mut deserializer);
             let api_data = <Vec<u8>>::sse_decode(&mut deserializer);
-            let api_iv = <Vec<u8>>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
                 transform_result_sse::<_, CalError>((move || {
@@ -1153,7 +1152,6 @@ fn wire__crypto_layer__common__KeyPairHandle_encrypt_data_impl(
                     let output_ok = crypto_layer::common::KeyPairHandle::encrypt_data(
                         &*api_that_guard,
                         &api_data,
-                        &api_iv,
                     )?;
                     Ok(output_ok)
                 })())
@@ -2997,6 +2995,7 @@ const _: fn() = || {
             let _: String = description;
             let _: bool = internal;
         }
+        crypto_layer::common::error::CalErrorKind::NonExportable => {}
         crypto_layer::common::error::CalErrorKind::UnsupportedAlgorithm(field0) => {
             let _: String = field0;
         }
@@ -3030,6 +3029,7 @@ const _: fn() = || {
         let _: crypto_layer::common::crypto::algorithms::encryption::Cipher = KeySpec.cipher;
         let _: crypto_layer::common::crypto::algorithms::hashes::CryptoHash = KeySpec.signing_hash;
         let _: bool = KeySpec.ephemeral;
+        let _: bool = KeySpec.non_exportable;
     }
     {
         let ProviderConfig = None::<crypto_layer::common::config::ProviderConfig>.unwrap();
@@ -3660,13 +3660,16 @@ impl SseDecode for crypto_layer::common::error::CalErrorKind {
                 };
             }
             6 => {
+                return crypto_layer::common::error::CalErrorKind::NonExportable;
+            }
+            7 => {
                 let mut var_field0 = <String>::sse_decode(deserializer);
                 return crypto_layer::common::error::CalErrorKind::UnsupportedAlgorithm(var_field0);
             }
-            7 => {
+            8 => {
                 return crypto_layer::common::error::CalErrorKind::EphemeralKeyError;
             }
-            8 => {
+            9 => {
                 return crypto_layer::common::error::CalErrorKind::Other;
             }
             _ => {
@@ -3796,10 +3799,12 @@ impl SseDecode for crypto_layer::common::config::KeySpec {
                 deserializer,
             );
         let mut var_ephemeral = <bool>::sse_decode(deserializer);
+        let mut var_nonExportable = <bool>::sse_decode(deserializer);
         return crypto_layer::common::config::KeySpec {
             cipher: var_cipher,
             signing_hash: var_signingHash,
             ephemeral: var_ephemeral,
+            non_exportable: var_nonExportable,
         };
     }
 }
@@ -4615,13 +4620,14 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crypto_layer::common::error::C
                 internal.into_into_dart().into_dart(),
             ]
             .into_dart(),
+            crypto_layer::common::error::CalErrorKind::NonExportable => [6.into_dart()].into_dart(),
             crypto_layer::common::error::CalErrorKind::UnsupportedAlgorithm(field0) => {
-                [6.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+                [7.into_dart(), field0.into_into_dart().into_dart()].into_dart()
             }
             crypto_layer::common::error::CalErrorKind::EphemeralKeyError => {
-                [7.into_dart()].into_dart()
+                [8.into_dart()].into_dart()
             }
-            crypto_layer::common::error::CalErrorKind::Other => [8.into_dart()].into_dart(),
+            crypto_layer::common::error::CalErrorKind::Other => [9.into_dart()].into_dart(),
             _ => {
                 unimplemented!("");
             }
@@ -4789,6 +4795,7 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crypto_layer::common::config::
             self.0.cipher.into_into_dart().into_dart(),
             self.0.signing_hash.into_into_dart().into_dart(),
             self.0.ephemeral.into_into_dart().into_dart(),
+            self.0.non_exportable.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -5455,15 +5462,18 @@ impl SseEncode for crypto_layer::common::error::CalErrorKind {
                 <String>::sse_encode(description, serializer);
                 <bool>::sse_encode(internal, serializer);
             }
-            crypto_layer::common::error::CalErrorKind::UnsupportedAlgorithm(field0) => {
+            crypto_layer::common::error::CalErrorKind::NonExportable => {
                 <i32>::sse_encode(6, serializer);
+            }
+            crypto_layer::common::error::CalErrorKind::UnsupportedAlgorithm(field0) => {
+                <i32>::sse_encode(7, serializer);
                 <String>::sse_encode(field0, serializer);
             }
             crypto_layer::common::error::CalErrorKind::EphemeralKeyError => {
-                <i32>::sse_encode(7, serializer);
+                <i32>::sse_encode(8, serializer);
             }
             crypto_layer::common::error::CalErrorKind::Other => {
-                <i32>::sse_encode(8, serializer);
+                <i32>::sse_encode(9, serializer);
             }
             _ => {
                 unimplemented!("");
@@ -5591,6 +5601,7 @@ impl SseEncode for crypto_layer::common::config::KeySpec {
             serializer,
         );
         <bool>::sse_encode(self.ephemeral, serializer);
+        <bool>::sse_encode(self.non_exportable, serializer);
     }
 }
 

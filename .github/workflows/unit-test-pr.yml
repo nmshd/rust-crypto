@@ -22,6 +22,17 @@ jobs:
         run: cargo check -F software,android
       - name: Unit Test Rust Code
         run: cargo test -F software
+    
+  test-pr-rs-apple:
+    name: Test Rust-Code (Apple)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
+        # with:
+        #   save-if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+      - name: Check Rust Code
+        run: cargo check -F software,android,apple-secure-enclave
 
   test-pr-ts-types:
     name: Test TS-Types

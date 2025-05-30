@@ -101,19 +101,19 @@ impl KeyHandleImpl for AndroidKeyHandle {
     }
 
     fn hmac(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
-        todo!()
+        Err(CalError::not_implemented())
     }
 
     fn verify_hmac(&self, _data: &[u8], _hmac: &[u8]) -> Result<bool, CalError> {
-        todo!()
+        Err(CalError::not_implemented())
     }
 
     fn derive_key(&self, nonce: &[u8]) -> Result<KeyHandle, CalError> {
-        todo!();
+        Err(CalError::not_implemented())
     }
 
     fn extract_key(&self) -> Result<Vec<u8>, CalError> {
-        todo!()
+        Err(CalError::not_implemented())
     }
 
     fn delete(mut self) -> Result<(), CalError> {
@@ -198,7 +198,7 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
         Ok(output)
     }
 
-    fn encrypt_data(&self, encrypted_data: &[u8], iv: &[u8]) -> Result<Vec<u8>, CalError> {
+    fn encrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, CalError> {
         info!("encrypting");
 
         let vm = context::android_context()?.vm();
@@ -277,11 +277,11 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
     }
 
     fn extract_key(&self) -> Result<Vec<u8>, CalError> {
-        todo!()
+        Err(CalError::not_implemented())
     }
 
     fn start_dh_exchange(&self) -> Result<DHExchange, CalError> {
-        todo!()
+        Err(CalError::not_implemented())
     }
 
     fn delete(mut self) -> Result<(), CalError> {

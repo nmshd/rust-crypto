@@ -914,6 +914,7 @@ impl SoftwareDHExchange {
                 cipher,
                 ephemeral: self.spec.ephemeral,
                 signing_hash: self.spec.signing_hash,
+                non_exportable: self.spec.non_exportable,
             },
         };
 

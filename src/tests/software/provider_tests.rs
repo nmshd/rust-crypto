@@ -190,6 +190,7 @@ mod tests {
                         cipher: Cipher::AesGcm256,
                         ephemeral: true,
                         signing_hash: CryptoHash::Sha2_256,
+                        non_exportable: false,
                     },
                 };
                 let client_tx_key_handle = KeyHandle {
@@ -205,6 +206,7 @@ mod tests {
                         cipher: Cipher::AesGcm256,
                         ephemeral: true,
                         signing_hash: CryptoHash::Sha2_256,
+                        non_exportable: false,
                     },
                 };
                 let server_rx_key_handle = KeyHandle {
@@ -236,6 +238,7 @@ mod tests {
                         cipher: Cipher::AesGcm256,
                         ephemeral: true,
                         signing_hash: CryptoHash::Sha2_256,
+                        non_exportable: false,
                     },
                 };
                 let server_tx_key_handle = KeyHandle {
@@ -251,6 +254,7 @@ mod tests {
                         cipher: Cipher::AesGcm256,
                         ephemeral: true,
                         signing_hash: CryptoHash::Sha2_256,
+                        non_exportable: false,
                     },
                 };
                 let client_rx_key_handle = KeyHandle {
@@ -472,6 +476,7 @@ mod tests {
                 cipher: Cipher::XChaCha20Poly1305,
                 signing_hash: CryptoHash::Sha2_256,
                 ephemeral: true,
+                non_exportable: false,
             }
         }
 

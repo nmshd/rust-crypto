@@ -64,6 +64,7 @@ sealed class CalErrorKind with _$CalErrorKind {
     /// `true` if caused within this library. `false` if caused by another library.
     required bool internal,
   }) = CalErrorKind_InitializationError;
+  const factory CalErrorKind.nonExportable() = CalErrorKind_NonExportable;
 
   /// Algorithm requested is not supported by the provider.
   const factory CalErrorKind.unsupportedAlgorithm(String field0) =

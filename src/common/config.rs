@@ -97,6 +97,8 @@ pub struct KeySpec {
     pub signing_hash: CryptoHash,
     /// If set to `true`, the key is going to be deleted when the handle is dropped.
     pub ephemeral: bool,
+    /// If set to `true`, the key cannot be exported.
+    pub non_exportable: bool,
 }
 
 /// Struct used to configure key pairs.

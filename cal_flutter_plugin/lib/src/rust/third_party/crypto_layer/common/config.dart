@@ -109,10 +109,14 @@ class KeySpec {
   /// If set to `true`, the key is going to be deleted when the handle is dropped.
   final bool ephemeral;
 
+  /// If set to `true`, the key cannot be exported.
+  final bool nonExportable;
+
   const KeySpec({
     required this.cipher,
     required this.signingHash,
     required this.ephemeral,
+    required this.nonExportable,
   });
 
   static Future<KeySpec> default_() =>
@@ -120,7 +124,10 @@ class KeySpec {
 
   @override
   int get hashCode =>
-      cipher.hashCode ^ signingHash.hashCode ^ ephemeral.hashCode;
+      cipher.hashCode ^
+      signingHash.hashCode ^
+      ephemeral.hashCode ^
+      nonExportable.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -129,7 +136,8 @@ class KeySpec {
           runtimeType == other.runtimeType &&
           cipher == other.cipher &&
           signingHash == other.signingHash &&
-          ephemeral == other.ephemeral;
+          ephemeral == other.ephemeral &&
+          nonExportable == other.nonExportable;
 }
 
 /// Capabilities of a Provider
