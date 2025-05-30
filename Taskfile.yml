@@ -73,3 +73,10 @@ tasks:
     dir: ./flutter_app/
     cmds:
       - flutter run
+
+  test-flutter:
+    desc: Run tests for the example app, testing the rust-dart bindings
+    aliases: [testf]
+    dir: ./flutter_app/
+    cmds:
+      - flutter test integration_test/cal_test.dart
