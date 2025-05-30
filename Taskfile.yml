@@ -37,6 +37,7 @@ tasks:
     dir: ./cal_flutter_plugin/
     cmds:
       - flutter_rust_bridge_codegen generate --rust-preamble "use std::future::Future; use std::pin::Pin; use crypto_layer::common::config::DynFuture;"
+      - flutter pub run build_runner build
 
   test:
     desc: Execute non interactive tests.

@@ -79,10 +79,7 @@ abstract class KeyPairHandle implements RustOpaqueInterface {
   Future<void> delete();
 
   /// Abstraction of asymmetric key pair handles.
-  Future<Uint8List> encryptData({
-    required List<int> data,
-    required List<int> iv,
-  });
+  Future<Uint8List> encryptData({required List<int> data});
 
   /// Abstraction of asymmetric key pair handles.
   Future<Uint8List> extractKey();

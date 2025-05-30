@@ -183,7 +183,6 @@ abstract class RustLibApi extends BaseApi {
   Future<Uint8List> cryptoLayerCommonKeyPairHandleEncryptData({
     required KeyPairHandle that,
     required List<int> data,
-    required List<int> iv,
   });
 
   Future<Uint8List> cryptoLayerCommonKeyPairHandleExtractKey({
@@ -1246,7 +1245,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   Future<Uint8List> cryptoLayerCommonKeyPairHandleEncryptData({
     required KeyPairHandle that,
     required List<int> data,
-    required List<int> iv,
   }) {
     return handler.executeNormal(
       NormalTask(
@@ -1257,7 +1255,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             serializer,
           );
           sse_encode_list_prim_u_8_loose(data, serializer);
-          sse_encode_list_prim_u_8_loose(iv, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -1271,7 +1268,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
               sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError,
         ),
         constMeta: kCryptoLayerCommonKeyPairHandleEncryptDataConstMeta,
-        argValues: [that, data, iv],
+        argValues: [that, data],
         apiImpl: this,
       ),
     );
@@ -1280,7 +1277,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCryptoLayerCommonKeyPairHandleEncryptDataConstMeta =>
       const TaskConstMeta(
         debugName: "KeyPairHandle_encrypt_data",
-        argNames: ["that", "data", "iv"],
+        argNames: ["that", "data"],
       );
 
   @override
@@ -3383,10 +3380,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           internal: dco_decode_bool(raw[2]),
         );
       case 6:
-        return CalErrorKind_UnsupportedAlgorithm(dco_decode_String(raw[1]));
+        return CalErrorKind_NonExportable();
       case 7:
-        return CalErrorKind_EphemeralKeyError();
+        return CalErrorKind_UnsupportedAlgorithm(dco_decode_String(raw[1]));
       case 8:
+        return CalErrorKind_EphemeralKeyError();
+      case 9:
         return CalErrorKind_Other();
       default:
         throw Exception("unreachable");
@@ -3451,12 +3450,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   KeySpec dco_decode_key_spec(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 3)
-      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    if (arr.length != 4)
+      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
     return KeySpec(
       cipher: dco_decode_cipher(arr[0]),
       signingHash: dco_decode_crypto_hash(arr[1]),
       ephemeral: dco_decode_bool(arr[2]),
+      nonExportable: dco_decode_bool(arr[3]),
     );
   }
 
@@ -4229,11 +4229,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           internal: var_internal,
         );
       case 6:
+        return CalErrorKind_NonExportable();
+      case 7:
         var var_field0 = sse_decode_String(deserializer);
         return CalErrorKind_UnsupportedAlgorithm(var_field0);
-      case 7:
-        return CalErrorKind_EphemeralKeyError();
       case 8:
+        return CalErrorKind_EphemeralKeyError();
+      case 9:
         return CalErrorKind_Other();
       default:
         throw UnimplementedError('');
@@ -4309,10 +4311,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_cipher = sse_decode_cipher(deserializer);
     var var_signingHash = sse_decode_crypto_hash(deserializer);
     var var_ephemeral = sse_decode_bool(deserializer);
+    var var_nonExportable = sse_decode_bool(deserializer);
     return KeySpec(
       cipher: var_cipher,
       signingHash: var_signingHash,
       ephemeral: var_ephemeral,
+      nonExportable: var_nonExportable,
     );
   }
 
@@ -5247,13 +5251,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_i_32(5, serializer);
         sse_encode_String(description, serializer);
         sse_encode_bool(internal, serializer);
-      case CalErrorKind_UnsupportedAlgorithm(field0: final field0):
+      case CalErrorKind_NonExportable():
         sse_encode_i_32(6, serializer);
+      case CalErrorKind_UnsupportedAlgorithm(field0: final field0):
+        sse_encode_i_32(7, serializer);
         sse_encode_String(field0, serializer);
       case CalErrorKind_EphemeralKeyError():
-        sse_encode_i_32(7, serializer);
-      case CalErrorKind_Other():
         sse_encode_i_32(8, serializer);
+      case CalErrorKind_Other():
+        sse_encode_i_32(9, serializer);
     }
   }
 
@@ -5313,6 +5319,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_cipher(self.cipher, serializer);
     sse_encode_crypto_hash(self.signingHash, serializer);
     sse_encode_bool(self.ephemeral, serializer);
+    sse_encode_bool(self.nonExportable, serializer);
   }
 
   @protected
@@ -5911,14 +5918,10 @@ class KeyPairHandleImpl extends RustOpaque implements KeyPairHandle {
       RustLib.instance.api.cryptoLayerCommonKeyPairHandleDelete(that: this);
 
   /// Abstraction of asymmetric key pair handles.
-  Future<Uint8List> encryptData({
-    required List<int> data,
-    required List<int> iv,
-  }) => RustLib.instance.api.cryptoLayerCommonKeyPairHandleEncryptData(
-    that: this,
-    data: data,
-    iv: iv,
-  );
+  Future<Uint8List> encryptData({required List<int> data}) => RustLib
+      .instance
+      .api
+      .cryptoLayerCommonKeyPairHandleEncryptData(that: this, data: data);
 
   /// Abstraction of asymmetric key pair handles.
   Future<Uint8List> extractKey() =>
