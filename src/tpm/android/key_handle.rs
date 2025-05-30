@@ -1,3 +1,6 @@
+use super::utils::get_cipher_name;
+use crate::software::key_handle::id_from_buffer;
+use crate::tpm::android::utils::{get_cipher_padding, get_mode_name};
 use crate::{
     common::{
         config::{KeyPairSpec, KeySpec},
@@ -16,7 +19,10 @@ use crate::{
         ANDROID_KEYSTORE,
     },
 };
-
+use anyhow::anyhow;
+use blake2::Blake2bVar;
+use digest::Update;
+use digest::VariableOutput;
 use robusta_jni::jni::{objects::JObject, JavaVM};
 use tracing::{debug, info};
 
@@ -72,6 +78,8 @@ impl KeyHandleImpl for AndroidKeyHandle {
     }
 
     fn decrypt_data(&self, encrypted_data: &[u8], iv: &[u8]) -> Result<Vec<u8>, CalError> {
+        info!("decrypting");
+
         let vm = context::android_context()?.vm();
         let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
         let env = vm.attach_current_thread().err_internal()?;
@@ -100,7 +108,7 @@ impl KeyHandleImpl for AndroidKeyHandle {
         Ok(decrypted)
     }
 
-    fn hmac(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
+    fn hmac(&self, _data: &[u8]) -> Result<Vec<u8>, CalError> {
         Err(CalError::not_implemented())
     }
 
@@ -109,7 +117,97 @@ impl KeyHandleImpl for AndroidKeyHandle {
     }
 
     fn derive_key(&self, nonce: &[u8]) -> Result<KeyHandle, CalError> {
-        Err(CalError::not_implemented())
+        info!("deriving key");
+        let vm = context::android_context()?.vm();
+        let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
+        let env = vm.attach_current_thread().err_internal()?;
+
+        // encrypt nonce with existing key, re-use the same nonce
+        let encrypted_nonce = self.encrypt_with_iv(nonce, nonce)?;
+
+        let mut spec = self.spec.clone();
+        spec.ephemeral = true;
+        let key_length = spec.cipher.len();
+
+        let mut hasher = Blake2bVar::new(key_length).map_err(|e| {
+            let cal_err = CalError::bad_parameter(
+                "Blake2b failed to initialize".to_owned(),
+                false,
+                Some(anyhow!(e)),
+            );
+            tracing::error!(err = %cal_err, "Failed Blake2b init.");
+            cal_err
+        })?;
+
+        hasher.update(&encrypted_nonce);
+
+        let mut derived_key = vec![0u8; key_length];
+
+        hasher
+            .finalize_variable(derived_key.as_mut_slice())
+            .map_err(|e| {
+                let cal_err = CalError::bad_parameter(
+                    "Blake2b failed to write hash.".to_owned(),
+                    false,
+                    Some(anyhow!(e)),
+                );
+                tracing::error!(err = %cal_err, "Failed Blake2b init.");
+                cal_err
+            })?;
+
+        let id = id_from_buffer(nonce)?;
+
+        let jderived_key = env.byte_array_from_slice(&derived_key).err_internal()?;
+        let algorithm = get_cipher_name(spec.cipher)?;
+        let jalgorithm = env.new_string(algorithm).err_internal()?;
+        let key = env
+            .new_object(
+                "javax/crypto/spec/SecretKeySpec",
+                "([BLjava/lang/String;)V",
+                &[jderived_key.into(), jalgorithm.into()],
+            )
+            .err_internal()?;
+
+        let key_entry =
+            wrapper::key_store::key_entry::SecretKeyEntry::new(&env, key).err_internal()?;
+
+        let key_store = wrapper::key_store::store::jni::KeyStore::getInstance(
+            &env,
+            ANDROID_KEYSTORE.to_owned(),
+        )
+        .err_internal()?;
+        key_store.load(&env, None).err_internal()?;
+
+        let protections =
+            wrapper::key_generation::protections_builder::ProtectionsBuilder::new(&env, 3)
+                .err_internal()?
+                .set_block_modes(&env, vec![get_mode_name(spec.cipher)?])
+                .err_internal()?
+                .set_encryption_paddings(&env, vec![get_cipher_padding(spec.cipher)?.into()])
+                .err_internal()?
+                .set_randomized_encryption_required(&env, false)
+                .err_internal()?
+                .set_is_strongbox_backed(&env, false)
+                .err_internal()?
+                .build(&env)
+                .err_internal()?;
+
+        key_store
+            .set_entry(
+                &env,
+                id.clone(),
+                key_entry.raw.as_obj(),
+                Some(protections.raw.as_obj()),
+            )
+            .err_internal()?;
+
+        Ok(KeyHandle {
+            implementation: Into::into(AndroidKeyHandle {
+                key_id: id,
+                spec,
+                storage_manager: self.storage_manager.clone(),
+            }),
+        })
     }
 
     fn extract_key(&self) -> Result<Vec<u8>, CalError> {

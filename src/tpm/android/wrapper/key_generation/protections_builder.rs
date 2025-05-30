@@ -1,18 +1,18 @@
-use crate::tpm::android::wrapper::key_generation::key_gen_parameter_spec::jni::KeyGenParameterSpec;
-
 use robusta_jni::jni::errors::Result as JniResult;
 use robusta_jni::jni::objects::{AutoLocal, JObject, JValue};
 use robusta_jni::jni::sys::jsize;
 use robusta_jni::jni::JNIEnv;
 
+use super::key_protection::jni::KeyProtection;
+
 /// Builder for creating `KeyGenParameterSpec` objects.
 /// This class is an inner class of `KeyGenParameterSpec`. For that reason, it could not
 /// be implemented using the help of `robusta_jni`. `robusta_jni` does not support inner classes.
-pub(crate) struct Builder<'env: 'borrow, 'borrow> {
+pub(crate) struct ProtectionsBuilder<'env: 'borrow, 'borrow> {
     raw: AutoLocal<'env, 'borrow>,
 }
 
-impl<'env: 'borrow, 'borrow> Builder<'env, 'borrow> {
+impl<'env: 'borrow, 'borrow> ProtectionsBuilder<'env, 'borrow> {
     /// Creates a new `Builder` instance.
     ///
     /// # Arguments
@@ -24,15 +24,10 @@ impl<'env: 'borrow, 'borrow> Builder<'env, 'borrow> {
     /// # Returns
     ///
     /// A `JniResult` containing the new `Builder` instance.
-    pub(crate) fn new(
-        env: &'borrow JNIEnv<'env>,
-        keystore_alias: String,
-        purposes: i32,
-    ) -> JniResult<Self> {
-        let class = env.find_class("android/security/keystore/KeyGenParameterSpec$Builder")?;
-        let jstring_keystore_alias = env.new_string(keystore_alias)?;
-        let args = [Into::into(jstring_keystore_alias), JValue::from(purposes)];
-        let obj = env.new_object(class, "(Ljava/lang/String;I)V", &args)?;
+    pub(crate) fn new(env: &'borrow JNIEnv<'env>, purposes: i32) -> JniResult<Self> {
+        let class = env.find_class("android/security/keystore/KeyProtection$Builder")?;
+        let args = [JValue::from(purposes)];
+        let obj = env.new_object(class, "(I)V", &args)?;
         Ok(Self {
             raw: AutoLocal::new(env, Into::<JObject>::into(obj)),
         })
@@ -65,7 +60,7 @@ impl<'env: 'borrow, 'borrow> Builder<'env, 'borrow> {
         let result = env.call_method(
             self.raw.as_obj(),
             "setDigests",
-            "([Ljava/lang/String;)Landroid/security/keystore/KeyGenParameterSpec$Builder;",
+            "([Ljava/lang/String;)Landroid/security/keystore/KeyProtection$Builder;",
             &[digest_array.into()],
         )?;
         self.raw = AutoLocal::new(env, result.l()?);
@@ -99,7 +94,7 @@ impl<'env: 'borrow, 'borrow> Builder<'env, 'borrow> {
         let result = env.call_method(
             self.raw.as_obj(),
             "setEncryptionPaddings",
-            "([Ljava/lang/String;)Landroid/security/keystore/KeyGenParameterSpec$Builder;",
+            "([Ljava/lang/String;)Landroid/security/keystore/KeyProtection$Builder;",
             &[padding_array.into()],
         )?;
         self.raw = AutoLocal::new(env, result.l()?);
@@ -133,7 +128,7 @@ impl<'env: 'borrow, 'borrow> Builder<'env, 'borrow> {
         let result = env.call_method(
             self.raw.as_obj(),
             "setSignaturePaddings",
-            "([Ljava/lang/String;)Landroid/security/keystore/KeyGenParameterSpec$Builder;",
+            "([Ljava/lang/String;)Landroid/security/keystore/KeyProtection$Builder;",
             &[padding_array.into()],
         )?;
         self.raw = AutoLocal::new(env, result.l()?);
@@ -167,61 +162,9 @@ impl<'env: 'borrow, 'borrow> Builder<'env, 'borrow> {
         let result = env.call_method(
             self.raw.as_obj(),
             "setBlockModes",
-            "([Ljava/lang/String;)Landroid/security/keystore/KeyGenParameterSpec$Builder;",
+            "([Ljava/lang/String;)Landroid/security/keystore/KeyProtection$Builder;",
             &[block_mode_array.into()],
         )?;
-        self.raw = AutoLocal::new(env, result.l()?);
-        Ok(self)
-    }
-
-    /// Sets the key size for the key.
-    ///
-    /// # Arguments
-    ///
-    /// * `self` - The `Builder` instance.
-    /// * `env` - The JNI environment.
-    /// * `key_size` - The key size to set.
-    ///
-    /// # Returns
-    ///
-    /// A `JniResult` containing the updated `Builder` instance.
-    pub(crate) fn set_key_size(
-        mut self,
-        env: &'borrow JNIEnv<'env>,
-        key_size: i32,
-    ) -> JniResult<Self> {
-        let result = env.call_method(
-            self.raw.as_obj(),
-            "setKeySize",
-            "(I)Landroid/security/keystore/KeyGenParameterSpec$Builder;",
-            &[JValue::Int(key_size)],
-        )?;
-        self.raw = AutoLocal::new(env, result.l()?);
-        Ok(self)
-    }
-
-    /// Sets the algorithm parameter specification for the key.
-    ///
-    /// # Arguments
-    ///
-    /// * `self` - The `Builder` instance.
-    /// * `env` - The JNI environment.
-    /// * `spec` - The algorithm parameter specification to set.
-    ///
-    /// # Returns
-    ///
-    /// A `JniResult` containing the updated `Builder` instance.
-    pub(crate) fn set_algorithm_parameter_spec(
-        mut self,
-        env: &'borrow JNIEnv<'env>,
-        spec: JObject,
-    ) -> JniResult<Self> {
-        let result = env.call_method(
-        self.raw.as_obj(),
-        "setAlgorithmParameterSpec",
-        "(Ljavax/crypto/spec/AlgorithmParameterSpec;)Landroid/security/keystore/KeyGenParameterSpec$Builder;",
-        &[JValue::Object(spec)],
-    )?;
         self.raw = AutoLocal::new(env, result.l()?);
         Ok(self)
     }
@@ -245,7 +188,7 @@ impl<'env: 'borrow, 'borrow> Builder<'env, 'borrow> {
         let result = env.call_method(
             self.raw.as_obj(),
             "setIsStrongBoxBacked",
-            "(Z)Landroid/security/keystore/KeyGenParameterSpec$Builder;",
+            "(Z)Landroid/security/keystore/KeyProtection$Builder;",
             &[JValue::Bool(is_strongbox_backed.into())],
         )?;
         self.raw = AutoLocal::new(env, result.l()?);
@@ -260,7 +203,7 @@ impl<'env: 'borrow, 'borrow> Builder<'env, 'borrow> {
         let result = env.call_method(
             self.raw.as_obj(),
             "setRandomizedEncryptionRequired",
-            "(Z)Landroid/security/keystore/KeyGenParameterSpec$Builder;",
+            "(Z)Landroid/security/keystore/KeyProtection$Builder;",
             &[JValue::Bool(is_strongbox_backed.into())],
         )?;
         self.raw = AutoLocal::new(env, result.l()?);
@@ -280,14 +223,14 @@ impl<'env: 'borrow, 'borrow> Builder<'env, 'borrow> {
     pub(crate) fn build(
         self,
         env: &'borrow JNIEnv<'env>,
-    ) -> JniResult<KeyGenParameterSpec<'env, 'borrow>> {
+    ) -> JniResult<KeyProtection<'env, 'borrow>> {
         let result = env.call_method(
             self.raw.as_obj(),
             "build",
-            "()Landroid/security/keystore/KeyGenParameterSpec;",
+            "()Landroid/security/keystore/KeyProtection;",
             &[],
         )?;
-        Ok(KeyGenParameterSpec {
+        Ok(KeyProtection {
             raw: AutoLocal::new(env, result.l()?),
         })
     }

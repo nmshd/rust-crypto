@@ -62,7 +62,7 @@ impl SoftwareKeyHandle {
 /// Hashes and encodes a buffer to a string.
 ///
 /// This is meant to generate deterministic ids from variable length nonces and contexts in derive key.
-fn id_from_buffer(buff: &[u8]) -> Result<String, CalError> {
+pub(crate) fn id_from_buffer(buff: &[u8]) -> Result<String, CalError> {
     // `digest` and `blake2` crate have both update functions that get each other int the way.
     use blake2::{Blake2b, Digest};
     use digest::consts::U8;
