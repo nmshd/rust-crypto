@@ -14,10 +14,13 @@ use sha2::Sha256;
 
 type HmacSha256 = Hmac<Sha256>;
 
-use crate::common::{
-    config::{AdditionalConfig, AllKeysFn, DeleteFn, GetFn, Spec, StoreFn},
-    error::{CalError, KeyType},
-    KeyHandle, KeyPairHandle,
+use crate::{
+    common::{
+        config::{AdditionalConfig, AllKeysFn, DeleteFn, GetFn, Spec, StoreFn},
+        error::{CalError, KeyType},
+        KeyHandle, KeyPairHandle,
+    },
+    storage::storage_backend::StorageBackendExplicit,
 };
 
 mod key;
@@ -66,7 +69,7 @@ enum ChecksumProvider {
 pub(crate) struct StorageManager {
     checksum_provider: ChecksumProvider,
     key_handle: Option<Box<KeyHandle>>,
-    storage: Arc<dyn StorageBackend>,
+    storage: StorageBackendExplicit,
     scope: String,
 }
 

@@ -1,9 +1,13 @@
 use std::fmt::Debug;
 
+use enum_dispatch::enum_dispatch;
 use thiserror::Error;
 
 mod file_store;
 mod kv_store;
+
+use file_store::FileStorageBackend;
+use kv_store::KvStorageBackend;
 
 #[derive(Debug, Error)]
 pub enum StorageBackendError {
@@ -37,9 +41,28 @@ pub enum StorageBackendError {
     },
 }
 
+#[enum_dispatch]
 pub trait StorageBackend: Debug {
     fn store(&self, key: String, data: &[u8]) -> Result<(), StorageBackendError>;
     fn get(&self, key: String) -> Result<Vec<u8>, StorageBackendError>;
     fn delete(&self, key: String) -> Result<(), StorageBackendError>;
     fn keys(&self) -> Result<Vec<String>, StorageBackendError>;
+}
+
+#[enum_dispatch(StorageBackend)]
+#[derive(Clone)]
+pub enum StorageBackendExplicit {
+    FileStorageBackend,
+    KvStorageBackend,
+}
+
+impl Debug for StorageBackendExplicit {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            StorageBackendExplicit::KvStorageBackend(_) => {
+                f.debug_struct("KvStorageBackend").finish()
+            }
+            StorageBackendExplicit::FileStorageBackend(file) => writeln!(f, "{:?}", file),
+        }
+    }
 }
