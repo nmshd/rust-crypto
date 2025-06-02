@@ -252,6 +252,21 @@ impl<'env: 'borrow, 'borrow> Builder<'env, 'borrow> {
         Ok(self)
     }
 
+    pub(crate) fn set_randomized_encryption_required(
+        mut self,
+        env: &'borrow JNIEnv<'env>,
+        is_strongbox_backed: bool,
+    ) -> JniResult<Self> {
+        let result = env.call_method(
+            self.raw.as_obj(),
+            "setRandomizedEncryptionRequired",
+            "(Z)Landroid/security/keystore/KeyGenParameterSpec$Builder;",
+            &[JValue::Bool(is_strongbox_backed.into())],
+        )?;
+        self.raw = AutoLocal::new(env, result.l()?);
+        Ok(self)
+    }
+
     /// Builds the `KeyGenParameterSpec` object.
     ///
     /// # Arguments

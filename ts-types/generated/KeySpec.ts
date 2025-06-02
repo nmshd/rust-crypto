@@ -19,4 +19,8 @@ export type KeySpec = {
    * If set to `true`, the key is going to be deleted when the handle is dropped.
    */
   ephemeral: boolean;
+  /**
+   * If set to `true`, the key cannot be exported.
+   */
+  non_exportable: boolean;
 };

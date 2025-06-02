@@ -130,7 +130,7 @@ impl KeyPairHandleImpl for StubKeyPairHandle {
         Ok(data == signature)
     }
 
-    fn encrypt_data(&self, data: &[u8], iv: &[u8]) -> Result<Vec<u8>, CalError> {
+    fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
         todo!()
     }
 

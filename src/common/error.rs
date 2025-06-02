@@ -71,6 +71,9 @@ pub enum CalErrorKind {
         internal: bool,
     },
 
+    #[error("Key or key pair is non exportable.")]
+    NonExportable,
+
     /// Algorithm requested is not supported by the provider.
     #[error("Unsupported Algorithm: {0}")]
     UnsupportedAlgorithm(String),
@@ -180,6 +183,13 @@ impl CalError {
                 internal: true,
             },
             source: anyhow!("Initialization Error"),
+        }
+    }
+
+    pub(crate) fn non_exportable() -> Self {
+        Self {
+            error_kind: CalErrorKind::NonExportable,
+            source: anyhow!("NonExportable Error"),
         }
     }
 

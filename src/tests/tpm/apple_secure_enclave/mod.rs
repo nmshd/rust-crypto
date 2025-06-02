@@ -15,9 +15,8 @@ static STORE: LazyLock<TestStore> = LazyLock::new(|| TestStore::new());
 fn test_create_apple_secure_provider_from_name() -> Result<()> {
     setup();
 
-    let _provider =
-        create_provider_from_name("APPLE_SECURE_ENCLAVE".to_owned(), STORE.impl_config())
-            .expect("Failed initializing apple secure provider.");
+    let _provider = create_provider_from_name("APPLE_SECURE_ENCLAVE", STORE.impl_config())
+        .expect("Failed initializing apple secure provider.");
 
     Ok(())
 }
@@ -26,15 +25,15 @@ fn test_create_apple_secure_provider_from_name() -> Result<()> {
 fn test_create_key_with_provider() -> Result<()> {
     setup();
 
-    let mut provider =
-        create_provider_from_name("APPLE_SECURE_ENCLAVE".to_owned(), STORE.impl_config())
-            .expect("Failed initializing apple secure provider.");
+    let mut provider = create_provider_from_name("APPLE_SECURE_ENCLAVE", STORE.impl_config())
+        .expect("Failed initializing apple secure provider.");
 
     let key_spec = KeyPairSpec {
         asym_spec: AsymmetricKeySpec::P256,
         cipher: None,
         signing_hash: CryptoHash::Sha2_256,
         ephemeral: false,
+        non_exportable: true,
     };
 
     let _key = provider.create_key_pair(key_spec)?;
@@ -48,9 +47,8 @@ fn test_create_key_with_provider() -> Result<()> {
 fn test_create_key_pair_sign_and_verify_data() -> Result<()> {
     setup();
 
-    let mut provider =
-        create_provider_from_name("APPLE_SECURE_ENCLAVE".to_owned(), STORE.impl_config())
-            .expect("Failed initializing apple secure provider.");
+    let mut provider = create_provider_from_name("APPLE_SECURE_ENCLAVE", STORE.impl_config())
+        .expect("Failed initializing apple secure provider.");
 
     let hashes = vec![
         CryptoHash::Sha2_224,
@@ -65,6 +63,7 @@ fn test_create_key_pair_sign_and_verify_data() -> Result<()> {
             cipher: None,
             signing_hash: hash,
             ephemeral: false,
+            non_exportable: true,
         };
 
         let key = provider.create_key_pair(key_spec)?;
@@ -87,15 +86,15 @@ fn test_load_key_pair() -> Result<()> {
     let id;
     let _key_cleanup;
     {
-        let mut provider =
-            create_provider_from_name("APPLE_SECURE_ENCLAVE".to_owned(), STORE.impl_config())
-                .expect("Failed initializing apple secure provider.");
+        let mut provider = create_provider_from_name("APPLE_SECURE_ENCLAVE", STORE.impl_config())
+            .expect("Failed initializing apple secure provider.");
 
         let key_spec = KeyPairSpec {
             asym_spec: AsymmetricKeySpec::P256,
             cipher: None,
             signing_hash: CryptoHash::Sha2_256,
             ephemeral: false,
+            non_exportable: true,
         };
 
         let key = provider.create_key_pair(key_spec)?;
@@ -104,9 +103,8 @@ fn test_load_key_pair() -> Result<()> {
         id = key.id()?;
     }
 
-    let mut provider =
-        create_provider_from_name("APPLE_SECURE_ENCLAVE".to_owned(), STORE.impl_config())
-            .expect("Failed initializing apple secure provider.");
+    let mut provider = create_provider_from_name("APPLE_SECURE_ENCLAVE", STORE.impl_config())
+        .expect("Failed initializing apple secure provider.");
 
     let key = provider.load_key_pair(id.clone())?;
 

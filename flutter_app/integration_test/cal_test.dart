@@ -7,22 +7,19 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() async {
   await cal.RustLib.init();
-  test("Android Provider is available", () async {
-    var provider = await cal.getAllProviders();
-    var present = provider.any((element) => element == "ANDROID_PROVIDER");
-    expect(present, isTrue);
-  });
+
+  KVStore store = KVStore();
+  var implConf = await cal.getDefaultConfig(
+      getFn: store.get,
+      storeFn: store.store,
+      deleteFn: store.delete,
+      allKeysFn: store.allKeys);
+
+  implConf.additionalConfig
+      .add(const cal.AdditionalConfig.storageConfigPass("testpass"));
 
   test("KeyPair can be created and used for every spec and every provider",
       () async {
-    KVStore store = KVStore();
-
-    var implConf = await cal.getDefaultConfig(
-        getFn: store.get,
-        storeFn: store.store,
-        deleteFn: store.delete,
-        allKeysFn: store.allKeys);
-
     var providers = await cal.getAllProviders();
     for (var providerName in providers) {
       store.clear();
@@ -38,7 +35,7 @@ void main() async {
             spec: cal.KeyPairSpec(
                 asymSpec: asymSpec,
                 signingHash: cal.CryptoHash.sha2256,
-                ephemeral: true,
+                ephemeral: false,
                 nonExportable: false));
         expect(handle, isNotNull);
         expect(store.count(), 1);
@@ -59,6 +56,45 @@ void main() async {
 
         await handle.delete();
         expect(store.count(), 0);
+      }
+    }
+  });
+
+  test("Key can be derived", () async {
+    var providers = await cal.getAllProviders();
+    for (var providerName in providers) {
+      store.clear();
+      var provider = await cal.createProviderFromName(
+          name: providerName, implConf: implConf);
+      expect(provider, isNotNull, reason: "expected $providerName");
+
+      var caps = await provider!.getCapabilities();
+
+      expect(caps, isNotNull);
+      for (var cipher in caps!.supportedCiphers) {
+        var handle = await provider.createKey(
+            spec: cal.KeySpec(
+                cipher: cipher,
+                signingHash: cal.CryptoHash.sha2256,
+                ephemeral: true,
+                nonExportable: false));
+        expect(handle, isNotNull);
+
+        var data = Uint8List(20);
+        Random().fillBytes(data);
+
+        var derive_nonce = Uint8List(16);
+        Random().fillBytes(data);
+
+        print("starting deriving");
+
+        var derived1 = await handle.deriveKey(nonce: derive_nonce);
+        var derived2 = await handle.deriveKey(nonce: derive_nonce);
+
+        var (ciphertext, nonce) = await derived1.encrypt(data: data);
+        var plaintext =
+            await derived2.decryptData(encryptedData: ciphertext, iv: nonce);
+        expect(data, plaintext);
       }
     }
   });

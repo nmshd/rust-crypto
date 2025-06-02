@@ -73,12 +73,7 @@ class _SigningPageState extends State<SigningPage> {
                 _keyIds = e.toList();
               }),
             });
-      } on cal.CalErrorImpl catch (e) {
-        debugPrint('Exception:\n$e');
-        var errorKind = await e.errorKind();
-        debugPrint("Error Kind: $errorKind");
-        var backtrace = await e.backtrace();
-        debugPrint('Back trace:\n $backtrace');
+      } catch (e) {
         rethrow;
       }
     }
@@ -95,12 +90,7 @@ class _SigningPageState extends State<SigningPage> {
           _keyPairHandle = keyPair;
           _publicKeyController.text = publicKey;
         });
-      } on cal.CalErrorImpl catch (e) {
-        debugPrint('Exception:\n$e');
-        var errorKind = await e.errorKind();
-        debugPrint("Error Kind: $errorKind");
-        var backtrace = await e.backtrace();
-        debugPrint('Back trace:\n $backtrace');
+      } catch (e) {
         rethrow;
       }
     }
@@ -114,12 +104,7 @@ class _SigningPageState extends State<SigningPage> {
       setState(() {
         _signature = base64Encode(signature);
       });
-    } on cal.CalErrorImpl catch (e) {
-      debugPrint('Exception:\n$e');
-      var errorKind = await e.errorKind();
-      debugPrint("Error Kind: $errorKind");
-      var backtrace = await e.backtrace();
-      debugPrint('Back trace:\n $backtrace');
+    } catch (e) {
       rethrow;
     }
   }

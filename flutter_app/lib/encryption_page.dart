@@ -52,7 +52,8 @@ class _EncryptionPageState extends State<EncryptionPage> {
       var spec = cal.KeySpec(
           cipher: _cipherChoice!,
           signingHash: cal.CryptoHash.sha2256,
-          ephemeral: false);
+          ephemeral: false,
+          nonExportable: false);
       var key = await (await widget.provider!).createKey(spec: spec);
       setState(() {
         _keyHandle = key;
@@ -73,12 +74,7 @@ class _EncryptionPageState extends State<EncryptionPage> {
         setState(() {
           _keyHandle = key;
         });
-      } on cal.CalErrorImpl catch (e) {
-        debugPrint('Exception:\n$e');
-        var errorKind = await e.errorKind();
-        debugPrint("Error Kind: $errorKind");
-        var backtrace = await e.backtrace();
-        debugPrint('Back trace:\n $backtrace');
+      } catch (e) {
         rethrow;
       }
     }

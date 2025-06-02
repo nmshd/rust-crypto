@@ -62,7 +62,7 @@ impl SoftwareKeyHandle {
 /// Hashes and encodes a buffer to a string.
 ///
 /// This is meant to generate deterministic ids from variable length nonces and contexts in derive key.
-fn id_from_buffer(buff: &[u8]) -> Result<String, CalError> {
+pub(crate) fn id_from_buffer(buff: &[u8]) -> Result<String, CalError> {
     // `digest` and `blake2` crate have both update functions that get each other int the way.
     use blake2::{Blake2b, Digest};
     use digest::consts::U8;
@@ -321,7 +321,11 @@ impl KeyHandleImpl for SoftwareKeyHandle {
     }
 
     fn extract_key(&self) -> Result<Vec<u8>, CalError> {
-        Ok(self.key.clone())
+        if self.spec.non_exportable {
+            Err(CalError::non_exportable())
+        } else {
+            Ok(self.key.clone())
+        }
     }
 
     fn id(&self) -> Result<String, CalError> {
@@ -415,11 +419,11 @@ impl KeyPairHandleImpl for SoftwareKeyPairHandle {
     }
 
     fn encrypt_data(&self, _data: &[u8]) -> Result<Vec<u8>, CalError> {
-        todo!("Encryption not supported for ECC keys")
+        Err(CalError::not_implemented())
     }
 
     fn decrypt_data(&self, _encrypted_data: &[u8]) -> Result<Vec<u8>, CalError> {
-        todo!("Decryption not supported for ECC keys")
+        Err(CalError::not_implemented())
     }
 
     fn get_public_key(&self) -> Result<Vec<u8>, CalError> {
@@ -432,11 +436,7 @@ impl KeyPairHandleImpl for SoftwareKeyPairHandle {
                 .clone()
                 .ok_or_else(|| CalError::missing_key(self.key_id.clone(), KeyType::Private))
         } else {
-            Err(CalError::failed_operation(
-                "The private key is not exportable".to_string(),
-                true,
-                None,
-            ))
+            Err(CalError::non_exportable())
         }
     }
 

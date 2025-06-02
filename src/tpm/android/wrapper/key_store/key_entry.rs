@@ -2,7 +2,7 @@ use robusta_jni::jni::objects::{JObject, JValue};
 use robusta_jni::jni::{errors::Result, objects::AutoLocal, JNIEnv};
 
 pub(crate) struct SecretKeyEntry<'env: 'borrow, 'borrow> {
-    raw: AutoLocal<'env, 'borrow>,
+    pub(crate) raw: AutoLocal<'env, 'borrow>,
 }
 
 impl<'env: 'borrow, 'borrow> SecretKeyEntry<'env, 'borrow> {

@@ -142,6 +142,8 @@ impl ProviderImpl for AndroidProvider {
             .set_encryption_paddings(&env, vec![get_cipher_padding(spec.cipher)?.into()])
             .err_internal()?
             .set_key_size(&env, get_key_size(spec.cipher)?)
+            .err_internal()?
+            .set_randomized_encryption_required(&env, false)
             .err_internal()?;
 
         kps_builder = kps_builder
@@ -331,21 +333,48 @@ impl ProviderImpl for AndroidProvider {
 
         let id = nanoid!(10);
 
-        let key = wrapper::key_generation::secret_key_spec::jni::SecretKeySpec::new(
-            &env,
-            data.to_vec(),
-            get_cipher_name(spec.cipher)?,
-        )
-        .err_internal()?;
+        let jdata = env.byte_array_from_slice(&data).err_internal()?;
+        let algorithm = get_cipher_name(spec.cipher)?;
+        let jalgorithm = env.new_string(algorithm).err_internal()?;
+        let key = env
+            .new_object(
+                "javax/crypto/spec/SecretKeySpec",
+                "([BLjava/lang/String;)V",
+                &[jdata.into(), jalgorithm.into()],
+            )
+            .err_internal()?;
+
+        let key_entry =
+            wrapper::key_store::key_entry::SecretKeyEntry::new(&env, key).err_internal()?;
 
         let key_store = wrapper::key_store::store::jni::KeyStore::getInstance(
             &env,
             ANDROID_KEYSTORE.to_owned(),
         )
         .err_internal()?;
+        key_store.load(&env, None).err_internal()?;
+
+        let protections =
+            wrapper::key_generation::protections_builder::ProtectionsBuilder::new(&env, 3)
+                .err_internal()?
+                .set_block_modes(&env, vec![get_mode_name(spec.cipher)?])
+                .err_internal()?
+                .set_encryption_paddings(&env, vec![get_cipher_padding(spec.cipher)?.into()])
+                .err_internal()?
+                .set_randomized_encryption_required(&env, false)
+                .err_internal()?
+                .set_is_strongbox_backed(&env, self.used_factory.secure_element)
+                .err_internal()?
+                .build(&env)
+                .err_internal()?;
 
         key_store
-            .set_entry(&env, id.clone(), key.raw.as_obj(), None)
+            .set_entry(
+                &env,
+                id.clone(),
+                key_entry.raw.as_obj(),
+                Some(protections.raw.as_obj()),
+            )
             .err_internal()?;
 
         let storage_data = KeyData {
