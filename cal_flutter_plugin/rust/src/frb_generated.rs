@@ -44,7 +44,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.9.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1296864754;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 828526276;
 
 // Section: executor
 
@@ -2454,6 +2454,68 @@ fn wire__crypto_layer__common__crypto__algorithms__encryption__cipher_default_im
         },
     )
 }
+fn wire__crate__api__crypto__createWithKVConfig_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "createWithKVConfig",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_get_fn =
+                decode_DartFn_Inputs_String_Output_opt_list_prim_u_8_strict_AnyhowException(
+                    <flutter_rust_bridge::DartOpaque>::sse_decode(&mut deserializer),
+                );
+            let api_store_fn =
+                decode_DartFn_Inputs_String_list_prim_u_8_strict_Output_bool_AnyhowException(
+                    <flutter_rust_bridge::DartOpaque>::sse_decode(&mut deserializer),
+                );
+            let api_delete_fn = decode_DartFn_Inputs_String_Output_unit_AnyhowException(
+                <flutter_rust_bridge::DartOpaque>::sse_decode(&mut deserializer),
+            );
+            let api_all_keys_fn = decode_DartFn_Inputs__Output_list_String_AnyhowException(
+                <flutter_rust_bridge::DartOpaque>::sse_decode(&mut deserializer),
+            );
+            let api_additional_config =
+                <Vec<crypto_layer::common::config::AdditionalConfig>>::sse_decode(
+                    &mut deserializer,
+                );
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, ()>(
+                    (move || async move {
+                        let output_ok = Result::<_, ()>::Ok(
+                            crate::api::crypto::createWithKVConfig(
+                                api_get_fn,
+                                api_store_fn,
+                                api_delete_fn,
+                                api_all_keys_fn,
+                                api_additional_config,
+                            )
+                            .await,
+                        )?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
 fn wire__crypto_layer__common__factory__create_provider_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -4248,18 +4310,19 @@ fn pde_ffi_dispatcher_primary_impl(
 47 => wire__crypto_layer__common__crypto__algorithms__key_derivation__argon_2_options_default_impl(port, ptr, rust_vec_len, data_len),
 48 => wire__crypto_layer__common__crypto__algorithms__encryption__asymmetric_key_spec_default_impl(port, ptr, rust_vec_len, data_len),
 49 => wire__crypto_layer__common__crypto__algorithms__encryption__cipher_default_impl(port, ptr, rust_vec_len, data_len),
-50 => wire__crypto_layer__common__factory__create_provider_impl(port, ptr, rust_vec_len, data_len),
-51 => wire__crypto_layer__common__factory__create_provider_from_name_impl(port, ptr, rust_vec_len, data_len),
-52 => wire__crypto_layer__common__crypto__algorithms__hashes__crypto_hash_default_impl(port, ptr, rust_vec_len, data_len),
-53 => wire__crypto_layer__common__factory__get_all_providers_impl(port, ptr, rust_vec_len, data_len),
-54 => wire__crate__api__crypto__get_default_config_impl(port, ptr, rust_vec_len, data_len),
-55 => wire__crypto_layer__common__factory__get_provider_capabilities_impl(port, ptr, rust_vec_len, data_len),
-56 => wire__crate__api__simple__init_app_impl(port, ptr, rust_vec_len, data_len),
-57 => wire__crypto_layer__common__crypto__algorithms__key_derivation__kdf_default_impl(port, ptr, rust_vec_len, data_len),
-58 => wire__crypto_layer__common__config__key_pair_spec_default_impl(port, ptr, rust_vec_len, data_len),
-59 => wire__crypto_layer__common__config__key_spec_default_impl(port, ptr, rust_vec_len, data_len),
-60 => wire__crypto_layer__common__crypto__pkcs__standards__oid_type_as_str_impl(port, ptr, rust_vec_len, data_len),
-61 => wire__crypto_layer__common__config__provider_impl_config_new_impl(port, ptr, rust_vec_len, data_len),
+50 => wire__crate__api__crypto__createWithKVConfig_impl(port, ptr, rust_vec_len, data_len),
+51 => wire__crypto_layer__common__factory__create_provider_impl(port, ptr, rust_vec_len, data_len),
+52 => wire__crypto_layer__common__factory__create_provider_from_name_impl(port, ptr, rust_vec_len, data_len),
+53 => wire__crypto_layer__common__crypto__algorithms__hashes__crypto_hash_default_impl(port, ptr, rust_vec_len, data_len),
+54 => wire__crypto_layer__common__factory__get_all_providers_impl(port, ptr, rust_vec_len, data_len),
+55 => wire__crate__api__crypto__get_default_config_impl(port, ptr, rust_vec_len, data_len),
+56 => wire__crypto_layer__common__factory__get_provider_capabilities_impl(port, ptr, rust_vec_len, data_len),
+57 => wire__crate__api__simple__init_app_impl(port, ptr, rust_vec_len, data_len),
+58 => wire__crypto_layer__common__crypto__algorithms__key_derivation__kdf_default_impl(port, ptr, rust_vec_len, data_len),
+59 => wire__crypto_layer__common__config__key_pair_spec_default_impl(port, ptr, rust_vec_len, data_len),
+60 => wire__crypto_layer__common__config__key_spec_default_impl(port, ptr, rust_vec_len, data_len),
+61 => wire__crypto_layer__common__crypto__pkcs__standards__oid_type_as_str_impl(port, ptr, rust_vec_len, data_len),
+62 => wire__crypto_layer__common__config__provider_impl_config_new_impl(port, ptr, rust_vec_len, data_len),
                         _ => unreachable!(),
                     }
 }
