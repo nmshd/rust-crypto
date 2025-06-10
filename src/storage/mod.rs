@@ -21,8 +21,8 @@ use crate::{
         KeyHandle, KeyPairHandle,
     },
     storage::{
-        encryption::EncryptionBackendExplicit,
-        signature::SignatureBackendExplicit,
+        encryption::{EncryptionBackend, EncryptionBackendError, EncryptionBackendExplicit},
+        signature::{SignatureBackend, SignatureBackendError, SignatureBackendExplicit},
         storage_backend::{StorageBackendError, StorageBackendExplicit},
     },
 };
@@ -39,10 +39,18 @@ pub enum StorageManagerError {
     #[error("A needed option was not supplied: {description}")]
     MissingProviderImplConfigOption { description: &'static str },
     #[error("Failed to initialize a storage backend: {description}")]
-    InitializingStorageBackend {
+    InitializeStorageBackend {
         source: StorageBackendError,
         description: &'static str,
     },
+    #[error("Failed to encrypt sensitive data.")]
+    Encrypt { source: EncryptionBackendError },
+    #[error("Failed serialization of data.")]
+    Serialize { source: rmp_serde::encode::Error },
+    #[error("Failed to sign data.")]
+    Sign { source: SignatureBackendError },
+    #[error("Failed to store data.")]
+    Store { source: StorageBackendError }
 }
 
 #[derive(Clone, Debug)]
@@ -84,66 +92,33 @@ impl StorageManager {
         id: impl AsRef<str>,
         data: KeyData,
     ) -> Result<(), StorageManagerError> {
-        // encrypt secret data if KeyHandle is available
-
-        let encrypted_data = KeyDataEncrypted {
-            id: data.id.clone(),
+        let key_data_encrypted = KeyDataEncrypted {
+            id: data.id,
             secret_data: data
                 .secret_data
-                .map(|secret| {
-                    self.key_handle
-                        .as_ref()
-                        .map(|key| {
-                            let (v, iv) = key
-                                .encrypt(&secret)
-                                .change_context(StorageManagerError::EncryptError)?;
-                            Result::<StorageField, _>::Ok(StorageField::Encrypted { data: v, iv })
-                        })
-                        .unwrap_or(Ok(StorageField::Raw(secret)))
-                })
-                .transpose()?,
+                .map(|e| self.encryption.encrypt(&e))
+                .transpose()
+                .map_err(|e| StorageManagerError::Encrypt { source: e })?,
             public_data: data.public_data,
             additional_data: data.additional_data,
             spec: data.spec,
         };
 
-        let encoded = serde_json::to_vec(&encrypted_data)
-            .change_context(StorageManagerError::FailedSerialization)?;
+        let key_data_encrypted_encoded = rmp_serde::to_vec(&key_data_encrypted)
+            .map_err(|e| StorageManagerError::Serialize { source: e })?;
 
-        // generate checksum
-        let (checksum, ctype) = match self.checksum_provider {
-            ChecksumProvider::KeyPairHandle(ref key_pair_handle) => {
-                let checksum = key_pair_handle
-                    .sign_data(&encoded)
-                    .change_context(StorageManagerError::FailedSigning)?;
-                (checksum, Signature::DSA)
-            }
-            ChecksumProvider::HMAC(ref pass) => {
-                let mut hmac = HmacSha256::new_from_slice(pass.as_bytes())
-                    .change_context(StorageManagerError::FailedSigning)?;
-                hmac.update(&encoded);
-                let result = hmac.finalize();
-                (result.into_bytes().to_vec(), Signature::HMAC)
-            }
-        };
+        let key_data_encrypted_encoded_signed = self
+            .signature
+            .sign(key_data_encrypted_encoded)
+            .map_err(|e| StorageManagerError::Sign { source: e })?;
 
-        let encoded = serde_json::to_vec(&SignedData {
-            data: encoded,
-            checksum,
-            signature: ctype,
-        })
-        .change_context(StorageManagerError::FailedDeserialization)?;
+        let key_data_encrypted_encoded_signed_serialized =
+            rmp_serde::to_vec(&key_data_encrypted_encoded_signed)
+                .map_err(|e| StorageManagerError::Serialize { source: e })?;
 
-        // choose storage Strategy
-        match self.storage {
-            Storage::KVStore(ref store) => store
-                .store(self.scope.clone(), id.as_ref(), encoded)
-                .change_context(StorageManagerError::FailedToStoreWithBackend),
-            Storage::FileStore(ref store) => store
-                .store(self.scope.clone(), id.as_ref(), encoded)
-                .change_context(StorageManagerError::FailedToStoreWithBackend),
-        }
+            self.storage.store(id, &key_data_encrypted_encoded_signed_serialized).map_err(|e| StorageManagerError::Store { source: e })
     }
+}
 
     pub(crate) fn get(&self, id: impl AsRef<str>) -> Result<KeyData, StorageManagerError> {
         let value = match self.storage {

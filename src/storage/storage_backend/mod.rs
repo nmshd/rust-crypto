@@ -99,7 +99,7 @@ impl StorageBackendExplicit {
 
         match filtered_config[0] {
             AdditionalConfig::FileStoreConfig { db_dir } => FileStorageBackend::new(db_dir)
-                .map_err(|e| StorageManagerError::InitializingStorageBackend {
+                .map_err(|e| StorageManagerError::InitializeStorageBackend {
                     source: e,
                     description: "Failed to initialize the file storage backend.",
                 })
