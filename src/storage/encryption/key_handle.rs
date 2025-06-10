@@ -13,6 +13,14 @@ pub struct KeyHandleBackend {
     key_handle: Arc<KeyHandle>,
 }
 
+impl KeyHandleBackend {
+    pub fn new(key_handle: KeyHandle) -> Self {
+        Self {
+            key_handle: Arc::new(key_handle),
+        }
+    }
+}
+
 impl EncryptionBackend for KeyHandleBackend {
     fn encrypt(&self, data: &[u8]) -> Result<StorageField, super::EncryptionBackendError> {
         let (data, iv) = self

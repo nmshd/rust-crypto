@@ -32,7 +32,10 @@ mod signature;
 mod storage_backend;
 
 #[derive(Debug, Clone, Copy, Error)]
-pub enum StorageManagerError {}
+pub enum StorageManagerError {
+    #[error("Some options in the given provider implementation config are in conflict with each other: {description}")]
+    ConflictingProviderImplConfig { description: &'static str },
+}
 
 #[derive(Clone, Debug)]
 pub(crate) struct StorageManager {

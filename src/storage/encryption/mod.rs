@@ -2,12 +2,12 @@ use enum_dispatch::enum_dispatch;
 use thiserror::Error;
 
 use crate::{
-    prelude::CalError,
+    prelude::{AdditionalConfig, CalError, ProviderImplConfig},
     storage::{
         encryption::{
             key_handle::KeyHandleBackend, key_pair_handle::KeyPairHandleBackend, raw::RawBackend,
         },
-        StorageField,
+        StorageField, StorageManagerError,
     },
 };
 
@@ -38,4 +38,32 @@ pub enum EncryptionBackendExplicit {
     KeyPairHandleBackend,
     KeyHandleBackend,
     RawBackend,
+}
+
+impl EncryptionBackendExplicit {
+    pub fn new(provider_impl_config: &ProviderImplConfig) -> Result<Self, StorageManagerError> {
+        let mut encryption_backends =
+            provider_impl_config
+                .additional_config
+                .iter()
+                .filter_map(|e| match e {
+                    AdditionalConfig::StorageConfigSymmetricEncryption(handle) => Some(
+                        EncryptionBackendExplicit::from(KeyHandleBackend::new(handle.clone())),
+                    ),
+                    AdditionalConfig::StorageConfigAsymmetricEncryption(handle) => Some(
+                        EncryptionBackendExplicit::from(KeyPairHandleBackend::new(handle.clone())),
+                    ),
+                    _ => None,
+                });
+
+        let encryption_backend = encryption_backends
+            .next()
+            .unwrap_or_else(|| EncryptionBackendExplicit::from(RawBackend {}));
+
+        if encryption_backends.next().is_some() {
+            Err(StorageManagerError::ConflictingProviderImplConfig { description: "Expected either StorageConfigSymmetricEncryption OR StorageConfigAsymmetricEncryption, not both." })
+        } else {
+            Ok(encryption_backend)
+        }
+    }
 }
