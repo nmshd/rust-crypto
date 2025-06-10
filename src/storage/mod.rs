@@ -23,8 +23,8 @@ use crate::{
     storage::storage_backend::StorageBackendExplicit,
 };
 
+mod encryption;
 mod key;
-mod security;
 mod storage_backend;
 
 #[derive(Debug, Clone, Copy, Error)]
@@ -365,5 +365,6 @@ pub struct WithChecksum {
 #[derive(Serialize, Deserialize, Clone)]
 pub(crate) enum StorageField {
     Encrypted { data: Vec<u8>, iv: Vec<u8> },
+    EncryptedAsymmetric { data: Vec<u8> },
     Raw(Vec<u8>),
 }
