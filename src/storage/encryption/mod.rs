@@ -47,18 +47,18 @@ impl EncryptionBackendExplicit {
                 .additional_config
                 .iter()
                 .filter_map(|e| match e {
-                    AdditionalConfig::StorageConfigSymmetricEncryption(handle) => Some(
-                        EncryptionBackendExplicit::from(KeyHandleBackend::new(handle.clone())),
-                    ),
-                    AdditionalConfig::StorageConfigAsymmetricEncryption(handle) => Some(
-                        EncryptionBackendExplicit::from(KeyPairHandleBackend::new(handle.clone())),
-                    ),
+                    AdditionalConfig::StorageConfigSymmetricEncryption(handle) => {
+                        Some(Self::from(KeyHandleBackend::new(handle.clone())))
+                    }
+                    AdditionalConfig::StorageConfigAsymmetricEncryption(handle) => {
+                        Some(Self::from(KeyPairHandleBackend::new(handle.clone())))
+                    }
                     _ => None,
                 });
 
         let encryption_backend = encryption_backends
             .next()
-            .unwrap_or_else(|| EncryptionBackendExplicit::from(RawBackend {}));
+            .unwrap_or_else(|| Self::from(RawBackend {}));
 
         if encryption_backends.next().is_some() {
             Err(StorageManagerError::ConflictingProviderImplConfig { description: "Expected either StorageConfigSymmetricEncryption OR StorageConfigAsymmetricEncryption, not both." })

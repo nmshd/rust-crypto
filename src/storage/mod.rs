@@ -17,12 +17,13 @@ type HmacSha256 = Hmac<Sha256>;
 use crate::{
     common::{
         config::{AdditionalConfig, AllKeysFn, DeleteFn, GetFn, Spec, StoreFn},
-        error::{CalError, KeyType},
+        error::{self, CalError, KeyType},
         KeyHandle, KeyPairHandle,
     },
     storage::{
-        encryption::EncryptionBackendExplicit, signature::SignatureBackendExplicit,
-        storage_backend::StorageBackendExplicit,
+        encryption::EncryptionBackendExplicit,
+        signature::SignatureBackendExplicit,
+        storage_backend::{StorageBackendError, StorageBackendExplicit},
     },
 };
 
@@ -31,10 +32,17 @@ mod key;
 mod signature;
 mod storage_backend;
 
-#[derive(Debug, Clone, Copy, Error)]
+#[derive(Debug, Error)]
 pub enum StorageManagerError {
     #[error("Some options in the given provider implementation config are in conflict with each other: {description}")]
     ConflictingProviderImplConfig { description: &'static str },
+    #[error("A needed option was not supplied: {description}")]
+    MissingProviderImplConfigOption { description: &'static str },
+    #[error("Failed to initialize a storage backend: {description}")]
+    InitializingStorageBackend {
+        source: StorageBackendError,
+        description: &'static str,
+    },
 }
 
 #[derive(Clone, Debug)]

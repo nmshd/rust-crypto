@@ -9,6 +9,11 @@ mod kv_store;
 use file_store::FileStorageBackend;
 use kv_store::KvStorageBackend;
 
+use crate::{
+    prelude::{AdditionalConfig, ProviderImplConfig},
+    storage::StorageManagerError,
+};
+
 #[derive(Debug, Error)]
 pub enum StorageBackendError {
     #[error("Failed to store data: {description}")]
@@ -63,6 +68,59 @@ impl Debug for StorageBackendExplicit {
                 f.debug_struct("KvStorageBackend").finish()
             }
             StorageBackendExplicit::FileStorageBackend(file) => writeln!(f, "{:?}", file),
+        }
+    }
+}
+
+impl StorageBackendExplicit {
+    pub fn new(provider_impl_config: &ProviderImplConfig) -> Result<Self, StorageManagerError> {
+        let config: Vec<&AdditionalConfig> = provider_impl_config
+            .additional_config
+            .iter()
+            .filter(|e| {
+                matches!(
+                    e,
+                    AdditionalConfig::FileStoreConfig { .. }
+                        | AdditionalConfig::KVStoreConfig { .. }
+                )
+            })
+            .collect();
+
+        match config.len() {
+            0 => {
+                return Err(StorageManagerError::MissingProviderImplConfigOption {
+                    description:
+                        "No additional config for initializing a storage backend was given.",
+                })
+            }
+            2.. => {
+                return Err(StorageManagerError::ConflictingProviderImplConfig {
+                    description: "Expected either FileStoreConfig OR KVStoreConfig, not both.",
+                })
+            }
+            1 => {}
+        }
+
+        match config[0] {
+            AdditionalConfig::FileStoreConfig { db_dir } => FileStorageBackend::new(db_dir)
+                .map_err(|e| StorageManagerError::InitializingStorageBackend {
+                    source: e,
+                    description: "Failed to initialize the file storage backend.",
+                })
+                .map(Self::from),
+
+            AdditionalConfig::KVStoreConfig {
+                get_fn,
+                store_fn,
+                delete_fn,
+                all_keys_fn,
+            } => Ok(Self::from(KvStorageBackend {
+                get_fn: get_fn.clone(),
+                store_fn: store_fn.clone(),
+                delete_fn: delete_fn.clone(),
+                all_keys_fn: all_keys_fn.clone(),
+            })),
+            _ => unreachable!(),
         }
     }
 }

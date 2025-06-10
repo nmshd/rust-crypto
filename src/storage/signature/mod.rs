@@ -59,7 +59,9 @@ impl SignatureBackendExplicit {
             .unwrap_or_else(|| Self::from(NoneBackend {}));
 
         if encryption_backends.next().is_some() {
-            Err(StorageManagerError::ConflictingProviderImplConfig { description: "Expected either StorageConfigSymmetricEncryption OR StorageConfigAsymmetricEncryption, not both." })
+            Err(StorageManagerError::ConflictingProviderImplConfig {
+                description: "Expected either StorageConfigHMAC OR StorageConfigDSA, not both.",
+            })
         } else {
             Ok(encryption_backend)
         }
