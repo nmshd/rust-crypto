@@ -180,7 +180,7 @@ pub enum AdditionalConfig {
     )]
     /// Callback functions acting like a hashmap for storing key metadata.
     ///
-    /// Not supported by the NodeJS plugin.
+    /// Mutually exclusive with [AdditionalConfig::FileStoreConfig].
     KVStoreConfig {
         get_fn: GetFn,
         store_fn: StoreFn,
@@ -188,16 +188,32 @@ pub enum AdditionalConfig {
         all_keys_fn: AllKeysFn,
     },
     /// Configuration for the usage of the metadata file database.
+    ///
+    /// Mutually exclusive with [AdditionalConfig::KVStoreConfig].
     FileStoreConfig {
         /// Path to a directory where the database holding key metadata will be saved.
         db_dir: String,
     },
-    /// Used for verifying the integrity of the key metadata.
+    /// Enables integrity verification of key metadata.
+    ///
+    /// Mutually exclusive with [AdditionalConfig::StorageConfigDSA].
     StorageConfigHMAC(KeyHandle),
-    /// Used for verifying the integrity of the key metadata.
+    /// Enables integrity verification of key metadata.
+    ///
+    /// Mutually exclusive with [AdditionalConfig::StorageConfigHMAC].
     StorageConfigDSA(KeyPairHandle),
-    /// Used for verifying the integrity of the key metadata.
-    StorageConfigPass(String),
+    /// Enables encryption of sensitive key metadata.
+    ///
+    /// In case of the software provider, this enables encryption of secret keys.
+    ///
+    /// Mutually exclusive with [AdditionalConfig::StorageConfigAsymmetricEncryption].
+    StorageConfigSymmetricEncryption(KeyHandle),
+    /// Enables encryption of sensitive key metadata.
+    ///
+    /// In case of the software provider, this enables encryption of secret keys.
+    ///
+    /// Mutually exclusive with [AdditionalConfig::StorageConfigSymmetricEncryption].
+    StorageConfigAsymmetricEncryption(KeyPairHandle),
 }
 
 impl std::fmt::Debug for ProviderImplConfig {
