@@ -1,9 +1,19 @@
+use enum_dispatch::enum_dispatch;
 use thiserror::Error;
 
-use crate::{prelude::CalError, storage::StorageField};
+use crate::{
+    prelude::CalError,
+    storage::{
+        encryption::{
+            key_handle::KeyHandleBackend, key_pair_handle::KeyPairHandleBackend, raw::RawBackend,
+        },
+        StorageField,
+    },
+};
 
 mod key_handle;
 mod key_pair_handle;
+mod raw;
 
 #[derive(Debug, Error)]
 pub enum EncryptionBackendError {
@@ -15,8 +25,16 @@ pub enum EncryptionBackendError {
     WrongStorageField,
 }
 
+#[enum_dispatch]
 pub trait EncryptionBackend {
     fn encrypt(&self, data: &[u8]) -> Result<StorageField, EncryptionBackendError>;
 
     fn decrypt(&self, cipher: StorageField) -> Result<Vec<u8>, EncryptionBackendError>;
+}
+
+#[enum_dispatch(EncryptionBackend)]
+pub enum EncryptionBackendExplicit {
+    KeyPairHandleBackend,
+    KeyHandleBackend,
+    RawBackend,
 }
