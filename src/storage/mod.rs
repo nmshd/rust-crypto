@@ -3,6 +3,7 @@ use std::{cell::Cell, fmt, path::Path, sync::Arc};
 
 use anyhow::anyhow;
 use hmac::Mac;
+use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use sled::{open, Db};
 use storage_backend::StorageBackend;
@@ -11,6 +12,7 @@ use tracing::trace;
 
 use hmac::Hmac;
 use sha2::Sha256;
+use tracing_subscriber::registry::Scope;
 
 type HmacSha256 = Hmac<Sha256>;
 
@@ -22,6 +24,7 @@ use crate::{
     },
     storage::{
         encryption::{EncryptionBackend, EncryptionBackendError, EncryptionBackendExplicit},
+        key::{StorageManagerKey, StorageManagerKeyFactory},
         signature::{SignatureBackend, SignatureBackendError, SignatureBackendExplicit},
         storage_backend::{StorageBackendError, StorageBackendExplicit},
     },
@@ -59,6 +62,12 @@ pub enum StorageManagerError {
     Store { source: StorageBackendError },
     #[error("Failed to get data from storage backend.")]
     Get { source: StorageBackendError },
+    #[error("Failed to delete entry.")]
+    Delete { source: StorageBackendError },
+    #[error("Failed to create a scope for the storage manager.")]
+    Scope { source: anyhow::Error },
+    #[error("Failed to get key ids.")]
+    GetKeys { source: anyhow::Error },
 }
 
 #[derive(Clone, Debug)]
@@ -66,7 +75,7 @@ pub(crate) struct StorageManager {
     signature: SignatureBackendExplicit,
     encryption: EncryptionBackendExplicit,
     storage: StorageBackendExplicit,
-    scope: String,
+    scope: StorageManagerKeyFactory,
 }
 
 impl StorageManager {
@@ -74,7 +83,7 @@ impl StorageManager {
         scope: impl Into<String>,
         config: &[AdditionalConfig],
     ) -> Result<Option<Self>, StorageManagerError> {
-        let storage_backend = match StorageBackendExplicit::new(config) {
+        let storage = match StorageBackendExplicit::new(config) {
             Ok(e) => e,
             Err(e)
                 if matches!(
@@ -87,11 +96,23 @@ impl StorageManager {
             Err(e) => return Err(e),
         };
 
+        let signature = SignatureBackendExplicit::new(config)?;
+        let encryption = EncryptionBackendExplicit::new(config)?;
+        let scope = StorageManagerKeyFactory {
+            provider_scope: scope.into(),
+            encryption_scope: encryption
+                .scope()
+                .map_err(|e| StorageManagerError::Scope { source: anyhow!(e) })?,
+            signature_scope: signature
+                .scope()
+                .map_err(|e| StorageManagerError::Scope { source: anyhow!(e) })?,
+        };
+
         Ok(Some(Self {
-            signature: SignatureBackendExplicit::new(config)?,
-            encryption: EncryptionBackendExplicit::new(config)?,
-            storage: storage_backend,
-            scope: scope.into(),
+            signature,
+            encryption,
+            storage,
+            scope,
         }))
     }
 
@@ -124,15 +145,19 @@ impl StorageManager {
             rmp_serde::to_vec(&key_data_encrypted_encoded_signed)
                 .map_err(|e| StorageManagerError::Serialize { source: e })?;
 
+        let scoped_id = self.scope.scoped_key(id)?;
+
         self.storage
-            .store(id.into(), &key_data_encrypted_encoded_signed_serialized)
+            .store(scoped_id, &key_data_encrypted_encoded_signed_serialized)
             .map_err(|e| StorageManagerError::Store { source: e })
     }
 
     pub(crate) fn get(&self, id: impl Into<String>) -> Result<KeyData, StorageManagerError> {
+        let scoped_id = self.scope.scoped_key(id)?;
+
         let value = self
             .storage
-            .get(id.into())
+            .get(scoped_id)
             .map_err(|e| StorageManagerError::Get { source: e })?;
 
         let signed_data = rmp_serde::from_slice::<SignedData>(&value)
@@ -160,42 +185,24 @@ impl StorageManager {
         Ok(key_data)
     }
 
-    pub(crate) fn delete(&self, id: impl AsRef<str>) {
-        match self.storage {
-            Storage::KVStore(ref store) => store.delete(self.scope.clone(), id),
-            Storage::FileStore(ref store) => store.delete(self.scope.clone(), id),
-        }
+    pub(crate) fn delete(&self, id: impl Into<String>) -> Result<(), StorageManagerError> {
+        let scoped_id = self.scope.scoped_key(id)?;
+
+        self.storage
+            .delete(scoped_id)
+            .map_err(|e| StorageManagerError::Delete { source: e })
     }
 
     pub fn get_all_keys(&self) -> Vec<Result<(String, Spec), StorageManagerError>> {
-        // get keys from all available storage methods
-        let mut keys = Vec::new();
-
-        match self.storage {
-            Storage::KVStore(ref store) => {
-                keys.append(&mut store.get_all_keys(self.scope.clone()));
-            }
-            Storage::FileStore(ref store) => {
-                keys.append(&mut store.get_all_keys(self.scope.clone()));
-            }
-        }
-
-        keys.iter()
-            .map(|v| {
-                serde_json::from_slice::<SignedData>(v.as_slice())
-                    .change_context(StorageManagerError::FailedDeserialization)
-                    .attach_printable("Could not decode data blob.")
-            })
-            .map(|result| {
-                result.map(|with_checksum| {
-                    serde_json::from_slice::<KeyDataEncrypted>(with_checksum.data.as_slice())
-                        .change_context(StorageManagerError::FailedDeserialization)
-                        .attach_printable("Could not decode key data.")
-                })
-            })
-            .flatten()
-            .map(|result| result.map(|v| (v.id, v.spec)))
-            .collect()
+        self.storage
+            .keys()
+            .map_err(|e| StorageManagerError::GetKeys { source: anyhow!(e) })?
+            .into_iter()
+            .map(|e| match self.storage.get(e) {
+                Ok(signed_data) => //TODO
+            }))
+            .map(|e| StorageManagerKey::deserialize(e))
+            .process_results(|iter| iter.map(|e| e.key_id))
     }
 }
 

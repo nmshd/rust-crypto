@@ -37,4 +37,10 @@ impl EncryptionBackend for KeyPairHandleBackend {
             _ => Err(super::EncryptionBackendError::WrongStorageField),
         }
     }
+
+    fn scope(&self) -> Result<String, super::EncryptionBackendError> {
+        self.key_pair_handle
+            .id()
+            .map_err(|e| super::EncryptionBackendError::Scope { source: e })
+    }
 }

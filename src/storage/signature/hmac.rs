@@ -50,4 +50,10 @@ impl SignatureBackend for HmacBackend {
             _ => Err(SignatureBackendError::WrongSignatureType),
         }
     }
+
+    fn scope(&self) -> Result<String, SignatureBackendError> {
+        self.handle
+            .id()
+            .map_err(|e| SignatureBackendError::Scope { source: e })
+    }
 }

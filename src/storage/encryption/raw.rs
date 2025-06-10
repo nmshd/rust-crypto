@@ -17,4 +17,8 @@ impl EncryptionBackend for RawBackend {
     fn encrypt(&self, data: &[u8]) -> Result<StorageField, super::EncryptionBackendError> {
         Ok(StorageField::Raw(data.to_vec()))
     }
+
+    fn scope(&self) -> Result<String, super::EncryptionBackendError> {
+        Ok("RAW".to_owned())
+    }
 }

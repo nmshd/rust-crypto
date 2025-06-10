@@ -20,4 +20,8 @@ impl SignatureBackend for NoneBackend {
             Err(SignatureBackendError::WrongSignatureType)
         }
     }
+
+    fn scope(&self) -> Result<String, SignatureBackendError> {
+        Ok("NONE".to_owned())
+    }
 }

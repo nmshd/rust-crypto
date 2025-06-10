@@ -40,4 +40,10 @@ impl EncryptionBackend for KeyHandleBackend {
             _ => Err(EncryptionBackendError::WrongStorageField),
         }
     }
+
+    fn scope(&self) -> Result<String, EncryptionBackendError> {
+        self.key_handle
+            .id()
+            .map_err(|e| EncryptionBackendError::Scope { source: e })
+    }
 }

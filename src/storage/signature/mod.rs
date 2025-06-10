@@ -21,6 +21,8 @@ pub enum SignatureBackendError {
     Verify,
     #[error("Wrong signature type. Cannot verify such signature with this signature backend.")]
     WrongSignatureType,
+    #[error("Failed to get scope.")]
+    Scope { source: CalError },
 }
 
 #[enum_dispatch]
@@ -28,6 +30,8 @@ pub trait SignatureBackend {
     fn verify(&self, signed_data: SignedData) -> Result<(), SignatureBackendError>;
 
     fn sign(&self, data: Vec<u8>) -> Result<SignedData, SignatureBackendError>;
+
+    fn scope(&self) -> Result<String, SignatureBackendError>;
 }
 
 #[enum_dispatch(SignatureBackend)]
