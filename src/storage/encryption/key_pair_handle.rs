@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::{
     common::KeyPairHandle,
@@ -7,7 +7,7 @@ use crate::{
 
 #[derive(Debug, Clone)]
 pub struct KeyPairHandleBackend {
-    key_pair_handle: Rc<KeyPairHandle>,
+    key_pair_handle: Arc<KeyPairHandle>,
 }
 
 impl EncryptionBackend for KeyPairHandleBackend {

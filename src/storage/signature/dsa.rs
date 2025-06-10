@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::{
     common::KeyPairHandle,
@@ -10,7 +10,7 @@ use crate::{
 
 #[derive(Clone, Debug)]
 pub struct DsaBackend {
-    handle: Rc<KeyPairHandle>,
+    handle: Arc<KeyPairHandle>,
 }
 
 impl SignatureBackend for DsaBackend {

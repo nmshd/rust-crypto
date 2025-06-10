@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::{
     common::KeyHandle,
@@ -10,7 +10,7 @@ use crate::{
 
 #[derive(Clone, Debug)]
 pub struct HmacBackend {
-    handle: Rc<KeyHandle>,
+    handle: Arc<KeyHandle>,
 }
 
 impl SignatureBackend for HmacBackend {
