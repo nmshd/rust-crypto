@@ -1,5 +1,6 @@
 use crate::storage::{encryption::EncryptionBackend, StorageField};
 
+#[derive(Clone, Debug)]
 pub struct RawBackend {}
 
 impl EncryptionBackend for RawBackend {

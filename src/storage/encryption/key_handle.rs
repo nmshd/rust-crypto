@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use crate::{
     common::KeyHandle,
     storage::{
@@ -8,7 +10,7 @@ use crate::{
 
 #[derive(Debug, Clone)]
 pub struct KeyHandleBackend {
-    key_handle: KeyHandle,
+    key_handle: Rc<KeyHandle>,
 }
 
 impl EncryptionBackend for KeyHandleBackend {

@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use crate::{
     common::KeyPairHandle,
     storage::{
@@ -6,8 +8,9 @@ use crate::{
     },
 };
 
+#[derive(Clone, Debug)]
 pub struct DsaBackend {
-    handle: KeyPairHandle,
+    handle: Rc<KeyPairHandle>,
 }
 
 impl SignatureBackend for DsaBackend {

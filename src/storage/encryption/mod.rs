@@ -33,6 +33,7 @@ pub trait EncryptionBackend {
 }
 
 #[enum_dispatch(EncryptionBackend)]
+#[derive(Debug, Clone)]
 pub enum EncryptionBackendExplicit {
     KeyPairHandleBackend,
     KeyHandleBackend,

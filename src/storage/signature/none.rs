@@ -2,6 +2,7 @@ use crate::storage::{signature::SignatureBackend, Signature, SignedData};
 
 use super::SignatureBackendError;
 
+#[derive(Clone, Debug)]
 pub struct NoneBackend {}
 
 impl SignatureBackend for NoneBackend {

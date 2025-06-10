@@ -20,7 +20,10 @@ use crate::{
         error::{CalError, KeyType},
         KeyHandle, KeyPairHandle,
     },
-    storage::storage_backend::StorageBackendExplicit,
+    storage::{
+        encryption::EncryptionBackendExplicit, signature::SignatureBackendExplicit,
+        storage_backend::StorageBackendExplicit,
+    },
 };
 
 mod encryption;
@@ -29,47 +32,12 @@ mod signature;
 mod storage_backend;
 
 #[derive(Debug, Clone, Copy, Error)]
-pub enum StorageManagerError {
-    #[error("Error during kv store operation.")]
-    KvStore,
-    #[error("Error during file store operation.")]
-    FileStore,
-    #[error("Multiple additional configs for backend initialization provided, while only one is accepted.")]
-    MultipleConfigForBackendInitialization,
-    #[error("Missing configs to initialize storage backends.")]
-    MissingConfigForStorageBackend,
-    #[error("Multiple security configs where provided, while only one is accepted.")]
-    MultipleSecurityConfigs,
-    #[error("No security configs where provided.")]
-    NoSecurityConfigs,
-    #[error("Error during encryption.")]
-    EncryptError,
-    #[error("Error during decryption.")]
-    DecryptError,
-    #[error("Failed to sign metadata and payload.")]
-    FailedSigning,
-    #[error("Failed to validate metadata and payload.")]
-    FailedValidation,
-    #[error("Failed to serialize payload.")]
-    FailedSerialization,
-    #[error("Failed to deserialize payload.")]
-    FailedDeserialization,
-    #[error("Failed to store payload with backend.")]
-    FailedToStoreWithBackend,
-    #[error("Failed to get payload with backend.")]
-    FailedToGetWithBackend,
-}
-
-#[derive(Clone, Debug)]
-enum ChecksumProvider {
-    KeyPairHandle(Box<KeyPairHandle>),
-    HMAC(String),
-}
+pub enum StorageManagerError {}
 
 #[derive(Clone, Debug)]
 pub(crate) struct StorageManager {
-    checksum_provider: ChecksumProvider,
-    key_handle: Option<Box<KeyHandle>>,
+    signature: SignatureBackendExplicit,
+    encryption: EncryptionBackendExplicit,
     storage: StorageBackendExplicit,
     scope: String,
 }

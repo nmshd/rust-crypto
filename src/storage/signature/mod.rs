@@ -31,6 +31,7 @@ pub trait SignatureBackend {
 }
 
 #[enum_dispatch(SignatureBackend)]
+#[derive(Debug, Clone)]
 pub enum SignatureBackendExplicit {
     DsaBackend,
     HmacBackend,
