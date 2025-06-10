@@ -13,6 +13,14 @@ pub struct HmacBackend {
     handle: Arc<KeyHandle>,
 }
 
+impl HmacBackend {
+    pub fn new(key_handle: KeyHandle) -> Self {
+        Self {
+            handle: Arc::new(key_handle),
+        }
+    }
+}
+
 impl SignatureBackend for HmacBackend {
     fn sign(&self, data: Vec<u8>) -> Result<SignedData, super::SignatureBackendError> {
         let signature = self

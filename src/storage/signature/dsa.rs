@@ -13,6 +13,14 @@ pub struct DsaBackend {
     handle: Arc<KeyPairHandle>,
 }
 
+impl DsaBackend {
+    pub fn new(key_pair_handle: KeyPairHandle) -> Self {
+        Self {
+            handle: Arc::new(key_pair_handle),
+        }
+    }
+}
+
 impl SignatureBackend for DsaBackend {
     fn sign(
         &self,
