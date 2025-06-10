@@ -5,6 +5,7 @@
         "Brainpool",
         "cdylib",
         "chacha",
+        "ciphertext",
         "codegen",
         "dalek",
         "Diffie",

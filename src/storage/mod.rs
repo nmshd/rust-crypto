@@ -45,12 +45,20 @@ pub enum StorageManagerError {
     },
     #[error("Failed to encrypt sensitive data.")]
     Encrypt { source: EncryptionBackendError },
+    #[error("Failed to decrypt ciphertext.")]
+    Decrypt { source: EncryptionBackendError },
     #[error("Failed serialization of data.")]
     Serialize { source: rmp_serde::encode::Error },
+    #[error("Failed deserialization of data.")]
+    Deserialize { source: rmp_serde::decode::Error },
     #[error("Failed to sign data.")]
     Sign { source: SignatureBackendError },
+    #[error("Failed verification of data.")]
+    Verify { source: SignatureBackendError },
     #[error("Failed to store data.")]
-    Store { source: StorageBackendError }
+    Store { source: StorageBackendError },
+    #[error("Failed to get data from storage backend.")]
+    Get { source: StorageBackendError },
 }
 
 #[derive(Clone, Debug)]
@@ -89,7 +97,7 @@ impl StorageManager {
 
     pub(crate) fn store(
         &self,
-        id: impl AsRef<str>,
+        id: impl Into<String>,
         data: KeyData,
     ) -> Result<(), StorageManagerError> {
         let key_data_encrypted = KeyDataEncrypted {
@@ -116,63 +124,40 @@ impl StorageManager {
             rmp_serde::to_vec(&key_data_encrypted_encoded_signed)
                 .map_err(|e| StorageManagerError::Serialize { source: e })?;
 
-            self.storage.store(id, &key_data_encrypted_encoded_signed_serialized).map_err(|e| StorageManagerError::Store { source: e })
+        self.storage
+            .store(id.into(), &key_data_encrypted_encoded_signed_serialized)
+            .map_err(|e| StorageManagerError::Store { source: e })
     }
-}
 
-    pub(crate) fn get(&self, id: impl AsRef<str>) -> Result<KeyData, StorageManagerError> {
-        let value = match self.storage {
-            Storage::KVStore(ref store) => store
-                .get(self.scope.clone(), id.as_ref())
-                .change_context(StorageManagerError::KvStore),
-            Storage::FileStore(ref store) => store
-                .get(self.scope.clone(), id.as_ref())
-                .change_context(StorageManagerError::FileStore),
-        }?;
+    pub(crate) fn get(&self, id: impl Into<String>) -> Result<KeyData, StorageManagerError> {
+        let value = self
+            .storage
+            .get(id.into())
+            .map_err(|e| StorageManagerError::Get { source: e })?;
 
-        let decoded = serde_json::from_slice::<SignedData>(&value)
-            .change_context(StorageManagerError::FailedDeserialization)?;
+        let signed_data = rmp_serde::from_slice::<SignedData>(&value)
+            .map_err(|e| StorageManagerError::Deserialize { source: e })?;
 
-        // verify checksum
-        match self.checksum_provider {
-            ChecksumProvider::KeyPairHandle(ref key_pair_handle) => {
-                if key_pair_handle
-                    .verify_signature(&decoded.data, &decoded.checksum)
-                    .change_context(StorageManagerError::FailedValidation)?
-                {
-                } else {
-                    return Err(report!(StorageManagerError::FailedValidation));
-                }
-            }
-            ChecksumProvider::HMAC(ref pass) => {
-                let mut hmac = HmacSha256::new_from_slice(pass.as_bytes())
-                    .change_context(StorageManagerError::FailedValidation)?;
-                hmac.update(&decoded.data);
-                hmac.verify_slice(&decoded.checksum)
-                    .change_context(StorageManagerError::FailedValidation)?;
-            }
-        };
+        let key_encrypted_data = rmp_serde::from_slice::<KeyDataEncrypted>(&signed_data.data)
+            .map_err(|e| StorageManagerError::Deserialize { source: e })?;
 
-        let decoded = serde_json::from_slice::<KeyDataEncrypted>(&decoded.data)
-            .change_context(StorageManagerError::FailedDeserialization)?;
+        self.signature
+            .verify(signed_data)
+            .map_err(|e| StorageManagerError::Verify { source: e })?;
 
-        let decrypted = KeyData {
-            id: decoded.id.clone(),
-            secret_data: decoded
+        let key_data = KeyData {
+            id: key_encrypted_data.id,
+            secret_data: key_encrypted_data
                 .secret_data
-                .and_then(|secret| match secret {
-                    StorageField::Encrypted { data, iv } => self.key_handle.as_ref().map(|key| {
-                        key.decrypt_data(&data, &iv)
-                            .change_context(StorageManagerError::DecryptError)
-                    }),
-                    StorageField::Raw(data) => Some(Ok(data)),
-                })
-                .transpose()?,
-            public_data: decoded.public_data,
-            additional_data: decoded.additional_data,
-            spec: decoded.spec,
+                .map(|encrypted_data| self.encryption.decrypt(encrypted_data))
+                .transpose()
+                .map_err(|e| StorageManagerError::Decrypt { source: e })?,
+            public_data: key_encrypted_data.public_data,
+            additional_data: key_encrypted_data.additional_data,
+            spec: key_encrypted_data.spec,
         };
-        Ok(decrypted)
+
+        Ok(key_data)
     }
 
     pub(crate) fn delete(&self, id: impl AsRef<str>) {
