@@ -25,6 +25,7 @@ use crate::{
 
 mod encryption;
 mod key;
+mod signature;
 mod storage_backend;
 
 #[derive(Debug, Clone, Copy, Error)]
@@ -208,21 +209,21 @@ impl StorageManager {
                 let checksum = key_pair_handle
                     .sign_data(&encoded)
                     .change_context(StorageManagerError::FailedSigning)?;
-                (checksum, ChecksumType::DSA)
+                (checksum, Signature::DSA)
             }
             ChecksumProvider::HMAC(ref pass) => {
                 let mut hmac = HmacSha256::new_from_slice(pass.as_bytes())
                     .change_context(StorageManagerError::FailedSigning)?;
                 hmac.update(&encoded);
                 let result = hmac.finalize();
-                (result.into_bytes().to_vec(), ChecksumType::HMAC)
+                (result.into_bytes().to_vec(), Signature::HMAC)
             }
         };
 
-        let encoded = serde_json::to_vec(&WithChecksum {
+        let encoded = serde_json::to_vec(&SignedData {
             data: encoded,
             checksum,
-            checksum_type: ctype,
+            signature: ctype,
         })
         .change_context(StorageManagerError::FailedDeserialization)?;
 
@@ -247,7 +248,7 @@ impl StorageManager {
                 .change_context(StorageManagerError::FileStore),
         }?;
 
-        let decoded = serde_json::from_slice::<WithChecksum>(&value)
+        let decoded = serde_json::from_slice::<SignedData>(&value)
             .change_context(StorageManagerError::FailedDeserialization)?;
 
         // verify checksum
@@ -314,7 +315,7 @@ impl StorageManager {
 
         keys.iter()
             .map(|v| {
-                serde_json::from_slice::<WithChecksum>(v.as_slice())
+                serde_json::from_slice::<SignedData>(v.as_slice())
                     .change_context(StorageManagerError::FailedDeserialization)
                     .attach_printable("Could not decode data blob.")
             })
@@ -349,17 +350,17 @@ pub(crate) struct KeyDataEncrypted {
     pub(crate) spec: Spec,
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy)]
-pub enum ChecksumType {
-    HMAC,
-    DSA,
+#[derive(Serialize, Deserialize, Clone)]
+pub(crate) enum Signature {
+    HMAC(Vec<u8>),
+    DSA(Vec<u8>),
+    None,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
-pub struct WithChecksum {
+pub(crate) struct SignedData {
     data: Vec<u8>,
-    checksum: Vec<u8>,
-    checksum_type: ChecksumType,
+    signature: Signature,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
