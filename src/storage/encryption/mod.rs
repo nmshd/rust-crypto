@@ -2,7 +2,7 @@ use enum_dispatch::enum_dispatch;
 use thiserror::Error;
 
 use crate::{
-    prelude::{AdditionalConfig, CalError, ProviderImplConfig},
+    prelude::{AdditionalConfig, CalError},
     storage::{
         encryption::{
             key_handle::KeyHandleBackend, key_pair_handle::KeyPairHandleBackend, raw::RawBackend,
@@ -41,20 +41,16 @@ pub enum EncryptionBackendExplicit {
 }
 
 impl EncryptionBackendExplicit {
-    pub fn new(provider_impl_config: &ProviderImplConfig) -> Result<Self, StorageManagerError> {
-        let mut encryption_backends =
-            provider_impl_config
-                .additional_config
-                .iter()
-                .filter_map(|e| match e {
-                    AdditionalConfig::StorageConfigSymmetricEncryption(handle) => {
-                        Some(Self::from(KeyHandleBackend::new(handle.clone())))
-                    }
-                    AdditionalConfig::StorageConfigAsymmetricEncryption(handle) => {
-                        Some(Self::from(KeyPairHandleBackend::new(handle.clone())))
-                    }
-                    _ => None,
-                });
+    pub fn new(config: &[AdditionalConfig]) -> Result<Self, StorageManagerError> {
+        let mut encryption_backends = config.iter().filter_map(|e| match e {
+            AdditionalConfig::StorageConfigSymmetricEncryption(handle) => {
+                Some(Self::from(KeyHandleBackend::new(handle.clone())))
+            }
+            AdditionalConfig::StorageConfigAsymmetricEncryption(handle) => {
+                Some(Self::from(KeyPairHandleBackend::new(handle.clone())))
+            }
+            _ => None,
+        });
 
         let encryption_backend = encryption_backends
             .next()

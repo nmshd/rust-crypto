@@ -1,7 +1,7 @@
 use enum_dispatch::enum_dispatch;
 use thiserror::Error;
 
-use crate::prelude::{AdditionalConfig, CalError, ProviderImplConfig};
+use crate::prelude::{AdditionalConfig, CalError};
 use crate::storage::signature::dsa::DsaBackend;
 use crate::storage::signature::hmac::HmacBackend;
 use crate::storage::signature::none::NoneBackend;
@@ -39,20 +39,16 @@ pub enum SignatureBackendExplicit {
 }
 
 impl SignatureBackendExplicit {
-    pub fn new(provider_impl_config: &ProviderImplConfig) -> Result<Self, StorageManagerError> {
-        let mut encryption_backends =
-            provider_impl_config
-                .additional_config
-                .iter()
-                .filter_map(|e| match e {
-                    AdditionalConfig::StorageConfigHMAC(handle) => {
-                        Some(Self::from(HmacBackend::new(handle.clone())))
-                    }
-                    AdditionalConfig::StorageConfigDSA(handle) => {
-                        Some(Self::from(DsaBackend::new(handle.clone())))
-                    }
-                    _ => None,
-                });
+    pub fn new(config: &[AdditionalConfig]) -> Result<Self, StorageManagerError> {
+        let mut encryption_backends = config.iter().filter_map(|e| match e {
+            AdditionalConfig::StorageConfigHMAC(handle) => {
+                Some(Self::from(HmacBackend::new(handle.clone())))
+            }
+            AdditionalConfig::StorageConfigDSA(handle) => {
+                Some(Self::from(DsaBackend::new(handle.clone())))
+            }
+            _ => None,
+        });
 
         let encryption_backend = encryption_backends
             .next()

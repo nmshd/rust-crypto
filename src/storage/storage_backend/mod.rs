@@ -9,10 +9,7 @@ mod kv_store;
 use file_store::FileStorageBackend;
 use kv_store::KvStorageBackend;
 
-use crate::{
-    prelude::{AdditionalConfig, ProviderImplConfig},
-    storage::StorageManagerError,
-};
+use crate::{prelude::AdditionalConfig, storage::StorageManagerError};
 
 #[derive(Debug, Error)]
 pub enum StorageBackendError {
@@ -73,9 +70,8 @@ impl Debug for StorageBackendExplicit {
 }
 
 impl StorageBackendExplicit {
-    pub fn new(provider_impl_config: &ProviderImplConfig) -> Result<Self, StorageManagerError> {
-        let config: Vec<&AdditionalConfig> = provider_impl_config
-            .additional_config
+    pub fn new(config: &[AdditionalConfig]) -> Result<Self, StorageManagerError> {
+        let filtered_config: Vec<&AdditionalConfig> = config
             .iter()
             .filter(|e| {
                 matches!(
@@ -86,7 +82,7 @@ impl StorageBackendExplicit {
             })
             .collect();
 
-        match config.len() {
+        match filtered_config.len() {
             0 => {
                 return Err(StorageManagerError::MissingProviderImplConfigOption {
                     description:
@@ -101,7 +97,7 @@ impl StorageBackendExplicit {
             1 => {}
         }
 
-        match config[0] {
+        match filtered_config[0] {
             AdditionalConfig::FileStoreConfig { db_dir } => FileStorageBackend::new(db_dir)
                 .map_err(|e| StorageManagerError::InitializingStorageBackend {
                     source: e,

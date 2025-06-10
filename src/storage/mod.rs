@@ -53,100 +53,28 @@ pub(crate) struct StorageManager {
     scope: String,
 }
 
-fn extract_storage_method(
-    config: &[AdditionalConfig],
-) -> Result<impl StorageBackend, StorageManagerError> {
-    let config: Vec<&AdditionalConfig> = config
-        .iter()
-        .filter(|e| {
-            matches!(
-                e,
-                AdditionalConfig::FileStoreConfig { .. } | AdditionalConfig::KVStoreConfig { .. }
-            )
-        })
-        .collect();
-
-    ensure!(
-        config.len() > 0,
-        StorageManagerError::MissingConfigForStorageBackend
-    );
-    ensure!(
-        config.len() < 2,
-        StorageManagerError::MultipleConfigForBackendInitialization
-    );
-
-    Ok(match config[0] {
-        AdditionalConfig::FileStoreConfig { db_dir } => Storage::FileStore(
-            FileStore::new(db_dir).change_context(StorageManagerError::FileStore)?,
-        ),
-        AdditionalConfig::KVStoreConfig {
-            get_fn,
-            store_fn,
-            delete_fn,
-            all_keys_fn,
-        } => Storage::KVStore(KVStore {
-            get_fn: get_fn.clone(),
-            store_fn: store_fn.clone(),
-            delete_fn: delete_fn.clone(),
-            all_keys_fn: all_keys_fn.clone(),
-        }),
-        _ => unreachable!(),
-    })
-}
-
-fn extract_security_method(
-    config: &[AdditionalConfig],
-) -> Result<ChecksumProvider, StorageManagerError> {
-    let key_pair_handle = config.iter().find_map(|c| match c {
-        AdditionalConfig::StorageConfigDSA(key_handle) => Some(key_handle.clone()),
-        _ => None,
-    });
-    let hmac_pass = config.iter().find_map(|c| match c {
-        AdditionalConfig::StorageConfigPass(pass) => Some(pass.clone()),
-        _ => None,
-    });
-
-    match (key_pair_handle, hmac_pass) {
-        (Some(key_pair_handle), None) => {
-            Ok(ChecksumProvider::KeyPairHandle(Box::new(key_pair_handle)))
-        }
-        (None, Some(hmac_pass)) => Ok(ChecksumProvider::HMAC(hmac_pass)),
-        (None, None) => Err(report!(StorageManagerError::NoSecurityConfigs)),
-        (Some(_), Some(_)) => Err(report!(StorageManagerError::MultipleSecurityConfigs)),
-    }
-}
-
 impl StorageManager {
     pub(crate) fn new(
         scope: impl Into<String>,
         config: &[AdditionalConfig],
     ) -> Result<Option<Self>, StorageManagerError> {
-        let storage = match extract_storage_method(config) {
-            Ok(s) => s,
+        let storage_backend = match StorageBackendExplicit::new(config) {
+            Ok(e) => e,
             Err(e)
                 if matches!(
-                    e.current_context(),
-                    StorageManagerError::MissingConfigForStorageBackend
+                    e,
+                    StorageManagerError::MissingProviderImplConfigOption { .. }
                 ) =>
             {
-                return Ok(None);
+                return Ok(None)
             }
-            Err(e) => {
-                return Err(e);
-            }
+            Err(e) => return Err(e),
         };
 
-        let checksum_provider = extract_security_method(config)?;
-
-        let key_handle = config.iter().find_map(|c| match c {
-            AdditionalConfig::StorageConfigHMAC(key_handle) => Some(key_handle.clone()),
-            _ => None,
-        });
-
-        Ok(Some(StorageManager {
-            checksum_provider,
-            key_handle: key_handle.map(Box::new),
-            storage,
+        Ok(Some(Self {
+            signature: SignatureBackendExplicit::new(config)?,
+            encryption: EncryptionBackendExplicit::new(config)?,
+            storage: storage_backend,
             scope: scope.into(),
         }))
     }
