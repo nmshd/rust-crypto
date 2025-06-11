@@ -1,27 +1,16 @@
-#![allow(clippy::upper_case_acronyms)]
-use std::{cell::Cell, fmt, path::Path, sync::Arc};
-
 use anyhow::anyhow;
-use hmac::Mac;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
-use sled::{open, Db};
 use storage_backend::StorageBackend;
 use thiserror::Error;
-use tracing::trace;
 
 use hmac::Hmac;
 use sha2::Sha256;
-use tracing_subscriber::registry::Scope;
 
 type HmacSha256 = Hmac<Sha256>;
 
 use crate::{
-    common::{
-        config::{AdditionalConfig, AllKeysFn, DeleteFn, GetFn, Spec, StoreFn},
-        error::{self, CalError, KeyType},
-        KeyHandle, KeyPairHandle,
-    },
+    common::config::{AdditionalConfig, Spec},
     storage::{
         encryption::{EncryptionBackend, EncryptionBackendError, EncryptionBackendExplicit},
         key::{StorageManagerKey, StorageManagerKeyFactory},
@@ -193,16 +182,28 @@ impl StorageManager {
             .map_err(|e| StorageManagerError::Delete { source: e })
     }
 
-    pub fn get_all_keys(&self) -> Vec<Result<(String, Spec), StorageManagerError>> {
+    pub fn get_all_keys(
+        &self,
+    ) -> Result<Vec<Result<(String, Spec), StorageManagerError>>, StorageManagerError> {
         self.storage
             .keys()
             .map_err(|e| StorageManagerError::GetKeys { source: anyhow!(e) })?
             .into_iter()
-            .map(|e| match self.storage.get(e) {
-                Ok(signed_data) => //TODO
-            }))
-            .map(|e| StorageManagerKey::deserialize(e))
-            .process_results(|iter| iter.map(|e| e.key_id))
+            .map(|scoped_id| {
+                self.get(scoped_id.clone())
+                    .map(|key_data| (scoped_id, key_data))
+            })
+            .map_ok(|(scoped_id, key_data)| {
+                StorageManagerKey::deserialize(&scoped_id)
+                    .map_err(|err| StorageManagerError::Scope {
+                        source: anyhow!(err),
+                    })
+                    .map(|deserialized_scoped_id| {
+                        Ok::<_, StorageManagerError>((deserialized_scoped_id.key_id, key_data.spec))
+                    })
+            })
+            .flatten_ok()
+            .collect()
     }
 }
 
