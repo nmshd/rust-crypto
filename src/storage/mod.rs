@@ -67,7 +67,7 @@ fn deserialize<'a, T: Deserialize<'a>>(value: &'a [u8]) -> Result<T, StorageMana
 }
 
 fn serialize<T: Serialize>(value: &T) -> Result<Vec<u8>, StorageManagerError> {
-    rmp_serde::to_vec(value).map_err(|e| StorageManagerError::Serialize { source: e })
+    rmp_serde::to_vec_named(value).map_err(|e| StorageManagerError::Serialize { source: e })
 }
 
 impl StorageManager {
