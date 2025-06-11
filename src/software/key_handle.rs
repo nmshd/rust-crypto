@@ -335,8 +335,19 @@ impl KeyHandleImpl for SoftwareKeyHandle {
     #[doc = " Delete this key."]
     fn delete(self) -> Result<(), CalError> {
         if let Some(s) = &self.storage_manager {
-            s.delete(self.key_id.clone())
+            s.delete(self.key_id.clone()).map_err(|err| {
+                // TODO: Better mapping to CalError.
+                CalError::failed_operation(
+                    format!(
+                        "Failed to delete metadata for key with key id: '{}'",
+                        &self.key_id
+                    ),
+                    true,
+                    Some(anyhow!(err)),
+                )
+            })?
         }
+
         Ok(())
     }
 
@@ -451,8 +462,19 @@ impl KeyPairHandleImpl for SoftwareKeyPairHandle {
     #[doc = " Delete this key pair."]
     fn delete(self) -> Result<(), CalError> {
         if let Some(s) = self.storage_manager {
-            s.delete(self.key_id)
+            s.delete(&self.key_id).map_err(|err| {
+                // TODO: Better mapping to CalError.
+                CalError::failed_operation(
+                    format!(
+                        "Failed to delete metadata for key with key id: '{}'",
+                        &self.key_id
+                    ),
+                    true,
+                    Some(anyhow!(err)),
+                )
+            })?
         }
+
         Ok(())
     }
 
