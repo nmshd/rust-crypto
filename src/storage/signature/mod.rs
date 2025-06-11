@@ -27,7 +27,7 @@ pub enum SignatureBackendError {
 
 #[enum_dispatch]
 pub trait SignatureBackend {
-    fn verify(&self, signed_data: SignedData) -> Result<(), SignatureBackendError>;
+    fn verify(&self, signed_data: SignedData) -> Result<Vec<u8>, SignatureBackendError>;
 
     fn sign(&self, data: Vec<u8>) -> Result<SignedData, SignatureBackendError>;
 

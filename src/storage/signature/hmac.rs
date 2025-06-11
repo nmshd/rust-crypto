@@ -34,7 +34,7 @@ impl SignatureBackend for HmacBackend {
         })
     }
 
-    fn verify(&self, signed_data: SignedData) -> Result<(), SignatureBackendError> {
+    fn verify(&self, signed_data: SignedData) -> Result<Vec<u8>, SignatureBackendError> {
         match signed_data.signature {
             Signature::HMAC(signature) => {
                 if self
@@ -42,7 +42,7 @@ impl SignatureBackend for HmacBackend {
                     .verify_hmac(&signed_data.data, &signature)
                     .map_err(|e| SignatureBackendError::DuringVerify { source: e })?
                 {
-                    Ok(())
+                    Ok(signed_data.data)
                 } else {
                     Err(SignatureBackendError::Verify)
                 }

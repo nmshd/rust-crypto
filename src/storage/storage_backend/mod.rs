@@ -9,7 +9,10 @@ mod kv_store;
 use file_store::FileStorageBackend;
 use kv_store::KvStorageBackend;
 
-use crate::{prelude::AdditionalConfig, storage::StorageManagerError};
+use crate::{
+    prelude::AdditionalConfig,
+    storage::{key::ScopedKey, StorageManagerError},
+};
 
 #[derive(Debug, Error)]
 pub enum StorageBackendError {
@@ -41,14 +44,19 @@ pub enum StorageBackendError {
         description: &'static str,
         source: anyhow::Error,
     },
+    #[error("Failed operation regarding scoped keys: {description}")]
+    Scope {
+        description: &'static str,
+        source: anyhow::Error,
+    },
 }
 
 #[enum_dispatch]
 pub trait StorageBackend: Debug {
-    fn store(&self, key: String, data: &[u8]) -> Result<(), StorageBackendError>;
-    fn get(&self, key: String) -> Result<Vec<u8>, StorageBackendError>;
-    fn delete(&self, key: String) -> Result<(), StorageBackendError>;
-    fn keys(&self) -> Result<Vec<String>, StorageBackendError>;
+    fn store(&self, key: ScopedKey, data: &[u8]) -> Result<(), StorageBackendError>;
+    fn get(&self, key: ScopedKey) -> Result<Vec<u8>, StorageBackendError>;
+    fn delete(&self, key: ScopedKey) -> Result<(), StorageBackendError>;
+    fn keys(&self) -> Vec<Result<ScopedKey, StorageBackendError>>;
 }
 
 #[enum_dispatch(StorageBackend)]

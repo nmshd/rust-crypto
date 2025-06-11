@@ -37,7 +37,7 @@ impl SignatureBackend for DsaBackend {
         })
     }
 
-    fn verify(&self, signed_data: SignedData) -> Result<(), SignatureBackendError> {
+    fn verify(&self, signed_data: SignedData) -> Result<Vec<u8>, SignatureBackendError> {
         match signed_data.signature {
             Signature::DSA(signature) => {
                 if self
@@ -45,7 +45,7 @@ impl SignatureBackend for DsaBackend {
                     .verify_signature(&signed_data.data, &signature)
                     .map_err(|e| SignatureBackendError::DuringVerify { source: e })?
                 {
-                    Ok(())
+                    Ok(signed_data.data)
                 } else {
                     Err(SignatureBackendError::Verify)
                 }

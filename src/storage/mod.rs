@@ -13,7 +13,7 @@ use crate::{
     common::config::{AdditionalConfig, Spec},
     storage::{
         encryption::{EncryptionBackend, EncryptionBackendError, EncryptionBackendExplicit},
-        key::{StorageManagerKey, StorageManagerKeyFactory},
+        key::{ScopedKey, ScopedKeyFactory},
         signature::{SignatureBackend, SignatureBackendError, SignatureBackendExplicit},
         storage_backend::{StorageBackendError, StorageBackendExplicit},
     },
@@ -56,7 +56,7 @@ pub enum StorageManagerError {
     #[error("Failed to create a scope for the storage manager.")]
     Scope { source: anyhow::Error },
     #[error("Failed to get key ids.")]
-    GetKeys { source: anyhow::Error },
+    GetKeys { source: StorageBackendError },
 }
 
 #[derive(Clone, Debug)]
@@ -64,7 +64,7 @@ pub(crate) struct StorageManager {
     signature: SignatureBackendExplicit,
     encryption: EncryptionBackendExplicit,
     storage: StorageBackendExplicit,
-    scope: StorageManagerKeyFactory,
+    scope: ScopedKeyFactory,
 }
 
 fn deserialize<'a, T: Deserialize<'a>>(value: &'a [u8]) -> Result<T, StorageManagerError> {
@@ -95,7 +95,7 @@ impl StorageManager {
 
         let signature = SignatureBackendExplicit::new(config)?;
         let encryption = EncryptionBackendExplicit::new(config)?;
-        let scope = StorageManagerKeyFactory {
+        let scope = ScopedKeyFactory {
             provider_scope: scope.into(),
             encryption_scope: encryption
                 .scope()
@@ -113,69 +113,103 @@ impl StorageManager {
         }))
     }
 
+    fn encrypt_key_data(&self, key_data: KeyData) -> Result<KeyDataEncrypted, StorageManagerError> {
+        Ok(KeyDataEncrypted {
+            id: key_data.id,
+            secret_data: key_data
+                .secret_data
+                .map(|e| self.encryption.encrypt(&e))
+                .transpose()
+                .map_err(|e| StorageManagerError::Encrypt { source: e })?,
+            public_data: key_data.public_data,
+            additional_data: key_data.additional_data,
+            spec: key_data.spec,
+        })
+    }
+
+    fn decrypt_encrypted_key_data(
+        &self,
+        encrypted_key_data: KeyDataEncrypted,
+    ) -> Result<KeyData, StorageManagerError> {
+        let sensitive_data = encrypted_key_data
+            .secret_data
+            .map(|encrypted_data| self.encryption.decrypt(encrypted_data))
+            .transpose()
+            .map_err(|e| StorageManagerError::Decrypt { source: e })?;
+
+        Ok(KeyData {
+            id: encrypted_key_data.id,
+            secret_data: sensitive_data,
+            public_data: encrypted_key_data.public_data,
+            additional_data: encrypted_key_data.additional_data,
+            spec: encrypted_key_data.spec,
+        })
+    }
+
+    fn sign_blob(&self, blob: Vec<u8>) -> Result<SignedData, StorageManagerError> {
+        self.signature
+            .sign(blob)
+            .map_err(|e| StorageManagerError::Sign { source: e })
+    }
+
+    fn verify_signed_data(&self, signed_data: SignedData) -> Result<Vec<u8>, StorageManagerError> {
+        self.signature
+            .verify(signed_data)
+            .map_err(|e| StorageManagerError::Verify { source: e })
+    }
+
+    fn sign_encrypted_key_data(
+        &self,
+        encrypted_key_data: KeyDataEncrypted,
+    ) -> Result<SignedData, StorageManagerError> {
+        let serialized_encrypted_key_data = serialize(&encrypted_key_data)?;
+        self.sign_blob(serialized_encrypted_key_data)
+    }
+
+    fn verify_signed_encrypted_key_data(
+        &self,
+        signed_encrypted_key_data: SignedData,
+    ) -> Result<KeyDataEncrypted, StorageManagerError> {
+        let verified_blob = self.verify_signed_data(signed_encrypted_key_data)?;
+        deserialize::<KeyDataEncrypted>(&verified_blob)
+    }
+
     pub(crate) fn store(
         &self,
         id: impl Into<String>,
         data: KeyData,
     ) -> Result<(), StorageManagerError> {
-        let key_data_encrypted = KeyDataEncrypted {
-            id: data.id,
-            secret_data: data
-                .secret_data
-                .map(|e| self.encryption.encrypt(&e))
-                .transpose()
-                .map_err(|e| StorageManagerError::Encrypt { source: e })?,
-            public_data: data.public_data,
-            additional_data: data.additional_data,
-            spec: data.spec,
-        };
+        let key_data_encrypted = self.encrypt_key_data(data)?;
 
-        let key_data_encrypted_encoded = serialize(&key_data_encrypted)?;
-
-        let key_data_encrypted_encoded_signed = self
-            .signature
-            .sign(key_data_encrypted_encoded)
-            .map_err(|e| StorageManagerError::Sign { source: e })?;
+        let key_data_encrypted_encoded_signed = self.sign_encrypted_key_data(key_data_encrypted)?;
 
         let key_data_encrypted_encoded_signed_serialized =
             serialize(&key_data_encrypted_encoded_signed)?;
 
-        let scoped_id = self.scope.scoped_key(id)?;
+        let scoped_key = self.scope.scoped_key(id)?;
 
         self.storage
-            .store(scoped_id, &key_data_encrypted_encoded_signed_serialized)
+            .store(scoped_key, &key_data_encrypted_encoded_signed_serialized)
             .map_err(|e| StorageManagerError::Store { source: e })
     }
 
-    pub(crate) fn get(&self, id: impl Into<String>) -> Result<KeyData, StorageManagerError> {
-        let scoped_id = self.scope.scoped_key(id)?;
-
+    fn get_partial(&self, scoped_key: ScopedKey) -> Result<KeyDataEncrypted, StorageManagerError> {
         let value = self
             .storage
-            .get(scoped_id)
+            .get(scoped_key)
             .map_err(|e| StorageManagerError::Get { source: e })?;
 
         let signed_data: SignedData = deserialize(&value)?;
 
-        let key_encrypted_data: KeyDataEncrypted = deserialize(&signed_data.data)?;
+        self.verify_signed_encrypted_key_data(signed_data)
+    }
 
-        self.signature
-            .verify(signed_data)
-            .map_err(|e| StorageManagerError::Verify { source: e })?;
+    pub(crate) fn get(&self, id: impl Into<String>) -> Result<KeyData, StorageManagerError> {
+        let scoped_key = self.scope.scoped_key(id)?;
 
-        let key_data = KeyData {
-            id: key_encrypted_data.id,
-            secret_data: key_encrypted_data
-                .secret_data
-                .map(|encrypted_data| self.encryption.decrypt(encrypted_data))
-                .transpose()
-                .map_err(|e| StorageManagerError::Decrypt { source: e })?,
-            public_data: key_encrypted_data.public_data,
-            additional_data: key_encrypted_data.additional_data,
-            spec: key_encrypted_data.spec,
-        };
+        let key_encrypted_data = self.get_partial(scoped_key)?;
 
-        Ok(key_data)
+        self.decrypt_encrypted_key_data(key_encrypted_data)
     }
 
     pub(crate) fn delete(&self, id: impl Into<String>) -> Result<(), StorageManagerError> {
@@ -186,25 +220,15 @@ impl StorageManager {
             .map_err(|e| StorageManagerError::Delete { source: e })
     }
 
-    pub fn get_all_keys(
-        &self,
-    ) -> Result<Vec<Result<(String, Spec), StorageManagerError>>, StorageManagerError> {
+    pub(crate) fn get_all_keys(&self) -> Vec<Result<(String, Spec), StorageManagerError>> {
         self.storage
             .keys()
-            .map_err(|e| StorageManagerError::GetKeys { source: anyhow!(e) })?
             .into_iter()
-            .map(|scoped_id| {
-                self.get(scoped_id.clone())
-                    .map(|key_data| (scoped_id, key_data))
-            })
-            .map_ok(|(scoped_id, key_data)| {
-                StorageManagerKey::deserialize(&scoped_id)
-                    .map_err(|err| StorageManagerError::Scope {
-                        source: anyhow!(err),
-                    })
-                    .map(|deserialized_scoped_id| {
-                        Ok::<_, StorageManagerError>((deserialized_scoped_id.key_id, key_data.spec))
-                    })
+            .map(|result| result.map_err(|err| StorageManagerError::GetKeys { source: err }))
+            .map_ok(|scoped_key| {
+                let id = scoped_key.key_id.clone();
+                let key_data = self.get_partial(scoped_key)?;
+                Ok::<_, StorageManagerError>((id, key_data.spec))
             })
             .flatten_ok()
             .collect()

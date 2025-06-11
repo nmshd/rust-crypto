@@ -7,6 +7,8 @@ use anyhow::anyhow;
 use itertools::Itertools;
 use sled::{open, Db};
 
+use crate::storage::key::ScopedKey;
+
 use super::{StorageBackend, StorageBackendError};
 
 /// Sled can only open a file once. This static holds the absolute path of a file and the open [Db].
@@ -68,8 +70,23 @@ impl FileStorageBackend {
     }
 }
 
+fn serialize_scoped_key(key: &ScopedKey) -> Result<Vec<u8>, StorageBackendError> {
+    rmp_serde::to_vec_named(key).map_err(|err| StorageBackendError::Scope {
+        description: "Failed to serialize scoped key.",
+        source: anyhow!(err),
+    })
+}
+
+fn deserialize_scoped_key(value: &[u8]) -> Result<ScopedKey, StorageBackendError> {
+    rmp_serde::from_slice(value).map_err(|err| StorageBackendError::Scope {
+        description: "Failed to deserialize scoped key.",
+        source: anyhow!(err),
+    })
+}
+
 impl StorageBackend for FileStorageBackend {
-    fn store(&self, key: String, data: &[u8]) -> Result<(), StorageBackendError> {
+    fn store(&self, key: ScopedKey, data: &[u8]) -> Result<(), StorageBackendError> {
+        let key = serialize_scoped_key(&key)?;
         self.db
             .insert(key, data)
             .map_err(|err| StorageBackendError::Store {
@@ -79,7 +96,8 @@ impl StorageBackend for FileStorageBackend {
         Ok(())
     }
 
-    fn get(&self, key: String) -> Result<Vec<u8>, StorageBackendError> {
+    fn get(&self, key: ScopedKey) -> Result<Vec<u8>, StorageBackendError> {
+        let key = serialize_scoped_key(&key)?;
         match self.db.get(key).map_err(|err| StorageBackendError::Get {
             description: "Get for sled db failed.",
             source: anyhow!(err),
@@ -89,7 +107,8 @@ impl StorageBackend for FileStorageBackend {
         }
     }
 
-    fn delete(&self, key: String) -> Result<(), StorageBackendError> {
+    fn delete(&self, key: ScopedKey) -> Result<(), StorageBackendError> {
+        let key = serialize_scoped_key(&key)?;
         self.db
             .remove(key)
             .map_err(|err| StorageBackendError::Delete {
@@ -100,28 +119,18 @@ impl StorageBackend for FileStorageBackend {
         Ok(())
     }
 
-    fn keys(&self) -> Result<Vec<String>, StorageBackendError> {
-        let (raw_keys, mut errors): (Vec<_>, Vec<_>) = self.db.iter().partition_result();
-
-        if let Some(last_error) = errors.pop() {
-            return Err(StorageBackendError::Get {
-                description: "Failed reading keys.",
-                source: anyhow!(last_error),
-            });
-        }
-
-        let (keys, mut conversion_errors): (Vec<_>, Vec<_>) = raw_keys
-            .into_iter()
-            .map(|e| e.0)
-            .map(|e| String::from_utf8(e.to_vec()))
-            .partition_result();
-
-        if let Some(error) = conversion_errors.pop() {
-            return Err(StorageBackendError::KeyDecode {
-                source: anyhow!(error),
-            });
-        }
-
-        Ok(keys)
+    fn keys(&self) -> Vec<Result<ScopedKey, StorageBackendError>> {
+        self.db
+            .iter()
+            .keys()
+            .map(|result| {
+                result.map_err(|err| StorageBackendError::Get {
+                    description: "Failed reading of key.",
+                    source: anyhow!(err),
+                })
+            })
+            .map_ok(|raw_key| deserialize_scoped_key(&raw_key))
+            .flatten_ok()
+            .collect()
     }
 }

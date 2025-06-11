@@ -13,9 +13,9 @@ impl SignatureBackend for NoneBackend {
         })
     }
 
-    fn verify(&self, signed_data: SignedData) -> Result<(), SignatureBackendError> {
+    fn verify(&self, signed_data: SignedData) -> Result<Vec<u8>, SignatureBackendError> {
         if matches!(signed_data.signature, Signature::None) {
-            Ok(())
+            Ok(signed_data.data)
         } else {
             Err(SignatureBackendError::WrongSignatureType)
         }
