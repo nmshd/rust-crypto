@@ -67,6 +67,14 @@ pub(crate) struct StorageManager {
     scope: StorageManagerKeyFactory,
 }
 
+fn deserialize<'a, T: Deserialize<'a>>(value: &'a [u8]) -> Result<T, StorageManagerError> {
+    rmp_serde::from_slice(&value).map_err(|e| StorageManagerError::Deserialize { source: e })
+}
+
+fn serialize<T: Serialize>(value: &T) -> Result<Vec<u8>, StorageManagerError> {
+    rmp_serde::to_vec(value).map_err(|e| StorageManagerError::Serialize { source: e })
+}
+
 impl StorageManager {
     pub(crate) fn new(
         scope: impl Into<String>,
@@ -122,8 +130,7 @@ impl StorageManager {
             spec: data.spec,
         };
 
-        let key_data_encrypted_encoded = rmp_serde::to_vec(&key_data_encrypted)
-            .map_err(|e| StorageManagerError::Serialize { source: e })?;
+        let key_data_encrypted_encoded = serialize(&key_data_encrypted)?;
 
         let key_data_encrypted_encoded_signed = self
             .signature
@@ -131,8 +138,7 @@ impl StorageManager {
             .map_err(|e| StorageManagerError::Sign { source: e })?;
 
         let key_data_encrypted_encoded_signed_serialized =
-            rmp_serde::to_vec(&key_data_encrypted_encoded_signed)
-                .map_err(|e| StorageManagerError::Serialize { source: e })?;
+            serialize(&key_data_encrypted_encoded_signed)?;
 
         let scoped_id = self.scope.scoped_key(id)?;
 
@@ -149,11 +155,9 @@ impl StorageManager {
             .get(scoped_id)
             .map_err(|e| StorageManagerError::Get { source: e })?;
 
-        let signed_data = rmp_serde::from_slice::<SignedData>(&value)
-            .map_err(|e| StorageManagerError::Deserialize { source: e })?;
+        let signed_data: SignedData = deserialize(&value)?;
 
-        let key_encrypted_data = rmp_serde::from_slice::<KeyDataEncrypted>(&signed_data.data)
-            .map_err(|e| StorageManagerError::Deserialize { source: e })?;
+        let key_encrypted_data: KeyDataEncrypted = deserialize(&signed_data.data)?;
 
         self.signature
             .verify(signed_data)
