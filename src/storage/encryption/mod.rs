@@ -1,4 +1,5 @@
 use enum_dispatch::enum_dispatch;
+use itertools::Itertools;
 use thiserror::Error;
 
 use crate::{
@@ -46,24 +47,22 @@ pub enum EncryptionBackendExplicit {
 
 impl EncryptionBackendExplicit {
     pub fn new(config: &[AdditionalConfig]) -> Result<Self, StorageManagerError> {
-        let mut encryption_backends = config.iter().filter_map(|e| match e {
-            AdditionalConfig::StorageConfigSymmetricEncryption(handle) => {
-                Some(Self::from(KeyHandleBackend::new(handle.clone())))
-            }
-            AdditionalConfig::StorageConfigAsymmetricEncryption(handle) => {
-                Some(Self::from(KeyPairHandleBackend::new(handle.clone())))
-            }
-            _ => None,
-        });
-
-        let encryption_backend = encryption_backends
-            .next()
-            .unwrap_or_else(|| Self::from(RawBackend {}));
-
-        if encryption_backends.next().is_some() {
-            Err(StorageManagerError::ConflictingProviderImplConfig { description: "Expected either StorageConfigSymmetricEncryption OR StorageConfigAsymmetricEncryption, not both." })
-        } else {
-            Ok(encryption_backend)
-        }
+        Ok(
+            config.iter()
+            .filter_map(|e| match e {
+                AdditionalConfig::StorageConfigSymmetricEncryption(handle) => {
+                    Some(Self::from(KeyHandleBackend::new(handle.clone())))
+                }
+                AdditionalConfig::StorageConfigAsymmetricEncryption(handle) => {
+                    Some(Self::from(KeyPairHandleBackend::new(handle.clone())))
+                }
+                _ => None,
+            })
+            .at_most_one()
+            .map_err(|_| StorageManagerError::ConflictingProviderImplConfig { 
+                description: "Expected either StorageConfigSymmetricEncryption OR StorageConfigAsymmetricEncryption, not both." 
+            })?
+            .unwrap_or_else(|| Self::from(RawBackend {}))
+        )
     }
 }

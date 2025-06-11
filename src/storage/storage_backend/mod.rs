@@ -1,6 +1,7 @@
 use std::fmt::Debug;
 
 use enum_dispatch::enum_dispatch;
+use itertools::Itertools;
 use thiserror::Error;
 
 mod file_store;
@@ -79,52 +80,50 @@ impl Debug for StorageBackendExplicit {
 
 impl StorageBackendExplicit {
     pub fn new(config: &[AdditionalConfig]) -> Result<Self, StorageManagerError> {
-        let filtered_config: Vec<&AdditionalConfig> = config
-            .iter()
-            .filter(|e| {
-                matches!(
-                    e,
-                    AdditionalConfig::FileStoreConfig { .. }
-                        | AdditionalConfig::KVStoreConfig { .. }
-                )
-            })
-            .collect();
-
-        match filtered_config.len() {
-            0 => {
-                return Err(StorageManagerError::MissingProviderImplConfigOption {
-                    description:
-                        "No additional config for initializing a storage backend was given.",
-                })
-            }
-            2.. => {
-                return Err(StorageManagerError::ConflictingProviderImplConfig {
-                    description: "Expected either FileStoreConfig OR KVStoreConfig, not both.",
-                })
-            }
-            1 => {}
-        }
-
-        match filtered_config[0] {
-            AdditionalConfig::FileStoreConfig { db_dir } => FileStorageBackend::new(db_dir)
+        let file_store = |db_dir: &String| {
+            FileStorageBackend::new(db_dir)
                 .map_err(|e| StorageManagerError::InitializeStorageBackend {
                     source: e,
                     description: "Failed to initialize the file storage backend.",
                 })
-                .map(Self::from),
+                .map(Self::from)
+        };
 
-            AdditionalConfig::KVStoreConfig {
-                get_fn,
-                store_fn,
-                delete_fn,
-                all_keys_fn,
-            } => Ok(Self::from(KvStorageBackend {
-                get_fn: get_fn.clone(),
-                store_fn: store_fn.clone(),
-                delete_fn: delete_fn.clone(),
-                all_keys_fn: all_keys_fn.clone(),
-            })),
-            _ => unreachable!(),
-        }
+        let storage_backend_option_from_additional_config =
+            |additional_data: &AdditionalConfig| match additional_data {
+                AdditionalConfig::FileStoreConfig { db_dir } => Some(file_store(db_dir)),
+                AdditionalConfig::KVStoreConfig {
+                    get_fn,
+                    store_fn,
+                    delete_fn,
+                    all_keys_fn,
+                } => Some(Ok(Self::from(KvStorageBackend {
+                    get_fn: get_fn.clone(),
+                    store_fn: store_fn.clone(),
+                    delete_fn: delete_fn.clone(),
+                    all_keys_fn: all_keys_fn.clone(),
+                }))),
+                _ => None,
+            };
+
+        // `count` is either `1` or `2..`.
+        let error_from_count = |count: usize| {
+            if count > 1 {
+                StorageManagerError::ConflictingProviderImplConfig {
+                    description: "Expected either FileStoreConfig OR KVStoreConfig, not both.",
+                }
+            } else {
+                StorageManagerError::MissingProviderImplConfigOption {
+                    description:
+                        "No additional config for initializing a storage backend was given.",
+                }
+            }
+        };
+
+        config
+            .iter()
+            .filter_map(storage_backend_option_from_additional_config)
+            .exactly_one()
+            .map_err(|iter| error_from_count(iter.count()))?
     }
 }

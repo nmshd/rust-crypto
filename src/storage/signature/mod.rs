@@ -1,4 +1,5 @@
 use enum_dispatch::enum_dispatch;
+use itertools::Itertools;
 use thiserror::Error;
 
 use crate::prelude::{AdditionalConfig, CalError};
@@ -44,26 +45,21 @@ pub enum SignatureBackendExplicit {
 
 impl SignatureBackendExplicit {
     pub fn new(config: &[AdditionalConfig]) -> Result<Self, StorageManagerError> {
-        let mut encryption_backends = config.iter().filter_map(|e| match e {
-            AdditionalConfig::StorageConfigHMAC(handle) => {
-                Some(Self::from(HmacBackend::new(handle.clone())))
-            }
-            AdditionalConfig::StorageConfigDSA(handle) => {
-                Some(Self::from(DsaBackend::new(handle.clone())))
-            }
-            _ => None,
-        });
-
-        let encryption_backend = encryption_backends
-            .next()
-            .unwrap_or_else(|| Self::from(NoneBackend {}));
-
-        if encryption_backends.next().is_some() {
-            Err(StorageManagerError::ConflictingProviderImplConfig {
-                description: "Expected either StorageConfigHMAC OR StorageConfigDSA, not both.",
+        Ok(config
+            .iter()
+            .filter_map(|e| match e {
+                AdditionalConfig::StorageConfigHMAC(handle) => {
+                    Some(Self::from(HmacBackend::new(handle.clone())))
+                }
+                AdditionalConfig::StorageConfigDSA(handle) => {
+                    Some(Self::from(DsaBackend::new(handle.clone())))
+                }
+                _ => None,
             })
-        } else {
-            Ok(encryption_backend)
-        }
+            .at_most_one()
+            .map_err(|_| StorageManagerError::ConflictingProviderImplConfig {
+                description: "Expected either StorageConfigHMAC OR StorageConfigDSA, not both.",
+            })?
+            .unwrap_or_else(|| Self::from(NoneBackend {})))
     }
 }
