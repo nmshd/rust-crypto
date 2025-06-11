@@ -22,7 +22,7 @@ pub enum EncryptionBackendError {
     Encrypt { source: CalError },
     #[error("Failed decryption.")]
     Decrypt { source: CalError },
-    #[error("The cipher text to be decrypted by the storage manager encryption backend does not match what the storage field that was expected.")]
+    #[error("The cipher text to be decrypted by the storage manager encryption backend does not match what the expected storage field.")]
     WrongStorageField,
     #[error("Failed to get scope.")]
     Scope { source: CalError },
