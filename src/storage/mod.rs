@@ -114,13 +114,15 @@ impl StorageManager {
     }
 
     fn encrypt_key_data(&self, key_data: KeyData) -> Result<KeyDataEncrypted, StorageManagerError> {
+        let encrypted_sensitive_data = key_data
+            .secret_data
+            .map(|e| self.encryption.encrypt(&e))
+            .transpose()
+            .map_err(|e| StorageManagerError::Encrypt { source: e })?;
+
         Ok(KeyDataEncrypted {
             id: key_data.id,
-            secret_data: key_data
-                .secret_data
-                .map(|e| self.encryption.encrypt(&e))
-                .transpose()
-                .map_err(|e| StorageManagerError::Encrypt { source: e })?,
+            secret_data: encrypted_sensitive_data,
             public_data: key_data.public_data,
             additional_data: key_data.additional_data,
             spec: key_data.spec,
@@ -146,31 +148,26 @@ impl StorageManager {
         })
     }
 
-    fn sign_blob(&self, blob: Vec<u8>) -> Result<SignedData, StorageManagerError> {
-        self.signature
-            .sign(blob)
-            .map_err(|e| StorageManagerError::Sign { source: e })
-    }
-
-    fn verify_signed_data(&self, signed_data: SignedData) -> Result<Vec<u8>, StorageManagerError> {
-        self.signature
-            .verify(signed_data)
-            .map_err(|e| StorageManagerError::Verify { source: e })
-    }
-
     fn sign_encrypted_key_data(
         &self,
         encrypted_key_data: KeyDataEncrypted,
     ) -> Result<SignedData, StorageManagerError> {
         let serialized_encrypted_key_data = serialize(&encrypted_key_data)?;
-        self.sign_blob(serialized_encrypted_key_data)
+
+        self.signature
+            .sign(serialized_encrypted_key_data)
+            .map_err(|e| StorageManagerError::Sign { source: e })
     }
 
     fn verify_signed_encrypted_key_data(
         &self,
         signed_encrypted_key_data: SignedData,
     ) -> Result<KeyDataEncrypted, StorageManagerError> {
-        let verified_blob = self.verify_signed_data(signed_encrypted_key_data)?;
+        let verified_blob = self
+            .signature
+            .verify(signed_encrypted_key_data)
+            .map_err(|e| StorageManagerError::Verify { source: e })?;
+
         deserialize::<KeyDataEncrypted>(&verified_blob)
     }
 
