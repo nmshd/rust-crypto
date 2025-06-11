@@ -4,11 +4,6 @@ use serde::{Deserialize, Serialize};
 use storage_backend::StorageBackend;
 use thiserror::Error;
 
-use hmac::Hmac;
-use sha2::Sha256;
-
-type HmacSha256 = Hmac<Sha256>;
-
 use crate::{
     common::config::{AdditionalConfig, Spec},
     storage::{
@@ -222,6 +217,11 @@ impl StorageManager {
             .keys()
             .into_iter()
             .map(|result| result.map_err(|err| StorageManagerError::GetKeys { source: err }))
+            .filter_ok(|scoped_key| {
+                scoped_key.encryption_scope == self.scope.encryption_scope
+                    && scoped_key.signature_scope == self.scope.signature_scope
+                    && scoped_key.provider_scope == self.scope.provider_scope
+            })
             .map_ok(|scoped_key| {
                 let id = scoped_key.key_id.clone();
                 let key_data = self.get_partial(scoped_key)?;
