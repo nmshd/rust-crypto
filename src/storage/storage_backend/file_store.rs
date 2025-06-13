@@ -36,8 +36,16 @@ pub enum FileStorageBackendError {
 pub enum FileStorageBackendInitializationError {
     #[error("Failed to acquire lock for global map containing initialized file stores.")]
     AcquireLock,
-    #[error("Failed to canonicalize input database path.")]
-    Canonicalize { source: std::io::Error },
+    #[error("Failed to canonicalize input database path: '{path:?}'")]
+    Canonicalize {
+        source: std::io::Error,
+        path: PathBuf,
+    },
+    #[error("Failed to create directories of database path.")]
+    CreateDir {
+        source: std::io::Error,
+        path: PathBuf,
+    },
     #[error("Failed to open db at path: '{path:?}'")]
     Open { source: sled::Error, path: PathBuf },
 }
@@ -67,9 +75,24 @@ pub struct FileStorageBackend {
 
 impl FileStorageBackend {
     /// Returns a [FileStorageBackend], for which a db is opened if not already opened.
-    pub fn new(db_path: impl AsRef<Path>) -> Result<Self, StorageBackendInitializationError> {
-        let absolute_path = canonicalize(db_path.as_ref())
-            .map_err(|err| FileStorageBackendInitializationError::Canonicalize { source: err })?;
+    pub fn new(
+        db_folder_path: impl AsRef<Path>,
+    ) -> Result<Self, StorageBackendInitializationError> {
+        if !db_folder_path.as_ref().exists() {
+            std::fs::create_dir_all(db_folder_path.as_ref()).map_err(|err| {
+                FileStorageBackendInitializationError::CreateDir {
+                    source: err,
+                    path: db_folder_path.as_ref().to_path_buf(),
+                }
+            })?;
+        }
+
+        let absolute_path = canonicalize(db_folder_path.as_ref()).map_err(|err| {
+            FileStorageBackendInitializationError::Canonicalize {
+                source: err,
+                path: db_folder_path.as_ref().to_owned(),
+            }
+        })?;
 
         if let Some(db) = db_from_map(&absolute_path)? {
             return Ok(Self { db: db.clone() });
@@ -135,5 +158,19 @@ impl StorageBackend for FileStorageBackend {
             .map_ok(|raw_key| deserialize_scoped_key(&raw_key))
             .flatten_ok()
             .collect()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_file_store_creation() {
+        let _ = FileStorageBackend::new(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/target/file_store_test_db"
+        ))
+        .expect("Failed to create a file store");
     }
 }
