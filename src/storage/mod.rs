@@ -178,7 +178,7 @@ impl StorageManager {
         let key_data_encrypted_encoded_signed_serialized =
             serialize(&key_data_encrypted_encoded_signed)?;
 
-        let scoped_key = self.scope.scoped_key(id)?;
+        let scoped_key = self.scope.scoped_key(id);
 
         self.storage
             .store(scoped_key, &key_data_encrypted_encoded_signed_serialized)
@@ -197,7 +197,7 @@ impl StorageManager {
     }
 
     pub(crate) fn get(&self, id: impl Into<String>) -> Result<KeyData, StorageManagerError> {
-        let scoped_key = self.scope.scoped_key(id)?;
+        let scoped_key = self.scope.scoped_key(id);
 
         let key_encrypted_data = self.get_partial(scoped_key)?;
 
@@ -205,7 +205,7 @@ impl StorageManager {
     }
 
     pub(crate) fn delete(&self, id: impl Into<String>) -> Result<(), StorageManagerError> {
-        let scoped_id = self.scope.scoped_key(id)?;
+        let scoped_id = self.scope.scoped_key(id);
 
         self.storage
             .delete(scoped_id)

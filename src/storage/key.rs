@@ -1,7 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-use crate::storage::StorageManagerError;
-
 /// Key that is used to store, get and delete data from a `StorageManagerBackend`.
 ///
 /// This key stores the key id of the key handle, that the stored data is from.
@@ -23,12 +21,12 @@ pub struct ScopedKeyFactory {
 }
 
 impl ScopedKeyFactory {
-    pub fn scoped_key(&self, key_id: impl Into<String>) -> Result<ScopedKey, StorageManagerError> {
-        Ok(ScopedKey {
+    pub fn scoped_key(&self, key_id: impl Into<String>) -> ScopedKey {
+        ScopedKey {
             key_id: key_id.into(),
             provider_scope: self.provider_scope.clone(),
             encryption_scope: self.encryption_scope.clone(),
             signature_scope: self.signature_scope.clone(),
-        })
+        }
     }
 }
