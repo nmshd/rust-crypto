@@ -14,7 +14,10 @@ use crate::{
     prelude::AdditionalConfig,
     storage::{
         key::ScopedKey,
-        storage_backend::{file_store::FileStorageBackendError, kv_store::KvStorageBackendError},
+        storage_backend::{
+            file_store::{FileStorageBackendError, FileStorageBackendInitializationError},
+            kv_store::KvStorageBackendError,
+        },
         StorageManagerInitializationError,
     },
 };
@@ -25,6 +28,12 @@ pub enum StorageBackendError {
     KvStore(#[from] KvStorageBackendError),
     #[error(transparent)]
     FileStore(#[from] FileStorageBackendError),
+}
+
+#[derive(Debug, Error)]
+pub enum StorageBackendInitializationError {
+    #[error(transparent)]
+    FileStore(#[from] FileStorageBackendInitializationError),
 }
 
 #[enum_dispatch]
@@ -55,14 +64,7 @@ impl Debug for StorageBackendExplicit {
 
 impl StorageBackendExplicit {
     pub fn new(config: &[AdditionalConfig]) -> Result<Self, StorageManagerInitializationError> {
-        let file_store = |db_dir: &String| {
-            FileStorageBackend::new(db_dir)
-                .map_err(|e| StorageManagerInitializationError::StorageBackend {
-                    source: e,
-                    description: "Failed to initialize the file storage backend.",
-                })
-                .map(Self::from)
-        };
+        let file_store = |db_dir: &String| FileStorageBackend::new(db_dir).map(Self::from);
 
         let storage_backend_option_from_additional_config =
             |additional_data: &AdditionalConfig| match additional_data {
@@ -98,6 +100,7 @@ impl StorageBackendExplicit {
         config
             .iter()
             .filter_map(storage_backend_option_from_additional_config)
+            .map(|result| result.map_err(StorageManagerInitializationError::from))
             .exactly_one()
             .map_err(|iter| error_from_count(iter.count()))?
     }

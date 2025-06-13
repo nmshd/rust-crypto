@@ -9,7 +9,9 @@ use crate::{
         encryption::{EncryptionBackend, EncryptionBackendError, EncryptionBackendExplicit},
         key::{ScopedKey, ScopedKeyFactory},
         signature::{SignatureBackend, SignatureBackendError, SignatureBackendExplicit},
-        storage_backend::{StorageBackendError, StorageBackendExplicit},
+        storage_backend::{
+            StorageBackendError, StorageBackendExplicit, StorageBackendInitializationError,
+        },
     },
 };
 
@@ -52,11 +54,8 @@ pub enum StorageManagerInitializationError {
     ConflictingProviderImplConfig { description: &'static str },
     #[error("A needed option was not supplied: {description}")]
     MissingProviderImplConfigOption { description: &'static str },
-    #[error("Failed to initialize a storage backend: {description}")]
-    StorageBackend {
-        source: StorageBackendError,
-        description: &'static str,
-    },
+    #[error("Failed to initialize a storage backend.")]
+    StorageBackendInitialization(#[from] StorageBackendInitializationError),
 }
 
 #[derive(Clone, Debug)]

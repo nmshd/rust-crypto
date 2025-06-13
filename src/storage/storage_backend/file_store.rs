@@ -8,6 +8,7 @@ use sled::{open, Db};
 use thiserror::Error;
 
 use crate::storage::key::ScopedKey;
+use crate::storage::storage_backend::StorageBackendInitializationError;
 
 use super::{StorageBackend, StorageBackendError};
 
@@ -21,8 +22,6 @@ pub enum FileStorageBackendError {
     ScopeSerialize { source: rmp_serde::encode::Error },
     #[error("Failed to deserialize json to scoped key.")]
     ScopeDeserialize { source: rmp_serde::decode::Error },
-    #[error("Failed initialization.")]
-    Initialization(#[from] FileStorageBackendInitializationError),
     #[error("Failed to insert data into database.")]
     Insert { source: sled::Error },
     #[error("Failed to get data from database.")]
@@ -43,18 +42,18 @@ pub enum FileStorageBackendInitializationError {
     Open { source: sled::Error, path: PathBuf },
 }
 
-fn db_from_map(path: &PathBuf) -> Result<Option<Db>, StorageBackendError> {
-    let db_map = FILE_STORAGE_BACKEND_MAP.read().map_err(|_| {
-        FileStorageBackendError::from(FileStorageBackendInitializationError::AcquireLock)
-    })?;
+fn db_from_map(path: &PathBuf) -> Result<Option<Db>, StorageBackendInitializationError> {
+    let db_map = FILE_STORAGE_BACKEND_MAP
+        .read()
+        .map_err(|_| FileStorageBackendInitializationError::AcquireLock)?;
 
     Ok(db_map.get(path).cloned())
 }
 
-fn insert_db_into_map(path: PathBuf, db: Db) -> Result<(), StorageBackendError> {
-    let mut db_map = FILE_STORAGE_BACKEND_MAP.write().map_err(|_| {
-        FileStorageBackendError::from(FileStorageBackendInitializationError::AcquireLock)
-    })?;
+fn insert_db_into_map(path: PathBuf, db: Db) -> Result<(), StorageBackendInitializationError> {
+    let mut db_map = FILE_STORAGE_BACKEND_MAP
+        .write()
+        .map_err(|_| FileStorageBackendInitializationError::AcquireLock)?;
 
     db_map.insert(path, db);
 
@@ -68,23 +67,19 @@ pub struct FileStorageBackend {
 
 impl FileStorageBackend {
     /// Returns a [FileStorageBackend], for which a db is opened if not already opened.
-    pub fn new(db_path: impl AsRef<Path>) -> Result<Self, StorageBackendError> {
-        let absolute_path = canonicalize(db_path.as_ref()).map_err(|err| {
-            FileStorageBackendError::from(FileStorageBackendInitializationError::Canonicalize {
-                source: err,
-            })
-        })?;
+    pub fn new(db_path: impl AsRef<Path>) -> Result<Self, StorageBackendInitializationError> {
+        let absolute_path = canonicalize(db_path.as_ref())
+            .map_err(|err| FileStorageBackendInitializationError::Canonicalize { source: err })?;
 
         if let Some(db) = db_from_map(&absolute_path)? {
             return Ok(Self { db: db.clone() });
         }
 
-        let db = open(&absolute_path).map_err(|err| {
-            FileStorageBackendError::from(FileStorageBackendInitializationError::Open {
+        let db =
+            open(&absolute_path).map_err(|err| FileStorageBackendInitializationError::Open {
                 source: err,
                 path: absolute_path.clone(),
-            })
-        })?;
+            })?;
 
         insert_db_into_map(absolute_path, db.clone())?;
 
