@@ -4,7 +4,7 @@ use std::fmt;
 use anyhow::anyhow;
 use thiserror;
 
-use crate::storage::StorageManagerError;
+use crate::storage::{StorageManagerError, StorageManagerInitializationError};
 
 // Feel free to add more items to error.
 
@@ -243,6 +243,12 @@ impl From<anyhow::Error> for CalError {
 
 impl From<StorageManagerError> for CalError {
     fn from(value: StorageManagerError) -> Self {
+        CalError::from(anyhow!(value))
+    }
+}
+
+impl From<StorageManagerInitializationError> for CalError {
+    fn from(value: StorageManagerInitializationError) -> Self {
         CalError::from(anyhow!(value))
     }
 }
