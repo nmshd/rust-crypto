@@ -1,4 +1,3 @@
-use anyhow::anyhow;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use storage_backend::StorageBackend;
@@ -48,8 +47,10 @@ pub enum StorageManagerError {
     Get { source: StorageBackendError },
     #[error("Failed to delete entry.")]
     Delete { source: StorageBackendError },
-    #[error("Failed to create a scope for the storage manager.")]
-    Scope { source: anyhow::Error },
+    #[error("Failed to get the signature backend scope for the storage manager.")]
+    ScopeSignature { source: SignatureBackendError },
+    #[error("Failed to get the encryption backend scope for the storage manager.")]
+    ScopeEncryption { source: EncryptionBackendError },
     #[error("Failed to get key ids.")]
     GetKeys { source: StorageBackendError },
 }
@@ -94,10 +95,10 @@ impl StorageManager {
             provider_scope: scope.into(),
             encryption_scope: encryption
                 .scope()
-                .map_err(|e| StorageManagerError::Scope { source: anyhow!(e) })?,
+                .map_err(|e| StorageManagerError::ScopeEncryption { source: e })?,
             signature_scope: signature
                 .scope()
-                .map_err(|e| StorageManagerError::Scope { source: anyhow!(e) })?,
+                .map_err(|e| StorageManagerError::ScopeSignature { source: e })?,
         };
 
         Ok(Some(Self {
