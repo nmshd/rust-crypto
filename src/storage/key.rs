@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 /// This key stores the key id of the key handle, that the stored data is from.
 /// Provider name, encryption and signature backend scope are used as scope, so that different providers
 /// or providers with different metadata security may never accidentally access the same keys.
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct ScopedKey {
     pub key_id: String,
     pub provider_scope: String,

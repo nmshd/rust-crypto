@@ -163,28 +163,29 @@ impl StorageBackend for FileStorageBackend {
 
 #[cfg(test)]
 mod test {
+    use tempfile::{tempdir_in, TempDir};
+
     use super::*;
+
+    const TARGET_FOLDER: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/target");
+    static TEST_TMP_DIR: LazyLock<TempDir> = LazyLock::new(|| tempdir_in(TARGET_FOLDER).unwrap());
 
     #[test]
     fn test_file_store_creation() {
-        const DB_DIR_PATH: &str = concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/target/file_store_test_db/test_file_store_creation"
-        );
-
-        let _storage = FileStorageBackend::new(DB_DIR_PATH).expect("Failed to create a file store");
+        let _storage =
+            FileStorageBackend::new(TEST_TMP_DIR.path().join("test_file_store_creation"))
+                .expect("Failed to create a file store");
     }
 
     #[test]
     fn test_multi_file_store_creation_same_file() {
-        const DB_DIR_PATH: &str = concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/target/file_store_test_db/test_multi_file_store_creation_same_file"
-        );
+        let db_dir = TEST_TMP_DIR
+            .path()
+            .join("test_multi_file_store_creation_same_file");
 
-        let store1 = FileStorageBackend::new(DB_DIR_PATH).expect("Failed to create a file store 1");
+        let store1 = FileStorageBackend::new(&db_dir).expect("Failed to create a file store 1");
 
-        let store2 = FileStorageBackend::new(DB_DIR_PATH).expect("Failed to create a file store 2");
+        let store2 = FileStorageBackend::new(db_dir).expect("Failed to create a file store 2");
 
         assert_eq!(store1.db.checksum().unwrap(), store2.db.checksum().unwrap());
     }

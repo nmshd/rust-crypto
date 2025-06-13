@@ -26,6 +26,7 @@
         "repr",
         "reqwest",
         "robusta",
+        "rstest",
         "rustup",
         "securestore",
         "serde",
