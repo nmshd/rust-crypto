@@ -18,12 +18,9 @@ fn main() {
     // Providers need additional configuration.
     // All providers need either `FileStoreConfig` or `KVStoreConfig` for storing key metadata.
     let implementation_config = ProviderImplConfig {
-        additional_config: vec![
-            AdditionalConfig::FileStoreConfig {
-                db_dir: "./testdb".to_owned(),
-            },
-            AdditionalConfig::StorageConfigPass("password".to_owned()),
-        ],
+        additional_config: vec![AdditionalConfig::FileStoreConfig {
+            db_dir: "./testdb".to_owned(),
+        }],
     };
 
     let mut provider = create_provider(&capabilities, implementation_config).unwrap();
