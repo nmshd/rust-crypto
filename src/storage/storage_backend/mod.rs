@@ -12,44 +12,19 @@ use kv_store::KvStorageBackend;
 
 use crate::{
     prelude::AdditionalConfig,
-    storage::{key::ScopedKey, StorageManagerError},
+    storage::{
+        key::ScopedKey,
+        storage_backend::{file_store::FileStorageBackendError, kv_store::KvStorageBackendError},
+        StorageManagerError,
+    },
 };
 
 #[derive(Debug, Error)]
 pub enum StorageBackendError {
-    #[error("Failed to store data: {description}")]
-    Store {
-        description: &'static str,
-        source: anyhow::Error,
-    },
-    #[error("Failed to store data. Cause unknown.")]
-    StoreUnknown,
-    #[error("Failed to get data: {description}")]
-    Get {
-        description: &'static str,
-        source: anyhow::Error,
-    },
-    #[error("Failed to get data. Cause unknown.")]
-    GetUnknown,
-    #[error("Failed to decode key.")]
-    KeyDecode { source: anyhow::Error },
-    #[error("Failed to open storage backend: {description}")]
-    Open {
-        description: &'static str,
-        source: anyhow::Error,
-    },
-    #[error("Key or data for key does not exist in storage backend.")]
-    NotExists,
-    #[error("Failed to delete key for storage backend: {description}")]
-    Delete {
-        description: &'static str,
-        source: anyhow::Error,
-    },
-    #[error("Failed operation regarding scoped keys: {description}")]
-    Scope {
-        description: &'static str,
-        source: anyhow::Error,
-    },
+    #[error(transparent)]
+    KvStore(#[from] KvStorageBackendError),
+    #[error(transparent)]
+    FileStore(#[from] FileStorageBackendError),
 }
 
 #[enum_dispatch]

@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use anyhow::anyhow;
+use thiserror::Error;
 
 use crate::{
     common::config::{AllKeysFn, DeleteFn, GetFn, StoreFn},
@@ -8,6 +8,18 @@ use crate::{
 };
 
 use super::{StorageBackend, StorageBackendError};
+
+#[derive(Debug, Error)]
+pub enum KvStorageBackendError {
+    #[error("Failed to serialize scoped key to json.")]
+    ScopeSerialize { source: serde_json::Error },
+    #[error("Failed to deserialize json to scoped key.")]
+    ScopeDeserialize { source: serde_json::Error },
+    #[error("Failed to store data. Cause unknown.")]
+    Store,
+    #[error("Failed to get data. Cause unknown.")]
+    Get,
+}
 
 #[derive(Clone)]
 pub struct KvStorageBackend {
@@ -18,17 +30,13 @@ pub struct KvStorageBackend {
 }
 
 fn serialize_scoped_key(key: ScopedKey) -> Result<String, StorageBackendError> {
-    serde_json::to_string(&key).map_err(|err| StorageBackendError::Scope {
-        description: "Failed to serialize scoped key.",
-        source: anyhow!(err),
-    })
+    serde_json::to_string(&key)
+        .map_err(|err| KvStorageBackendError::ScopeSerialize { source: err }.into())
 }
 
 fn deserialize_scoped_key(value: &str) -> Result<ScopedKey, StorageBackendError> {
-    serde_json::from_str(value).map_err(|err| StorageBackendError::Scope {
-        description: "Failed to deserialize scoped key.",
-        source: anyhow!(err),
-    })
+    serde_json::from_str(value)
+        .map_err(|err| KvStorageBackendError::ScopeDeserialize { source: err }.into())
 }
 
 impl StorageBackend for KvStorageBackend {
@@ -37,13 +45,13 @@ impl StorageBackend for KvStorageBackend {
         if pollster::block_on((self.store_fn)(key, data.to_owned())) {
             Ok(())
         } else {
-            Err(StorageBackendError::StoreUnknown)
+            Err(KvStorageBackendError::Store.into())
         }
     }
 
     fn get(&self, key: ScopedKey) -> Result<Vec<u8>, StorageBackendError> {
         let key = serialize_scoped_key(key)?;
-        pollster::block_on((self.get_fn)(key)).ok_or_else(|| StorageBackendError::GetUnknown)
+        pollster::block_on((self.get_fn)(key)).ok_or_else(|| KvStorageBackendError::Get.into())
     }
 
     fn delete(&self, key: ScopedKey) -> Result<(), StorageBackendError> {
