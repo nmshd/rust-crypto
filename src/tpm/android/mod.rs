@@ -1,3 +1,4 @@
+pub mod DHExchange;
 pub(crate) mod error;
 pub mod key_handle;
 pub mod provider;
