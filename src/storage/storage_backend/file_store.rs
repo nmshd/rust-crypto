@@ -167,10 +167,25 @@ mod test {
 
     #[test]
     fn test_file_store_creation() {
-        let _ = FileStorageBackend::new(concat!(
+        const DB_DIR_PATH: &str = concat!(
             env!("CARGO_MANIFEST_DIR"),
-            "/target/file_store_test_db"
-        ))
-        .expect("Failed to create a file store");
+            "/target/file_store_test_db/test_file_store_creation"
+        );
+
+        let _storage = FileStorageBackend::new(DB_DIR_PATH).expect("Failed to create a file store");
+    }
+
+    #[test]
+    fn test_multi_file_store_creation_same_file() {
+        const DB_DIR_PATH: &str = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/target/file_store_test_db/test_multi_file_store_creation_same_file"
+        );
+
+        let store1 = FileStorageBackend::new(DB_DIR_PATH).expect("Failed to create a file store 1");
+
+        let store2 = FileStorageBackend::new(DB_DIR_PATH).expect("Failed to create a file store 2");
+
+        assert_eq!(store1.db.checksum().unwrap(), store2.db.checksum().unwrap());
     }
 }
