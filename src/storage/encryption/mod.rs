@@ -8,7 +8,7 @@ use crate::{
         encryption::{
             key_handle::KeyHandleBackend, key_pair_handle::KeyPairHandleBackend, raw::RawBackend,
         },
-        StorageField, StorageManagerError,
+        StorageField, StorageManagerInitializationError,
     },
 };
 
@@ -46,7 +46,7 @@ pub enum EncryptionBackendExplicit {
 }
 
 impl EncryptionBackendExplicit {
-    pub fn new(config: &[AdditionalConfig]) -> Result<Self, StorageManagerError> {
+    pub fn new(config: &[AdditionalConfig]) -> Result<Self, StorageManagerInitializationError> {
         Ok(
             config.iter()
             .filter_map(|e| match e {
@@ -59,7 +59,7 @@ impl EncryptionBackendExplicit {
                 _ => None,
             })
             .at_most_one()
-            .map_err(|_| StorageManagerError::ConflictingProviderImplConfig { 
+            .map_err(|_| StorageManagerInitializationError::ConflictingProviderImplConfig { 
                 description: "Expected either StorageConfigSymmetricEncryption OR StorageConfigAsymmetricEncryption, not both." 
             })?
             .unwrap_or_else(|| Self::from(RawBackend {}))

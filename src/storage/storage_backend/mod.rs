@@ -15,7 +15,7 @@ use crate::{
     storage::{
         key::ScopedKey,
         storage_backend::{file_store::FileStorageBackendError, kv_store::KvStorageBackendError},
-        StorageManagerError,
+        StorageManagerInitializationError,
     },
 };
 
@@ -54,10 +54,10 @@ impl Debug for StorageBackendExplicit {
 }
 
 impl StorageBackendExplicit {
-    pub fn new(config: &[AdditionalConfig]) -> Result<Self, StorageManagerError> {
+    pub fn new(config: &[AdditionalConfig]) -> Result<Self, StorageManagerInitializationError> {
         let file_store = |db_dir: &String| {
             FileStorageBackend::new(db_dir)
-                .map_err(|e| StorageManagerError::InitializeStorageBackend {
+                .map_err(|e| StorageManagerInitializationError::StorageBackend {
                     source: e,
                     description: "Failed to initialize the file storage backend.",
                 })
@@ -84,11 +84,11 @@ impl StorageBackendExplicit {
         // `count` is either `1` or `2..`.
         let error_from_count = |count: usize| {
             if count > 1 {
-                StorageManagerError::ConflictingProviderImplConfig {
+                StorageManagerInitializationError::ConflictingProviderImplConfig {
                     description: "Expected either FileStoreConfig OR KVStoreConfig, not both.",
                 }
             } else {
-                StorageManagerError::MissingProviderImplConfigOption {
+                StorageManagerInitializationError::MissingProviderImplConfigOption {
                     description:
                         "No additional config for initializing a storage backend was given.",
                 }

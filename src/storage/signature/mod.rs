@@ -6,7 +6,7 @@ use crate::prelude::{AdditionalConfig, CalError};
 use crate::storage::signature::dsa::DsaBackend;
 use crate::storage::signature::hmac::HmacBackend;
 use crate::storage::signature::none::NoneBackend;
-use crate::storage::{SignedData, StorageManagerError};
+use crate::storage::{SignedData, StorageManagerInitializationError};
 
 mod dsa;
 mod hmac;
@@ -44,7 +44,7 @@ pub enum SignatureBackendExplicit {
 }
 
 impl SignatureBackendExplicit {
-    pub fn new(config: &[AdditionalConfig]) -> Result<Self, StorageManagerError> {
+    pub fn new(config: &[AdditionalConfig]) -> Result<Self, StorageManagerInitializationError> {
         Ok(config
             .iter()
             .filter_map(|e| match e {
@@ -57,9 +57,11 @@ impl SignatureBackendExplicit {
                 _ => None,
             })
             .at_most_one()
-            .map_err(|_| StorageManagerError::ConflictingProviderImplConfig {
-                description: "Expected either StorageConfigHMAC OR StorageConfigDSA, not both.",
-            })?
+            .map_err(
+                |_| StorageManagerInitializationError::ConflictingProviderImplConfig {
+                    description: "Expected either StorageConfigHMAC OR StorageConfigDSA, not both.",
+                },
+            )?
             .unwrap_or_else(|| Self::from(NoneBackend {})))
     }
 }

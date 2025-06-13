@@ -20,15 +20,6 @@ mod storage_backend;
 
 #[derive(Debug, Error)]
 pub enum StorageManagerError {
-    #[error("Some options in the given provider implementation config are in conflict with each other: {description}")]
-    ConflictingProviderImplConfig { description: &'static str },
-    #[error("A needed option was not supplied: {description}")]
-    MissingProviderImplConfigOption { description: &'static str },
-    #[error("Failed to initialize a storage backend: {description}")]
-    InitializeStorageBackend {
-        source: StorageBackendError,
-        description: &'static str,
-    },
     #[error("Failed to encrypt sensitive data.")]
     Encrypt { source: EncryptionBackendError },
     #[error("Failed to decrypt ciphertext.")]
@@ -47,12 +38,25 @@ pub enum StorageManagerError {
     Get { source: StorageBackendError },
     #[error("Failed to delete entry.")]
     Delete { source: StorageBackendError },
+    #[error("Failed to get key ids.")]
+    GetKeys { source: StorageBackendError },
+}
+
+#[derive(Debug, Error)]
+pub enum StorageManagerInitializationError {
     #[error("Failed to get the signature backend scope for the storage manager.")]
     ScopeSignature { source: SignatureBackendError },
     #[error("Failed to get the encryption backend scope for the storage manager.")]
     ScopeEncryption { source: EncryptionBackendError },
-    #[error("Failed to get key ids.")]
-    GetKeys { source: StorageBackendError },
+    #[error("Some options in the given provider implementation config are in conflict with each other: {description}")]
+    ConflictingProviderImplConfig { description: &'static str },
+    #[error("A needed option was not supplied: {description}")]
+    MissingProviderImplConfigOption { description: &'static str },
+    #[error("Failed to initialize a storage backend: {description}")]
+    StorageBackend {
+        source: StorageBackendError,
+        description: &'static str,
+    },
 }
 
 #[derive(Clone, Debug)]
@@ -75,13 +79,13 @@ impl StorageManager {
     pub(crate) fn new(
         scope: impl Into<String>,
         config: &[AdditionalConfig],
-    ) -> Result<Option<Self>, StorageManagerError> {
+    ) -> Result<Option<Self>, StorageManagerInitializationError> {
         let storage = match StorageBackendExplicit::new(config) {
             Ok(e) => e,
             Err(e)
                 if matches!(
                     e,
-                    StorageManagerError::MissingProviderImplConfigOption { .. }
+                    StorageManagerInitializationError::MissingProviderImplConfigOption { .. }
                 ) =>
             {
                 return Ok(None)
@@ -95,10 +99,10 @@ impl StorageManager {
             provider_scope: scope.into(),
             encryption_scope: encryption
                 .scope()
-                .map_err(|e| StorageManagerError::ScopeEncryption { source: e })?,
+                .map_err(|e| StorageManagerInitializationError::ScopeEncryption { source: e })?,
             signature_scope: signature
                 .scope()
-                .map_err(|e| StorageManagerError::ScopeSignature { source: e })?,
+                .map_err(|e| StorageManagerInitializationError::ScopeSignature { source: e })?,
         };
 
         Ok(Some(Self {
