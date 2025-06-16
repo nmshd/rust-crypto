@@ -7,6 +7,7 @@ use crate::{
         DHExchange, KeyHandle,
     },
     prelude::Cipher,
+    software::util::ring_hmac_algorithm_from_signing_hash,
 };
 use anyhow::anyhow;
 use base64::Engine;
@@ -267,12 +268,38 @@ impl KeyHandleImpl for SoftwareKeyHandle {
         }
     }
 
-    fn hmac(&self, _data: &[u8]) -> Result<Vec<u8>, CalError> {
-        todo!("HMAC not supported for AES keys")
+    fn hmac(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
+        let hmac_algorithm = ring_hmac_algorithm_from_signing_hash(self.spec.signing_hash)
+            .ok_or_else(|| {
+                CalError::bad_parameter(
+                    "SoftwareProvider only supports Sha2_256, Sha2_384 and Sha2_512 for HMAC.",
+                    true,
+                    None,
+                )
+            })?;
+
+        let signing_key = ring::hmac::Key::new(hmac_algorithm, &self.key);
+
+        Ok(ring::hmac::sign(&signing_key, data).as_ref().to_vec())
     }
 
-    fn verify_hmac(&self, _data: &[u8], _hmac: &[u8]) -> Result<bool, CalError> {
-        todo!("HMAC not supported for AES keys")
+    fn verify_hmac(&self, data: &[u8], tag: &[u8]) -> Result<bool, CalError> {
+        let hmac_algorithm = ring_hmac_algorithm_from_signing_hash(self.spec.signing_hash)
+            .ok_or_else(|| {
+                CalError::bad_parameter(
+                    "SoftwareProvider only supports Sha2_256, Sha2_384 and Sha2_512 for HMAC.",
+                    true,
+                    None,
+                )
+            })?;
+
+        let signing_key = ring::hmac::Key::new(hmac_algorithm, &self.key);
+
+        match ring::hmac::verify(&signing_key, data, tag) {
+            Ok(()) => Ok(true),
+            // `verify` errors on failure with [ring::error::Unspecified].
+            Err(_) => Ok(false),
+        }
     }
 
     fn derive_key(&self, nonce: &[u8]) -> Result<KeyHandle, CalError> {
