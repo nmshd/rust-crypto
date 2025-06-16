@@ -79,7 +79,7 @@ pub enum SecurityLevel {
     Unsafe = 1,
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy, Debug)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
 /// flutter_rust_bridge:non_opaque
 pub enum Spec {
     KeySpec(KeySpec),
@@ -87,7 +87,7 @@ pub enum Spec {
 }
 
 /// Struct used to configure keys.
-#[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, Zeroize)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, Zeroize, PartialEq)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 /// flutter_rust_bridge:non_opaque
 pub struct KeySpec {
@@ -102,7 +102,7 @@ pub struct KeySpec {
 }
 
 /// Struct used to configure key pairs.
-#[derive(Clone, Copy, Debug, Serialize, Deserialize, Default)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, PartialEq)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 /// flutter_rust_bridge:non_opaque
 pub struct KeyPairSpec {

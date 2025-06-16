@@ -25,6 +25,7 @@
         "redb",
         "repr",
         "reqwest",
+        "rngs",
         "robusta",
         "rstest",
         "rustup",

@@ -236,7 +236,7 @@ impl StorageManager {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub(crate) struct KeyData {
     pub(crate) id: String,
     pub(crate) secret_data: Option<Vec<u8>>,
@@ -272,4 +272,143 @@ pub(crate) enum StorageField {
     Encrypted { data: Vec<u8>, iv: Vec<u8> },
     EncryptedAsymmetric { data: Vec<u8> },
     Raw(Vec<u8>),
+}
+
+#[cfg(test)]
+mod test {
+    use std::sync::LazyLock;
+
+    use nanoid::nanoid;
+    use rstest::{fixture, rstest};
+
+    use crate::{prelude::KeySpec, tests::TestStore};
+
+    use super::*;
+
+    static TEST_KV_STORE: LazyLock<TestStore> = LazyLock::new(TestStore::new);
+
+    const DUMMY_SPEC: Spec = Spec::KeySpec(KeySpec {
+        cipher: crate::prelude::Cipher::AesGcm256,
+        signing_hash: crate::prelude::CryptoHash::Sha2_512,
+        ephemeral: true,
+        non_exportable: false,
+    });
+
+    #[test]
+    fn none_on_empty_config() {
+        let config = vec![];
+        let storage = StorageManager::new(nanoid!(), &config).unwrap();
+        assert!(storage.is_none());
+    }
+
+    #[fixture]
+    fn storage_manager() -> StorageManager {
+        let config = TEST_KV_STORE.impl_config().additional_config;
+        StorageManager::new(nanoid!(), &config).unwrap().unwrap()
+    }
+
+    #[test]
+    fn create_unencrypted_storage_manager() {
+        let _storage = storage_manager();
+    }
+
+    #[fixture]
+    fn key_data_empty() -> KeyData {
+        KeyData {
+            id: nanoid!(),
+            secret_data: None,
+            public_data: None,
+            additional_data: None,
+            spec: DUMMY_SPEC,
+        }
+    }
+
+    #[fixture]
+    fn key_data_no_sensitive_data() -> KeyData {
+        KeyData {
+            id: nanoid!(),
+            secret_data: None,
+            public_data: Some(nanoid::rngs::default(12)),
+            additional_data: Some(nanoid::rngs::default(12)),
+            spec: DUMMY_SPEC,
+        }
+    }
+
+    #[fixture]
+    fn key_data_filled() -> KeyData {
+        KeyData {
+            id: nanoid!(),
+            secret_data: Some(nanoid::rngs::default(12)),
+            public_data: Some(nanoid::rngs::default(12)),
+            additional_data: Some(nanoid::rngs::default(12)),
+            spec: DUMMY_SPEC,
+        }
+    }
+
+    #[fixture]
+    fn key_id() -> String {
+        nanoid!()
+    }
+
+    #[rstest]
+    #[case::key_data_empty(key_data_empty())]
+    #[case::key_data_non_sensitive(key_data_no_sensitive_data())]
+    #[case::key_data_filled(key_data_filled())]
+    fn test_store(storage_manager: StorageManager, key_id: String, #[case] key_data: KeyData) {
+        storage_manager.store(key_id, key_data).unwrap();
+    }
+
+    #[rstest]
+    #[case::key_data_empty(key_data_empty())]
+    #[case::key_data_non_sensitive(key_data_no_sensitive_data())]
+    #[case::key_data_filled(key_data_filled())]
+    fn test_store_and_get(
+        storage_manager: StorageManager,
+        key_id: String,
+        #[case] key_data: KeyData,
+    ) {
+        storage_manager.store(&key_id, key_data.clone()).unwrap();
+
+        let loaded_key_data = storage_manager.get(key_id).unwrap();
+
+        assert_eq!(key_data, loaded_key_data);
+    }
+
+    #[rstest]
+    #[case::key_data_empty(key_data_empty())]
+    #[case::key_data_non_sensitive(key_data_no_sensitive_data())]
+    #[case::key_data_filled(key_data_filled())]
+    fn test_store_and_all_keys(
+        storage_manager: StorageManager,
+        key_id: String,
+        #[case] key_data: KeyData,
+    ) {
+        storage_manager.store(&key_id, key_data.clone()).unwrap();
+
+        let keys = storage_manager.get_all_keys();
+        assert_eq!(keys.len(), 1);
+        let (id, spec) = keys[0].as_ref().unwrap();
+        assert_eq!(id, &key_id);
+        assert_eq!(spec, &key_data.spec);
+    }
+
+    #[rstest]
+    #[case::key_data_empty(key_data_empty())]
+    #[case::key_data_non_sensitive(key_data_no_sensitive_data())]
+    #[case::key_data_filled(key_data_filled())]
+    fn test_store_and_delete(
+        storage_manager: StorageManager,
+        key_id: String,
+        #[case] key_data: KeyData,
+    ) {
+        assert_eq!(storage_manager.get_all_keys().len(), 0);
+
+        storage_manager.store(&key_id, key_data.clone()).unwrap();
+
+        assert_eq!(storage_manager.get_all_keys().len(), 1);
+
+        storage_manager.delete(key_id).unwrap();
+
+        assert_eq!(storage_manager.get_all_keys().len(), 0);
+    }
 }
