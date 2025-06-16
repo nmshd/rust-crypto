@@ -65,3 +65,106 @@ impl SignatureBackendExplicit {
             .unwrap_or_else(|| Self::from(NoneBackend {})))
     }
 }
+
+#[cfg(test)]
+mod test {
+    use std::collections::HashSet;
+
+    use rstest::{fixture, rstest};
+
+    use crate::{
+        common::{KeyHandle, KeyPairHandle, Provider},
+        prelude::{
+            create_provider, AsymmetricKeySpec, Cipher, CryptoHash, KeyPairSpec, KeySpec,
+            ProviderConfig, ProviderImplConfig,
+        },
+    };
+
+    use super::*;
+
+    fn provider() -> Provider {
+        let provider_config = ProviderConfig {
+            max_security_level: crate::prelude::SecurityLevel::Software,
+            min_security_level: crate::prelude::SecurityLevel::Software,
+            supported_ciphers: HashSet::from([Cipher::AesGcm256]),
+            supported_hashes: HashSet::from([CryptoHash::Sha2_512]),
+            supported_asym_spec: HashSet::from([AsymmetricKeySpec::P256]),
+        };
+
+        let provider_impl_config = ProviderImplConfig {
+            additional_config: vec![],
+        };
+
+        create_provider(&provider_config, provider_impl_config).unwrap()
+    }
+
+    #[fixture]
+    fn key_handle() -> KeyHandle {
+        let mut provider = provider();
+
+        let key_spec = KeySpec {
+            cipher: Cipher::XChaCha20Poly1305,
+            signing_hash: CryptoHash::Sha2_512,
+            ephemeral: true,
+            non_exportable: false,
+        };
+
+        provider.create_key(key_spec).unwrap()
+    }
+
+    #[fixture]
+    fn key_pair_handle() -> KeyPairHandle {
+        let mut provider = provider();
+
+        let key_pair_spec = KeyPairSpec {
+            asym_spec: AsymmetricKeySpec::P256,
+            cipher: None,
+            signing_hash: CryptoHash::Sha2_512,
+            ephemeral: true,
+            non_exportable: false,
+        };
+
+        provider.create_key_pair(key_pair_spec).unwrap()
+    }
+
+    #[rstest]
+    #[case::none(vec![])]
+    #[case::hmac(vec![AdditionalConfig::StorageConfigHMAC(key_handle())])]
+    #[case::dsa(vec![AdditionalConfig::StorageConfigDSA(key_pair_handle())])]
+    #[should_panic]
+    #[case::hmac_and_dsa_panic(vec![
+        AdditionalConfig::StorageConfigHMAC(key_handle()), 
+        AdditionalConfig::StorageConfigDSA(key_pair_handle())
+    ])]
+    fn test_new(#[case] additional_config: Vec<AdditionalConfig>) {
+        let _signature = SignatureBackendExplicit::new(&additional_config).unwrap();
+    }
+
+    #[rstest]
+    #[case::none(vec![])]
+    #[case::hmac(vec![AdditionalConfig::StorageConfigHMAC(key_handle())])]
+    #[case::dsa(vec![AdditionalConfig::StorageConfigDSA(key_pair_handle())])]
+    fn test_sign(#[case] additional_config: Vec<AdditionalConfig>) {
+        let signature_backend = SignatureBackendExplicit::new(&additional_config).unwrap();
+
+        let test_data = b"Hello World!".to_vec();
+
+        let _signed_data =  signature_backend.sign(test_data).unwrap();
+    }
+
+    #[rstest]
+    #[case::none(vec![])]
+    #[case::hmac(vec![AdditionalConfig::StorageConfigHMAC(key_handle())])]
+    #[case::dsa(vec![AdditionalConfig::StorageConfigDSA(key_pair_handle())])]
+    fn test_sign_and_verify(#[case] additional_config: Vec<AdditionalConfig>) {
+        let signature_backend = SignatureBackendExplicit::new(&additional_config).unwrap();
+
+        let test_data = b"Hello World!".to_vec();
+
+        let signed_data =  signature_backend.sign(test_data.clone()).unwrap();
+
+        let verified_test_data = signature_backend.verify(signed_data).unwrap();
+
+        assert_eq!(verified_test_data, test_data);
+    }
+}
