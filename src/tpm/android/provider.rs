@@ -8,6 +8,7 @@ use crate::{
     },
     storage::{KeyData, StorageManager},
     tpm::android::{
+        dh_exchange::AndroidDHExchange,
         key_handle::{AndroidKeyHandle, AndroidKeyPairHandle},
         utils::{
             get_asym_key_size, get_cipher_name, get_cipher_padding, get_key_size, get_mode_name,
@@ -98,6 +99,7 @@ impl ProviderFactory for AndroidProviderFactory {
 /// for operations like signing, encryption, and decryption.
 /// It provides a secure and hardware-backed solution for managing cryptographic keys and performing
 /// cryptographic operations on Android.
+#[derive(Clone)]
 pub(crate) struct AndroidProvider {
     impl_config: ProviderImplConfig,
     used_factory: AndroidProviderFactory,
@@ -494,11 +496,11 @@ impl ProviderImpl for AndroidProvider {
                 .store(key_id.clone(), storage_data)?;
         }
 
-        Ok(KeyPairHandle {
-            implementation: Into::into(AndroidKeyPairHandle {
+        Ok(DHExchange {
+            implementation: Into::into(AndroidDHExchange {
                 key_id,
                 spec,
-                storage_manager: storage_manager.clone(),
+                provider: self.clone(),
             }),
         })
     }

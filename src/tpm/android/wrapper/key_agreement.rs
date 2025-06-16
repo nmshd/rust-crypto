@@ -4,14 +4,10 @@ use robusta_jni::bridge;
 pub(crate) mod jni {
     use robusta_jni::{
         convert::{IntoJavaValue, Signature, TryFromJavaValue, TryIntoJavaValue},
-        jni::{
-            errors::Result as JniResult,
-            objects::{AutoLocal, JObject},
-            JNIEnv,
-        },
+        jni::{errors::Result as JniResult, objects::AutoLocal, JNIEnv},
     };
 
-    use crate::tpm::android::wrapper::key_generation::key::jni::{Key, SecretKey};
+    use crate::tpm::android::wrapper::key_generation::key::jni::Key;
 
     /// Represents a key in Java's `java.security` package.
     #[derive(Signature, TryIntoJavaValue, IntoJavaValue, TryFromJavaValue)]
@@ -22,27 +18,23 @@ pub(crate) mod jni {
     }
 
     impl<'env: 'borrow, 'borrow> KeyAgreement<'env, 'borrow> {
+        pub(crate) extern "java" fn getInstance(
+            env: &'borrow JNIEnv<'env>,
+            algorithm: String,
+            provider: String,
+        ) -> JniResult<Self> {
+        }
+
         pub(crate) extern "java" fn doPhase(
             &self,
-            _env: &JNIEnv,
+            env: &'borrow JNIEnv<'env>,
             key: Key,
             lastPhase: bool,
-        ) -> JniResult<Option<Key>> {
+        ) -> JniResult<Key> {
         }
 
-        pub(crate) extern "java" fn generateSecret(
-            &self,
-            _env: &JNIEnv,
-            algorithm: String,
-        ) -> JniResult<SecretKey> {
-        }
+        pub(crate) extern "java" fn generateSecret(&self, _env: &JNIEnv) -> JniResult<Vec<u8>> {}
 
-        pub(crate) extern "java" fn init(
-            &self,
-            _env: &JNIEnv,
-            key: Key,
-            params: JObject,
-        ) -> JniResult<()> {
-        }
+        pub(crate) extern "java" fn init(&self, _env: &JNIEnv, key: Key) -> JniResult<()> {}
     }
 }
