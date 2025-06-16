@@ -140,25 +140,39 @@ mod test {
         let _signature = SignatureBackendExplicit::new(&additional_config).unwrap();
     }
 
-    #[rstest]
-    #[case::none(vec![])]
-    #[case::hmac(vec![AdditionalConfig::StorageConfigHMAC(key_handle())])]
-    #[case::dsa(vec![AdditionalConfig::StorageConfigDSA(key_pair_handle())])]
-    fn test_sign(#[case] additional_config: Vec<AdditionalConfig>) {
-        let signature_backend = SignatureBackendExplicit::new(&additional_config).unwrap();
+    #[fixture]
+    fn signature_backend_dsa() -> SignatureBackendExplicit {
+        let config = vec![AdditionalConfig::StorageConfigDSA(key_pair_handle())];
+        SignatureBackendExplicit::new(&config).unwrap()
+    }
 
+    #[fixture]
+    fn signature_backend_hmac() -> SignatureBackendExplicit {
+        let config = vec![AdditionalConfig::StorageConfigHMAC(key_handle())];
+        SignatureBackendExplicit::new(&config).unwrap()
+    }
+
+    #[fixture]
+    fn signature_backend_none() -> SignatureBackendExplicit {
+        let config = vec![];
+        SignatureBackendExplicit::new(&config).unwrap()
+    }
+
+    #[rstest]
+    #[case::none(signature_backend_none())]
+    #[case::hmac(signature_backend_hmac())]
+    #[case::dsa(signature_backend_dsa())]
+    fn test_sign(#[case] signature_backend: SignatureBackendExplicit) {
         let test_data = b"Hello World!".to_vec();
 
         let _signed_data =  signature_backend.sign(test_data).unwrap();
     }
 
     #[rstest]
-    #[case::none(vec![])]
-    #[case::hmac(vec![AdditionalConfig::StorageConfigHMAC(key_handle())])]
-    #[case::dsa(vec![AdditionalConfig::StorageConfigDSA(key_pair_handle())])]
-    fn test_sign_and_verify(#[case] additional_config: Vec<AdditionalConfig>) {
-        let signature_backend = SignatureBackendExplicit::new(&additional_config).unwrap();
-
+    #[case::none(signature_backend_none())]
+    #[case::hmac(signature_backend_hmac())]
+    #[case::dsa(signature_backend_dsa())]
+    fn test_sign_and_verify(#[case] signature_backend: SignatureBackendExplicit) {
         let test_data = b"Hello World!".to_vec();
 
         let signed_data =  signature_backend.sign(test_data.clone()).unwrap();
@@ -166,5 +180,27 @@ mod test {
         let verified_test_data = signature_backend.verify(signed_data).unwrap();
 
         assert_eq!(verified_test_data, test_data);
+    }
+
+    #[rstest]
+    #[case::none_hmac(signature_backend_none(), signature_backend_hmac())]
+    #[case::none_dsa(signature_backend_none(), signature_backend_dsa())]
+    #[case::hmac_none(signature_backend_hmac(), signature_backend_none())]
+    #[case::hmac_dsa(signature_backend_hmac(), signature_backend_dsa())]
+    #[case::dsa_none(signature_backend_dsa(), signature_backend_none())]
+    #[case::dsa_hmac(signature_backend_dsa(), signature_backend_hmac())]
+    fn test_fail_on_wrong_signature_backend(
+        #[case]
+        signature_backend_sign: SignatureBackendExplicit,
+        #[case]
+        signature_backend_verify: SignatureBackendExplicit
+    ) {
+        let test_data = b"Hello World!".to_vec();
+
+        let signed_data =  signature_backend_sign.sign(test_data.clone()).unwrap();
+
+        let error = signature_backend_verify.verify(signed_data).unwrap_err();
+
+        assert!(matches!(error, SignatureBackendError::WrongSignatureType));
     }
 }
