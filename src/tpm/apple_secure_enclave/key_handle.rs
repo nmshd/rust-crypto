@@ -104,7 +104,7 @@ impl KeyPairHandleImpl for AppleSecureEnclaveKeyPair {
     #[instrument]
     fn delete(self) -> Result<(), CalError> {
         if let Some(storage_manager) = &self.storage_manager {
-            storage_manager.delete(self.id()?);
+            storage_manager.delete(self.id()?)?;
         }
         self.key_handle.delete().err_internal()
     }

@@ -123,14 +123,12 @@ impl ProviderImpl for AppleSecureEnclaveProvider {
         )
         .err_internal()?;
 
-        let key_options = GenerateKeyOptions {
-            key_type: Some(KeyType::ec()),
-            size_in_bits: Some(256),
-            label: None,
-            token: None,
-            location: Some(Location::DataProtectionKeychain),
-            access_control: Some(access_controll),
-        };
+        let mut key_options = GenerateKeyOptions::default();
+        key_options
+            .set_key_type(KeyType::ec())
+            .set_size_in_bits(256)
+            .set_location(Location::DataProtectionKeychain)
+            .set_access_control(access_controll);
 
         let sec_key: SecKey = SecKey::new(&key_options).err_internal()?;
 
