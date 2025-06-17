@@ -20,3 +20,17 @@ Future<ProviderImplConfig> getDefaultConfig({
   deleteFn: deleteFn,
   allKeysFn: allKeysFn,
 );
+
+Future<ProviderImplConfig> createWithKvConfig({
+  required FutureOr<Uint8List?> Function(String) getFn,
+  required FutureOr<bool> Function(String, Uint8List) storeFn,
+  required FutureOr<void> Function(String) deleteFn,
+  required FutureOr<List<String>> Function() allKeysFn,
+  required List<AdditionalConfig> additionalConfig,
+}) => RustLib.instance.api.crateApiCryptoCreateWithKvConfig(
+  getFn: getFn,
+  storeFn: storeFn,
+  deleteFn: deleteFn,
+  allKeysFn: allKeysFn,
+  additionalConfig: additionalConfig,
+);
