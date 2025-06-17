@@ -1,5 +1,6 @@
 use std::fmt;
 
+use anyhow::anyhow;
 use base64::prelude::*;
 use security_framework::key::Algorithm;
 use security_framework::key::SecKey;
@@ -14,9 +15,10 @@ use crate::common::{
     DHExchange,
 };
 use crate::storage::StorageManager;
+use crate::tpm::apple_secure_enclave::CFErrorThreadSafe;
 
 #[instrument(level = "trace")]
-fn hash_kind(hash: CryptoHash) -> Result<Algorithm, CalError> {
+fn signature_algorithm_from_crypto_hash(hash: CryptoHash) -> Result<Algorithm, CalError> {
     match hash {
         CryptoHash::Sha2_224 => Ok(Algorithm::ECDSASignatureMessageX962SHA224),
         CryptoHash::Sha2_256 => Ok(Algorithm::ECDSASignatureMessageX962SHA256),
@@ -27,6 +29,53 @@ fn hash_kind(hash: CryptoHash) -> Result<Algorithm, CalError> {
             true,
             None,
         )),
+    }
+}
+
+fn encryption_algorithm_from_spec(spec: &KeyPairSpec) -> Result<Algorithm, CalError> {
+    if let Some(cipher) = spec.cipher {
+        if !matches!(
+            cipher,
+            crate::prelude::Cipher::AesGcm128 | crate::prelude::Cipher::AesGcm256
+        ) {
+            return Err(CalError::bad_parameter(
+                format!(
+                    "Apple secure enclave ECIES only supports AES GCM not '{:?}'.",
+                    cipher
+                ),
+                true,
+                None,
+            ));
+        }
+
+        match spec.signing_hash {
+            CryptoHash::Sha2_224 => {
+                Ok(Algorithm::ECIESEncryptionStandardVariableIVX963SHA224AESGCM)
+            }
+            CryptoHash::Sha2_256 => {
+                Ok(Algorithm::ECIESEncryptionStandardVariableIVX963SHA256AESGCM)
+            }
+            CryptoHash::Sha2_384 => {
+                Ok(Algorithm::ECIESEncryptionStandardVariableIVX963SHA384AESGCM)
+            }
+            CryptoHash::Sha2_512 => {
+                Ok(Algorithm::ECIESEncryptionStandardVariableIVX963SHA512AESGCM)
+            }
+            _ => Err(CalError::bad_parameter(
+                format!(
+                    "Apple secure enclave provider does not support the requested algorithm: '{:?}'.",
+                    spec.signing_hash
+                ),
+                true,
+                None,
+            )),
+        }
+    } else {
+        Err(CalError::bad_parameter(
+            "Key was not initialized with a cipher.",
+            true,
+            None,
+        ))
     }
 }
 
@@ -41,7 +90,10 @@ impl KeyPairHandleImpl for AppleSecureEnclaveKeyPair {
     #[instrument(level = "trace", skip(data))]
     fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
         self.key_handle
-            .create_signature(hash_kind(self.spec.signing_hash)?, data)
+            .create_signature(
+                signature_algorithm_from_crypto_hash(self.spec.signing_hash)?,
+                data,
+            )
             .err_internal()
     }
 
@@ -52,16 +104,38 @@ impl KeyPairHandleImpl for AppleSecureEnclaveKeyPair {
             KeyType::Public,
         ))?;
         public_key
-            .verify_signature(hash_kind(self.spec.signing_hash)?, data, signature)
+            .verify_signature(
+                signature_algorithm_from_crypto_hash(self.spec.signing_hash)?,
+                data,
+                signature,
+            )
             .err_internal()
     }
 
-    fn encrypt_data(&self, _data: &[u8]) -> Result<Vec<u8>, CalError> {
-        Err(CalError::not_implemented())
+    fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
+        let algorithm = encryption_algorithm_from_spec(&self.spec)?;
+        self.key_handle
+            .encrypt_data(algorithm, data)
+            .map_err(|err| {
+                CalError::failed_operation(
+                    "Apple secure enclave failed encryption.",
+                    false,
+                    Some(anyhow!(CFErrorThreadSafe::from(err))),
+                )
+            })
     }
 
-    fn decrypt_data(&self, _encrypted_data: &[u8]) -> Result<Vec<u8>, CalError> {
-        Err(CalError::not_implemented())
+    fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, CalError> {
+        let algorithm = encryption_algorithm_from_spec(&self.spec)?;
+        self.key_handle
+            .decrypt_data(algorithm, encrypted_data)
+            .map_err(|err| {
+                CalError::failed_operation(
+                    "Apple secure enclave failed decryption.",
+                    false,
+                    Some(anyhow!(CFErrorThreadSafe::from(err))),
+                )
+            })
     }
 
     #[instrument(level = "trace", skip_all)]

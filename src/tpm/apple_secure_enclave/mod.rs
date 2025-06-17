@@ -13,7 +13,7 @@ use crate::common::error::{CalError, ToCalError};
 /// CFError is not thread safe. This struct wraps CFError's output.
 #[derive(thiserror::Error, Debug)]
 #[error("{code} -- {description}")]
-struct CFErrorThreadSafe {
+pub(self) struct CFErrorThreadSafe {
     domain: String,
     code: isize,
     description: String,
