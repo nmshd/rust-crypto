@@ -5,7 +5,10 @@ use crate::software::{
     provider::SoftwareDHExchange,
 };
 #[cfg(feature = "android")]
-use crate::tpm::android::key_handle::{AndroidKeyHandle, AndroidKeyPairHandle};
+use crate::tpm::android::{
+    dh_exchange::AndroidDHExchange,
+    key_handle::{AndroidKeyHandle, AndroidKeyPairHandle},
+};
 #[cfg(feature = "apple-secure-enclave")]
 use crate::tpm::apple_secure_enclave::key_handle::AppleSecureEnclaveKeyPair;
 
@@ -186,6 +189,8 @@ pub(crate) enum DHKeyExchangeImplEnum {
     StubDHKeyExchange,
     #[cfg(feature = "software")]
     SoftwareDHExchange,
+    #[cfg(feature = "android")]
+    AndroidDHExchange,
 }
 
 #[enum_dispatch(DHKeyExchangeImplEnum)]
