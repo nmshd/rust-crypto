@@ -67,7 +67,7 @@ impl EncryptionBackendExplicit {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "software"))]
 mod test {
     use std::collections::HashSet;
     use rstest::{fixture, rstest};
