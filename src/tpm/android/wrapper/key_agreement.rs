@@ -4,7 +4,11 @@ use robusta_jni::bridge;
 pub(crate) mod jni {
     use robusta_jni::{
         convert::{IntoJavaValue, Signature, TryFromJavaValue, TryIntoJavaValue},
-        jni::{errors::Result as JniResult, objects::AutoLocal, JNIEnv},
+        jni::{
+            errors::Result as JniResult,
+            objects::{AutoLocal, JValue},
+            JNIEnv,
+        },
     };
 
     use crate::tpm::android::wrapper::key_generation::key::jni::Key;
@@ -25,16 +29,42 @@ pub(crate) mod jni {
         ) -> JniResult<Self> {
         }
 
-        pub(crate) extern "java" fn doPhase(
+        pub(crate) fn doPhase(
             &self,
             env: &'borrow JNIEnv<'env>,
             key: Key,
             lastPhase: bool,
         ) -> JniResult<Key> {
+            let reskey = env.call_method(
+                self.raw.as_obj(),
+                "doPhase",
+                "(Ljava/security/Key;Z)Ljava/security/Key;",
+                &[
+                    JValue::Object(key.raw.as_obj()),
+                    JValue::Bool(Into::into(lastPhase)),
+                ],
+            )?;
+
+            Ok(Key {
+                raw: AutoLocal::new(env, Into::into(reskey.l()?)),
+            })
         }
 
-        pub(crate) extern "java" fn generateSecret(&self, _env: &JNIEnv) -> JniResult<Vec<u8>> {}
+        pub(crate) fn generateSecret(&self, env: &JNIEnv) -> JniResult<Vec<u8>> {
+            let res = env
+                .call_method(self.raw.as_obj(), "generateSecret", "()[B", &[])?
+                .l()?;
+            env.convert_byte_array(*res)
+        }
 
-        pub(crate) extern "java" fn init(&self, _env: &JNIEnv, key: Key) -> JniResult<()> {}
+        pub(crate) fn init(&self, env: &JNIEnv, key: Key) -> JniResult<()> {
+            env.call_method(
+                self.raw.as_obj(),
+                "init",
+                "(Ljava/security/Key;)V",
+                &[JValue::Object(key.raw.as_obj())],
+            )?;
+            Ok(())
+        }
     }
 }

@@ -441,7 +441,7 @@ impl ProviderImpl for AndroidProvider {
 
         // build up key specs
         let mut kps_builder =
-            wrapper::key_generation::builder::Builder::new(&env, key_id.to_owned(), 1 | 2 | 4 | 8)
+            wrapper::key_generation::builder::Builder::new(&env, key_id.to_owned(), 64)
                 .err_internal()?;
 
         match is_rsa(spec.asym_spec) {

@@ -1,4 +1,8 @@
-use robusta_jni::jni::{objects::JObject, JavaVM};
+use robusta_jni::jni::{
+    objects::{AutoLocal, JObject},
+    JavaVM,
+};
+use tracing::trace;
 
 use crate::{
     common::{
@@ -7,7 +11,6 @@ use crate::{
         KeyHandle,
     },
     prelude::{CalError, KeyPairSpec, KeySpec},
-    storage::StorageManager,
     tpm::android::{
         provider::AndroidProvider,
         utils::get_exchange_algorithm,
@@ -27,6 +30,10 @@ pub(crate) struct AndroidDHExchange {
 
 impl AndroidDHExchange {
     fn derive_key(&mut self, other_key: Vec<u8>) -> Result<Vec<u8>, CalError> {
+        trace!(
+            "AndroidDHExchange::derive_key called with key id: {}",
+            self.key_id
+        );
         let vm = context::android_context()?.vm();
         let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
         let env = vm.attach_current_thread().err_internal()?;
@@ -37,9 +44,6 @@ impl AndroidDHExchange {
         let own_key = key_store
             .getKey(&env, self.key_id.to_string(), JObject::null())
             .err_internal()?;
-
-        let own_key = wrapper::key_generation::key_pair::jni::KeyPair::from_key(own_key);
-        let own_key_private = own_key.getPrivate(&env).err_internal()?;
 
         let key_factory =
             wrapper::key_factory::jni::KeyFactory::getInstance(&env, "EC".to_string())
@@ -57,20 +61,14 @@ impl AndroidDHExchange {
             KeyAgreement::getInstance(&env, algorithm, ANDROID_KEYSTORE.to_string())
                 .err_internal()?;
 
-        key_agreement
-            .init(
-                &env,
-                wrapper::key_generation::key::jni::Key {
-                    raw: own_key_private.raw,
-                },
-            )
-            .err_internal()?;
+        key_agreement.init(&env, own_key).err_internal()?;
+
         key_agreement
             .doPhase(&env, other_key, true)
             .err_internal()?;
 
         let shared_secret = key_agreement.generateSecret(&env).err_internal()?;
-        Ok(shared_secret)
+        Ok(shared_secret.to_vec())
     }
 }
 
@@ -88,16 +86,22 @@ impl DHKeyExchangeImpl for AndroidDHExchange {
         let key_store = KeyStore::getInstance(&env, ANDROID_KEYSTORE.to_string()).err_internal()?;
         key_store.load(&env, None).err_internal()?;
 
-        let own_key = key_store
-            .getKey(&env, self.key_id.to_string(), JObject::null())
+        let entry = key_store
+            .getEntry(&env, self.key_id.to_string())
             .err_internal()?;
 
-        let res = wrapper::key_generation::key_pair::jni::KeyPair::from_key(own_key)
-            .getPublic(&env)
+        let entry = wrapper::key_store::key_entry::PrivateKeyEntry {
+            raw: AutoLocal::new(&env, Into::<JObject>::into(entry)),
+        };
+
+        let public_key = entry
+            .get_certificate(&env)
+            .err_internal()?
+            .getPublicKey(&env)
             .err_internal()?
             .getEncoded(&env)
             .err_internal()?;
-        Ok(res)
+        Ok(public_key)
     }
 
     #[doc = " Derive client session keys (rx, tx) - client is the templator in your code"]

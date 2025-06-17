@@ -31,7 +31,7 @@ pub(crate) mod jni {
         pub(crate) extern "java" fn generatePublic(
             &self,
             env: &'borrow JNIEnv<'env>,
-            keySpec: JObject,
+            #[input_type("Ljava/security/spec/KeySpec;")] keySpec: JObject,
         ) -> JniResult<PublicKey> {
         }
     }

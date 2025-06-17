@@ -16,11 +16,14 @@ pub(crate) mod jni {
     }
 
     impl<'env: 'borrow, 'borrow> X509EncodedKeySpec<'env, 'borrow> {
-        #[constructor]
-        pub(crate) extern "java" fn new(
-            env: &'borrow JNIEnv<'env>,
-            encodedKey: Vec<u8>,
-        ) -> JniResult<Self> {
+        pub(crate) fn new(env: &'borrow JNIEnv<'env>, encodedKey: Vec<u8>) -> JniResult<Self> {
+            let class = env.find_class("java/security/spec/X509EncodedKeySpec")?;
+            let encodedKeyJava = env.byte_array_from_slice(&encodedKey)?;
+            let args = [Into::into(encodedKeyJava)];
+            let obj = env.new_object(class, "([B)V", &args)?;
+            Ok(Self {
+                raw: AutoLocal::new(env, obj),
+            })
         }
     }
 }
