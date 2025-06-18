@@ -83,7 +83,7 @@ impl StorageBackendExplicit {
                 _ => None,
             };
 
-        // `count` is either `1` or `2..`.
+        // `count` is either `0` or `2..`.
         let error_from_count = |count: usize| {
             if count > 1 {
                 StorageManagerInitializationError::ConflictingProviderImplConfig {
