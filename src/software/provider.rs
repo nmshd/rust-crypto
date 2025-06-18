@@ -473,7 +473,6 @@ impl ProviderImpl for SoftwareProvider {
                 .into_iter()
                 .process_results(|key_spec_tuple_iter| key_spec_tuple_iter.collect())
                 .map_err(|err| {
-                    // TODO: Better mapping to CalError.
                     CalError::failed_operation(
                         "At least metadata for one key could not be loaded.",
                         true,

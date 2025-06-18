@@ -220,7 +220,7 @@ impl KeyHandleImpl for AndroidKeyHandle {
         }
 
         if let Some(storage_manager) = &self.storage_manager {
-            storage_manager.delete(self.key_id.clone());
+            storage_manager.delete(self.key_id.clone())?;
         }
 
         Ok(())
@@ -388,7 +388,7 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
         }
 
         if let Some(storage_manager) = &self.storage_manager {
-            storage_manager.delete(self.key_id.clone());
+            storage_manager.delete(self.key_id.clone())?;
         }
 
         Ok(())
