@@ -117,6 +117,19 @@ pub(crate) mod jni {
             Ok(())
         }
 
+        pub(crate) fn getEntry<'a>(&self, env: &JNIEnv<'a>, alias: String) -> JniResult<JObject<'a>>
+        where
+            'env: 'a,
+        {
+            let result = env.call_method(
+                self.raw.as_obj(),
+                "getEntry",
+                "(Ljava/lang/String;Ljava/security/KeyStore$ProtectionParameter;)Ljava/security/KeyStore$Entry;",
+                &[Into::into(env.new_string(alias)?), Into::into(JObject::null())],
+            )?;
+            result.l()
+        }
+
         pub(crate) fn set_entry(
             &self,
             env: &JNIEnv,

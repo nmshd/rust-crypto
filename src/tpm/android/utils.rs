@@ -163,6 +163,27 @@ impl From<AsymmetricKeySpec> for String {
     }
 }
 
+pub fn get_exchange_algorithm(spec: KeyPairSpec) -> String {
+    match spec.asym_spec {
+        AsymmetricKeySpec::RSA1024
+        | AsymmetricKeySpec::RSA2048
+        | AsymmetricKeySpec::RSA3072
+        | AsymmetricKeySpec::RSA4096
+        | AsymmetricKeySpec::RSA8192 => "DH".to_string(),
+        AsymmetricKeySpec::BrainpoolP256r1
+        | AsymmetricKeySpec::BrainpoolP384r1
+        | AsymmetricKeySpec::BrainpoolP512r1
+        | AsymmetricKeySpec::BrainpoolP638
+        | AsymmetricKeySpec::Curve25519
+        | AsymmetricKeySpec::Curve448
+        | AsymmetricKeySpec::P256
+        | AsymmetricKeySpec::P384
+        | AsymmetricKeySpec::P521
+        | AsymmetricKeySpec::Secp256k1
+        | AsymmetricKeySpec::Frp256v1 => "ECDH".to_string(),
+    }
+}
+
 pub fn get_signature_algorithm(spec: KeyPairSpec) -> Result<String, CalError> {
     let part1 = match spec.asym_spec {
         AsymmetricKeySpec::RSA1024

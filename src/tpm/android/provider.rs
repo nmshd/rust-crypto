@@ -8,6 +8,7 @@ use crate::{
     },
     storage::{KeyData, StorageManager},
     tpm::android::{
+        dh_exchange::AndroidDHExchange,
         key_handle::{AndroidKeyHandle, AndroidKeyPairHandle},
         utils::{
             get_asym_key_size, get_cipher_name, get_cipher_padding, get_key_size, get_mode_name,
@@ -100,6 +101,7 @@ impl ProviderFactory for AndroidProviderFactory {
 /// for operations like signing, encryption, and decryption.
 /// It provides a secure and hardware-backed solution for managing cryptographic keys and performing
 /// cryptographic operations on Android.
+#[derive(Clone)]
 pub(crate) struct AndroidProvider {
     impl_config: ProviderImplConfig,
     used_factory: AndroidProviderFactory,
@@ -428,8 +430,81 @@ impl ProviderImpl for AndroidProvider {
 
     #[instrument]
     fn start_ephemeral_dh_exchange(&mut self, spec: KeyPairSpec) -> Result<DHExchange, CalError> {
-        // TODO: start ephemeral dh exchange
-        todo!("start ephemeral dh exchange")
+        if self.storage_manager.is_none() && !spec.ephemeral {
+            return Err(CalError::ephemeral_key_required());
+        }
+
+        let key_id = nanoid!(10);
+        info!("generating key pair! {}", key_id);
+
+        let vm = context::android_context()?.vm();
+        let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
+        let env = vm.attach_current_thread().err_internal()?;
+
+        // build up key specs
+        let mut kps_builder =
+            wrapper::key_generation::builder::Builder::new(&env, key_id.to_owned(), 64)
+                .err_internal()?;
+
+        match is_rsa(spec.asym_spec) {
+            true => {
+                kps_builder = kps_builder
+                    .set_digests(&env, vec![spec.signing_hash.into()])
+                    .err_internal()?
+                    .set_signature_paddings(&env, vec!["PKCS1".into()])
+                    .err_internal()?
+                    .set_encryption_paddings(&env, vec![Padding::PKCS1.into()])
+                    .err_internal()?
+                    .set_key_size(&env, get_asym_key_size(spec.asym_spec)?)
+                    .err_internal()?;
+            }
+            false => {
+                kps_builder = kps_builder
+                    .set_digests(&env, vec![spec.signing_hash.into()])
+                    .err_internal()?;
+            }
+        };
+        kps_builder = kps_builder
+            .set_is_strongbox_backed(&env, self.used_factory.secure_element)
+            .err_internal()?;
+
+        let kps = kps_builder.build(&env).err_internal()?;
+
+        let kpg = wrapper::key_generation::key_pair_generator::jni::KeyPairGenerator::getInstance(
+            &env,
+            spec.asym_spec.into(),
+            ANDROID_KEYSTORE.to_owned(),
+        )
+        .err_internal()?;
+
+        kpg.initialize(&env, kps.raw.as_obj()).err_internal()?;
+
+        kpg.generateKeyPair(&env).err_internal()?;
+
+        let storage_data = KeyData {
+            id: key_id.clone(),
+            secret_data: None,
+            public_data: None,
+            additional_data: None,
+            spec: Spec::KeyPairSpec(spec),
+        };
+
+        let storage_manager = self.storage_manager.clone().filter(|_| !spec.ephemeral);
+
+        if storage_manager.is_some() {
+            self.storage_manager
+                .as_ref()
+                .unwrap()
+                .store(key_id.clone(), storage_data)?;
+        }
+
+        Ok(DHExchange {
+            implementation: Into::into(AndroidDHExchange {
+                key_id,
+                spec,
+                provider: self.clone(),
+            }),
+        })
     }
 
     #[instrument]

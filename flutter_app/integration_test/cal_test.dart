@@ -99,6 +99,45 @@ void main() async {
     }
   });
 
+  test("DH exchange", () async {
+    var providers = await cal.getAllProviders();
+    for (var providerName in providers) {
+      store.clear();
+      var provider = await cal.createProviderFromName(
+          name: providerName, implConf: implConf);
+      expect(provider, isNotNull, reason: "expected $providerName");
+
+      const spec = cal.KeyPairSpec(
+          asymSpec: cal.AsymmetricKeySpec.p256,
+          signingHash: cal.CryptoHash.sha2256,
+          ephemeral: true,
+          nonExportable: true);
+
+      var exchange1 = await provider!.startEphemeralDhExchange(spec: spec);
+      var exchange2 = await provider.startEphemeralDhExchange(spec: spec);
+
+      var exchange1PublicKey = await exchange1.getPublicKey();
+      var exchange2PublicKey = await exchange2.getPublicKey();
+
+      print("got public keys");
+
+      try {
+        var (rx1, tx1) = await exchange1.deriveClientSessionKeys(
+            serverPk: exchange2PublicKey);
+        print("rx1: $rx1, tx1: $tx1");
+        var (rx2, tx2) = await exchange2.deriveServerSessionKeys(
+            clientPk: exchange1PublicKey);
+
+        print("rx2: $rx2, tx2: $tx2");
+        expect(rx1, tx2, reason: "rx1 should match tx2");
+        expect(tx1, rx2, reason: "tx1 should match rx2");
+      } catch (e) {
+        print("Error during DH exchange: $e");
+        rethrow;
+      }
+    }
+  });
+
 //   test("import key and encrypt with it", () async {
 //     KVStore store = KVStore();
 
