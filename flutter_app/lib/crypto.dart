@@ -25,14 +25,13 @@ Future<Provider> getDefaultProvider() async {
   return provider!;
 }
 
-Future<Provider> getNamedProvider(String providerName, String hmacPass) async {
+Future<Provider> getNamedProvider(String providerName) async {
   var implConf = await getDefaultConfig(
       getFn: store.get,
       storeFn: store.store,
       deleteFn: store.delete,
       allKeysFn: store.allKeys);
 
-  implConf.additionalConfig.add(AdditionalConfig.storageConfigPass(hmacPass));
   var provider =
       await createProviderFromName(name: providerName, implConf: implConf);
   return provider!;

@@ -56,7 +56,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   void setProvider(String name) {
     setState(() {
       _selectedProvider = name;
-      _cryptoProvider = getNamedProvider(name, "pass");
+      _cryptoProvider = getNamedProvider(name);
     });
   }
 
