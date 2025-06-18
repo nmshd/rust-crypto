@@ -23,8 +23,7 @@ import type { AdditionalConfig } from "./AdditionalConfig";
  *       additional_config: vec![
  *          AdditionalConfig::FileStoreConfig {
  *              db_dir: "./testdb".to_owned(),
- *          },
- *          AdditionalConfig::StorageConfigPass("password".to_owned()),
+ *          }
  *      ],
  * };
  * ```
