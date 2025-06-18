@@ -1,426 +1,242 @@
-#![allow(clippy::upper_case_acronyms)]
-use std::{fmt, path::Path};
-
-use hmac::Mac;
+use itertools::Itertools;
 use serde::{Deserialize, Serialize};
-use sled::{open, Db};
-use tracing::trace;
+use storage_backend::StorageBackend;
+use thiserror::Error;
 
-use hmac::Hmac;
-use sha2::Sha256;
-
-type HmacSha256 = Hmac<Sha256>;
-
-use crate::common::{
-    config::{AdditionalConfig, AllKeysFn, DeleteFn, GetFn, Spec, StoreFn},
-    error::{CalError, KeyType},
-    KeyHandle, KeyPairHandle,
+use crate::{
+    common::config::{AdditionalConfig, Spec},
+    storage::{
+        encryption::{EncryptionBackend, EncryptionBackendError, EncryptionBackendExplicit},
+        key::{ScopedKey, ScopedKeyFactory},
+        signature::{SignatureBackend, SignatureBackendError, SignatureBackendExplicit},
+        storage_backend::{
+            StorageBackendError, StorageBackendExplicit, StorageBackendInitializationError,
+        },
+    },
 };
 
-#[derive(Clone, Debug)]
-enum Storage {
-    KVStore(KVStore),
-    FileStore(FileStore),
+mod encryption;
+mod key;
+mod signature;
+mod storage_backend;
+
+#[derive(Debug, Error)]
+pub enum StorageManagerError {
+    #[error("Failed to encrypt sensitive data.")]
+    Encrypt { source: EncryptionBackendError },
+    #[error("Failed to decrypt ciphertext.")]
+    Decrypt { source: EncryptionBackendError },
+    #[error("Failed serialization of data.")]
+    Serialize { source: rmp_serde::encode::Error },
+    #[error("Failed deserialization of data.")]
+    Deserialize { source: rmp_serde::decode::Error },
+    #[error("Failed to sign data.")]
+    Sign { source: SignatureBackendError },
+    #[error("Failed verification of data.")]
+    Verify { source: SignatureBackendError },
+    #[error("Failed to store data.")]
+    Store { source: StorageBackendError },
+    #[error("Failed to get data from storage backend.")]
+    Get { source: StorageBackendError },
+    #[error("Failed to delete entry.")]
+    Delete { source: StorageBackendError },
+    #[error("Failed to get key ids.")]
+    GetKeys { source: StorageBackendError },
 }
 
-#[derive(Clone, Debug)]
-enum ChecksumProvider {
-    KeyPairHandle(Box<KeyPairHandle>),
-    HMAC(String),
+#[derive(Debug, Error)]
+pub enum StorageManagerInitializationError {
+    #[error("Failed to get the signature backend scope for the storage manager.")]
+    ScopeSignature { source: SignatureBackendError },
+    #[error("Failed to get the encryption backend scope for the storage manager.")]
+    ScopeEncryption { source: EncryptionBackendError },
+    #[error("Some options in the given provider implementation config are in conflict with each other: {description}")]
+    ConflictingProviderImplConfig { description: &'static str },
+    #[error("A needed option was not supplied: {description}")]
+    MissingProviderImplConfigOption { description: &'static str },
+    #[error("Failed to initialize a storage backend.")]
+    StorageBackendInitialization(#[from] StorageBackendInitializationError),
 }
 
 #[derive(Clone, Debug)]
 pub(crate) struct StorageManager {
-    checksum_provider: ChecksumProvider,
-    key_handle: Option<Box<KeyHandle>>,
-    storage: Storage,
-    scope: String,
+    signature: SignatureBackendExplicit,
+    encryption: EncryptionBackendExplicit,
+    storage: StorageBackendExplicit,
+    scope: ScopedKeyFactory,
 }
 
-fn extract_storage_method(config: &[AdditionalConfig]) -> Result<Option<Storage>, CalError> {
-    let db_store = config
-        .iter()
-        .filter_map(|c| {
-            if let AdditionalConfig::FileStoreConfig { db_dir } = c.clone() {
-                // TODO: Have new function return result instead?
-                match FileStore::new(db_dir) {
-                    Ok(db) => Some(db),
-                    Err(e) => {
-                        tracing::error!(error = %e, "Failed initializing database.");
-                        None
-                    }
-                }
-            } else {
-                None
-            }
-        })
-        .last();
-    let kv_store = config
-        .iter()
-        .filter_map(|c| {
-            if let AdditionalConfig::KVStoreConfig {
-                get_fn,
-                store_fn,
-                delete_fn,
-                all_keys_fn,
-            } = c.clone()
-            {
-                Some(KVStore {
-                    get_fn,
-                    store_fn,
-                    delete_fn,
-                    all_keys_fn,
-                })
-            } else {
-                None
-            }
-        })
-        .last();
-
-    match (db_store, kv_store) {
-        (Some(db_store), None) => Ok(Some(Storage::FileStore(db_store))),
-        (None, Some(kv_store)) => Ok(Some(Storage::KVStore(kv_store))),
-        (None, None) => Ok(None),
-        _ => Err(CalError::failed_operation(
-            "both KV Store and DB store were initialised".to_owned(),
-            true,
-            None,
-        )),
-    }
+fn deserialize<'a, T: Deserialize<'a>>(value: &'a [u8]) -> Result<T, StorageManagerError> {
+    rmp_serde::from_slice(&value).map_err(|e| StorageManagerError::Deserialize { source: e })
 }
 
-fn extract_security_method(config: &[AdditionalConfig]) -> Result<ChecksumProvider, CalError> {
-    let key_pair_handle = config.iter().find_map(|c| match c {
-        AdditionalConfig::StorageConfigDSA(key_handle) => Some(key_handle.clone()),
-        _ => None,
-    });
-    let hmac_pass = config.iter().find_map(|c| match c {
-        AdditionalConfig::StorageConfigPass(pass) => Some(pass.clone()),
-        _ => None,
-    });
-
-    match (key_pair_handle, hmac_pass) {
-        (Some(key_pair_handle), None) => Ok(ChecksumProvider::KeyPairHandle(Box::new(key_pair_handle))),
-        (None, Some(hmac_pass)) => Ok(ChecksumProvider::HMAC(hmac_pass)),
-        _ => Err(CalError::failed_operation(
-            "exactly one of AdditionalConfig::KeyHandle, AdditionalConfig::KeyPairHandle and AdditionalConfig::HMAC".to_owned(),
-            true,
-            None,
-        )),
-    }
+fn serialize<T: Serialize>(value: &T) -> Result<Vec<u8>, StorageManagerError> {
+    rmp_serde::to_vec_named(value).map_err(|e| StorageManagerError::Serialize { source: e })
 }
 
 impl StorageManager {
     pub(crate) fn new(
         scope: impl Into<String>,
         config: &[AdditionalConfig],
-    ) -> Result<Option<Self>, CalError> {
-        let storage = extract_storage_method(config)?;
-        let checksum_provider = extract_security_method(config)?;
-        Ok(storage.map(|storage| {
-            let key_handle = config.iter().find_map(|c| match c {
-                AdditionalConfig::StorageConfigHMAC(key_handle) => Some(key_handle.clone()),
-                _ => None,
-            });
-
-            StorageManager {
-                checksum_provider,
-                key_handle: key_handle.map(Box::new),
-                storage,
-                scope: scope.into(),
+    ) -> Result<Option<Self>, StorageManagerInitializationError> {
+        let storage = match StorageBackendExplicit::new(config) {
+            Ok(e) => e,
+            Err(e)
+                if matches!(
+                    e,
+                    StorageManagerInitializationError::MissingProviderImplConfigOption { .. }
+                ) =>
+            {
+                return Ok(None)
             }
+            Err(e) => return Err(e),
+        };
+
+        let signature = SignatureBackendExplicit::new(config)?;
+        let encryption = EncryptionBackendExplicit::new(config)?;
+        let scope = ScopedKeyFactory {
+            provider_scope: scope.into(),
+            encryption_scope: encryption
+                .scope()
+                .map_err(|e| StorageManagerInitializationError::ScopeEncryption { source: e })?,
+            signature_scope: signature
+                .scope()
+                .map_err(|e| StorageManagerInitializationError::ScopeSignature { source: e })?,
+        };
+
+        Ok(Some(Self {
+            signature,
+            encryption,
+            storage,
+            scope,
         }))
     }
 
-    pub(crate) fn store(&self, id: impl AsRef<str>, data: KeyData) -> Result<(), CalError> {
-        // encrypt secret data if KeyHandle is available
+    fn encrypt_key_data(&self, key_data: KeyData) -> Result<KeyDataEncrypted, StorageManagerError> {
+        let encrypted_sensitive_data = key_data
+            .secret_data
+            .map(|e| self.encryption.encrypt(&e))
+            .transpose()
+            .map_err(|e| StorageManagerError::Encrypt { source: e })?;
 
-        let encrypted_data = KeyDataEncrypted {
-            id: data.id.clone(),
-            secret_data: data
-                .secret_data
-                .map(|secret| {
-                    self.key_handle
-                        .as_ref()
-                        .map(|key| {
-                            let (v, iv) = match key.encrypt(&secret) {
-                                Ok(v) => v,
-                                Err(e) => return Err(e),
-                            };
-                            Ok(StorageField::Encrypted { data: v, iv })
-                        })
-                        .unwrap_or(Ok(StorageField::Raw(secret)))
-                })
-                .transpose()?,
-            public_data: data.public_data,
-            additional_data: data.additional_data,
-            spec: data.spec,
-        };
-
-        let encoded = serde_json::to_vec(&encrypted_data)
-            .expect("Failed to encode key data, this should never happen");
-
-        // generate checksum
-        let (checksum, ctype) = match self.checksum_provider {
-            ChecksumProvider::KeyPairHandle(ref key_pair_handle) => {
-                let checksum = key_pair_handle.sign_data(&encoded)?;
-                (checksum, ChecksumType::DSA)
-            }
-            ChecksumProvider::HMAC(ref pass) => {
-                let mut hmac =
-                    HmacSha256::new_from_slice(pass.as_bytes()).expect("Failed to create HMAC");
-                hmac.update(&encoded);
-                let result = hmac.finalize();
-                (result.into_bytes().to_vec(), ChecksumType::HMAC)
-            }
-        };
-
-        let encoded = serde_json::to_vec(&WithChecksum {
-            data: encoded,
-            checksum,
-            checksum_type: ctype,
+        Ok(KeyDataEncrypted {
+            id: key_data.id,
+            secret_data: encrypted_sensitive_data,
+            public_data: key_data.public_data,
+            additional_data: key_data.additional_data,
+            spec: key_data.spec,
         })
-        .expect("Failed to encode key data, this should never happen");
-
-        // choose storage Strategy
-        match self.storage {
-            Storage::KVStore(ref store) => store.store(self.scope.clone(), id.as_ref(), encoded),
-            Storage::FileStore(ref store) => store.store(self.scope.clone(), id.as_ref(), encoded),
-        }
     }
 
-    pub(crate) fn get(&self, id: impl AsRef<str>) -> Result<KeyData, CalError> {
-        let value = match self.storage {
-            Storage::KVStore(ref store) => store.get(self.scope.clone(), id.as_ref()),
-            Storage::FileStore(ref store) => store.get(self.scope.clone(), id.as_ref()),
-        }?;
-
-        let decoded = serde_json::from_slice::<WithChecksum>(&value).map_err(|e| {
-            CalError::failed_operation(format!("Failed to decode key data: {}", e), true, None)
-        })?;
-
-        // verify checksum
-        match self.checksum_provider {
-            ChecksumProvider::KeyPairHandle(ref key_pair_handle) => {
-                if key_pair_handle.verify_signature(&decoded.data, &decoded.checksum)? {
-                } else {
-                    return Err(CalError::failed_operation(
-                        "Checksum verification failed".to_owned(),
-                        true,
-                        None,
-                    ));
-                }
-            }
-            ChecksumProvider::HMAC(ref pass) => {
-                let mut hmac =
-                    HmacSha256::new_from_slice(pass.as_bytes()).expect("Failed to create HMAC");
-                hmac.update(&decoded.data);
-                hmac.verify_slice(&decoded.checksum).map_err(|_| {
-                    CalError::failed_operation(
-                        "Checksum verification failed".to_owned(),
-                        true,
-                        None,
-                    )
-                })?;
-            }
-        };
-
-        let decoded = serde_json::from_slice::<KeyDataEncrypted>(&decoded.data).map_err(|e| {
-            CalError::failed_operation(format!("Failed to decode key data: {}", e), true, None)
-        })?;
-
-        let decrypted = KeyData {
-            id: decoded.id.clone(),
-            secret_data: decoded
-                .secret_data
-                .and_then(|secret| match secret {
-                    StorageField::Encrypted { data, iv } => {
-                        self.key_handle
-                            .as_ref()
-                            .map(|key| match key.decrypt_data(&data, &iv) {
-                                Ok(v) => Ok(v),
-                                Err(e) => Err(e),
-                            })
-                    }
-                    StorageField::Raw(data) => Some(Ok(data)),
-                })
-                .transpose()?,
-            public_data: decoded.public_data,
-            additional_data: decoded.additional_data,
-            spec: decoded.spec,
-        };
-        Ok(decrypted)
-    }
-
-    pub(crate) fn delete(&self, id: impl AsRef<str>) {
-        match self.storage {
-            Storage::KVStore(ref store) => store.delete(self.scope.clone(), id),
-            Storage::FileStore(ref store) => store.delete(self.scope.clone(), id),
-        }
-    }
-
-    pub fn get_all_keys(&self) -> Vec<(String, Spec)> {
-        // get keys from all available storage methods
-        let mut keys = Vec::new();
-
-        match self.storage {
-            Storage::KVStore(ref store) => {
-                keys.append(&mut store.get_all_keys(self.scope.clone()));
-            }
-            Storage::FileStore(ref store) => {
-                keys.append(&mut store.get_all_keys(self.scope.clone()));
-            }
-        }
-
-        keys.iter()
-            .map(|v| {
-                serde_json::from_slice::<WithChecksum>(v.as_slice())
-                    .expect("Could not decode key data, this should never happen")
-            })
-            .map(|with_checksum| {
-                serde_json::from_slice::<KeyDataEncrypted>(with_checksum.data.as_slice())
-                    .expect("Could not decode key data, this should never happen")
-            })
-            .map(|v| (v.id, v.spec))
-            .collect()
-    }
-}
-
-#[derive(Clone)]
-struct KVStore {
-    get_fn: GetFn,
-    store_fn: StoreFn,
-    delete_fn: DeleteFn,
-    all_keys_fn: AllKeysFn,
-}
-
-impl fmt::Debug for KVStore {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "KVStore {{}}")
-    }
-}
-
-impl KVStore {
-    fn store(
+    fn decrypt_encrypted_key_data(
         &self,
-        scope: impl AsRef<str>,
-        key: impl AsRef<str>,
-        value: Vec<u8>,
-    ) -> Result<(), CalError> {
-        let valid = pollster::block_on((self.store_fn)(
-            format!("{}:{}", scope.as_ref(), key.as_ref()),
-            value,
-        ));
-        if valid {
-            Ok(())
-        } else {
-            Err(CalError::failed_operation(
-                "Storing key failed, the handle may still be valid".to_owned(),
-                false,
-                None,
-            ))
-        }
+        encrypted_key_data: KeyDataEncrypted,
+    ) -> Result<KeyData, StorageManagerError> {
+        let sensitive_data = encrypted_key_data
+            .secret_data
+            .map(|encrypted_data| self.encryption.decrypt(encrypted_data))
+            .transpose()
+            .map_err(|e| StorageManagerError::Decrypt { source: e })?;
+
+        Ok(KeyData {
+            id: encrypted_key_data.id,
+            secret_data: sensitive_data,
+            public_data: encrypted_key_data.public_data,
+            additional_data: encrypted_key_data.additional_data,
+            spec: encrypted_key_data.spec,
+        })
     }
 
-    fn get(&self, scope: impl AsRef<str>, key: impl AsRef<str>) -> Result<Vec<u8>, CalError> {
-        let value = pollster::block_on((self.get_fn)(format!(
-            "{}:{}",
-            scope.as_ref(),
-            key.as_ref()
-        )));
-        match value {
-            Some(data) => Ok(data),
-            None => Err(CalError::missing_key(key.as_ref(), KeyType::Private)),
-        }
-    }
-
-    fn delete(&self, scope: impl AsRef<str>, key: impl AsRef<str>) {
-        pollster::block_on((self.delete_fn)(format!(
-            "{}:{}",
-            scope.as_ref(),
-            key.as_ref()
-        )));
-    }
-
-    fn get_all_keys(&self, scope: String) -> Vec<Vec<u8>> {
-        let keys = pollster::block_on((self.all_keys_fn)());
-        trace!("get_all_keys_kv: {:?}", keys);
-        keys.into_iter()
-            .filter(|k| k.starts_with(&format!("{}:", scope.clone())))
-            .map(|k| k.split(':').last().unwrap().to_owned())
-            .filter_map(|k| self.get(scope.clone(), k).ok())
-            .collect()
-    }
-}
-
-fn file_store_key_id(provider: impl AsRef<str>, key: impl AsRef<str>) -> Vec<u8> {
-    format!("{}:{}", provider.as_ref(), key.as_ref())
-        .as_bytes()
-        .to_vec()
-}
-
-#[allow(dead_code)]
-#[derive(Clone, Debug)]
-struct FileStore {
-    db: Db,
-}
-
-impl FileStore {
-    fn new(db_dir: impl AsRef<Path>) -> Result<Self, CalError> {
-        Ok(Self { db: open(db_dir)? })
-    }
-
-    fn store(
+    fn sign_encrypted_key_data(
         &self,
-        provider: impl AsRef<str>,
-        key: impl AsRef<str>,
-        value: Vec<u8>,
-    ) -> Result<(), CalError> {
-        let id = file_store_key_id(provider, key);
-        self.db.insert(id, value)?;
-        Ok(())
+        encrypted_key_data: KeyDataEncrypted,
+    ) -> Result<SignedData, StorageManagerError> {
+        let serialized_encrypted_key_data = serialize(&encrypted_key_data)?;
+
+        self.signature
+            .sign(serialized_encrypted_key_data)
+            .map_err(|e| StorageManagerError::Sign { source: e })
     }
 
-    fn get(&self, provider: impl AsRef<str>, key: impl AsRef<str>) -> Result<Vec<u8>, CalError> {
-        let id = file_store_key_id(provider, key.as_ref());
-        match self.db.get(id)? {
-            Some(data) => Ok(data.as_ref().to_vec()),
-            None => Err(CalError::missing_value(
-                format!("Sled (db): No data found for key: {}", key.as_ref()),
-                true,
-                None,
-            )),
-        }
+    fn verify_signed_encrypted_key_data(
+        &self,
+        signed_encrypted_key_data: SignedData,
+    ) -> Result<KeyDataEncrypted, StorageManagerError> {
+        let verified_blob = self
+            .signature
+            .verify(signed_encrypted_key_data)
+            .map_err(|e| StorageManagerError::Verify { source: e })?;
+
+        deserialize::<KeyDataEncrypted>(&verified_blob)
     }
 
-    fn delete(&self, provider: impl AsRef<str>, key: impl AsRef<str>) {
-        let id = file_store_key_id(provider, key.as_ref());
-        match self.db.remove(id) {
-            Ok(_) => {}
-            Err(e) => {
-                // TODO: Change delete to return result?
-                tracing::error!(error = %e, "Storage Manager: Failed deletion of data for key {}", key.as_ref())
-            }
-        }
+    pub(crate) fn store(
+        &self,
+        id: impl Into<String>,
+        data: KeyData,
+    ) -> Result<(), StorageManagerError> {
+        let key_data_encrypted = self.encrypt_key_data(data)?;
+
+        let key_data_encrypted_encoded_signed = self.sign_encrypted_key_data(key_data_encrypted)?;
+
+        let key_data_encrypted_encoded_signed_serialized =
+            serialize(&key_data_encrypted_encoded_signed)?;
+
+        let scoped_key = self.scope.scoped_key(id);
+
+        self.storage
+            .store(scoped_key, &key_data_encrypted_encoded_signed_serialized)
+            .map_err(|e| StorageManagerError::Store { source: e })
     }
 
-    fn get_all_keys(&self, scope: impl AsRef<str>) -> Vec<Vec<u8>> {
-        self.db
-            .scan_prefix(file_store_key_id(scope, ""))
-            .values()
-            .filter(|result| match result {
-                Ok(_) => true,
-                Err(e) => {
-                    tracing::warn!(error = %e, "Sled (db): Failed reading entry.");
-                    false
-                }
+    fn get_partial(&self, scoped_key: ScopedKey) -> Result<KeyDataEncrypted, StorageManagerError> {
+        let value = self
+            .storage
+            .get(scoped_key)
+            .map_err(|e| StorageManagerError::Get { source: e })?;
+
+        let signed_data: SignedData = deserialize(&value)?;
+
+        self.verify_signed_encrypted_key_data(signed_data)
+    }
+
+    pub(crate) fn get(&self, id: impl Into<String>) -> Result<KeyData, StorageManagerError> {
+        let scoped_key = self.scope.scoped_key(id);
+
+        let key_encrypted_data = self.get_partial(scoped_key)?;
+
+        self.decrypt_encrypted_key_data(key_encrypted_data)
+    }
+
+    pub(crate) fn delete(&self, id: impl Into<String>) -> Result<(), StorageManagerError> {
+        let scoped_id = self.scope.scoped_key(id);
+
+        self.storage
+            .delete(scoped_id)
+            .map_err(|e| StorageManagerError::Delete { source: e })
+    }
+
+    pub(crate) fn get_all_keys(&self) -> Vec<Result<(String, Spec), StorageManagerError>> {
+        self.storage
+            .keys()
+            .into_iter()
+            .map(|result| result.map_err(|err| StorageManagerError::GetKeys { source: err }))
+            .filter_ok(|scoped_key| {
+                scoped_key.encryption_scope == self.scope.encryption_scope
+                    && scoped_key.signature_scope == self.scope.signature_scope
+                    && scoped_key.provider_scope == self.scope.provider_scope
             })
-            .map(|result| result.unwrap().as_ref().to_vec())
+            .map_ok(|scoped_key| {
+                let id = scoped_key.key_id.clone();
+                let key_data = self.get_partial(scoped_key)?;
+                Ok::<_, StorageManagerError>((id, key_data.spec))
+            })
+            .flatten_ok()
             .collect()
     }
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub(crate) struct KeyData {
     pub(crate) id: String,
     pub(crate) secret_data: Option<Vec<u8>>,
@@ -438,21 +254,161 @@ pub(crate) struct KeyDataEncrypted {
     pub(crate) spec: Spec,
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy)]
-pub enum ChecksumType {
-    HMAC,
-    DSA,
+#[derive(Serialize, Deserialize, Clone)]
+pub(crate) enum Signature {
+    HMAC(Vec<u8>),
+    DSA(Vec<u8>),
+    None,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
-pub struct WithChecksum {
+pub(crate) struct SignedData {
     data: Vec<u8>,
-    checksum: Vec<u8>,
-    checksum_type: ChecksumType,
+    signature: Signature,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
 pub(crate) enum StorageField {
     Encrypted { data: Vec<u8>, iv: Vec<u8> },
+    EncryptedAsymmetric { data: Vec<u8> },
     Raw(Vec<u8>),
+}
+
+#[cfg(test)]
+mod test {
+    use std::sync::LazyLock;
+
+    use nanoid::nanoid;
+    use rstest::{fixture, rstest};
+
+    use crate::{prelude::KeySpec, tests::TestStore};
+
+    use super::*;
+
+    static TEST_KV_STORE: LazyLock<TestStore> = LazyLock::new(TestStore::new);
+
+    const DUMMY_SPEC: Spec = Spec::KeySpec(KeySpec {
+        cipher: crate::prelude::Cipher::AesGcm256,
+        signing_hash: crate::prelude::CryptoHash::Sha2_512,
+        ephemeral: true,
+        non_exportable: false,
+    });
+
+    #[test]
+    fn none_on_empty_config() {
+        let config = vec![];
+        let storage = StorageManager::new(nanoid!(), &config).unwrap();
+        assert!(storage.is_none());
+    }
+
+    #[fixture]
+    fn storage_manager() -> StorageManager {
+        let config = TEST_KV_STORE.impl_config().additional_config;
+        StorageManager::new(nanoid!(), &config).unwrap().unwrap()
+    }
+
+    #[test]
+    fn create_unencrypted_storage_manager() {
+        let _storage = storage_manager();
+    }
+
+    #[fixture]
+    fn key_data_empty() -> KeyData {
+        KeyData {
+            id: nanoid!(),
+            secret_data: None,
+            public_data: None,
+            additional_data: None,
+            spec: DUMMY_SPEC,
+        }
+    }
+
+    #[fixture]
+    fn key_data_no_sensitive_data() -> KeyData {
+        KeyData {
+            id: nanoid!(),
+            secret_data: None,
+            public_data: Some(nanoid::rngs::default(12)),
+            additional_data: Some(nanoid::rngs::default(12)),
+            spec: DUMMY_SPEC,
+        }
+    }
+
+    #[fixture]
+    fn key_data_filled() -> KeyData {
+        KeyData {
+            id: nanoid!(),
+            secret_data: Some(nanoid::rngs::default(12)),
+            public_data: Some(nanoid::rngs::default(12)),
+            additional_data: Some(nanoid::rngs::default(12)),
+            spec: DUMMY_SPEC,
+        }
+    }
+
+    #[fixture]
+    fn key_id() -> String {
+        nanoid!()
+    }
+
+    #[rstest]
+    #[case::key_data_empty(key_data_empty())]
+    #[case::key_data_non_sensitive(key_data_no_sensitive_data())]
+    #[case::key_data_filled(key_data_filled())]
+    fn test_store(storage_manager: StorageManager, key_id: String, #[case] key_data: KeyData) {
+        storage_manager.store(key_id, key_data).unwrap();
+    }
+
+    #[rstest]
+    #[case::key_data_empty(key_data_empty())]
+    #[case::key_data_non_sensitive(key_data_no_sensitive_data())]
+    #[case::key_data_filled(key_data_filled())]
+    fn test_store_and_get(
+        storage_manager: StorageManager,
+        key_id: String,
+        #[case] key_data: KeyData,
+    ) {
+        storage_manager.store(&key_id, key_data.clone()).unwrap();
+
+        let loaded_key_data = storage_manager.get(key_id).unwrap();
+
+        assert_eq!(key_data, loaded_key_data);
+    }
+
+    #[rstest]
+    #[case::key_data_empty(key_data_empty())]
+    #[case::key_data_non_sensitive(key_data_no_sensitive_data())]
+    #[case::key_data_filled(key_data_filled())]
+    fn test_store_and_all_keys(
+        storage_manager: StorageManager,
+        key_id: String,
+        #[case] key_data: KeyData,
+    ) {
+        storage_manager.store(&key_id, key_data.clone()).unwrap();
+
+        let keys = storage_manager.get_all_keys();
+        assert_eq!(keys.len(), 1);
+        let (id, spec) = keys[0].as_ref().unwrap();
+        assert_eq!(id, &key_id);
+        assert_eq!(spec, &key_data.spec);
+    }
+
+    #[rstest]
+    #[case::key_data_empty(key_data_empty())]
+    #[case::key_data_non_sensitive(key_data_no_sensitive_data())]
+    #[case::key_data_filled(key_data_filled())]
+    fn test_store_and_delete(
+        storage_manager: StorageManager,
+        key_id: String,
+        #[case] key_data: KeyData,
+    ) {
+        assert_eq!(storage_manager.get_all_keys().len(), 0);
+
+        storage_manager.store(&key_id, key_data.clone()).unwrap();
+
+        assert_eq!(storage_manager.get_all_keys().len(), 1);
+
+        storage_manager.delete(key_id).unwrap();
+
+        assert_eq!(storage_manager.get_all_keys().len(), 0);
+    }
 }

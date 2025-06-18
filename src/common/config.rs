@@ -79,7 +79,7 @@ pub enum SecurityLevel {
     Unsafe = 1,
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy, Debug)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
 /// flutter_rust_bridge:non_opaque
 pub enum Spec {
     KeySpec(KeySpec),
@@ -87,7 +87,7 @@ pub enum Spec {
 }
 
 /// Struct used to configure keys.
-#[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, Zeroize)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, Zeroize, PartialEq)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 /// flutter_rust_bridge:non_opaque
 pub struct KeySpec {
@@ -102,7 +102,7 @@ pub struct KeySpec {
 }
 
 /// Struct used to configure key pairs.
-#[derive(Clone, Copy, Debug, Serialize, Deserialize, Default)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, PartialEq)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 /// flutter_rust_bridge:non_opaque
 pub struct KeyPairSpec {
@@ -151,8 +151,7 @@ pub struct ProviderConfig {
 ///       additional_config: vec![
 ///          AdditionalConfig::FileStoreConfig {
 ///              db_dir: "./testdb".to_owned(),
-///          },
-///          AdditionalConfig::StorageConfigPass("password".to_owned()),
+///          }
 ///      ],
 /// };
 /// ```
@@ -180,7 +179,7 @@ pub enum AdditionalConfig {
     )]
     /// Callback functions acting like a hashmap for storing key metadata.
     ///
-    /// Not supported by the NodeJS plugin.
+    /// Mutually exclusive with [AdditionalConfig::FileStoreConfig].
     KVStoreConfig {
         get_fn: GetFn,
         store_fn: StoreFn,
@@ -188,16 +187,32 @@ pub enum AdditionalConfig {
         all_keys_fn: AllKeysFn,
     },
     /// Configuration for the usage of the metadata file database.
+    ///
+    /// Mutually exclusive with [AdditionalConfig::KVStoreConfig].
     FileStoreConfig {
         /// Path to a directory where the database holding key metadata will be saved.
         db_dir: String,
     },
-    /// Used for verifying the integrity of the key metadata.
+    /// Enables integrity verification of key metadata.
+    ///
+    /// Mutually exclusive with [AdditionalConfig::StorageConfigDSA].
     StorageConfigHMAC(KeyHandle),
-    /// Used for verifying the integrity of the key metadata.
+    /// Enables integrity verification of key metadata.
+    ///
+    /// Mutually exclusive with [AdditionalConfig::StorageConfigHMAC].
     StorageConfigDSA(KeyPairHandle),
-    /// Used for verifying the integrity of the key metadata.
-    StorageConfigPass(String),
+    /// Enables encryption of sensitive key metadata.
+    ///
+    /// In case of the software provider, this enables encryption of secret keys.
+    ///
+    /// Mutually exclusive with [AdditionalConfig::StorageConfigAsymmetricEncryption].
+    StorageConfigSymmetricEncryption(KeyHandle),
+    /// Enables encryption of sensitive key metadata.
+    ///
+    /// In case of the software provider, this enables encryption of secret keys.
+    ///
+    /// Mutually exclusive with [AdditionalConfig::StorageConfigSymmetricEncryption].
+    StorageConfigAsymmetricEncryption(KeyPairHandle),
 }
 
 impl std::fmt::Debug for ProviderImplConfig {

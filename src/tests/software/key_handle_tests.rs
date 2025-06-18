@@ -631,5 +631,50 @@ mod tests {
 
             Ok(())
         }
+
+        #[test]
+        fn test_hmac() -> Result<()> {
+            setup();
+            let spec = KeySpec::default();
+            let key = create_software_key_handle(spec)?;
+
+            let data = b"TEST DATA";
+
+            let _tag = key.hmac(data)?;
+
+            Ok(())
+        }
+
+        #[test]
+        fn test_hmac_verify_ok() -> Result<()> {
+            setup();
+            let spec = KeySpec::default();
+            let key = create_software_key_handle(spec)?;
+
+            let data = b"TEST DATA";
+
+            let tag = key.hmac(data)?;
+
+            assert!(key.verify_hmac(data, &tag)?);
+
+            Ok(())
+        }
+
+        #[test]
+        fn test_hmac_fail_verify_on_changed_data() -> Result<()> {
+            setup();
+            let spec = KeySpec::default();
+            let key = create_software_key_handle(spec)?;
+
+            let data = b"TEST DATA";
+
+            let tag = key.hmac(data)?;
+
+            let changed_data = b"TEST dATA";
+
+            assert!(!key.verify_hmac(changed_data, &tag)?);
+
+            Ok(())
+        }
     }
 }

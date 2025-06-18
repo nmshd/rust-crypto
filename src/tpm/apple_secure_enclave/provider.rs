@@ -3,6 +3,7 @@ use std::sync::LazyLock;
 
 use anyhow::anyhow;
 use base64::prelude::*;
+use itertools::Itertools;
 use security_framework::{
     access_control::{ProtectionMode, SecAccessControl},
     item::{ItemClass, ItemSearchOptions, KeyClass, Location, Reference, SearchResult},
@@ -122,14 +123,12 @@ impl ProviderImpl for AppleSecureEnclaveProvider {
         )
         .err_internal()?;
 
-        let key_options = GenerateKeyOptions {
-            key_type: Some(KeyType::ec()),
-            size_in_bits: Some(256),
-            label: None,
-            token: None,
-            location: Some(Location::DataProtectionKeychain),
-            access_control: Some(access_controll),
-        };
+        let mut key_options = GenerateKeyOptions::default();
+        key_options
+            .set_key_type(KeyType::ec())
+            .set_size_in_bits(256)
+            .set_location(Location::DataProtectionKeychain)
+            .set_access_control(access_controll);
 
         let sec_key: SecKey = SecKey::new(&key_options).err_internal()?;
 
@@ -301,13 +300,25 @@ impl ProviderImpl for AppleSecureEnclaveProvider {
     }
 
     fn get_all_keys(&self) -> Result<Vec<(String, Spec)>, CalError> {
-        if self.storage_manager.is_none() {
-            return Err(CalError::failed_operation(
-                "This is an ephemeral provider, it cannot have stored keys".to_owned(),
+        if let Some(storage_manager) = self.storage_manager.as_ref() {
+            storage_manager
+                .get_all_keys()
+                .into_iter()
+                .process_results(|key_spec_tuple_iter| key_spec_tuple_iter.collect())
+                .map_err(|err| {
+                    // TODO: Better mapping to CalError.
+                    CalError::failed_operation(
+                        "At least metadata for one key could not be loaded.",
+                        true,
+                        Some(anyhow!(err)),
+                    )
+                })
+        } else {
+            Err(CalError::failed_operation(
+                "This is an ephemeral provider, it cannot have stored keys",
                 true,
                 None,
-            ));
+            ))
         }
-        Ok(self.storage_manager.as_ref().unwrap().get_all_keys())
     }
 }

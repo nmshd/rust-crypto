@@ -3011,8 +3011,15 @@ const _: fn() = || {
         crypto_layer::common::config::AdditionalConfig::StorageConfigDSA(field0) => {
             let _: KeyPairHandle = field0;
         }
-        crypto_layer::common::config::AdditionalConfig::StorageConfigPass(field0) => {
-            let _: String = field0;
+        crypto_layer::common::config::AdditionalConfig::StorageConfigSymmetricEncryption(
+            field0,
+        ) => {
+            let _: KeyHandle = field0;
+        }
+        crypto_layer::common::config::AdditionalConfig::StorageConfigAsymmetricEncryption(
+            field0,
+        ) => {
+            let _: KeyPairHandle = field0;
         }
     }
     {
@@ -3613,10 +3620,12 @@ impl SseDecode for crypto_layer::common::config::AdditionalConfig {
                 );
             }
             4 => {
-                let mut var_field0 = <String>::sse_decode(deserializer);
-                return crypto_layer::common::config::AdditionalConfig::StorageConfigPass(
-                    var_field0,
-                );
+                let mut var_field0 = <KeyHandle>::sse_decode(deserializer);
+                return crypto_layer::common::config::AdditionalConfig::StorageConfigSymmetricEncryption(var_field0);
+            }
+            5 => {
+                let mut var_field0 = <KeyPairHandle>::sse_decode(deserializer);
+                return crypto_layer::common::config::AdditionalConfig::StorageConfigAsymmetricEncryption(var_field0);
             }
             _ => {
                 unimplemented!("");
@@ -4545,9 +4554,12 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crypto_layer::common::config::
             crypto_layer::common::config::AdditionalConfig::StorageConfigDSA(field0) => {
                 [3.into_dart(), field0.into_into_dart().into_dart()].into_dart()
             }
-            crypto_layer::common::config::AdditionalConfig::StorageConfigPass(field0) => {
-                [4.into_dart(), field0.into_into_dart().into_dart()].into_dart()
-            }
+            crypto_layer::common::config::AdditionalConfig::StorageConfigSymmetricEncryption(
+                field0,
+            ) => [4.into_dart(), field0.into_into_dart().into_dart()].into_dart(),
+            crypto_layer::common::config::AdditionalConfig::StorageConfigAsymmetricEncryption(
+                field0,
+            ) => [5.into_dart(), field0.into_into_dart().into_dart()].into_dart(),
             _ => {
                 unimplemented!("");
             }
@@ -5431,9 +5443,17 @@ impl SseEncode for crypto_layer::common::config::AdditionalConfig {
                 <i32>::sse_encode(3, serializer);
                 <KeyPairHandle>::sse_encode(field0, serializer);
             }
-            crypto_layer::common::config::AdditionalConfig::StorageConfigPass(field0) => {
+            crypto_layer::common::config::AdditionalConfig::StorageConfigSymmetricEncryption(
+                field0,
+            ) => {
                 <i32>::sse_encode(4, serializer);
-                <String>::sse_encode(field0, serializer);
+                <KeyHandle>::sse_encode(field0, serializer);
+            }
+            crypto_layer::common::config::AdditionalConfig::StorageConfigAsymmetricEncryption(
+                field0,
+            ) => {
+                <i32>::sse_encode(5, serializer);
+                <KeyPairHandle>::sse_encode(field0, serializer);
             }
             _ => {
                 unimplemented!("");

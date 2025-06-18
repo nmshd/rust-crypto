@@ -25,4 +25,5 @@ export type AdditionalConfig =
   }
   | { "StorageConfigHMAC": KeyHandle }
   | { "StorageConfigDSA": KeyPairHandle }
-  | { "StorageConfigPass": string };
+  | { "StorageConfigSymmetricEncryption": KeyHandle }
+  | { "StorageConfigAsymmetricEncryption": KeyPairHandle };

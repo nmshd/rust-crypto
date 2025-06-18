@@ -13,7 +13,7 @@ import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'config.freezed.dart';
 
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `AdditionalConfigDiscriminants`, `SecurityLevelIter`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_receiver_is_total_eq`, `assert_receiver_is_total_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `cmp`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `from_str`, `from_str`, `from`, `from`, `from`, `from`, `from`, `from`, `iter`, `len`, `next_back`, `next`, `nth`, `partial_cmp`, `size_hint`, `try_from`, `try_from`, `zeroize`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_receiver_is_total_eq`, `assert_receiver_is_total_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `cmp`, `eq`, `eq`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `from_str`, `from_str`, `from`, `from`, `from`, `from`, `from`, `from`, `iter`, `len`, `next_back`, `next`, `nth`, `partial_cmp`, `size_hint`, `try_from`, `try_from`, `zeroize`
 
 @freezed
 sealed class AdditionalConfig with _$AdditionalConfig {
@@ -21,7 +21,7 @@ sealed class AdditionalConfig with _$AdditionalConfig {
 
   /// Callback functions acting like a hashmap for storing key metadata.
   ///
-  /// Not supported by the NodeJS plugin.
+  /// Mutually exclusive with [AdditionalConfig::FileStoreConfig].
   const factory AdditionalConfig.kvStoreConfig({
     required ArcFnStringDynFutureOptionVecU8 getFn,
     required ArcFnStringVecU8DynFutureBool storeFn,
@@ -30,22 +30,42 @@ sealed class AdditionalConfig with _$AdditionalConfig {
   }) = AdditionalConfig_KVStoreConfig;
 
   /// Configuration for the usage of the metadata file database.
+  ///
+  /// Mutually exclusive with [AdditionalConfig::KVStoreConfig].
   const factory AdditionalConfig.fileStoreConfig({
     /// Path to a directory where the database holding key metadata will be saved.
     required String dbDir,
   }) = AdditionalConfig_FileStoreConfig;
 
-  /// Used for verifying the integrity of the key metadata.
+  /// Enables integrity verification of key metadata.
+  ///
+  /// Mutually exclusive with [AdditionalConfig::StorageConfigDSA].
   const factory AdditionalConfig.storageConfigHmac(KeyHandle field0) =
       AdditionalConfig_StorageConfigHMAC;
 
-  /// Used for verifying the integrity of the key metadata.
+  /// Enables integrity verification of key metadata.
+  ///
+  /// Mutually exclusive with [AdditionalConfig::StorageConfigHMAC].
   const factory AdditionalConfig.storageConfigDsa(KeyPairHandle field0) =
       AdditionalConfig_StorageConfigDSA;
 
-  /// Used for verifying the integrity of the key metadata.
-  const factory AdditionalConfig.storageConfigPass(String field0) =
-      AdditionalConfig_StorageConfigPass;
+  /// Enables encryption of sensitive key metadata.
+  ///
+  /// In case of the software provider, this enables encryption of secret keys.
+  ///
+  /// Mutually exclusive with [AdditionalConfig::StorageConfigAsymmetricEncryption].
+  const factory AdditionalConfig.storageConfigSymmetricEncryption(
+    KeyHandle field0,
+  ) = AdditionalConfig_StorageConfigSymmetricEncryption;
+
+  /// Enables encryption of sensitive key metadata.
+  ///
+  /// In case of the software provider, this enables encryption of secret keys.
+  ///
+  /// Mutually exclusive with [AdditionalConfig::StorageConfigSymmetricEncryption].
+  const factory AdditionalConfig.storageConfigAsymmetricEncryption(
+    KeyPairHandle field0,
+  ) = AdditionalConfig_StorageConfigAsymmetricEncryption;
 }
 
 /// Struct used to configure key pairs.
@@ -198,8 +218,7 @@ class ProviderConfig {
 ///       additional_config: vec![
 ///          AdditionalConfig::FileStoreConfig {
 ///              db_dir: "./testdb".to_owned(),
-///          },
-///          AdditionalConfig::StorageConfigPass("password".to_owned()),
+///          }
 ///      ],
 /// };
 /// ```
