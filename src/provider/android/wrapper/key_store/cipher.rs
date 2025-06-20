@@ -3,7 +3,7 @@ use robusta_jni::bridge;
 #[bridge]
 /// This module contains the JNI bindings for the Cipher class in the javax.crypto package.
 pub(crate) mod jni {
-    use crate::tpm::android::wrapper::key_generation::key::jni::Key;
+    use crate::provider::android::wrapper::key_generation::key::jni::Key;
     use robusta_jni::{
         convert::{IntoJavaValue, Signature, TryFromJavaValue, TryIntoJavaValue},
         jni::{

@@ -1,7 +1,7 @@
 use robusta_jni::jni::objects::{JObject, JValue};
 use robusta_jni::jni::{errors::Result, objects::AutoLocal, JNIEnv};
 
-use crate::tpm::android::wrapper::key_store::store::jni::Certificate;
+use crate::provider::android::wrapper::key_store::store::jni::Certificate;
 
 pub(crate) struct SecretKeyEntry<'env: 'borrow, 'borrow> {
     pub(crate) raw: AutoLocal<'env, 'borrow>,

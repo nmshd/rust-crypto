@@ -2,7 +2,7 @@ use robusta_jni::bridge;
 
 #[bridge]
 pub(crate) mod jni {
-    use crate::tpm::android::wrapper::key_generation::key::jni::SecretKey;
+    use crate::provider::android::wrapper::key_generation::key::jni::SecretKey;
     use robusta_jni::{
         convert::{IntoJavaValue, Signature, TryFromJavaValue, TryIntoJavaValue},
         jni::{

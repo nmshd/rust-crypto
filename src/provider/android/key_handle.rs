@@ -1,6 +1,6 @@
 use super::utils::get_cipher_name;
-use crate::software::key_handle::id_from_buffer;
-use crate::tpm::android::utils::{get_cipher_padding, get_mode_name};
+use crate::provider::android::utils::{get_cipher_padding, get_mode_name};
+use crate::provider::software::key_handle::id_from_buffer;
 use crate::{
     common::{
         config::{KeyPairSpec, KeySpec},
@@ -8,8 +8,7 @@ use crate::{
         traits::key_handle::{KeyHandleImpl, KeyPairHandleImpl},
         DHExchange, KeyHandle,
     },
-    storage::StorageManager,
-    tpm::android::{
+    provider::android::{
         utils::{get_asym_cipher_mode, get_signature_algorithm, get_sym_cipher_mode},
         wrapper::{
             self, context,
@@ -18,6 +17,7 @@ use crate::{
         },
         ANDROID_KEYSTORE,
     },
+    storage::StorageManager,
 };
 use anyhow::anyhow;
 use blake2::Blake2bVar;

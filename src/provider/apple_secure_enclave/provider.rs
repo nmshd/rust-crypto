@@ -21,7 +21,7 @@ use crate::{
     storage::{KeyData, StorageManager},
 };
 
-use crate::tpm::apple_secure_enclave::{key_handle::AppleSecureEnclaveKeyPair, *};
+use crate::provider::apple_secure_enclave::{key_handle::AppleSecureEnclaveKeyPair, *};
 
 static CAPABILITIES: LazyLock<ProviderConfig> = LazyLock::new(|| ProviderConfig {
     max_security_level: SecurityLevel::Hardware,

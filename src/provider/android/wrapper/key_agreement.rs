@@ -11,7 +11,7 @@ pub(crate) mod jni {
         },
     };
 
-    use crate::tpm::android::wrapper::key_generation::key::jni::Key;
+    use crate::provider::android::wrapper::key_generation::key::jni::Key;
 
     /// Represents a key in Java's `java.security` package.
     #[derive(Signature, TryIntoJavaValue, IntoJavaValue, TryFromJavaValue)]

@@ -11,7 +11,7 @@ use crate::{
         KeyHandle,
     },
     prelude::{CalError, KeyPairSpec, KeySpec},
-    tpm::android::{
+    provider::android::{
         provider::AndroidProvider,
         utils::get_exchange_algorithm,
         wrapper::{

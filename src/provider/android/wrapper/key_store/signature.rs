@@ -3,7 +3,7 @@ use robusta_jni::bridge;
 #[bridge]
 /// This module contains the JNI bindings for the Signature class in the Java security package.
 pub(crate) mod jni {
-    use crate::tpm::android::wrapper::key_store::store::jni::Certificate;
+    use crate::provider::android::wrapper::key_store::store::jni::Certificate;
     use robusta_jni::{
         convert::{IntoJavaValue, Signature as JavaSignature, TryFromJavaValue, TryIntoJavaValue},
         jni::{

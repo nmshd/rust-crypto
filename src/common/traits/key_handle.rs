@@ -1,16 +1,16 @@
 #![allow(dead_code)]
-#[cfg(feature = "software")]
-use crate::software::{
-    key_handle::{SoftwareKeyHandle, SoftwareKeyPairHandle},
-    provider::SoftwareDHExchange,
-};
 #[cfg(feature = "android")]
-use crate::tpm::android::{
+use crate::provider::android::{
     dh_exchange::AndroidDHExchange,
     key_handle::{AndroidKeyHandle, AndroidKeyPairHandle},
 };
 #[cfg(feature = "apple-secure-enclave")]
-use crate::tpm::apple_secure_enclave::key_handle::AppleSecureEnclaveKeyPair;
+use crate::provider::apple_secure_enclave::key_handle::AppleSecureEnclaveKeyPair;
+#[cfg(feature = "software")]
+use crate::provider::software::{
+    key_handle::{SoftwareKeyHandle, SoftwareKeyPairHandle},
+    provider::SoftwareDHExchange,
+};
 
 use crate::common::{
     config::{KeyPairSpec, KeySpec},

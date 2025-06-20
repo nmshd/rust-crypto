@@ -24,12 +24,10 @@
 
 /// Public module holding the API of the library and common structs.
 pub mod common;
-#[cfg(feature = "software")]
-pub(crate) mod software;
+pub(crate) mod provider;
 pub(crate) mod storage;
 #[cfg(test)]
 mod tests;
-pub(crate) mod tpm;
 
 /// Exports structs and functions needed for using the library.
 pub mod prelude;

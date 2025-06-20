@@ -6,8 +6,7 @@ use crate::{
         traits::module_provider::{ProviderFactory, ProviderImpl, ProviderImplEnum},
         DHExchange, KeyHandle, KeyPairHandle,
     },
-    storage::{KeyData, StorageManager},
-    tpm::android::{
+    provider::android::{
         dh_exchange::AndroidDHExchange,
         key_handle::{AndroidKeyHandle, AndroidKeyPairHandle},
         utils::{
@@ -17,6 +16,7 @@ use crate::{
         wrapper::{self, context},
         ANDROID_KEYSTORE,
     },
+    storage::{KeyData, StorageManager},
 };
 
 use nanoid::nanoid;

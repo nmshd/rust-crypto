@@ -1,4 +1,4 @@
-use crate::tpm::android::wrapper::key_generation::key_gen_parameter_spec::jni::KeyGenParameterSpec;
+use crate::provider::android::wrapper::key_generation::key_gen_parameter_spec::jni::KeyGenParameterSpec;
 
 use robusta_jni::jni::errors::Result as JniResult;
 use robusta_jni::jni::objects::{AutoLocal, JObject, JValue};

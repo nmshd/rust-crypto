@@ -3,7 +3,7 @@ use robusta_jni::bridge;
 #[bridge]
 /// This module contains the JNI bindings for the `KeyPair` struct used in Android TPM key generation.
 pub(crate) mod jni {
-    use crate::tpm::android::wrapper::key_generation::key::jni::{Key, PrivateKey, PublicKey};
+    use crate::provider::android::wrapper::key_generation::key::jni::{Key, PrivateKey, PublicKey};
     use robusta_jni::{
         convert::{IntoJavaValue, Signature, TryFromJavaValue, TryIntoJavaValue},
         jni::{errors::Result as JniResult, objects::AutoLocal, JNIEnv},
