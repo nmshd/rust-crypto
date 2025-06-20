@@ -1,15 +1,6 @@
 #![allow(static_mut_refs, dead_code, unused_variables)]
-#[cfg(feature = "hsm")]
-mod hsm;
 
-#[cfg(any(feature = "apple-secure-enclave", feature = "win", feature = "linux"))]
-mod tpm;
-
-#[cfg(feature = "nks")]
-mod nks;
-
-#[cfg(feature = "software")]
-mod software;
+mod provider;
 
 use std::collections::HashMap;
 use std::sync::Once;
