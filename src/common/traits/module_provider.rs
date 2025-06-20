@@ -14,7 +14,6 @@ use crate::{
         DHExchange, KeyHandle, KeyPairHandle,
     },
     prelude::CryptoHash,
-    stub::{StubProvider, StubProviderFactory},
 };
 use enum_dispatch::enum_dispatch;
 
@@ -34,7 +33,6 @@ pub(crate) trait ProviderFactory: Send + Sync {
 
 #[enum_dispatch]
 pub(crate) enum ProviderFactoryEnum {
-    StubProviderFactory,
     #[cfg(feature = "android")]
     AndroidProviderFactory,
     #[cfg(feature = "apple-secure-enclave")]
@@ -195,7 +193,6 @@ pub(crate) trait ProviderImpl: Send + Sync {
 
 #[enum_dispatch]
 pub(crate) enum ProviderImplEnum {
-    StubProvider,
     #[cfg(feature = "android")]
     AndroidProvider,
     #[cfg(feature = "apple-secure-enclave")]

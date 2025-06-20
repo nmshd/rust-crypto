@@ -12,13 +12,10 @@ use crate::tpm::android::{
 #[cfg(feature = "apple-secure-enclave")]
 use crate::tpm::apple_secure_enclave::key_handle::AppleSecureEnclaveKeyPair;
 
-use crate::{
-    common::{
-        config::{KeyPairSpec, KeySpec},
-        error::CalError,
-        DHExchange, KeyHandle,
-    },
-    stub::{StubDHKeyExchange, StubKeyHandle, StubKeyPairHandle},
+use crate::common::{
+    config::{KeyPairSpec, KeySpec},
+    error::CalError,
+    DHExchange, KeyHandle,
 };
 use enum_dispatch::enum_dispatch;
 
@@ -99,7 +96,6 @@ pub(crate) trait KeyHandleImpl: Send + Sync {
 #[enum_dispatch]
 #[derive(Debug, Clone)]
 pub(crate) enum KeyHandleImplEnum {
-    StubKeyHandle,
     #[cfg(feature = "android")]
     AndroidKeyHandle,
     #[cfg(feature = "software")]
@@ -174,7 +170,6 @@ pub(crate) trait KeyPairHandleImpl: Send + Sync {
 #[enum_dispatch]
 #[derive(Debug, Clone)]
 pub enum KeyPairHandleImplEnum {
-    StubKeyPairHandle,
     #[cfg(feature = "android")]
     AndroidKeyPairHandle,
     #[cfg(feature = "apple-secure-enclave")]
@@ -186,7 +181,6 @@ pub enum KeyPairHandleImplEnum {
 #[enum_dispatch]
 #[derive(Debug)]
 pub(crate) enum DHKeyExchangeImplEnum {
-    StubDHKeyExchange,
     #[cfg(feature = "software")]
     SoftwareDHExchange,
     #[cfg(feature = "android")]

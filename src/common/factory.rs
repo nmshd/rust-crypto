@@ -9,7 +9,6 @@ use super::{
 };
 #[cfg(feature = "software")]
 use crate::software::SoftwareProviderFactory;
-use crate::stub::StubProviderFactory;
 #[cfg(feature = "android")]
 use crate::tpm::android::provider::AndroidProviderFactory;
 #[cfg(feature = "apple-secure-enclave")]
@@ -25,7 +24,6 @@ static ALL_PROVIDERS: LazyLock<Vec<ProviderFactoryEnum>> = LazyLock::new(|| {
         Into::into(AndroidProviderFactory {
             secure_element: false,
         }),
-        Into::into(StubProviderFactory {}),
         #[cfg(feature = "apple-secure-enclave")]
         Into::into(AppleSecureEnclaveFactory {}),
         #[cfg(feature = "software")]
