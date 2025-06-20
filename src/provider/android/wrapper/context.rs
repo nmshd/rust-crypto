@@ -18,44 +18,12 @@ pub struct AndroidContext {
 
 impl AndroidContext {
     /// A handle to the `JavaVM` object.
-    ///
-    /// Usage with [__jni__](https://crates.io/crates/jni) crate:
-    /// ```no_run
-    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
-    /// let ctx = ndk_context::android_context();
-    /// let vm = unsafe { jni::JavaVM::from_raw(ctx.vm().cast()) }?;
-    /// let env = vm.attach_current_thread();
-    /// # Ok(())
-    /// # }
-    /// ```
     pub fn vm(self) -> *mut c_void {
         self.java_vm
     }
 
     /// A handle to an [android.content.Context](https://developer.android.com/reference/android/content/Context).
     /// In most cases this will be a ptr to an `Activity`, but this isn't guaranteed.
-    ///
-    /// Usage with [__jni__](https://crates.io/crates/jni) crate:
-    /// ```no_run
-    /// # use jni::objects::JObject;
-    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
-    /// let ctx = ndk_context::android_context();
-    /// let vm = unsafe { jni::JavaVM::from_raw(ctx.vm().cast()) }?;
-    /// let context = unsafe { JObject::from_raw(ctx.context().cast()) };
-    /// let env = vm.attach_current_thread()?;
-    /// let class_ctx = env.find_class("android/content/Context")?;
-    /// let audio_service = env.get_static_field(class_ctx, "AUDIO_SERVICE", "Ljava/lang/String;")?;
-    /// let audio_manager = env
-    ///     .call_method(
-    ///         context,
-    ///         "getSystemService",
-    ///         "(Ljava/lang/String;)Ljava/lang/Object;",
-    ///         &[audio_service],
-    ///     )?
-    ///     .l()?;
-    /// # Ok(())
-    /// # }
-    /// ```
     pub fn context(self) -> *mut c_void {
         self.context_jobject
     }

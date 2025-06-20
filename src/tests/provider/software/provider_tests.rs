@@ -3,12 +3,12 @@
 mod tests {
     use crate::{
         common::traits::key_handle::DHKeyExchangeImpl, prelude::*,
-        software::provider::SoftwareDHExchange,
+        provider::software::provider::SoftwareDHExchange,
     };
 
     mod dh_exchange {
         use super::*;
-        use crate::software::key_handle::SoftwareKeyHandle;
+        use crate::provider::software::key_handle::SoftwareKeyHandle;
         use crate::tests::setup;
         use crate::{storage::StorageManager, tests::TestStore};
         use color_eyre::eyre::{eyre, Result};

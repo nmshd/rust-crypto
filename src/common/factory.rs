@@ -72,7 +72,7 @@ fn provider_supports_capabilities(
 ///     supported_ciphers: HashSet::new(),
 ///     supported_hashes: HashSet::new(),
 /// };
-/// let provider = create_provider(&provider_config, specific_provider_config).unwrap();
+/// let provider = create_provider(&provider_config, specific_provider_config);
 /// ```
 pub fn create_provider(conf: &ProviderConfig, impl_conf: ProviderImplConfig) -> Option<Provider> {
     for provider in ALL_PROVIDERS.iter() {
