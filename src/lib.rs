@@ -24,8 +24,6 @@
 
 /// Public module holding the API of the library and common structs.
 pub mod common;
-#[cfg(feature = "ffi")]
-pub mod ffi;
 #[cfg(feature = "software")]
 pub(crate) mod software;
 pub(crate) mod storage;
