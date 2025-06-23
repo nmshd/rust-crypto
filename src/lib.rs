@@ -4,7 +4,6 @@
 //!
 //! | Provider Name                   | Sign and Verify       | Encrypt and Decrypt       | DH Exchange | Import Key | Import Key Pair | Import Public Key | Export Key | Export Private Key | Export Public Key |
 //! | ------------------------------- | --------------------- | ------------------------- | ----------- | ---------- | --------------- | ----------------- | ---------- | ------------------ | ----------------- |
-//! | STUB_PROVIDER                   | ⬜                    | ⬜                        | ⬜          | ⬜         | ⬜              | ⬜                | ⬜         | ⬜                 | ⬜                |
 //! | ANDROID_PROVIDER                | ✅                    | ✅                        | ✅          | ⬜         | ⬜              | ⬜                | ⬜         | ⬜                 | ✅                |
 //! | ANDROID_PROVIDER_SECURE_ELEMENT | ✅                    | ✅                        | ✅          | ⬜         | ⬜              | ⬜                | ⬜         | ⬜                 | ✅                |
 //! | APPLE_SECURE_ENCLAVE            | ✅                    | ⬜                        | ⬜          | ⬜         | ⬜              | ⬜                | ⬜         | ⬜                 | ✅                |
