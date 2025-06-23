@@ -4,7 +4,7 @@ param(
 )
 
 Write-Host "Compiling Debug Test Build"
-[string]$cargo_test_output = cargo test -F apple-secure-enclave --no-default-features --no-run 2>&1
+[string]$cargo_test_output = cargo test -F "apple-secure-enclave,software" --no-run 2>&1
 $path_regex = [regex]"target\/debug\/deps\/crypto_layer-[a-z0-9]*"
 
 if ($cargo_test_output -match $path_regex) {
@@ -18,5 +18,6 @@ if ($cargo_test_output -match $path_regex) {
     & $debug_binary_path
 }
 else {
+    Write-Host $cargo_test_output
     Write-Error "Failed to match cargo test output." -ErrorAction Stop
 }

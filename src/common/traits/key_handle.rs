@@ -12,6 +12,12 @@ use crate::provider::software::{
     provider::SoftwareDHExchange,
 };
 
+#[cfg(not(any(feature = "android", feature = "software")))]
+compile_error!(
+    "Due to the use of enum dispatch a provider that supports KeyHandle and DHExchange \
+    needs to be chosen as well: 'software', 'android'."
+);
+
 use crate::common::{
     config::{KeyPairSpec, KeySpec},
     error::CalError,
