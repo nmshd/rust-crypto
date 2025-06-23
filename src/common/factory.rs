@@ -7,13 +7,12 @@ use super::{
     traits::module_provider::{ProviderFactory, ProviderFactoryEnum},
     Provider,
 };
-#[cfg(feature = "software")]
-use crate::software::SoftwareProviderFactory;
-use crate::stub::StubProviderFactory;
 #[cfg(feature = "android")]
-use crate::tpm::android::provider::AndroidProviderFactory;
+use crate::provider::android::provider::AndroidProviderFactory;
 #[cfg(feature = "apple-secure-enclave")]
-use crate::tpm::apple_secure_enclave::provider::AppleSecureEnclaveFactory;
+use crate::provider::apple_secure_enclave::provider::AppleSecureEnclaveFactory;
+#[cfg(feature = "software")]
+use crate::provider::software::SoftwareProviderFactory;
 
 static ALL_PROVIDERS: LazyLock<Vec<ProviderFactoryEnum>> = LazyLock::new(|| {
     vec![
@@ -25,7 +24,6 @@ static ALL_PROVIDERS: LazyLock<Vec<ProviderFactoryEnum>> = LazyLock::new(|| {
         Into::into(AndroidProviderFactory {
             secure_element: false,
         }),
-        Into::into(StubProviderFactory {}),
         #[cfg(feature = "apple-secure-enclave")]
         Into::into(AppleSecureEnclaveFactory {}),
         #[cfg(feature = "software")]
@@ -61,10 +59,7 @@ fn provider_supports_capabilities(
 /// ```
 /// use std::collections::HashSet;
 ///
-/// use crypto_layer::common::{
-///     config::*,
-///     factory::*,
-/// };
+/// use crypto_layer::prelude::*;
 ///
 /// let specific_provider_config = ProviderImplConfig{additional_config: vec![]};
 /// let provider_config = ProviderConfig {
@@ -74,7 +69,8 @@ fn provider_supports_capabilities(
 ///     supported_ciphers: HashSet::new(),
 ///     supported_hashes: HashSet::new(),
 /// };
-/// let provider = create_provider(&provider_config, specific_provider_config).unwrap();
+///
+/// let provider_option: Option<Provider> = create_provider(&provider_config, specific_provider_config);
 /// ```
 pub fn create_provider(conf: &ProviderConfig, impl_conf: ProviderImplConfig) -> Option<Provider> {
     for provider in ALL_PROVIDERS.iter() {
