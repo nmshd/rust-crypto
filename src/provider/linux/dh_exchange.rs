@@ -13,7 +13,7 @@ pub(crate) struct LinuxDHExchange {
 
 impl DHKeyExchangeImpl for LinuxDHExchange {
     fn id(&self) -> Result<String, CalError> {
-        Ok(self.key_id)
+        Ok(self.key_id.clone())
     }
 
     fn get_public_key(&self) -> Result<Vec<u8>, CalError> {
