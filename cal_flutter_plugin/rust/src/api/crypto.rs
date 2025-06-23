@@ -1,4 +1,4 @@
-use crypto_layer::common::config::ProviderImplConfig;
+use crypto_layer::{common::config::ProviderImplConfig, prelude::AdditionalConfig};
 
 use flutter_rust_bridge::DartFnFuture;
 use std::sync::Arc;

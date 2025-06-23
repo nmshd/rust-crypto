@@ -22,10 +22,7 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 /// ```
 /// use std::collections::HashSet;
 ///
-/// use crypto_layer::common::{
-///     config::*,
-///     factory::*,
-/// };
+/// use crypto_layer::prelude::*;
 ///
 /// let specific_provider_config = ProviderImplConfig{additional_config: vec![]};
 /// let provider_config = ProviderConfig {
@@ -35,7 +32,8 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 ///     supported_ciphers: HashSet::new(),
 ///     supported_hashes: HashSet::new(),
 /// };
-/// let provider = create_provider(&provider_config, specific_provider_config).unwrap();
+///
+/// let provider_option: Option<Provider> = create_provider(&provider_config, specific_provider_config);
 /// ```
 Future<Provider?> createProvider({
   required ProviderConfig conf,
