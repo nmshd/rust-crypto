@@ -372,7 +372,7 @@ impl DHExchange {
 }
 
 #[cfg(feature = "android")]
-use crate::tpm::android::wrapper::context;
+use crate::provider::android::wrapper::context;
 #[cfg(feature = "android")]
 use std::ffi::c_void;
 #[cfg(feature = "android")]
