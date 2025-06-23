@@ -7,8 +7,9 @@ use crate::{
     storage::StorageManager,
 };
 
-#[derive(Clone)]
 pub(crate) struct LinuxProvider {
+    pub(super) primary_key: tss_esapi::handles::KeyHandle,
+    pub(super) context: tss_esapi::Context,
     pub(super) impl_config: ProviderImplConfig,
     pub(super) used_factory: LinuxProviderFactory,
     pub(super) storage_manager: Option<StorageManager>,

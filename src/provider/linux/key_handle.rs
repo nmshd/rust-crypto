@@ -37,7 +37,7 @@ impl KeyHandleImpl for LinuxKeyHandle {
     }
 
     fn id(&self) -> Result<String, CalError> {
-        Ok(self.key_id)
+        Ok(self.key_id.clone())
     }
 
     fn delete(self) -> Result<(), CalError> {
