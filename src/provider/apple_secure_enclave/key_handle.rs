@@ -14,8 +14,8 @@ use crate::common::{
     traits::key_handle::KeyPairHandleImpl,
     DHExchange,
 };
+use crate::provider::apple_secure_enclave::CFErrorThreadSafe;
 use crate::storage::StorageManager;
-use crate::tpm::apple_secure_enclave::CFErrorThreadSafe;
 
 #[instrument(level = "trace")]
 fn signature_algorithm_from_crypto_hash(hash: CryptoHash) -> Result<Algorithm, CalError> {

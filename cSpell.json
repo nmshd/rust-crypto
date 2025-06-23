@@ -5,6 +5,7 @@
         "blake",
         "Brainpool",
         "cdylib",
+        "cferr",
         "chacha",
         "ciphertext",
         "codegen",
