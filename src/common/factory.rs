@@ -59,10 +59,7 @@ fn provider_supports_capabilities(
 /// ```
 /// use std::collections::HashSet;
 ///
-/// use crypto_layer::common::{
-///     config::*,
-///     factory::*,
-/// };
+/// use crypto_layer::prelude::*;
 ///
 /// let specific_provider_config = ProviderImplConfig{additional_config: vec![]};
 /// let provider_config = ProviderConfig {
@@ -72,7 +69,8 @@ fn provider_supports_capabilities(
 ///     supported_ciphers: HashSet::new(),
 ///     supported_hashes: HashSet::new(),
 /// };
-/// let provider = create_provider(&provider_config, specific_provider_config);
+///
+/// let provider_option: Option<Provider> = create_provider(&provider_config, specific_provider_config);
 /// ```
 pub fn create_provider(conf: &ProviderConfig, impl_conf: ProviderImplConfig) -> Option<Provider> {
     for provider in ALL_PROVIDERS.iter() {
