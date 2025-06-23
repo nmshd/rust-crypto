@@ -2,6 +2,8 @@
 pub(crate) mod android;
 #[cfg(feature = "apple-secure-enclave")]
 pub(crate) mod apple_secure_enclave;
+#[cfg(feature = "linux")]
+pub(crate) mod linux;
 #[cfg(feature = "software")]
 pub(crate) mod software;
 #[cfg(feature = "win")]

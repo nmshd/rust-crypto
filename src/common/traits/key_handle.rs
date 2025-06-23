@@ -6,6 +6,10 @@ use crate::provider::android::{
 };
 #[cfg(feature = "apple-secure-enclave")]
 use crate::provider::apple_secure_enclave::key_handle::AppleSecureEnclaveKeyPair;
+#[cfg(feature = "linux")]
+use crate::provider::linux::{
+    dh_exchange::LinuxDHExchange, key_handle::LinuxKeyHandle, key_pair_handle::LinuxKeyPairHandle,
+};
 #[cfg(feature = "software")]
 use crate::provider::software::{
     key_handle::{SoftwareKeyHandle, SoftwareKeyPairHandle},
@@ -108,6 +112,8 @@ pub(crate) enum KeyHandleImplEnum {
     AndroidKeyHandle,
     #[cfg(feature = "software")]
     SoftwareKeyHandle,
+    #[cfg(feature = "linux")]
+    LinuxKeyHandle,
 }
 
 #[enum_dispatch(KeyPairHandleImplEnum)]
@@ -184,6 +190,8 @@ pub enum KeyPairHandleImplEnum {
     AppleSecureEnclaveKeyPair,
     #[cfg(feature = "software")]
     SoftwareKeyPairHandle,
+    #[cfg(feature = "linux")]
+    LinuxKeyPairHandle,
 }
 
 #[enum_dispatch]
@@ -193,6 +201,8 @@ pub(crate) enum DHKeyExchangeImplEnum {
     SoftwareDHExchange,
     #[cfg(feature = "android")]
     AndroidDHExchange,
+    #[cfg(feature = "linux")]
+    LinuxDHExchange,
 }
 
 #[enum_dispatch(DHKeyExchangeImplEnum)]

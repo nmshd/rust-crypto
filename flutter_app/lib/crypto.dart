@@ -12,7 +12,7 @@ Future<Provider> getDefaultProvider() async {
   } else if (Platform.isMacOS || Platform.isIOS) {
     providerName = "APPLE_SECURE_ENCLAVE";
   } else {
-    providerName = "STUB_PROVIDER";
+    providerName = "SOFTWARE_PROVIDER";
   }
 
   var implConf = await getDefaultConfig(
