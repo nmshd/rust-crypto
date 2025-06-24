@@ -1,11 +1,13 @@
 use std::collections::HashSet;
+use std::sync::{Arc, Mutex};
 
 use anyhow::anyhow;
 use tss_esapi::attributes::ObjectAttributesBuilder;
 use tss_esapi::constants::{SessionType, StartupType};
+use tss_esapi::handles::AuthHandle;
 use tss_esapi::structures::{
-    Data, EccPoint, PublicBuilder, PublicEccParametersBuilder, SymmetricDefinition,
-    SymmetricDefinitionObject,
+    Auth, Data, EccPoint, PublicBuilder, PublicEccParametersBuilder, SensitiveData,
+    SymmetricDefinition, SymmetricDefinitionObject,
 };
 use tss_esapi::tcti_ldr::NetworkTPMConfig;
 use tss_esapi::Context;
@@ -78,6 +80,7 @@ impl ProviderFactory for LinuxProviderFactory {
             .with_restricted(true)
             .with_fixed_parent(true)
             .with_sensitive_data_origin(true)
+            .with_user_with_auth(true)
             .build()
             .expect("ObjectAttributesBuilder should never fail");
 
@@ -108,26 +111,14 @@ impl ProviderFactory for LinuxProviderFactory {
             .expect("PublicBuilder should never fail");
 
         let primary_key = context
-            .create_primary(
-                Hierarchy::Null,
-                public_config,
-                None,
-                Some(
-                    "unique_string"
-                        .as_bytes()
-                        .try_into()
-                        .expect("unique init data should be Data"),
-                ),
-                None,
-                None,
-            )
+            .create_primary(Hierarchy::Owner, public_config, None, None, None, None)
             .map_err(|e| {
                 CalError::failed_init("Failed to create primary key", false, Some(anyhow!(e)))
             })?
             .key_handle;
 
         Ok(ProviderImplEnum::from(LinuxProvider {
-            context,
+            context: Arc::new(Mutex::new(context)),
             primary_key,
             impl_config,
             used_factory: *self,
