@@ -15,9 +15,6 @@ void main() async {
       deleteFn: store.delete,
       allKeysFn: store.allKeys);
 
-  implConf.additionalConfig
-      .add(const cal.AdditionalConfig.storageConfigPass("testpass"));
-
   test("KeyPair can be created and used for every spec and every provider",
       () async {
     var providers = await cal.getAllProviders();

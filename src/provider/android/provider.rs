@@ -19,6 +19,8 @@ use crate::{
     storage::{KeyData, StorageManager},
 };
 
+use anyhow::anyhow;
+use itertools::Itertools;
 use nanoid::nanoid;
 use robusta_jni::jni::JavaVM;
 use std::{collections::HashSet, fmt::Debug};
@@ -507,11 +509,25 @@ impl ProviderImpl for AndroidProvider {
 
     #[instrument]
     fn get_all_keys(&self) -> Result<Vec<(String, Spec)>, CalError> {
-        if self.storage_manager.is_none() {
-            return Err(CalError::ephemeral_key_required());
+        if let Some(storage_manager) = self.storage_manager.as_ref() {
+            storage_manager
+                .get_all_keys()
+                .into_iter()
+                .process_results(|key_spec_tuple_iter| key_spec_tuple_iter.collect())
+                .map_err(|err| {
+                    CalError::failed_operation(
+                        "At least metadata for one key could not be loaded.",
+                        true,
+                        Some(anyhow!(err)),
+                    )
+                })
+        } else {
+            Err(CalError::failed_operation(
+                "This is an ephemeral provider, it cannot have stored keys",
+                true,
+                None,
+            ))
         }
-
-        Ok(self.storage_manager.as_ref().unwrap().get_all_keys())
     }
 
     fn provider_name(&self) -> String {

@@ -48,7 +48,7 @@ fn provider_supports_capabilities(
             .is_subset(&provider_capabilities.supported_hashes)
 }
 
-/// Returns a provider which supports the given requierements.
+/// Returns a provider which supports the given requirements.
 ///
 /// This function returns the first provider, which supports the given requirements and has a [`ProviderImplConfig`].
 ///

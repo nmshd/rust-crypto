@@ -13,7 +13,7 @@ use crate::common::error::{CalError, ToCalError};
 /// CFError is not thread safe. This struct wraps CFError's output.
 #[derive(thiserror::Error, Debug)]
 #[error("{code} -- {description}")]
-struct CFErrorThreadSafe {
+pub(self) struct CFErrorThreadSafe {
     domain: String,
     code: isize,
     description: String,
@@ -29,7 +29,7 @@ impl From<CFError> for CFErrorThreadSafe {
     }
 }
 
-// TODO: Fix this abhorent mess.
+// TODO: Remove error code to cal error mapping in favor of separate error.
 
 impl CalError {
     fn from_cferr(error: CFError, context: String) -> Self {

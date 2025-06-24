@@ -59,18 +59,18 @@ fn setup() {
     });
 }
 
-struct TestStore {
+pub(crate) struct TestStore {
     store: Arc<RwLock<HashMap<String, Vec<u8>>>>,
 }
 
 impl TestStore {
-    fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self {
             store: Arc::new(RwLock::new(HashMap::new())),
         }
     }
 
-    fn impl_config<'a: 'static>(&'a self) -> ProviderImplConfig {
+    pub(crate) fn impl_config<'a: 'static>(&'a self) -> ProviderImplConfig {
         let kv_store = AdditionalConfig::KVStoreConfig {
             get_fn: Arc::new(|key| Box::pin(self.get(key))),
             store_fn: Arc::new(|key, value| Box::pin(self.store(key, value))),
@@ -78,10 +78,8 @@ impl TestStore {
             all_keys_fn: Arc::new(|| Box::pin(self.keys())),
         };
 
-        let hmac = AdditionalConfig::StorageConfigPass("TestHMAC".to_owned());
-
         ProviderImplConfig {
-            additional_config: vec![kv_store, hmac],
+            additional_config: vec![kv_store],
         }
     }
 

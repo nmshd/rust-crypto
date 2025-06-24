@@ -155,7 +155,7 @@ impl KeyHandleImpl for AndroidKeyHandle {
                 cal_err
             })?;
 
-        let id = id_from_buffer(nonce)?;
+        let id = id_from_buffer(nonce);
 
         let jderived_key = env.byte_array_from_slice(&derived_key).err_internal()?;
         let algorithm = get_cipher_name(spec.cipher)?;
@@ -220,7 +220,7 @@ impl KeyHandleImpl for AndroidKeyHandle {
         }
 
         if let Some(storage_manager) = &self.storage_manager {
-            storage_manager.delete(self.key_id.clone());
+            storage_manager.delete(self.key_id.clone())?;
         }
 
         Ok(())
@@ -388,7 +388,7 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
         }
 
         if let Some(storage_manager) = &self.storage_manager {
-            storage_manager.delete(self.key_id.clone());
+            storage_manager.delete(self.key_id.clone())?;
         }
 
         Ok(())

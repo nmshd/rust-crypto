@@ -7,7 +7,9 @@ use crate::{
         DHExchange, KeyHandle,
     },
     prelude::Cipher,
+    provider::software::util::ring_hmac_algorithm_from_signing_hash,
 };
+
 use anyhow::anyhow;
 use base64::Engine;
 use chacha20poly1305::{
@@ -62,18 +64,17 @@ impl SoftwareKeyHandle {
 /// Hashes and encodes a buffer to a string.
 ///
 /// This is meant to generate deterministic ids from variable length nonces and contexts in derive key.
-pub(crate) fn id_from_buffer(buff: &[u8]) -> Result<String, CalError> {
-    // `digest` and `blake2` crate have both update functions that get each other int the way.
-    use blake2::{Blake2b, Digest};
-    use digest::consts::U8;
+pub(crate) fn id_from_buffer(buff: &[u8]) -> String {
+    // `digest` and `blake2` crate have both update functions that get each other in the way.
+    use blake2::{digest::consts::U8, Blake2b, Digest};
 
     type Blake2b64 = Blake2b<U8>;
 
-    let mut hasher = Blake2b64::new();
+    let mut hasher = <Blake2b64 as Digest>::new();
     hasher.update(buff);
     let hash = hasher.finalize();
     let hash_vec = hash.to_vec();
-    Ok(base64::prelude::BASE64_STANDARD.encode(hash_vec))
+    base64::prelude::BASE64_STANDARD.encode(hash_vec)
 }
 
 impl KeyHandleImpl for SoftwareKeyHandle {
@@ -267,12 +268,38 @@ impl KeyHandleImpl for SoftwareKeyHandle {
         }
     }
 
-    fn hmac(&self, _data: &[u8]) -> Result<Vec<u8>, CalError> {
-        todo!("HMAC not supported for AES keys")
+    fn hmac(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
+        let hmac_algorithm = ring_hmac_algorithm_from_signing_hash(self.spec.signing_hash)
+            .ok_or_else(|| {
+                CalError::bad_parameter(
+                    "SoftwareProvider only supports Sha2_256, Sha2_384 and Sha2_512 for HMAC.",
+                    true,
+                    None,
+                )
+            })?;
+
+        let signing_key = ring::hmac::Key::new(hmac_algorithm, &self.key);
+
+        Ok(ring::hmac::sign(&signing_key, data).as_ref().to_vec())
     }
 
-    fn verify_hmac(&self, _data: &[u8], _hmac: &[u8]) -> Result<bool, CalError> {
-        todo!("HMAC not supported for AES keys")
+    fn verify_hmac(&self, data: &[u8], tag: &[u8]) -> Result<bool, CalError> {
+        let hmac_algorithm = ring_hmac_algorithm_from_signing_hash(self.spec.signing_hash)
+            .ok_or_else(|| {
+                CalError::bad_parameter(
+                    "SoftwareProvider only supports Sha2_256, Sha2_384 and Sha2_512 for HMAC.",
+                    true,
+                    None,
+                )
+            })?;
+
+        let signing_key = ring::hmac::Key::new(hmac_algorithm, &self.key);
+
+        match ring::hmac::verify(&signing_key, data, tag) {
+            Ok(()) => Ok(true),
+            // `verify` errors on failure with [ring::error::Unspecified].
+            Err(_) => Ok(false),
+        }
     }
 
     fn derive_key(&self, nonce: &[u8]) -> Result<KeyHandle, CalError> {
@@ -311,7 +338,7 @@ impl KeyHandleImpl for SoftwareKeyHandle {
                 cal_err
             })?;
 
-        let id = id_from_buffer(nonce)?;
+        let id = id_from_buffer(nonce);
 
         Ok(KeyHandle {
             implementation: SoftwareKeyHandle::new(id, spec, derived_key, None)
@@ -335,8 +362,19 @@ impl KeyHandleImpl for SoftwareKeyHandle {
     #[doc = " Delete this key."]
     fn delete(self) -> Result<(), CalError> {
         if let Some(s) = &self.storage_manager {
-            s.delete(self.key_id.clone())
+            s.delete(self.key_id.clone()).map_err(|err| {
+                // TODO: Better mapping to CalError.
+                CalError::failed_operation(
+                    format!(
+                        "Failed to delete metadata for key with key id: '{}'",
+                        &self.key_id
+                    ),
+                    true,
+                    Some(anyhow!(err)),
+                )
+            })?
         }
+
         Ok(())
     }
 
@@ -451,8 +489,19 @@ impl KeyPairHandleImpl for SoftwareKeyPairHandle {
     #[doc = " Delete this key pair."]
     fn delete(self) -> Result<(), CalError> {
         if let Some(s) = self.storage_manager {
-            s.delete(self.key_id)
+            s.delete(&self.key_id).map_err(|err| {
+                // TODO: Better mapping to CalError.
+                CalError::failed_operation(
+                    format!(
+                        "Failed to delete metadata for key with key id: '{}'",
+                        &self.key_id
+                    ),
+                    true,
+                    Some(anyhow!(err)),
+                )
+            })?
         }
+
         Ok(())
     }
 

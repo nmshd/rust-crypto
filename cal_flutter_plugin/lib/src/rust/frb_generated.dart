@@ -3331,7 +3331,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           ),
         );
       case 4:
-        return AdditionalConfig_StorageConfigPass(dco_decode_String(raw[1]));
+        return AdditionalConfig_StorageConfigSymmetricEncryption(
+          dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandle(
+            raw[1],
+          ),
+        );
+      case 5:
+        return AdditionalConfig_StorageConfigAsymmetricEncryption(
+          dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle(
+            raw[1],
+          ),
+        );
       default:
         throw Exception("unreachable");
     }
@@ -4159,8 +4169,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             );
         return AdditionalConfig_StorageConfigDSA(var_field0);
       case 4:
-        var var_field0 = sse_decode_String(deserializer);
-        return AdditionalConfig_StorageConfigPass(var_field0);
+        var var_field0 =
+            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandle(
+              deserializer,
+            );
+        return AdditionalConfig_StorageConfigSymmetricEncryption(var_field0);
+      case 5:
+        var var_field0 =
+            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle(
+              deserializer,
+            );
+        return AdditionalConfig_StorageConfigAsymmetricEncryption(var_field0);
       default:
         throw UnimplementedError('');
     }
@@ -5181,9 +5200,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           field0,
           serializer,
         );
-      case AdditionalConfig_StorageConfigPass(field0: final field0):
+      case AdditionalConfig_StorageConfigSymmetricEncryption(
+        field0: final field0,
+      ):
         sse_encode_i_32(4, serializer);
-        sse_encode_String(field0, serializer);
+        sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyHandle(
+          field0,
+          serializer,
+        );
+      case AdditionalConfig_StorageConfigAsymmetricEncryption(
+        field0: final field0,
+      ):
+        sse_encode_i_32(5, serializer);
+        sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKeyPairHandle(
+          field0,
+          serializer,
+        );
     }
   }
 

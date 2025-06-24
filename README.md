@@ -2,6 +2,8 @@
 
 # Crypto Layer
 
+[![dependency status](https://deps.rs/repo/github/nmshd/rust-crypto/status.svg)](https://deps.rs/repo/github/nmshd/rust-crypto)
+
 </div>
 
 > [!WARNING]

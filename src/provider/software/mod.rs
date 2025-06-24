@@ -23,6 +23,7 @@ use std::collections::HashSet;
 
 pub(crate) mod key_handle;
 pub(crate) mod provider;
+mod util;
 
 #[derive(Default)]
 pub(crate) struct SoftwareProviderFactory {}

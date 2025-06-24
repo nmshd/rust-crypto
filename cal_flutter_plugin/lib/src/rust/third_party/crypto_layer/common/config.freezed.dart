@@ -316,23 +316,23 @@ as KeyPairHandle,
 /// @nodoc
 
 
-class AdditionalConfig_StorageConfigPass extends AdditionalConfig {
-  const AdditionalConfig_StorageConfigPass(this.field0): super._();
+class AdditionalConfig_StorageConfigSymmetricEncryption extends AdditionalConfig {
+  const AdditionalConfig_StorageConfigSymmetricEncryption(this.field0): super._();
   
 
- final  String field0;
+ final  KeyHandle field0;
 
 /// Create a copy of AdditionalConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
-$AdditionalConfig_StorageConfigPassCopyWith<AdditionalConfig_StorageConfigPass> get copyWith => _$AdditionalConfig_StorageConfigPassCopyWithImpl<AdditionalConfig_StorageConfigPass>(this, _$identity);
+$AdditionalConfig_StorageConfigSymmetricEncryptionCopyWith<AdditionalConfig_StorageConfigSymmetricEncryption> get copyWith => _$AdditionalConfig_StorageConfigSymmetricEncryptionCopyWithImpl<AdditionalConfig_StorageConfigSymmetricEncryption>(this, _$identity);
 
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AdditionalConfig_StorageConfigPass&&(identical(other.field0, field0) || other.field0 == field0));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AdditionalConfig_StorageConfigSymmetricEncryption&&(identical(other.field0, field0) || other.field0 == field0));
 }
 
 
@@ -341,18 +341,18 @@ int get hashCode => Object.hash(runtimeType,field0);
 
 @override
 String toString() {
-  return 'AdditionalConfig.storageConfigPass(field0: $field0)';
+  return 'AdditionalConfig.storageConfigSymmetricEncryption(field0: $field0)';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class $AdditionalConfig_StorageConfigPassCopyWith<$Res> implements $AdditionalConfigCopyWith<$Res> {
-  factory $AdditionalConfig_StorageConfigPassCopyWith(AdditionalConfig_StorageConfigPass value, $Res Function(AdditionalConfig_StorageConfigPass) _then) = _$AdditionalConfig_StorageConfigPassCopyWithImpl;
+abstract mixin class $AdditionalConfig_StorageConfigSymmetricEncryptionCopyWith<$Res> implements $AdditionalConfigCopyWith<$Res> {
+  factory $AdditionalConfig_StorageConfigSymmetricEncryptionCopyWith(AdditionalConfig_StorageConfigSymmetricEncryption value, $Res Function(AdditionalConfig_StorageConfigSymmetricEncryption) _then) = _$AdditionalConfig_StorageConfigSymmetricEncryptionCopyWithImpl;
 @useResult
 $Res call({
- String field0
+ KeyHandle field0
 });
 
 
@@ -360,19 +360,85 @@ $Res call({
 
 }
 /// @nodoc
-class _$AdditionalConfig_StorageConfigPassCopyWithImpl<$Res>
-    implements $AdditionalConfig_StorageConfigPassCopyWith<$Res> {
-  _$AdditionalConfig_StorageConfigPassCopyWithImpl(this._self, this._then);
+class _$AdditionalConfig_StorageConfigSymmetricEncryptionCopyWithImpl<$Res>
+    implements $AdditionalConfig_StorageConfigSymmetricEncryptionCopyWith<$Res> {
+  _$AdditionalConfig_StorageConfigSymmetricEncryptionCopyWithImpl(this._self, this._then);
 
-  final AdditionalConfig_StorageConfigPass _self;
-  final $Res Function(AdditionalConfig_StorageConfigPass) _then;
+  final AdditionalConfig_StorageConfigSymmetricEncryption _self;
+  final $Res Function(AdditionalConfig_StorageConfigSymmetricEncryption) _then;
 
 /// Create a copy of AdditionalConfig
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? field0 = null,}) {
-  return _then(AdditionalConfig_StorageConfigPass(
+  return _then(AdditionalConfig_StorageConfigSymmetricEncryption(
 null == field0 ? _self.field0 : field0 // ignore: cast_nullable_to_non_nullable
-as String,
+as KeyHandle,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class AdditionalConfig_StorageConfigAsymmetricEncryption extends AdditionalConfig {
+  const AdditionalConfig_StorageConfigAsymmetricEncryption(this.field0): super._();
+  
+
+ final  KeyPairHandle field0;
+
+/// Create a copy of AdditionalConfig
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AdditionalConfig_StorageConfigAsymmetricEncryptionCopyWith<AdditionalConfig_StorageConfigAsymmetricEncryption> get copyWith => _$AdditionalConfig_StorageConfigAsymmetricEncryptionCopyWithImpl<AdditionalConfig_StorageConfigAsymmetricEncryption>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AdditionalConfig_StorageConfigAsymmetricEncryption&&(identical(other.field0, field0) || other.field0 == field0));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,field0);
+
+@override
+String toString() {
+  return 'AdditionalConfig.storageConfigAsymmetricEncryption(field0: $field0)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $AdditionalConfig_StorageConfigAsymmetricEncryptionCopyWith<$Res> implements $AdditionalConfigCopyWith<$Res> {
+  factory $AdditionalConfig_StorageConfigAsymmetricEncryptionCopyWith(AdditionalConfig_StorageConfigAsymmetricEncryption value, $Res Function(AdditionalConfig_StorageConfigAsymmetricEncryption) _then) = _$AdditionalConfig_StorageConfigAsymmetricEncryptionCopyWithImpl;
+@useResult
+$Res call({
+ KeyPairHandle field0
+});
+
+
+
+
+}
+/// @nodoc
+class _$AdditionalConfig_StorageConfigAsymmetricEncryptionCopyWithImpl<$Res>
+    implements $AdditionalConfig_StorageConfigAsymmetricEncryptionCopyWith<$Res> {
+  _$AdditionalConfig_StorageConfigAsymmetricEncryptionCopyWithImpl(this._self, this._then);
+
+  final AdditionalConfig_StorageConfigAsymmetricEncryption _self;
+  final $Res Function(AdditionalConfig_StorageConfigAsymmetricEncryption) _then;
+
+/// Create a copy of AdditionalConfig
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? field0 = null,}) {
+  return _then(AdditionalConfig_StorageConfigAsymmetricEncryption(
+null == field0 ? _self.field0 : field0 // ignore: cast_nullable_to_non_nullable
+as KeyPairHandle,
   ));
 }
 
