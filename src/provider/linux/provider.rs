@@ -1,11 +1,16 @@
 use std::sync::{Arc, Mutex};
 
 use anyhow::anyhow;
-use tss_esapi::traits::Marshall;
+use nanoid::rngs::non_secure;
+use tss_esapi::{
+    structures::{Private, Public},
+    traits::{Marshall, UnMarshall},
+};
 
 use crate::{
     common::{
         config::Spec,
+        error::KeyType,
         traits::module_provider::{ProviderFactory, ProviderImpl},
         DHExchange, KeyHandle, KeyPairHandle,
     },
@@ -78,7 +83,56 @@ impl ProviderImpl for LinuxProvider {
     }
 
     fn load_key(&mut self, key_id: String) -> Result<KeyHandle, CalError> {
-        Err(CalError::not_implemented())
+        let key_data = self
+            .storage_manager
+            .as_ref()
+            .ok_or_else(|| {
+                CalError::failed_operation("Provider has no storage initialised", true, None)
+            })
+            .and_then(|sm| {
+                sm.get(&key_id)
+                    .map_err(|e| CalError::missing_key(&key_id, KeyType::Symmetric))
+            })?;
+
+        let spec = if let Spec::KeySpec(spec) = key_data.spec {
+            spec
+        } else {
+            return Err(CalError::failed_operation(
+                "loaded key has the wrong type",
+                true,
+                None,
+            ));
+        };
+
+        let public_data = key_data
+            .public_data
+            .ok_or_else(|| CalError::missing_value("missing public key definition", true, None))
+            .and_then(|data| {
+                Public::unmarshall(&data).map_err(|e| {
+                    CalError::failed_operation("failed to deserialize key", false, Some(anyhow!(e)))
+                })
+            })?;
+
+        let private_data = key_data
+            .additional_data
+            .ok_or_else(|| CalError::missing_value("missing wrapped key data", true, None))
+            .and_then(|data| {
+                Private::try_from(data).map_err(|e| {
+                    CalError::failed_operation("failed to deserialize key", false, Some(anyhow!(e)))
+                })
+            })?;
+
+        Ok(KeyHandle {
+            implementation: LinuxKeyHandle {
+                key_id,
+                spec,
+                storage_manager: self.storage_manager.clone().filter(|_| !spec.ephemeral),
+                provider: self.clone(),
+                key_data_private: private_data,
+                key_data_public: public_data,
+            }
+            .into(),
+        })
     }
 
     fn create_key_pair(&mut self, spec: KeyPairSpec) -> Result<KeyPairHandle, CalError> {
