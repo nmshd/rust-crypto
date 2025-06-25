@@ -2,7 +2,7 @@ use crate::{
     common::traits::module_provider::{ProviderFactory, ProviderImpl},
     prelude::{Cipher, KeySpec, ProviderImplConfig},
     provider::linux::provider_factory::LinuxProviderFactory,
-    tests::setup,
+    tests::{setup, TestStore},
 };
 
 use test_case::test_case;
@@ -96,6 +96,45 @@ fn test_encrypt_iv(iv_size: usize) {
         .expect("Should be able to encrypt");
 
     let decrypted = key
+        .decrypt_data(&encrypted, &iv)
+        .expect("Should be able to decrypt");
+
+    assert_eq!(data, decrypted)
+}
+
+static mut STORE: std::sync::LazyLock<TestStore> = std::sync::LazyLock::new(TestStore::new);
+
+#[test]
+fn test_load_key() {
+    setup();
+
+    let impl_config = unsafe { STORE.impl_config().clone() };
+
+    let mut provider = LinuxProviderFactory {}
+        .create_provider(impl_config)
+        .expect("provider should be created");
+
+    let key = provider
+        .create_key(KeySpec {
+            cipher: crate::prelude::Cipher::AesCbc256,
+            signing_hash: crate::prelude::CryptoHash::Sha2_256,
+            ephemeral: false,
+            non_exportable: true,
+        })
+        .expect("key should be created");
+
+    let data = random_data(100);
+    let iv = random_data(16);
+
+    let (encrypted, iv) = key
+        .encrypt_data(&data, &iv)
+        .expect("Should be able to encrypt");
+
+    let key2 = provider
+        .load_key(key.id().expect("should be able to get key id"))
+        .expect("should load key");
+
+    let decrypted = key2
         .decrypt_data(&encrypted, &iv)
         .expect("Should be able to decrypt");
 

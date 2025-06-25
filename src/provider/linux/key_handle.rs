@@ -1,5 +1,3 @@
-use std::sync::{Arc, Mutex};
-
 use itertools::Itertools;
 use tracing::debug;
 use tss_esapi::{
