@@ -4,10 +4,9 @@ use std::sync::{Arc, Mutex};
 use anyhow::anyhow;
 use tss_esapi::attributes::ObjectAttributesBuilder;
 use tss_esapi::constants::{SessionType, StartupType};
-use tss_esapi::handles::AuthHandle;
 use tss_esapi::structures::{
-    Auth, Data, EccPoint, PublicBuilder, PublicEccParametersBuilder, SensitiveData,
-    SymmetricDefinition, SymmetricDefinitionObject,
+    EccPoint, PublicBuilder, PublicEccParametersBuilder, SymmetricDefinition,
+    SymmetricDefinitionObject,
 };
 use tss_esapi::tcti_ldr::NetworkTPMConfig;
 use tss_esapi::Context;

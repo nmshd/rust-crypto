@@ -5,6 +5,8 @@ use zeroize::Zeroize;
 
 use strum::{EnumString, IntoStaticStr};
 
+use crate::common::traits::module_provider::ProviderImpl;
+
 /// Represents the available encryption algorithms.
 ///
 /// This enum provides a C-compatible representation of different encryption
@@ -117,8 +119,22 @@ impl Cipher {
             | Self::AesGcm128
             | Self::AesCbc256
             | Self::AesGcm256
-            | Self::ChaCha20Poly1305 => 12,
+            | Self::ChaCha20Poly1305 => 16,
             Self::XChaCha20Poly1305 => 24,
+        }
+    }
+
+    pub(crate) fn check_or_generate_iv(
+        &self,
+        iv: &[u8],
+        provider: &impl ProviderImpl,
+    ) -> Result<Vec<u8>, ()> {
+        if iv.len() == 0 {
+            Ok(provider.get_random(self.iv_len()))
+        } else if iv.len() == self.iv_len() {
+            Ok(iv.to_vec())
+        } else {
+            Err(())
         }
     }
 }

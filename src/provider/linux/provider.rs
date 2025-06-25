@@ -1,20 +1,20 @@
 use std::sync::{Arc, Mutex};
 
 use anyhow::anyhow;
-use tss_esapi::{
-    attributes::ObjectAttributesBuilder,
-    structures::{Digest, Public, PublicBuilder, SymmetricCipherParameters},
-};
+use tss_esapi::traits::Marshall;
 
 use crate::{
     common::{
-        config::Spec, traits::module_provider::ProviderImpl, DHExchange, KeyHandle, KeyPairHandle,
+        config::Spec,
+        traits::module_provider::{ProviderFactory, ProviderImpl},
+        DHExchange, KeyHandle, KeyPairHandle,
     },
     prelude::{CalError, KeyPairSpec, KeySpec, ProviderConfig, ProviderImplConfig},
     provider::linux::{key_handle::LinuxKeyHandle, provider_factory::LinuxProviderFactory},
     storage::{KeyData, StorageManager},
 };
 
+#[derive(Clone)]
 pub(crate) struct LinuxProvider {
     pub(super) primary_key: tss_esapi::handles::KeyHandle,
     pub(super) context: Arc<Mutex<tss_esapi::Context>>,
@@ -37,18 +37,31 @@ impl ProviderImpl for LinuxProvider {
             })?;
 
         if !spec.ephemeral {
-            self.storage_manager.as_ref().map(|sm| {
-                sm.store(
-                    id.clone(),
-                    KeyData {
-                        id: id.clone(),
-                        secret_data: None,
-                        public_data: None,
-                        additional_data: Some(key.out_private.value().to_vec()),
-                        spec: Spec::KeySpec(spec),
-                    },
-                )
-            });
+            self.storage_manager
+                .as_ref()
+                .map(|sm| {
+                    let serialized_public = key.out_public.marshall().map_err(|e| {
+                        CalError::failed_operation(
+                            "failed to serialize public part of key",
+                            false,
+                            Some(anyhow!(e)),
+                        )
+                    })?;
+                    sm.store(
+                        id.clone(),
+                        KeyData {
+                            id: id.clone(),
+                            secret_data: None,
+                            public_data: Some(serialized_public),
+                            additional_data: Some(key.out_private.value().to_vec()),
+                            spec: Spec::KeySpec(spec),
+                        },
+                    )
+                    .map_err(|e| {
+                        CalError::failed_operation("failed saving key", true, Some(anyhow!(e)))
+                    })
+                })
+                .transpose()?;
         }
 
         Ok(KeyHandle {
@@ -56,9 +69,9 @@ impl ProviderImpl for LinuxProvider {
                 key_id: id,
                 spec,
                 storage_manager: self.storage_manager.clone().filter(|_| !spec.ephemeral),
-                context: self.context.clone(),
-                key_data: Arc::new(key),
-                primary_key: self.primary_key,
+                provider: self.clone(),
+                key_data_private: key.out_private,
+                key_data_public: key.out_public,
             }
             .into(),
         })
@@ -110,6 +123,22 @@ impl ProviderImpl for LinuxProvider {
     }
 
     fn get_capabilities(&self) -> Option<ProviderConfig> {
-        self.get_capabilities()
+        self.used_factory.get_capabilities(self.impl_config.clone())
+    }
+
+    fn get_random(&self, len: usize) -> Vec<u8> {
+        self.context
+            .lock()
+            .unwrap()
+            .execute_without_session(|c| c.get_random(len))
+            .map(|digest| digest.to_vec())
+            .map_err(|e| {
+                CalError::failed_operation(
+                    "failed to get random data from TPM",
+                    false,
+                    Some(anyhow!(e)),
+                )
+            })
+            .expect("this should return result")
     }
 }

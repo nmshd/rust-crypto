@@ -1,3 +1,4 @@
+pub(crate) mod conversion;
 pub(crate) mod dh_exchange;
 pub(crate) mod key_handle;
 pub(crate) mod key_pair_handle;
