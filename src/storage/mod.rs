@@ -67,7 +67,7 @@ pub(crate) struct StorageManager {
 }
 
 fn deserialize<'a, T: Deserialize<'a>>(value: &'a [u8]) -> Result<T, StorageManagerError> {
-    rmp_serde::from_slice(&value).map_err(|e| StorageManagerError::Deserialize { source: e })
+    rmp_serde::from_slice(value).map_err(|e| StorageManagerError::Deserialize { source: e })
 }
 
 fn serialize<T: Serialize>(value: &T) -> Result<Vec<u8>, StorageManagerError> {

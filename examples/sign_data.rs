@@ -41,7 +41,7 @@ fn main() {
 
     // The ID is used for loading the key again.
     let key_pair_id = key_pair_handle.id().unwrap();
-    println!("KeyPairHandle ID: {}", key_pair_id);
+    println!("KeyPairHandle ID: {key_pair_id}");
 
     // ====== Signing and Verifying Data ======
 

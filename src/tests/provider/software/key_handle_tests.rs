@@ -275,7 +275,7 @@ mod tests {
         fn test_encrypt_decrypt_data(cipher: Cipher) -> Result<()> {
             setup();
             let spec = KeySpec {
-                cipher: cipher,
+                cipher,
                 ..Default::default()
             };
 
@@ -308,7 +308,7 @@ mod tests {
         fn test_encrypt_decrypt_empty_data(cipher: Cipher) -> Result<()> {
             setup();
             let spec = KeySpec {
-                cipher: cipher,
+                cipher,
                 ..Default::default()
             };
 
@@ -336,7 +336,7 @@ mod tests {
         fn test_decrypt_with_wrong_key(cipher: Cipher) -> Result<()> {
             setup();
             let spec = KeySpec {
-                cipher: cipher,
+                cipher,
                 ..Default::default()
             };
 
@@ -364,7 +364,7 @@ mod tests {
         fn test_decrypt_modified_ciphertext(cipher: Cipher) -> Result<()> {
             setup();
             let spec = KeySpec {
-                cipher: cipher,
+                cipher,
                 ..Default::default()
             };
 
@@ -393,7 +393,7 @@ mod tests {
         fn test_id_method(cipher: Cipher) -> Result<()> {
             setup();
             let spec = KeySpec {
-                cipher: cipher,
+                cipher,
                 ..Default::default()
             };
 
@@ -412,7 +412,7 @@ mod tests {
         fn test_encrypt_decrypt_large_data(cipher: Cipher) -> Result<()> {
             setup();
             let spec = KeySpec {
-                cipher: cipher,
+                cipher,
                 ..Default::default()
             };
 
@@ -440,7 +440,7 @@ mod tests {
         fn test_encrypt_same_plaintext_multiple_times(cipher: Cipher) -> Result<()> {
             setup();
             let spec = KeySpec {
-                cipher: cipher,
+                cipher,
                 ..Default::default()
             };
 
@@ -483,7 +483,7 @@ mod tests {
         fn test_decrypt_random_data(cipher: Cipher) -> Result<()> {
             setup();
             let spec = KeySpec {
-                cipher: cipher,
+                cipher,
                 ..Default::default()
             };
 
@@ -511,7 +511,7 @@ mod tests {
         fn test_decrypt_short_data(cipher: Cipher) -> Result<()> {
             setup();
             let spec = KeySpec {
-                cipher: cipher,
+                cipher,
                 ..Default::default()
             };
 
@@ -568,7 +568,7 @@ mod tests {
             setup();
 
             let spec = KeySpec {
-                cipher: cipher,
+                cipher,
                 ..Default::default()
             };
 

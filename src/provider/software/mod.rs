@@ -106,7 +106,7 @@ impl From<Cipher> for &'static aead::Algorithm {
             Cipher::AesGcm128 => &ring::aead::AES_128_GCM,
             Cipher::AesGcm256 => &ring::aead::AES_256_GCM,
             Cipher::ChaCha20Poly1305 => &ring::aead::CHACHA20_POLY1305,
-            _ => panic!("Unsupported cipher: {:?}", cipher), // Handle other cases or return an error
+            _ => panic!("Unsupported cipher: {cipher:?}"), // Handle other cases or return an error
         }
     }
 }

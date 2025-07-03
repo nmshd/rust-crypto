@@ -106,7 +106,7 @@ impl FileStorageBackend {
 
         insert_db_into_map(absolute_path, db.clone())?;
 
-        Ok(Self { db: db })
+        Ok(Self { db })
     }
 }
 

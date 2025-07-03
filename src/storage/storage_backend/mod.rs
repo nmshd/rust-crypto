@@ -57,7 +57,7 @@ impl Debug for StorageBackendExplicit {
             StorageBackendExplicit::KvStorageBackend(_) => {
                 f.debug_struct("KvStorageBackend").finish()
             }
-            StorageBackendExplicit::FileStorageBackend(file) => writeln!(f, "{:?}", file),
+            StorageBackendExplicit::FileStorageBackend(file) => writeln!(f, "{file:?}"),
         }
     }
 }
@@ -142,7 +142,7 @@ mod test {
 
     fn create_file_storage_backend() -> StorageBackendExplicit {
         let mut db_dir = TEST_TMP_DIR.path().to_path_buf();
-        db_dir.push(&nanoid!());
+        db_dir.push(nanoid!());
         let additional_configs = vec![AdditionalConfig::FileStoreConfig {
             db_dir: db_dir.to_string_lossy().to_string(),
         }];

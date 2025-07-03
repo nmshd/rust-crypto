@@ -1,135 +1,232 @@
-use crate::common::crypto::{
-    algorithms::{
-        encryption::{AsymmetricEncryption, BlockCiphers, EccSchemeAlgorithm},
-        hashes::{Hash, Sha2Bits},
+use crate::{
+    common::{
+        config::{ProviderConfig, ProviderImplConfig, SecurityLevel},
+        crypto::algorithms::{
+            encryption::{AsymmetricKeySpec, Cipher},
+            hashes::CryptoHash,
+        },
+        traits::module_provider::{ProviderFactory, ProviderImplEnum},
     },
-    KeyUsage,
+    prelude::CalError,
+    storage::StorageManager,
 };
-use tracing::instrument;
+
+use anyhow::anyhow;
+use std::collections::HashSet;
+use tracing::debug;
 use windows::{
     core::PCWSTR,
     Win32::Security::Cryptography::{
-        BCRYPT_ALG_HANDLE, BCRYPT_ECDH_ALGORITHM, BCRYPT_ECDSA_ALGORITHM, BCRYPT_MD2_ALGORITHM,
-        BCRYPT_MD2_ALG_HANDLE, BCRYPT_MD4_ALGORITHM, BCRYPT_MD4_ALG_HANDLE, BCRYPT_MD5_ALGORITHM,
-        BCRYPT_MD5_ALG_HANDLE, BCRYPT_RSA_ALGORITHM, BCRYPT_SHA256_ALGORITHM,
-        BCRYPT_SHA256_ALG_HANDLE, BCRYPT_SHA384_ALGORITHM, BCRYPT_SHA384_ALG_HANDLE,
-        BCRYPT_SHA512_ALGORITHM, BCRYPT_SHA512_ALG_HANDLE, NCRYPT_KEY_HANDLE, NCRYPT_PROV_HANDLE,
+        // NCrypt handles and functions
+        NCryptFreeObject,
+        NCryptOpenStorageProvider,
+        // NCrypt KSP name
+        MS_PLATFORM_CRYPTO_PROVIDER,
+        // NCrypt algorithm names
+        NCRYPT_AES_ALGORITHM,
+        NCRYPT_ECDSA_P256_ALGORITHM,
+        NCRYPT_ECDSA_P384_ALGORITHM,
+        NCRYPT_ECDSA_P521_ALGORITHM,
+        NCRYPT_PROV_HANDLE,
+        NCRYPT_RSA_ALGORITHM,
+        NCRYPT_SHA256_ALGORITHM,
+        NCRYPT_SHA384_ALGORITHM,
+        NCRYPT_SHA512_ALGORITHM,
     },
 };
 
-pub mod key_handle;
-pub mod provider;
+// Module declarations for provider implementation and key handle implementation
+pub(crate) mod key_handle;
+pub(crate) mod provider;
 
-/// A TPM-based cryptographic provider for managing cryptographic keys and performing
-/// cryptographic operations in a Windows environment.
-///
-/// This provider leverages the Windows Cryptography API: Next Generation (CNG) to interact
-/// with a Trusted Platform Module (TPM) for operations like signing, encryption, and decryption.
-/// It provides a secure and hardware-backed solution for managing cryptographic keys and performing
-/// cryptographic operations on Windows platforms.
-#[derive(Clone, Debug)]
-#[repr(C)]
-pub struct TpmProvider {
-    /// A unique identifier for the cryptographic key managed by this provider.
-    key_id: String,
-    pub(super) key_handle: Option<NCRYPT_KEY_HANDLE>,
-    pub(super) provider_handle: Option<NCRYPT_PROV_HANDLE>,
-    pub(super) key_algo: Option<AsymmetricEncryption>,
-    pub(super) sym_algo: Option<BlockCiphers>,
-    pub(super) hash: Option<Hash>,
-    pub(super) key_usages: Option<Vec<KeyUsage>>,
+#[derive(Default)]
+pub(crate) struct WindowsProviderFactory {}
+
+impl ProviderFactory for WindowsProviderFactory {
+    fn get_name(&self) -> Option<String> {
+        Some("WindowsTpmProvider".to_owned())
+    }
+
+    fn get_capabilities(&self, _impl_config: ProviderImplConfig) -> Option<ProviderConfig> {
+        let mut supported_asym_specs = HashSet::new();
+        supported_asym_specs.insert(AsymmetricKeySpec::RSA2048);
+        supported_asym_specs.insert(AsymmetricKeySpec::RSA3072);
+        supported_asym_specs.insert(AsymmetricKeySpec::RSA4096);
+        supported_asym_specs.insert(AsymmetricKeySpec::P256);
+        supported_asym_specs.insert(AsymmetricKeySpec::P384);
+        supported_asym_specs.insert(AsymmetricKeySpec::P521);
+
+        let mut cipher_set = HashSet::new();
+        cipher_set.insert(Cipher::AesGcm128);
+        cipher_set.insert(Cipher::AesGcm256);
+
+        let mut supported_hashes = HashSet::new();
+        supported_hashes.insert(CryptoHash::Sha2_256);
+        supported_hashes.insert(CryptoHash::Sha2_384);
+        supported_hashes.insert(CryptoHash::Sha2_512);
+
+        Some(ProviderConfig {
+            min_security_level: SecurityLevel::Hardware,
+            max_security_level: SecurityLevel::Hardware,
+            supported_asym_spec: supported_asym_specs,
+            supported_ciphers: cipher_set,
+            supported_hashes,
+        })
+    }
+
+    fn create_provider(
+        &self,
+        impl_config: ProviderImplConfig,
+    ) -> Result<ProviderImplEnum, CalError> {
+        let mut h_prov = NCRYPT_PROV_HANDLE::default();
+
+        execute_ncrypt_function!(@result NCryptOpenStorageProvider(
+            &mut h_prov,
+            MS_PLATFORM_CRYPTO_PROVIDER,
+            0
+        ))?;
+
+        let provider_handle = NcryptProvHandleWrapper(h_prov);
+
+        let storage_manager =
+            StorageManager::new(self.get_name().unwrap(), &impl_config.additional_config)?;
+
+        Ok(Into::into(WindowsProvider {
+            impl_config,
+            storage_manager,
+            provider_handle,
+        }))
+    }
 }
 
-impl TpmProvider {
-    /// Constructs a new `TpmProvider`.
-    ///
-    /// # Arguments
-    ///
-    /// * `key_id` - A string identifier for the cryptographic key to be managed by this provider.
-    ///
-    /// # Returns
-    ///
-    /// A new instance of `TpmProvider` with the specified `key_id`.
-    #[instrument]
-    pub fn new(key_id: String) -> Self {
-        Self {
-            key_id,
-            provider_handle: None,
-            key_handle: None,
-            key_algo: None,
-            sym_algo: None,
-            hash: None,
-            key_usages: None,
+/// Wrapper for NCRYPT_PROV_HANDLE to ensure NCryptFreeObject is called on drop.
+#[derive(Debug)]
+pub(super) struct NcryptProvHandleWrapper(pub NCRYPT_PROV_HANDLE);
+
+impl Drop for NcryptProvHandleWrapper {
+    fn drop(&mut self) {
+        if !self.0.is_invalid() {
+            // NCryptFreeObject returns a SECURITY_STATUS, but we can't easily propagate
+            // errors from drop. We'll log it if it fails.
+            // NCRYPT_OBJECT_HANDLE is a type alias for NCRYPT_HANDLE which is usize.
+            // NCRYPT_PROV_HANDLE is also NCRYPT_HANDLE.
+            let result = unsafe { NCryptFreeObject(self.0.into()) };
+            if result.is_err() {
+                debug!(
+                    "Failed to free NCRYPT_PROV_HANDLE {:?}: {:?}",
+                    self.0, result
+                );
+            }
         }
     }
 }
 
-/// Converts a `Hash` value to the corresponding Windows API constant for algorithm handles.
-///
-/// This implementation maps the `Hash` enum variants to the appropriate `BCRYPT_ALG_HANDLE`
-/// constants used by the Windows Cryptography API.
-impl From<Hash> for BCRYPT_ALG_HANDLE {
-    fn from(value: Hash) -> Self {
-        match value {
-            Hash::Sha2(bits) => match bits {
-                Sha2Bits::Sha256 => BCRYPT_SHA256_ALG_HANDLE,
-                Sha2Bits::Sha384 => BCRYPT_SHA384_ALG_HANDLE,
-                Sha2Bits::Sha512 => BCRYPT_SHA512_ALG_HANDLE,
-                _ => unimplemented!(),
-            },
-            Hash::Md2 => BCRYPT_MD2_ALG_HANDLE,
-            Hash::Md4 => BCRYPT_MD4_ALG_HANDLE,
-            Hash::Md5 => BCRYPT_MD5_ALG_HANDLE,
-            _ => unimplemented!(),
-        }
-    }
+// Ensure the wrapper can be sent across threads if the underlying handle can.
+// NCRYPT_PROV_HANDLE is essentially a pointer/usize, so it's Send + Sync.
+unsafe impl Send for NcryptProvHandleWrapper {}
+unsafe impl Sync for NcryptProvHandleWrapper {}
+
+pub(crate) struct WindowsProvider {
+    impl_config: ProviderImplConfig,
+    storage_manager: Option<StorageManager>,
+    pub(super) provider_handle: NcryptProvHandleWrapper,
 }
 
-/// Converts a `Hash` value to the corresponding Windows API constant for algorithm names.
-///
-/// This implementation maps the `Hash` enum variants to the appropriate `PCWSTR` constants
-/// representing algorithm names used by the Windows Cryptography API.
-impl From<Hash> for PCWSTR {
-    fn from(value: Hash) -> Self {
-        match value {
-            Hash::Sha2(bits) => match bits {
-                Sha2Bits::Sha256 => BCRYPT_SHA256_ALGORITHM,
-                Sha2Bits::Sha384 => BCRYPT_SHA384_ALGORITHM,
-                Sha2Bits::Sha512 => BCRYPT_SHA512_ALGORITHM,
-                _ => unimplemented!(),
-            },
-            Hash::Md2 => BCRYPT_MD2_ALGORITHM,
-            Hash::Md4 => BCRYPT_MD4_ALGORITHM,
-            Hash::Md5 => BCRYPT_MD5_ALGORITHM,
-            _ => unimplemented!(),
-        }
-    }
-}
-
-/// Converts an `AsymmetricEncryption` value to the corresponding Windows API constant for algorithm names.
-///
-/// This implementation maps the `AsymmetricEncryption` enum variants to the appropriate `PCWSTR` constants
-/// representing algorithm names used by the Windows Cryptography API.
-impl From<AsymmetricEncryption> for PCWSTR {
-    fn from(value: AsymmetricEncryption) -> Self {
-        match value {
-            AsymmetricEncryption::Rsa(_) => BCRYPT_RSA_ALGORITHM,
-            AsymmetricEncryption::Ecc(scheme) => match scheme {
-                EccSchemeAlgorithm::EcDsa(_) => BCRYPT_ECDSA_ALGORITHM,
-                EccSchemeAlgorithm::EcDh(_) => BCRYPT_ECDH_ALGORITHM,
-                _ => unimplemented!(),
-            },
-        }
-    }
-}
-
-/// Wraps NCrypt function calls with unsafe block, potential [`Error`](windows::core::Error) with [`TpmError`](crate::tpm::core::error::TpmError) and returns said error if any.
+/// Macro to execute NCrypt/BCrypt functions and convert errors.
 macro_rules! execute_ncrypt_function {
-    ($cng_function:expr) => {
-        if let Err(e) = unsafe { $cng_function } {
-            return Err(TpmError::Win(e).into());
+    // Arm 1: For functions that already return Result<T, windows::core::Error>
+    // Example: NCryptOpenStorageProvider returns Result<(), windows::core::Error>
+    // Usage: execute_ncrypt_function!(@result NCryptOpenStorageProvider(...))
+    (@result $func_returning_result:expr) => {
+        match unsafe { $func_returning_result } { // $func_returning_result is already a Result<T, Error>
+            Ok(val) => Ok(val), // val is T (can be () or an actual value)
+            Err(e) => Err(CalError::failed_operation(
+                format!("Windows API call (Result) failed: {}", e), // Clarified message
+                true,
+                Some(anyhow!(e)),
+            )),
+        }
+    };
+
+    // Arm 2: For functions that return a status code (e.g., NTSTATUS, HRESULT directly)
+    // which has a .ok() method converting it to Result<(), windows::core::Error>.
+    // Example: BCryptGenRandom returns NTSTATUS. BCryptGetProperty returns NTSTATUS.
+    // Usage: execute_ncrypt_function!(BCryptGenRandom(...))
+    ($func_returning_status_code:expr) => {
+        // unsafe { $func_returning_status_code } evaluates to the status code (e.g., NTSTATUS)
+        // .ok() is then called on this status code, converting it to Result<(), windows::core::Error>
+        match unsafe { $func_returning_status_code }.ok() {
+            Ok(()) => Ok(()), // This now correctly matches on Result<(), windows::core::Error>
+            Err(win_error) => Err(CalError::failed_operation(
+                format!("Windows API call (Status Code) failed: {}", win_error), // Clarified message
+                true,
+                Some(anyhow!(win_error)),
+            )),
         }
     };
 }
+pub(super) use execute_ncrypt_function;
 
-pub(self) use execute_ncrypt_function;
+pub(super) fn cipher_to_pcwstr(cipher: Cipher) -> Result<PCWSTR, CalError> {
+    match cipher {
+        Cipher::AesGcm128 | Cipher::AesGcm256 => Ok(NCRYPT_AES_ALGORITHM),
+        _ => Err(CalError::unsupported_algorithm(format!(
+            "Cipher {cipher:?} is not supported by WindowsTpmProvider"
+        ))),
+    }
+}
+
+pub(super) fn crypto_hash_to_pcwstr(hash: CryptoHash) -> Result<PCWSTR, CalError> {
+    match hash {
+        CryptoHash::Sha2_256 => Ok(NCRYPT_SHA256_ALGORITHM),
+        CryptoHash::Sha2_384 => Ok(NCRYPT_SHA384_ALGORITHM),
+        CryptoHash::Sha2_512 => Ok(NCRYPT_SHA512_ALGORITHM),
+        _ => Err(CalError::unsupported_algorithm(format!(
+            "CryptoHash {hash:?} is not supported by WindowsTpmProvider"
+        ))),
+    }
+}
+
+// Helper to get key length in bytes for symmetric keys
+pub(super) fn get_symmetric_key_length_bytes(cipher: Cipher) -> Result<usize, CalError> {
+    match cipher {
+        Cipher::AesGcm128 => Ok(128 / 8),
+        Cipher::AesGcm256 => Ok(256 / 8),
+        _ => Err(CalError::unsupported_algorithm(format!(
+            "Cannot determine key length for Cipher {cipher:?}"
+        ))),
+    }
+}
+
+// Helper to get key length in bits for asymmetric keys
+pub(super) fn get_asymmetric_key_length_bits(spec: AsymmetricKeySpec) -> Result<u32, CalError> {
+    match spec {
+        AsymmetricKeySpec::RSA1024 => Ok(1024),
+        AsymmetricKeySpec::RSA2048 => Ok(2048),
+        AsymmetricKeySpec::RSA3072 => Ok(3072),
+        AsymmetricKeySpec::RSA4096 => Ok(4096),
+        AsymmetricKeySpec::RSA8192 => Ok(8192),
+        AsymmetricKeySpec::P256 => Ok(256),
+        AsymmetricKeySpec::P384 => Ok(384),
+        AsymmetricKeySpec::P521 => Ok(521),
+        _ => Err(CalError::unsupported_algorithm(format!(
+            "Cannot determine key length for AsymmetricKeySpec {spec:?}"
+        ))),
+    }
+}
+
+pub(super) fn asymmetric_spec_to_pcwstr(spec: AsymmetricKeySpec) -> Result<PCWSTR, CalError> {
+    match spec {
+        AsymmetricKeySpec::RSA1024
+        | AsymmetricKeySpec::RSA2048
+        | AsymmetricKeySpec::RSA3072
+        | AsymmetricKeySpec::RSA4096
+        | AsymmetricKeySpec::RSA8192 => Ok(NCRYPT_RSA_ALGORITHM),
+        AsymmetricKeySpec::P256 => Ok(NCRYPT_ECDSA_P256_ALGORITHM),
+        AsymmetricKeySpec::P384 => Ok(NCRYPT_ECDSA_P384_ALGORITHM),
+        AsymmetricKeySpec::P521 => Ok(NCRYPT_ECDSA_P521_ALGORITHM),
+        _ => Err(CalError::unsupported_algorithm(format!(
+            "AsymmetricKeySpec {spec:?} is not supported by WindowsTpmProvider"
+        ))),
+    }
+}

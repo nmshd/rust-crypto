@@ -550,7 +550,7 @@ impl ProviderImpl for SoftwareProvider {
                 Some(key_length),
             )
             .map_err(|e| {
-                CalError::failed_operation(format!("Invalid Argon2 parameters: {}", e), true, None)
+                CalError::failed_operation(format!("Invalid Argon2 parameters: {e}"), true, None)
             })?,
         );
 

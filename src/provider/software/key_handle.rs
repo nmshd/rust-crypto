@@ -121,7 +121,7 @@ impl KeyHandleImpl for SoftwareKeyHandle {
                 let algo: &Algorithm = self.spec.cipher.into();
                 let unbound_key = UnboundKey::new(algo, &self.key).map_err(|e| {
                     CalError::failed_operation(
-                        format!("Failed to create unbound AES key: {}", e),
+                        format!("Failed to create unbound AES key: {e}"),
                         true,
                         None,
                     )
@@ -307,7 +307,7 @@ impl KeyHandleImpl for SoftwareKeyHandle {
         use blake2::Blake2bVar;
         use digest::{Update, VariableOutput};
 
-        let mut spec = self.spec.clone();
+        let mut spec = self.spec;
         spec.ephemeral = true;
         let key_length = spec.cipher.len();
 

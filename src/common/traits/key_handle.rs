@@ -11,6 +11,8 @@ use crate::provider::software::{
     key_handle::{SoftwareKeyHandle, SoftwareKeyPairHandle},
     provider::SoftwareDHExchange,
 };
+#[cfg(feature = "win")]
+use crate::provider::win::key_handle::{WindowsKeyHandle, WindowsKeyPairHandle};
 
 #[cfg(not(any(feature = "android", feature = "software")))]
 compile_error!(
@@ -53,7 +55,7 @@ pub(crate) trait KeyHandleImpl: Send + Sync {
     ///
     /// The resulting output is a pair of cipher text and generated iv: `(cipher_text, iv)`
     fn encrypt(&self, data: &[u8]) -> Result<(Vec<u8>, Vec<u8>), CalError> {
-        self.encrypt_data(data, &vec![])
+        self.encrypt_data(data, &[])
     }
 
     /// Encrypt data with the given iv.
@@ -108,6 +110,8 @@ pub(crate) enum KeyHandleImplEnum {
     AndroidKeyHandle,
     #[cfg(feature = "software")]
     SoftwareKeyHandle,
+    #[cfg(feature = "win")]
+    WindowsKeyHandle,
 }
 
 #[enum_dispatch(KeyPairHandleImplEnum)]
@@ -184,6 +188,8 @@ pub enum KeyPairHandleImplEnum {
     AppleSecureEnclaveKeyPair,
     #[cfg(feature = "software")]
     SoftwareKeyPairHandle,
+    #[cfg(feature = "win")]
+    WindowsKeyPairHandle,
 }
 
 #[enum_dispatch]

@@ -6,6 +6,9 @@ use crate::provider::apple_secure_enclave::provider::{
 };
 #[cfg(feature = "software")]
 use crate::provider::software::{SoftwareProvider, SoftwareProviderFactory};
+#[cfg(feature = "win")]
+use crate::provider::win::{WindowsProvider, WindowsProviderFactory};
+
 use crate::{
     common::{
         config::{KeyPairSpec, KeySpec, ProviderConfig, ProviderImplConfig, Spec},
@@ -39,6 +42,8 @@ pub(crate) enum ProviderFactoryEnum {
     AppleSecureEnclaveFactory,
     #[cfg(feature = "software")]
     SoftwareProviderFactory,
+    #[cfg(feature = "win")]
+    WindowsProviderFactory,
 }
 
 /// Defines the interface for a security module provider.
@@ -199,4 +204,6 @@ pub(crate) enum ProviderImplEnum {
     AppleSecureEnclaveProvider,
     #[cfg(feature = "software")]
     SoftwareProvider,
+    #[cfg(feature = "win")]
+    WindowsProvider,
 }

@@ -25,23 +25,9 @@ strip = "symbols"
 [features]
 default = ["software"]
 android = ["dep:robusta_jni"]
-apple-secure-enclave = [
-    "dep:security-framework",
-    "dep:core-foundation",
-    "dep:base64",
-]
+apple-secure-enclave = ["dep:security-framework", "dep:core-foundation", "dep:base64"]
 win = ["dep:windows"]
-software = [
-    "dep:base64",
-    "dep:blake2",
-    "dep:ring",
-    "dep:ed25519-compact",
-    "dep:chacha20poly1305",
-    "dep:argon2",
-    "dep:sha3",
-    "dep:x25519-dalek",
-    "dep:p256",
-]
+software = ["dep:base64", "dep:blake2", "dep:ring", "dep:ed25519-compact", "dep:chacha20poly1305", "dep:argon2", "dep:sha3", "dep:x25519-dalek", "dep:p256"]
 ts-interface = ["dep:ts-rs"]
 
 [dependencies]
@@ -52,21 +38,17 @@ chacha20poly1305 = { version = "0.10.1", optional = true }
 core-foundation = { version = "0.10.0", optional = true }
 ring = { version = "0.17.14", optional = true }
 robusta_jni = { version = "0.2", optional = true }
-security-framework = { version = "3.0.0", optional = true, default-features = false, features = [
-    "OSX_10_15",
-] }
+security-framework = { version = "3.0.0", optional = true, default-features = false, features = ["OSX_10_15"] }
 serde = { version = "1.0.217", features = ["derive"] }
 serde_json = { version = "1.0.135" }
 p256 = { version = "0.13.2", optional = true, features = ["ecdh"] }
 sha2 = { version = "0.10.8" }
 sha3 = { version = "0.10.8", optional = true }
-tracing = { version = "0.1.41", features = [
-    "attributes",
-    "release_max_level_info",
-] }
+tracing = { version = "0.1.41", features = ["attributes", "release_max_level_info"] }
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
-windows = { version = "0.57.0", features = [
+windows = { version = "0.61.3", features = [
     "Win32_Foundation",
+    "Win32_Globalization",
     "Win32_System_SystemServices",
     "Win32_Security_Tpm",
     "Security_Cryptography_Core",
@@ -76,9 +58,7 @@ windows = { version = "0.57.0", features = [
     "Win32_Foundation",
     "Win32_Security",
 ], optional = true }
-x25519-dalek = { version = "2.0.1", features = [
-    "static_secrets",
-], optional = true }
+x25519-dalek = { version = "2.0.1", features = ["static_secrets"], optional = true }
 nanoid = "0.4.0"
 enum_dispatch = "0.3.13"
 thiserror = "2.0.11"
