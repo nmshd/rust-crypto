@@ -34,11 +34,12 @@ use ring::{
     signature::{EcdsaKeyPair, EcdsaSigningAlgorithm, KeyPair},
 };
 use sha3::{Sha3_224, Sha3_256, Sha3_384, Sha3_512};
-use tracing::{error, trace};
+use tracing::{error, info, trace};
 use x25519_dalek::{PublicKey as X25519PublicKey, StaticSecret};
 
 impl ProviderImpl for SoftwareProvider {
     fn create_key(&mut self, spec: KeySpec) -> Result<KeyHandle, CalError> {
+        info!("Creating key in SoftwareProvider");
         if self.storage_manager.is_none() && !spec.ephemeral {
             error!("This is an ephemeral provider, it cannot create non-ephemeral keys");
             return Err(CalError::failed_operation(
@@ -162,6 +163,7 @@ impl ProviderImpl for SoftwareProvider {
     }
 
     fn create_key_pair(&mut self, spec: KeyPairSpec) -> Result<KeyPairHandle, CalError> {
+        info!("Creating key pair in SoftwareProvider");
         if self.storage_manager.is_none() && !spec.ephemeral {
             error!("This is an ephemeral provider, it cannot create non-ephemeral keys");
             return Err(CalError::failed_operation(
