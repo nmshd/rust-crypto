@@ -7,7 +7,7 @@ use crypto_layer::common::initialize_android_context;
 
 #[cfg(target_os = "android")]
 use {
-    jni::{objects::JClass, objects::JObject, JNIEnv},
+    jni::{objects::JClass, objects::JObject, sys::jint, JNIEnv, JNIVersion, JavaVM},
     std::ffi::c_void,
 };
 
@@ -16,24 +16,13 @@ static INITIALIZED: std::sync::Once = std::sync::Once::new();
 
 #[cfg(target_os = "android")]
 #[no_mangle]
-pub extern "system" fn Java_com_example_cal_1flutter_1app_MyPlugin_init_1android(
-    env: JNIEnv,
-    _class: JClass,
-    ctx: JObject,
-) {
-    use std::ffi::c_void;
+pub extern "C" fn JNI_OnLoad(vm: JavaVM, res: *mut std::os::raw::c_void) -> jint {
     INITIALIZED.call_once(|| {
-        let global_ctx = env
-            .new_global_ref(ctx)
-            .expect("Failed to create global ref");
+        let vm = vm.get_java_vm_pointer().cast::<c_void>();
+        unsafe {
+            initialize_android_context(vm, res);
+        }
+    });
 
-        env.get_java_vm().and_then(|vm| {
-            let vm = vm.get_java_vm_pointer().cast::<c_void>();
-            unsafe {
-                initialize_android_context(vm, global_ctx.as_obj().into_inner().cast::<c_void>());
-            }
-            std::mem::forget(global_ctx);
-            Ok(())
-        });
-    })
+    JNIVersion::V6.into()
 }

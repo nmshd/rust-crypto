@@ -1,6 +1,6 @@
 use std::sync::LazyLock;
 
-use tracing::warn;
+use tracing::{trace, warn};
 
 use super::{
     config::{ProviderConfig, ProviderImplConfig},
@@ -95,7 +95,9 @@ pub fn create_provider(conf: &ProviderConfig, impl_conf: ProviderImplConfig) -> 
 ///
 /// * `name` - Name of the provider. See `get_name()`.
 /// * `impl_config` - Specif configuration for said provider.
+#[tracing::instrument]
 pub fn create_provider_from_name(name: &str, impl_conf: ProviderImplConfig) -> Option<Provider> {
+    trace!("create_provider_from_name: {}", name);
     for provider in ALL_PROVIDERS.iter() {
         let p_name = provider.get_name();
 
@@ -111,6 +113,7 @@ pub fn create_provider_from_name(name: &str, impl_conf: ProviderImplConfig) -> O
             });
         }
     }
+    warn!("Error creating provider: No Provider with name {:?}", name);
     None
 }
 

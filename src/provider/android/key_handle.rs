@@ -24,7 +24,7 @@ use blake2::Blake2bVar;
 use digest::Update;
 use digest::VariableOutput;
 use robusta_jni::jni::{objects::JObject, JavaVM};
-use tracing::{debug, info};
+use tracing::trace;
 
 #[derive(Clone, Debug)]
 pub(crate) struct AndroidKeyHandle {
@@ -42,7 +42,7 @@ pub(crate) struct AndroidKeyPairHandle {
 
 impl KeyHandleImpl for AndroidKeyHandle {
     fn encrypt_data(&self, data: &[u8], iv: &[u8]) -> Result<(Vec<u8>, Vec<u8>), CalError> {
-        info!("encrypting");
+        trace!("encrypting");
 
         let vm = context::android_context()?.vm();
         let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
@@ -78,7 +78,7 @@ impl KeyHandleImpl for AndroidKeyHandle {
     }
 
     fn decrypt_data(&self, encrypted_data: &[u8], iv: &[u8]) -> Result<Vec<u8>, CalError> {
-        info!("decrypting");
+        trace!("decrypting");
 
         let vm = context::android_context()?.vm();
         let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
@@ -117,7 +117,7 @@ impl KeyHandleImpl for AndroidKeyHandle {
     }
 
     fn derive_key(&self, nonce: &[u8]) -> Result<KeyHandle, CalError> {
-        info!("deriving key");
+        trace!("deriving key");
         let vm = context::android_context()?.vm();
         let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
         let env = vm.attach_current_thread().err_internal()?;
@@ -135,7 +135,7 @@ impl KeyHandleImpl for AndroidKeyHandle {
                 false,
                 Some(anyhow!(e)),
             );
-            tracing::error!(err = %cal_err, "Failed Blake2b init.");
+            tracing::warn!(err = %cal_err, "Failed Blake2b init.");
             cal_err
         })?;
 
@@ -151,7 +151,7 @@ impl KeyHandleImpl for AndroidKeyHandle {
                     false,
                     Some(anyhow!(e)),
                 );
-                tracing::error!(err = %cal_err, "Failed Blake2b init.");
+                tracing::warn!(err = %cal_err, "Failed Blake2b init.");
                 cal_err
             })?;
 
@@ -237,7 +237,7 @@ impl KeyHandleImpl for AndroidKeyHandle {
 
 impl KeyPairHandleImpl for AndroidKeyPairHandle {
     fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
-        info!("signing");
+        trace!("signing");
 
         let vm = context::android_context()?.vm();
         let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
@@ -251,7 +251,6 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
             .err_internal()?;
 
         let signature_algorithm = get_signature_algorithm(self.spec)?;
-        debug!("Signature Algorithm: {}", signature_algorithm);
 
         let s = Signature::getInstance(&env, signature_algorithm).err_internal()?;
 
@@ -267,7 +266,7 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
     }
 
     fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, CalError> {
-        info!("verifying");
+        trace!("verifying");
 
         let vm = context::android_context()?.vm();
         let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
@@ -277,7 +276,6 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
         key_store.load(&env, None).err_internal()?;
 
         let signature_algorithm = get_signature_algorithm(self.spec)?;
-        debug!("Signature Algorithm: {}", signature_algorithm);
 
         let s = Signature::getInstance(&env, signature_algorithm).err_internal()?;
 
@@ -297,7 +295,7 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
     }
 
     fn encrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, CalError> {
-        info!("encrypting");
+        trace!("encrypting");
 
         let vm = context::android_context()?.vm();
         let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
@@ -326,7 +324,7 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
     }
 
     fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, CalError> {
-        info!("decrypting");
+        trace!("decrypting");
 
         let vm = context::android_context()?.vm();
         let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
@@ -354,7 +352,7 @@ impl KeyPairHandleImpl for AndroidKeyPairHandle {
     }
 
     fn get_public_key(&self) -> Result<Vec<u8>, CalError> {
-        info!("getting public key");
+        trace!("getting public key");
 
         let vm = context::android_context()?.vm();
         let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
