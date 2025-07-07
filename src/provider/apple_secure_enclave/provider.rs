@@ -19,6 +19,7 @@ use crate::{
         traits::module_provider::{ProviderFactory, ProviderImpl, ProviderImplEnum},
         DHExchange, KeyHandle, KeyPairHandle,
     },
+    prelude::Cipher,
     storage::{KeyData, StorageManager},
 };
 
@@ -27,7 +28,7 @@ use crate::provider::apple_secure_enclave::{key_handle::AppleSecureEnclaveKeyPai
 static CAPABILITIES: LazyLock<ProviderConfig> = LazyLock::new(|| ProviderConfig {
     max_security_level: SecurityLevel::Hardware,
     min_security_level: SecurityLevel::Hardware,
-    supported_ciphers: HashSet::new(),
+    supported_ciphers: HashSet::from([Cipher::AesGcm128, Cipher::AesGcm256]),
     supported_asym_spec: HashSet::from([AsymmetricKeySpec::P256]),
     supported_hashes: HashSet::from([
         CryptoHash::Sha2_224,

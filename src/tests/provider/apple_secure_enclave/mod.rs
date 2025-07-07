@@ -139,9 +139,11 @@ fn spec_from_cipher_hash(cipher: Option<Cipher>, hash: CryptoHash) -> KeyPairSpe
 #[case::sha224_aesgcm128(spec_from_cipher_hash(Some(Cipher::AesGcm128), CryptoHash::Sha2_224))]
 #[case::sha256_aesgcm256(spec_from_cipher_hash(Some(Cipher::AesGcm256), CryptoHash::Sha2_256))]
 #[case::sha512_aesgcm256(spec_from_cipher_hash(Some(Cipher::AesGcm256), CryptoHash::Sha2_512))]
-#[should_panic]
+#[should_panic(expected = "Bad Parameter Error")]
 #[case::sha3256_aesgcm128(spec_from_cipher_hash(Some(Cipher::AesGcm128), CryptoHash::Sha3_256))]
+#[should_panic(expected = "Bad Parameter Error")]
 #[case::sha224_nocipher(spec_from_cipher_hash(None, CryptoHash::Sha2_224))]
+#[should_panic(expected = "Bad Parameter Error")]
 #[case::sha224_aescbc128(spec_from_cipher_hash(Some(Cipher::AesCbc128), CryptoHash::Sha2_224))]
 fn test_encrypt_data(mut provider: Provider, #[case] spec: KeyPairSpec) {
     setup();
