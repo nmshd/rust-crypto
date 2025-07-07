@@ -126,7 +126,6 @@ impl ProviderImpl for AppleSecureEnclaveProvider {
         let mut key_options = GenerateKeyOptions::default();
         key_options
             .set_key_type(KeyType::ec())
-            .set_size_in_bits(256)
             .set_location(Location::DataProtectionKeychain)
             .set_access_control(access_controll)
             .set_token(Token::SecureEnclave);
