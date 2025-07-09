@@ -39,7 +39,7 @@ use x25519_dalek::{PublicKey as X25519PublicKey, StaticSecret};
 
 impl ProviderImpl for SoftwareProvider {
     fn create_key(&mut self, spec: KeySpec) -> Result<KeyHandle, CalError> {
-        info!("Creating key in SoftwareProvider");
+        info!("creating key");
         if self.storage_manager.is_none() && !spec.ephemeral {
             error!("This is an ephemeral provider, it cannot create non-ephemeral keys");
             return Err(CalError::failed_operation(
@@ -163,7 +163,7 @@ impl ProviderImpl for SoftwareProvider {
     }
 
     fn create_key_pair(&mut self, spec: KeyPairSpec) -> Result<KeyPairHandle, CalError> {
-        info!("Creating key pair in SoftwareProvider");
+        info!("creating key pair");
         if self.storage_manager.is_none() && !spec.ephemeral {
             error!("This is an ephemeral provider, it cannot create non-ephemeral keys");
             return Err(CalError::failed_operation(
@@ -736,9 +736,6 @@ impl SoftwareDHExchange {
         spec: KeyPairSpec,
     ) -> Result<Self, CalError> {
         // Validate that the provided key pair is valid
-        trace!("Key Spec: {:?}", spec);
-        trace!("Public Key Length: {}", public_key.len());
-        trace!("Private Key Length: {}", private_key.len());
         match spec.asym_spec {
             AsymmetricKeySpec::Curve25519 => {
                 // Verify key lengths
