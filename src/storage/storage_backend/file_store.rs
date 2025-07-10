@@ -6,6 +6,7 @@ use std::{collections::HashMap, path::Path};
 use itertools::Itertools;
 use sled::{open, Db};
 use thiserror::Error;
+use tracing::{trace, warn};
 
 use crate::storage::key::ScopedKey;
 use crate::storage::storage_backend::StorageBackendInitializationError;
@@ -87,12 +88,12 @@ impl FileStorageBackend {
             })?;
         }
 
-        let absolute_path = canonicalize(db_folder_path.as_ref()).map_err(|err| {
-            FileStorageBackendInitializationError::Canonicalize {
+        let absolute_path = canonicalize(db_folder_path.as_ref())
+            .map_err(|err| FileStorageBackendInitializationError::Canonicalize {
                 source: err,
                 path: db_folder_path.as_ref().to_owned(),
-            }
-        })?;
+            })?
+            .with_file_name("cal.sled");
 
         if let Some(db) = db_from_map(&absolute_path)? {
             return Ok(Self { db: db.clone() });
@@ -126,6 +127,9 @@ impl StorageBackend for FileStorageBackend {
         self.db
             .insert(key, data)
             .map_err(|err| FileStorageBackendError::Insert { source: err })?;
+        self.db
+            .flush()
+            .map_err(|err| FileStorageBackendError::Insert { source: err })?;
         Ok(())
     }
 
@@ -134,7 +138,8 @@ impl StorageBackend for FileStorageBackend {
         match self
             .db
             .get(key)
-            .map_err(|err| FileStorageBackendError::Get { source: err })?
+            .map_err(|err| FileStorageBackendError::Get { source: err })
+            .inspect_err(|e| {})?
         {
             Some(data) => Ok(data.as_ref().to_vec()),
             None => Err(FileStorageBackendError::NotExists.into()),
