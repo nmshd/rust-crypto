@@ -6,6 +6,7 @@ use crate::{
         traits::module_provider::{ProviderFactory, ProviderImpl, ProviderImplEnum},
         DHExchange, KeyHandle, KeyPairHandle,
     },
+    prelude::CryptoHash,
     provider::android::{
         dh_exchange::AndroidDHExchange,
         key_handle::{AndroidKeyHandle, AndroidKeyPairHandle},
@@ -24,7 +25,7 @@ use itertools::Itertools;
 use nanoid::nanoid;
 use robusta_jni::jni::JavaVM;
 use std::{collections::HashSet, fmt::Debug};
-use tracing::{debug, info, instrument};
+use tracing::{info, instrument};
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct AndroidProviderFactory {
@@ -68,8 +69,15 @@ impl ProviderFactory for AndroidProviderFactory {
             ]
             .into_iter()
             .collect(),
-            supported_ciphers: vec![Cipher::AesCbc256].into_iter().collect(),
-            supported_hashes: HashSet::new(),
+            supported_ciphers: vec![
+                Cipher::AesCbc256,
+                Cipher::AesCbc128,
+                Cipher::AesGcm256,
+                Cipher::AesGcm128,
+            ]
+            .into_iter()
+            .collect(),
+            supported_hashes: vec![CryptoHash::Sha2_256].into_iter().collect(),
         })
     }
 
