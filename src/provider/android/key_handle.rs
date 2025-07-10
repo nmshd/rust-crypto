@@ -1,5 +1,7 @@
 use super::utils::get_cipher_name;
+use crate::prelude::Cipher;
 use crate::provider::android::utils::{get_cipher_padding, get_mode_name};
+use crate::provider::android::wrapper::key_generation::gcm_parameter_spec::jni::GcmParameterSpec;
 use crate::provider::software::key_handle::id_from_buffer;
 use crate::{
     common::{
@@ -56,21 +58,37 @@ impl KeyHandleImpl for AndroidKeyHandle {
         let cipher = wrapper::key_store::cipher::jni::Cipher::getInstance(&env, config_mode)
             .err_internal()?;
 
-        // symmetric encryption needs an IV
-
         let key = key_store
             .getKey(&env, self.key_id.to_owned(), JObject::null())
             .err_internal()?;
 
-        let iv = if !iv.is_empty() {
-            let iv_spec = IvParameterSpec::new(&env, &iv).err_internal()?;
-            cipher
-                .init2(&env, 1, key, iv_spec.raw.as_obj())
-                .err_internal()?;
-            iv.to_vec()
+        let iv = if matches!(self.spec.cipher, Cipher::AesGcm128 | Cipher::AesGcm256) {
+            if !iv.is_empty() {
+                let iv_spec = GcmParameterSpec::new(&env, 128, iv).err_internal()?;
+                cipher
+                    .init2(&env, 1, key, iv_spec.raw.as_obj())
+                    .err_internal()?;
+                iv.to_vec()
+            } else {
+                cipher.init(&env, 1, key.raw.as_obj()).err_internal()?;
+                let iv = cipher.getIV(&env).err_internal()?;
+                let iv_spec = GcmParameterSpec::new(&env, 128, &iv).err_internal()?;
+                cipher
+                    .init2(&env, 1, key, iv_spec.raw.as_obj())
+                    .err_internal()?;
+                iv
+            }
         } else {
-            cipher.init(&env, 1, key.raw.as_obj()).err_internal()?;
-            cipher.getIV(&env).err_internal()?
+            if !iv.is_empty() {
+                let iv_spec = IvParameterSpec::new(&env, &iv).err_internal()?;
+                cipher
+                    .init2(&env, 1, key, iv_spec.raw.as_obj())
+                    .err_internal()?;
+                iv.to_vec()
+            } else {
+                cipher.init(&env, 1, key.raw.as_obj()).err_internal()?;
+                cipher.getIV(&env).err_internal()?
+            }
         };
         let encrypted = cipher.doFinal(&env, data.to_vec()).err_internal()?;
 
@@ -96,10 +114,17 @@ impl KeyHandleImpl for AndroidKeyHandle {
             .getKey(&env, self.key_id.to_owned(), JObject::null())
             .err_internal()?;
 
-        let iv_spec = IvParameterSpec::new(&env, &iv).err_internal()?;
-        cipher
-            .init2(&env, 2, key, iv_spec.raw.as_obj())
-            .err_internal()?;
+        if matches!(self.spec.cipher, Cipher::AesGcm128 | Cipher::AesGcm256) {
+            let iv_spec = GcmParameterSpec::new(&env, 128, iv).err_internal()?;
+            cipher
+                .init2(&env, 2, key, iv_spec.raw.as_obj())
+                .err_internal()?;
+        } else {
+            let iv_spec = IvParameterSpec::new(&env, &iv).err_internal()?;
+            cipher
+                .init2(&env, 2, key, iv_spec.raw.as_obj())
+                .err_internal()?;
+        }
 
         let decrypted = cipher
             .doFinal(&env, encrypted_data.to_vec())

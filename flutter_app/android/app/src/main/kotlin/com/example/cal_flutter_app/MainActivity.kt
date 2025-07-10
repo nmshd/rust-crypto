@@ -3,12 +3,9 @@ package com.example.cal_flutter_app
 import io.flutter.embedding.android.FlutterActivity
 
 class MainActivity : FlutterActivity() {
-    // override fun configureFlutterEngine(
-    //         @NonNull flutterEngine: FlutterEngine,
-    // ) {
-    //     super.configureFlutterEngine(flutterEngine)
-    //     flutterEngine.plugins.add(MyPlugin())
-    // }
+    init {
+        System.loadLibrary("cal_flutter_plugin")
+    }
 }
 
 // class MyPlugin : FlutterPlugin, MethodCallHandler {

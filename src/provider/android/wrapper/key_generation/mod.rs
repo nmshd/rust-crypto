@@ -1,6 +1,7 @@
 #![allow(clippy::needless_borrow)]
 
 pub(crate) mod builder;
+pub(crate) mod gcm_parameter_spec;
 pub(crate) mod iv_parameter_spec;
 pub(crate) mod key;
 pub(crate) mod key_gen_parameter_spec;
