@@ -12,7 +12,11 @@ if ($cargo_test_output -match $path_regex) {
     Write-Host $debug_binary_path
     
     Write-Host "Signing"
-    & codesign -f -s $SigningKeyHash --entitlements binary-knights.entitlement -o runtime -i "de.jssoft.BinaryKnights" $debug_binary_path
+    [string]$signature_output = codesign -f -s $SigningKeyHash --entitlements binary-knights.entitlement -o runtime -i "de.jssoft.BinaryKnights" $debug_binary_path 2>&1
+
+    if (-not $?) {
+        Write-Error "Failed to sign executable:`r`n$signature_output" -ErrorAction Stop
+    }
 
     Write-Host "Executing Tests"
     & $debug_binary_path

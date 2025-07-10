@@ -7,7 +7,7 @@ use itertools::Itertools;
 use security_framework::{
     access_control::{ProtectionMode, SecAccessControl},
     item::{ItemClass, ItemSearchOptions, KeyClass, Location, Reference, SearchResult},
-    key::{GenerateKeyOptions, KeyType, SecKey},
+    key::{GenerateKeyOptions, KeyType, SecKey, Token},
 };
 use tracing::instrument;
 
@@ -19,6 +19,7 @@ use crate::{
         traits::module_provider::{ProviderFactory, ProviderImpl, ProviderImplEnum},
         DHExchange, KeyHandle, KeyPairHandle,
     },
+    prelude::Cipher,
     storage::{KeyData, StorageManager},
 };
 
@@ -27,7 +28,7 @@ use crate::provider::apple_secure_enclave::{key_handle::AppleSecureEnclaveKeyPai
 static CAPABILITIES: LazyLock<ProviderConfig> = LazyLock::new(|| ProviderConfig {
     max_security_level: SecurityLevel::Hardware,
     min_security_level: SecurityLevel::Hardware,
-    supported_ciphers: HashSet::new(),
+    supported_ciphers: HashSet::from([Cipher::AesGcm128, Cipher::AesGcm256]),
     supported_asym_spec: HashSet::from([AsymmetricKeySpec::P256]),
     supported_hashes: HashSet::from([
         CryptoHash::Sha2_224,
@@ -126,9 +127,9 @@ impl ProviderImpl for AppleSecureEnclaveProvider {
         let mut key_options = GenerateKeyOptions::default();
         key_options
             .set_key_type(KeyType::ec())
-            .set_size_in_bits(256)
             .set_location(Location::DataProtectionKeychain)
-            .set_access_control(access_controll);
+            .set_access_control(access_controll)
+            .set_token(Token::SecureEnclave);
 
         let sec_key: SecKey = SecKey::new(&key_options).err_internal()?;
 
