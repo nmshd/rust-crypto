@@ -50,6 +50,7 @@ impl ProviderFactory for AndroidProviderFactory {
     fn get_capabilities(&self, _impl_config: ProviderImplConfig) -> Option<ProviderConfig> {
         // check if android context is initialised
         if !wrapper::context::is_initialized() {
+            info!("Android Context is not initialized, no android provider");
             return None;
         }
 
@@ -183,8 +184,6 @@ impl ProviderImpl for AndroidProvider {
                 .store(key_id.clone(), storage_data)?;
         }
 
-        debug!("key generated");
-
         Ok(KeyHandle {
             implementation: Into::into(AndroidKeyHandle {
                 key_id,
@@ -200,7 +199,7 @@ impl ProviderImpl for AndroidProvider {
         }
 
         let key_id = nanoid!(10);
-        info!("generating key pair! {}", key_id);
+        info!("generating key pair: {}", key_id);
 
         let vm = context::android_context()?.vm();
         let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
@@ -435,7 +434,7 @@ impl ProviderImpl for AndroidProvider {
         }
 
         let key_id = nanoid!(10);
-        info!("generating key pair! {}", key_id);
+        info!("generating key pair for dh exchange: {}", key_id);
 
         let vm = context::android_context()?.vm();
         let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
