@@ -180,7 +180,7 @@ impl KeyHandleImpl for AndroidKeyHandle {
                 cal_err
             })?;
 
-        let id = id_from_buffer(nonce);
+        let id = id_from_buffer(self.key_id.as_bytes(), nonce);
 
         let jderived_key = env.byte_array_from_slice(&derived_key).err_internal()?;
         let algorithm = get_cipher_name(spec.cipher)?;

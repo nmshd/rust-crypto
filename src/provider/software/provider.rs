@@ -34,7 +34,7 @@ use ring::{
     signature::{EcdsaKeyPair, EcdsaSigningAlgorithm, KeyPair},
 };
 use sha3::{Sha3_224, Sha3_256, Sha3_384, Sha3_512};
-use tracing::{error, info, trace};
+use tracing::{error, info};
 use x25519_dalek::{PublicKey as X25519PublicKey, StaticSecret};
 
 impl ProviderImpl for SoftwareProvider {

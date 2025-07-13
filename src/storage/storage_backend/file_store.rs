@@ -6,7 +6,6 @@ use std::{collections::HashMap, path::Path};
 use itertools::Itertools;
 use sled::{open, Db};
 use thiserror::Error;
-use tracing::{trace, warn};
 
 use crate::storage::key::ScopedKey;
 use crate::storage::storage_backend::StorageBackendInitializationError;
@@ -138,8 +137,7 @@ impl StorageBackend for FileStorageBackend {
         match self
             .db
             .get(key)
-            .map_err(|err| FileStorageBackendError::Get { source: err })
-            .inspect_err(|e| {})?
+            .map_err(|err| FileStorageBackendError::Get { source: err })?
         {
             Some(data) => Ok(data.as_ref().to_vec()),
             None => Err(FileStorageBackendError::NotExists.into()),
