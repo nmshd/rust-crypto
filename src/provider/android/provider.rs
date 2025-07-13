@@ -24,7 +24,7 @@ use anyhow::anyhow;
 use itertools::Itertools;
 use nanoid::nanoid;
 use robusta_jni::jni::JavaVM;
-use std::{collections::HashSet, fmt::Debug};
+use std::fmt::Debug;
 use tracing::{info, instrument};
 
 #[derive(Debug, Clone, Copy)]
