@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
         <key>com.apple.application-identifier</key>
-        <string>R7Y6NESEQW.de.jssoft.BinaryKnights</string>
+        <string>R7Y6NESEQW.eu.enmeshed.crypto-layer.tests</string>
         <!-- <key>com.apple.developer.team-identifier</key>
         <string>R7Y6NESEQW</string>      -->
         <key>com.apple.security.app-sandbox</key>

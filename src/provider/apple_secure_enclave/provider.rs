@@ -159,13 +159,22 @@ impl ProviderImpl for AppleSecureEnclaveProvider {
                 .store(id.clone(), storage_data)?;
         }
 
+        let public_key: SecKey = sec_key.public_key().ok_or(CalError::missing_key(
+            "SecKeyCopyPublicKey returned NULL".to_owned(),
+            crate::common::error::KeyType::Public,
+        ))?;
+
+        let apple_secure_enclave_key_pair = AppleSecureEnclaveKeyPair {
+            private_key: sec_key,
+            public_key: public_key,
+            spec,
+            storage_manager,
+        };
+
+        apple_secure_enclave_key_pair.baseline_supported()?;
+
         let key_pair = KeyPairHandle {
-            implementation: AppleSecureEnclaveKeyPair {
-                key_handle: sec_key,
-                spec,
-                storage_manager,
-            }
-            .into(),
+            implementation: apple_secure_enclave_key_pair.into(),
         };
 
         Ok(key_pair)
@@ -257,9 +266,15 @@ impl ProviderImpl for AppleSecureEnclaveProvider {
             }
         };
 
+        let public_key: SecKey = sec_key.public_key().ok_or(CalError::missing_key(
+            "SecKeyCopyPublicKey returned NULL".to_owned(),
+            crate::common::error::KeyType::Public,
+        ))?;
+
         Ok(KeyPairHandle {
             implementation: AppleSecureEnclaveKeyPair {
-                key_handle: sec_key,
+                private_key: sec_key,
+                public_key: public_key,
                 spec,
                 storage_manager: self.storage_manager.clone(),
             }

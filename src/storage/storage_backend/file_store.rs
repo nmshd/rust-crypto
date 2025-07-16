@@ -87,12 +87,12 @@ impl FileStorageBackend {
             })?;
         }
 
-        let absolute_path = canonicalize(db_folder_path.as_ref())
-            .map_err(|err| FileStorageBackendInitializationError::Canonicalize {
+        let absolute_path = canonicalize(db_folder_path.as_ref()).map_err(|err| {
+            FileStorageBackendInitializationError::Canonicalize {
                 source: err,
                 path: db_folder_path.as_ref().to_owned(),
-            })?
-            .with_file_name("cal.sled");
+            }
+        })?;
 
         if let Some(db) = db_from_map(&absolute_path)? {
             return Ok(Self { db: db.clone() });
