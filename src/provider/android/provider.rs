@@ -6,6 +6,7 @@ use crate::{
         traits::module_provider::{ProviderFactory, ProviderImpl, ProviderImplEnum},
         DHExchange, KeyHandle, KeyPairHandle,
     },
+    prelude::CryptoHash,
     provider::android::{
         dh_exchange::AndroidDHExchange,
         key_handle::{AndroidKeyHandle, AndroidKeyPairHandle},
@@ -23,8 +24,8 @@ use anyhow::anyhow;
 use itertools::Itertools;
 use nanoid::nanoid;
 use robusta_jni::jni::JavaVM;
-use std::{collections::HashSet, fmt::Debug};
-use tracing::{debug, info, instrument};
+use std::fmt::Debug;
+use tracing::{info, instrument};
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct AndroidProviderFactory {
@@ -50,6 +51,7 @@ impl ProviderFactory for AndroidProviderFactory {
     fn get_capabilities(&self, _impl_config: ProviderImplConfig) -> Option<ProviderConfig> {
         // check if android context is initialised
         if !wrapper::context::is_initialized() {
+            info!("Android Context is not initialized, no android provider");
             return None;
         }
 
@@ -67,8 +69,15 @@ impl ProviderFactory for AndroidProviderFactory {
             ]
             .into_iter()
             .collect(),
-            supported_ciphers: vec![Cipher::AesCbc256].into_iter().collect(),
-            supported_hashes: HashSet::new(),
+            supported_ciphers: vec![
+                Cipher::AesCbc256,
+                Cipher::AesCbc128,
+                Cipher::AesGcm256,
+                Cipher::AesGcm128,
+            ]
+            .into_iter()
+            .collect(),
+            supported_hashes: vec![CryptoHash::Sha2_256].into_iter().collect(),
         })
     }
 
@@ -183,8 +192,6 @@ impl ProviderImpl for AndroidProvider {
                 .store(key_id.clone(), storage_data)?;
         }
 
-        debug!("key generated");
-
         Ok(KeyHandle {
             implementation: Into::into(AndroidKeyHandle {
                 key_id,
@@ -200,7 +207,7 @@ impl ProviderImpl for AndroidProvider {
         }
 
         let key_id = nanoid!(10);
-        info!("generating key pair! {}", key_id);
+        info!("generating key pair: {}", key_id);
 
         let vm = context::android_context()?.vm();
         let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;
@@ -435,7 +442,7 @@ impl ProviderImpl for AndroidProvider {
         }
 
         let key_id = nanoid!(10);
-        info!("generating key pair! {}", key_id);
+        info!("generating key pair for dh exchange: {}", key_id);
 
         let vm = context::android_context()?.vm();
         let vm = unsafe { JavaVM::from_raw(vm.cast()) }.err_internal()?;

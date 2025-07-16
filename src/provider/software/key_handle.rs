@@ -64,13 +64,14 @@ impl SoftwareKeyHandle {
 /// Hashes and encodes a buffer to a string.
 ///
 /// This is meant to generate deterministic ids from variable length nonces and contexts in derive key.
-pub(crate) fn id_from_buffer(buff: &[u8]) -> String {
+pub(crate) fn id_from_buffer(id: &[u8], buff: &[u8]) -> String {
     // `digest` and `blake2` crate have both update functions that get each other in the way.
     use blake2::{digest::consts::U8, Blake2b, Digest};
 
     type Blake2b64 = Blake2b<U8>;
 
     let mut hasher = <Blake2b64 as Digest>::new();
+    hasher.update(id);
     hasher.update(buff);
     let hash = hasher.finalize();
     let hash_vec = hash.to_vec();
@@ -338,7 +339,7 @@ impl KeyHandleImpl for SoftwareKeyHandle {
                 cal_err
             })?;
 
-        let id = id_from_buffer(nonce);
+        let id = id_from_buffer(self.key_id.as_bytes(), nonce);
 
         Ok(KeyHandle {
             implementation: SoftwareKeyHandle::new(id, spec, derived_key, None)
