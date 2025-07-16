@@ -389,6 +389,7 @@ dependencies = [
  "robusta_jni",
  "rstest",
  "security-framework",
+ "security-framework-sys",
  "serde",
  "serde_json",
  "sha2",

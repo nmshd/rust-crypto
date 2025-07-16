@@ -2,8 +2,14 @@ use std::fmt;
 
 use anyhow::anyhow;
 use base64::prelude::*;
+use core_foundation::base::TCFType;
 use security_framework::key::Algorithm;
 use security_framework::key::SecKey;
+use security_framework_sys::key::kSecKeyOperationTypeDecrypt;
+use security_framework_sys::key::kSecKeyOperationTypeEncrypt;
+use security_framework_sys::key::SecKeyAlgorithm;
+use security_framework_sys::key::SecKeyIsAlgorithmSupported;
+use security_framework_sys::key::SecKeyOperationType;
 use tracing::instrument;
 
 use crate::common::config::KeyPairSpec;
@@ -86,6 +92,27 @@ pub(crate) struct AppleSecureEnclaveKeyPair {
     pub(super) storage_manager: Option<StorageManager>,
 }
 
+impl AppleSecureEnclaveKeyPair {
+    fn algorithm_supported(
+        &self,
+        operation: SecKeyOperationType,
+        algorithm: SecKeyAlgorithm,
+    ) -> bool {
+        let supported = unsafe {
+            SecKeyIsAlgorithmSupported(self.key_handle.as_concrete_TypeRef(), operation, algorithm)
+        };
+        supported != 0
+    }
+
+    fn decryption_algorithm_supported(&self, algorithm: Algorithm) -> bool {
+        self.algorithm_supported(kSecKeyOperationTypeDecrypt, algorithm.into())
+    }
+
+    /* fn ecryption_algorithm_supported(&self, algorithm: Algorithm) -> bool {
+        self.algorithm_supported(kSecKeyOperationTypeEncrypt, algorithm.into())
+    } */
+}
+
 impl KeyPairHandleImpl for AppleSecureEnclaveKeyPair {
     #[instrument(level = "trace", skip(data))]
     fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
@@ -112,19 +139,25 @@ impl KeyPairHandleImpl for AppleSecureEnclaveKeyPair {
             .err_internal()
     }
 
+    #[instrument(level = "trace", skip(data))]
     fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
         let algorithm = encryption_algorithm_from_spec(&self.spec)?;
-        self.key_handle
-            .encrypt_data(algorithm, data)
-            .map_err(|err| {
-                CalError::failed_operation(
-                    "Apple secure enclave failed encryption.",
-                    false,
-                    Some(anyhow!(CFErrorThreadSafe::from(err))),
-                )
-            })
+
+        let public_key: SecKey = self.key_handle.public_key().ok_or(CalError::missing_key(
+            "SecKeyCopyPublicKey returned NULL".to_owned(),
+            KeyType::Public,
+        ))?;
+
+        public_key.encrypt_data(algorithm, data).map_err(|err| {
+            CalError::failed_operation(
+                "Apple secure enclave failed encryption.",
+                false,
+                Some(anyhow!(CFErrorThreadSafe::from(err))),
+            )
+        })
     }
 
+    #[instrument(level = "trace", skip(encrypted_data))]
     fn decrypt_data(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, CalError> {
         let algorithm = encryption_algorithm_from_spec(&self.spec)?;
         self.key_handle
