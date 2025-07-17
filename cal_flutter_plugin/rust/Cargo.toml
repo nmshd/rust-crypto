@@ -14,7 +14,7 @@ libloading = "0.8.5"
 tracing = { version = "0.1.40", features = ["attributes"] }
 tracing-subscriber = "0.3.18"
 anyhow = "1.0.91"
-crypto-layer = { path = "../../", features = ["software"]}
+crypto-layer = { path = "../../", features = ["software"] }
 
 [target.'cfg(target_os = "android")'.dependencies]
 tracing-android = { version = "0.2.0" }
@@ -23,7 +23,11 @@ jni = "0.19"
 ndk-context = "0.1"
 
 [target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies]
-crypto-layer = { path = "../../", features = ["apple-secure-enclave"] }
+crypto-layer = { path = "../../", features = [
+    "apple-secure-enclave",
+    "software",
+] }
+tracing-oslog = "0.3.0"
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
