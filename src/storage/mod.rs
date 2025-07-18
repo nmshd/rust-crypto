@@ -303,7 +303,9 @@ mod test {
 
     #[fixture]
     fn storage_manager() -> StorageManager {
-        let config = TEST_KV_STORE.impl_config().additional_config;
+        let config = vec![AdditionalConfig::FileStoreConfig {
+            db_dir: "testfolder".to_owned(),
+        }];
         StorageManager::new(nanoid!(), &config).unwrap().unwrap()
     }
 

@@ -6,6 +6,7 @@ use thiserror::Error;
 
 mod file_store;
 mod kv_store;
+mod sqlite_store;
 
 use file_store::FileStorageBackend;
 use kv_store::KvStorageBackend;
@@ -17,6 +18,7 @@ use crate::{
         storage_backend::{
             file_store::{FileStorageBackendError, FileStorageBackendInitializationError},
             kv_store::KvStorageBackendError,
+            sqlite_store::{SqliteBackend, SqliteBackendError},
         },
         StorageManagerInitializationError,
     },
@@ -28,12 +30,16 @@ pub enum StorageBackendError {
     KvStore(#[from] KvStorageBackendError),
     #[error(transparent)]
     FileStore(#[from] FileStorageBackendError),
+    #[error(transparent)]
+    Sqlite(#[from] SqliteBackendError),
 }
 
 #[derive(Debug, Error)]
 pub enum StorageBackendInitializationError {
     #[error(transparent)]
     FileStore(#[from] FileStorageBackendInitializationError),
+    #[error(transparent)]
+    Sqlite(#[from] SqliteBackendError),
 }
 
 #[enum_dispatch]
@@ -49,6 +55,7 @@ pub trait StorageBackend: Debug {
 pub enum StorageBackendExplicit {
     FileStorageBackend,
     KvStorageBackend,
+    SqliteBackend,
 }
 
 impl Debug for StorageBackendExplicit {
@@ -58,17 +65,18 @@ impl Debug for StorageBackendExplicit {
                 f.debug_struct("KvStorageBackend").finish()
             }
             StorageBackendExplicit::FileStorageBackend(file) => writeln!(f, "{:?}", file),
+            StorageBackendExplicit::SqliteBackend(_) => writeln!(f, "SqliteBackend"),
         }
     }
 }
 
 impl StorageBackendExplicit {
     pub fn new(config: &[AdditionalConfig]) -> Result<Self, StorageManagerInitializationError> {
-        let file_store = |db_dir: &String| FileStorageBackend::new(db_dir).map(Self::from);
-
         let storage_backend_option_from_additional_config =
             |additional_data: &AdditionalConfig| match additional_data {
-                AdditionalConfig::FileStoreConfig { db_dir } => Some(file_store(db_dir)),
+                AdditionalConfig::FileStoreConfig { db_dir } => {
+                    Some(SqliteBackend::new(db_dir).map(Self::from))
+                }
                 AdditionalConfig::KVStoreConfig {
                     get_fn,
                     store_fn,
@@ -143,6 +151,7 @@ mod test {
     fn create_file_storage_backend() -> StorageBackendExplicit {
         let mut db_dir = TEST_TMP_DIR.path().to_path_buf();
         db_dir.push(&nanoid!());
+        std::fs::create_dir(&db_dir).expect("should be able to create dir");
         let additional_configs = vec![AdditionalConfig::FileStoreConfig {
             db_dir: db_dir.to_string_lossy().to_string(),
         }];
@@ -252,6 +261,7 @@ mod test {
         assert!(matches!(
             error,
             StorageBackendError::FileStore(FileStorageBackendError::NotExists)
+                | StorageBackendError::Sqlite(SqliteBackendError::NoKeyError)
                 | StorageBackendError::KvStore(KvStorageBackendError::Get)
         ))
     }
@@ -313,6 +323,7 @@ mod test {
         assert!(matches!(
             error,
             StorageBackendError::FileStore(FileStorageBackendError::NotExists)
+                | StorageBackendError::Sqlite(SqliteBackendError::NoKeyError)
                 | StorageBackendError::KvStore(KvStorageBackendError::Get)
         ));
     }
