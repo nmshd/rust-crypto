@@ -4,6 +4,7 @@ import type {
 	KeyPairSpec,
 	KeySpec,
 	ProviderConfig,
+	Spec,
 } from "../generated/index.ts";
 import type { DHExchange, KeyHandle, KeyPairHandle } from "./index.ts";
 
@@ -46,4 +47,5 @@ export type Provider = {
 	): Promise<KeyHandle>;
 	getRandom: (len: number) => Promise<Uint8Array>;
 	hash: (input: Uint8Array, hash: CryptoHash) => Promise<Uint8Array>;
+	getAllKeys: () => Promise<[string, Spec][]>;
 };

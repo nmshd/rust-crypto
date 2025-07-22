@@ -16,3 +16,4 @@ export * from './Provider';
 export * from './ProviderConfig';
 export * from './ProviderImplConfig';
 export * from './SecurityLevel';
+export * from './Spec';
