@@ -80,6 +80,7 @@ pub enum SecurityLevel {
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
+#[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 /// flutter_rust_bridge:non_opaque
 pub enum Spec {
     KeySpec(KeySpec),
