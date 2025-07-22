@@ -1,11 +1,5 @@
 import { createAssertGuard, createIs } from "typia";
 import type {
-	KeyHandle,
-	Provider,
-	KeyPairHandle,
-	DHExchange,
-} from "../manual/index.ts";
-import type {
 	AdditionalConfig,
 	Argon2Options,
 	AsymmetricKeySpec,
@@ -20,7 +14,14 @@ import type {
 	ProviderConfig,
 	ProviderImplConfig,
 	SecurityLevel,
+	Spec,
 } from "../generated/index.js";
+import type {
+	DHExchange,
+	KeyHandle,
+	KeyPairHandle,
+	Provider,
+} from "../manual/index.ts";
 
 export const isKeyHandle = createIs<KeyHandle>();
 export const assertKeyHandle = createAssertGuard<KeyHandle>();
@@ -67,6 +68,9 @@ export const assertKeyPairSpec = createAssertGuard<KeyPairSpec>();
 
 export const isKeySpec = createIs<KeySpec>();
 export const assertKeySpec = createAssertGuard<KeySpec>();
+
+export const isSpec = createIs<Spec>();
+export const assertSpec = createAssertGuard<Spec>();
 
 export const isKeyType = createIs<KeyType>();
 export const assertKeyType = createAssertGuard<KeyType>();

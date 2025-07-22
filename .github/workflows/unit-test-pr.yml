@@ -43,6 +43,7 @@ jobs:
         with:
           # node-version: 23
           cache: 'npm'
-      - uses: arduino/setup-task@v2
+      - name: Install Taskfile
+        run: npm install -g @go-task/cli
       - name: Test TS Types
         run: task prerequisites-ts test-ts-types
