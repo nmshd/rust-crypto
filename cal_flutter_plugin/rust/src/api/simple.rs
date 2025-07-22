@@ -12,7 +12,12 @@ pub(super) fn set_up_logging() {
     #[cfg(target_os = "android")]
     let subscriber = Registry::default()
         .with(tracing_android::layer("RUST").expect("could not create android logger"));
-    #[cfg(not(target_os = "android"))]
+
+    #[cfg(any(target_os = "macos", target_os = "ios"))]
+    let subscriber = Registry::default().with(tracing_oslog::OsLogger::default());
+
+    #[cfg(not(any(target_os = "android", target_os = "macos", target_os = "ios")))]
     let subscriber = Registry::default();
+
     let _ = tracing::subscriber::set_global_default(subscriber);
 }
