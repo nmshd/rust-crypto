@@ -6,6 +6,7 @@ use std::{
 
 use itertools::Itertools;
 use rusqlite::{named_params, Connection};
+use rusqlite_migration::{Migrations, M};
 use thiserror::Error;
 
 use crate::storage::{
@@ -28,25 +29,44 @@ pub(in crate::storage) struct SqliteBackend {
     conn: Arc<Mutex<Connection>>,
 }
 
+const MIGRATIONS_SLICE: &[M<'_>] = &[
+    M::up("CREATE TABLE keys (id TEXT PRIMARY KEY, provider TEXT, encryption_key_id TEXT, signature_key_id TEXT, data_blob BLOB);"),
+];
+const MIGRATIONS: Migrations<'_> = Migrations::from_slice(MIGRATIONS_SLICE);
+
 impl SqliteBackend {
     pub(super) fn new(path: impl AsRef<Path>) -> Result<Self, StorageBackendInitializationError> {
         let path = path.as_ref().join("keys.db");
 
         tracing::trace!("opening sql db: {:?}", path);
 
-        let conn = Connection::open(&path).map_err(|_| {
+        let mut conn = Connection::open(&path).map_err(|_| {
             StorageBackendInitializationError::Sqlite(SqliteBackendError::InitialisationError(
                 format!("Can't open path: {:?}", path),
             ))
         })?;
 
-        let table_exists = conn
-            .table_exists(None, "keys")
-            .map_err(|e| StorageBackendInitializationError::Sqlite(e.into()))?;
-
-        if !table_exists {
-            conn.execute("CREATE TABLE keys (id TEXT PRIMARY KEY, provider TEXT, encryption_key_id TEXT, signature_key_id TEXT, data_blob BLOB);", ())
-            .map_err(|e| StorageBackendInitializationError::Sqlite(e.into()))?;
+        match MIGRATIONS.to_latest(&mut conn) {
+            Ok(_) => (),
+            e @ Err(rusqlite_migration::Error::RusqliteError {
+                query: _,
+                err:
+                    rusqlite::Error::SqliteFailure(
+                        rusqlite::ffi::Error {
+                            code: _,
+                            extended_code: 1,
+                        },
+                        _,
+                    ),
+            }) => tracing::warn!("Cant run sqlite migration: {:?}", e),
+            Err(e) => {
+                return Err(StorageBackendInitializationError::Sqlite(
+                    SqliteBackendError::InitialisationError(format!(
+                        "Can't run sqlite migration: {:?}",
+                        e
+                    )),
+                ))
+            }
         }
 
         Ok(Self {
