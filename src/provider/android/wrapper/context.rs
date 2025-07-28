@@ -107,14 +107,37 @@ pub(crate) fn has_strong_box() -> Result<bool, CalError> {
     let ctx = android_context()?;
     let vm = unsafe { robusta_jni::jni::JavaVM::from_raw(ctx.vm().cast()) }.err_internal()?;
     let env = vm.attach_current_thread().err_internal()?;
-    let context = ctx.context();
-    let context_objext =
-        robusta_jni::jni::objects::JObject::from(context as robusta_jni::jni::sys::jobject);
+
+    // let context = ctx.context();
+    // let context_objext =
+    //     robusta_jni::jni::objects::JObject::from(context as robusta_jni::jni::sys::jobject);
+    // let context = jni::Context {
+    //     raw: robusta_jni::jni::objects::AutoLocal::new(
+    //         &env,
+    //         env.new_local_ref::<JObject>(context_objext)
+    //             .err_internal()?,
+    //     ),
+    // };
+
+    let activity_thread_class = env
+        .find_class("android/app/ActivityThread")
+        .err_internal()?;
+
+    let application = env
+        .call_static_method(
+            activity_thread_class,
+            "currentApplication",
+            "()Landroid/app/Application;",
+            &[],
+        )
+        .err_internal()?
+        .l()
+        .err_internal()?;
+
     let context = jni::Context {
         raw: robusta_jni::jni::objects::AutoLocal::new(
             &env,
-            env.new_local_ref::<JObject>(context_objext)
-                .err_internal()?,
+            env.new_local_ref::<JObject>(application).err_internal()?,
         ),
     };
 
