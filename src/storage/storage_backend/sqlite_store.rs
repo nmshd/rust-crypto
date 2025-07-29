@@ -46,6 +46,16 @@ impl SqliteBackend {
             ))
         })?;
 
+        conn.pragma_update(None, "journal_mode", "wal")
+            .map_err(|e| {
+                StorageBackendInitializationError::Sqlite(SqliteBackendError::SqlError(e))
+            })?;
+
+        conn.pragma_update(None, "synchronous", "normal")
+            .map_err(|e| {
+                StorageBackendInitializationError::Sqlite(SqliteBackendError::SqlError(e))
+            })?;
+
         match MIGRATIONS.to_latest(&mut conn) {
             Ok(_) => (),
             e @ Err(rusqlite_migration::Error::RusqliteError {
