@@ -141,8 +141,6 @@ pub(crate) fn has_strong_box() -> Result<bool, CalError> {
         ),
     };
 
-    env.
-
     let package_manager = context.getPackageManager(&env).err_internal()?;
     let has_strong_box = package_manager
         .hasSystemFeature(&env, "android.hardware.strongbox_keystore".to_string(), 40)
