@@ -7,8 +7,16 @@ edition = "2021"
 crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
+flutter_rust_bridge = { version = "=2.9.0", default-features = false, features = [
+    "anyhow",
+    "dart-opaque",
+    "portable-atomic",
+    "rust-async",
+    "thread-pool",
+    "wasm-start",
+    "console_error_panic_hook",
+] }
 flutter_rust_bridge_codegen = "2.9.0"
-flutter_rust_bridge = "=2.9.0"
 robusta_jni = "0.2"
 libloading = "0.8.5"
 tracing = { version = "0.1.40", features = ["attributes"] }
