@@ -276,13 +276,16 @@ pub(crate) enum StorageField {
 
 #[cfg(test)]
 mod test {
+    use super::*;
+
+    use std::sync::LazyLock;
 
     use nanoid::nanoid;
     use rstest::{fixture, rstest};
 
-    use crate::prelude::KeySpec;
+    use crate::{prelude::KeySpec, tests::TestStore};
 
-    use super::*;
+    static TEST_KV_STORE: LazyLock<TestStore> = LazyLock::new(TestStore::new);
 
     const DUMMY_SPEC: Spec = Spec::KeySpec(KeySpec {
         cipher: crate::prelude::Cipher::AesGcm256,
@@ -300,9 +303,7 @@ mod test {
 
     #[fixture]
     fn storage_manager() -> StorageManager {
-        let config = vec![AdditionalConfig::FileStoreConfig {
-            db_dir: "testfolder".to_owned(),
-        }];
+        let config = TEST_KV_STORE.impl_config().additional_config;
         StorageManager::new(nanoid!(), &config).unwrap().unwrap()
     }
 
