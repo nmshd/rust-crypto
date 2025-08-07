@@ -17,7 +17,7 @@ use crate::storage::{
 #[derive(Error, Debug)]
 pub enum SqliteBackendError {
     #[error("Failed to initialize database.")]
-    InitialisationError(String),
+    InitializationError(String),
     #[error("Failed to execute query.")]
     SqlError(#[from] rusqlite::Error),
     #[error("Key not found.")]
@@ -41,7 +41,7 @@ impl SqliteBackend {
         tracing::trace!("opening sql db: {:?}", path);
 
         let mut conn = Connection::open(&path).map_err(|_| {
-            StorageBackendInitializationError::Sqlite(SqliteBackendError::InitialisationError(
+            StorageBackendInitializationError::Sqlite(SqliteBackendError::InitializationError(
                 format!("Can't open path: {:?}", path),
             ))
         })?;
@@ -71,7 +71,7 @@ impl SqliteBackend {
             }) => tracing::warn!("Cant run sqlite migration: {:?}", e),
             Err(e) => {
                 return Err(StorageBackendInitializationError::Sqlite(
-                    SqliteBackendError::InitialisationError(format!(
+                    SqliteBackendError::InitializationError(format!(
                         "Can't run sqlite migration: {:?}",
                         e
                     )),
