@@ -2,11 +2,15 @@ use core::fmt;
 use std::{
     fs::create_dir_all,
     path::{Path, PathBuf},
-    sync::{Arc, Mutex},
+    sync::Arc,
 };
 
 use itertools::Itertools;
-use rusqlite::{named_params, Connection};
+use r2d2::{Builder, Pool};
+use r2d2_sqlite::{
+    rusqlite::{self, named_params},
+    SqliteConnectionManager,
+};
 use rusqlite_migration::{Migrations, M};
 use thiserror::Error;
 
@@ -21,6 +25,8 @@ pub enum SqliteBackendError {
     SqlError(#[from] rusqlite::Error),
     #[error("Key not found.")]
     NoKeyError,
+    #[error("Failed to acquire SQLite pooled connection.")]
+    Acquire { source: r2d2::Error },
 }
 
 #[derive(Error, Debug)]
@@ -35,15 +41,14 @@ pub enum SqliteBackendInitializationError {
     #[error("Failed to set SQLite pragmas: {source}")]
     Pragma { source: rusqlite::Error },
     #[error("Failed opening sqlite database with path '{path:?}' and error: {source}")]
-    Open {
-        source: rusqlite::Error,
-        path: PathBuf,
-    },
+    Open { source: r2d2::Error, path: PathBuf },
+    #[error("Failed to acquire SQLite pooled connection.")]
+    Acquire { source: r2d2::Error },
 }
 
 #[derive(Clone)]
 pub(in crate::storage) struct SqliteBackend {
-    conn: Arc<Mutex<Connection>>,
+    pool: Arc<Pool<SqliteConnectionManager>>,
 }
 
 const MIGRATIONS_SLICE: &[M<'_>] = &[
@@ -62,17 +67,24 @@ impl SqliteBackend {
 
         tracing::trace!("opening sql db: {:?}", path);
 
-        let mut conn =
-            Connection::open(&path).map_err(|err| SqliteBackendInitializationError::Open {
+        let manager = SqliteConnectionManager::file(&path).with_init(|conn| {
+            conn.pragma_update(None, "journal_mode", "wal")?;
+            conn.pragma_update(None, "synchronous", "normal")?;
+
+            Ok(())
+        });
+        let pool = Builder::new().build(manager).map_err(|err| {
+            SqliteBackendInitializationError::Open {
                 source: err,
                 path: path,
-            })?;
+            }
+        })?;
 
-        conn.pragma_update(None, "journal_mode", "wal")
-            .map_err(|e| SqliteBackendInitializationError::Pragma { source: e })?;
-
-        conn.pragma_update(None, "synchronous", "normal")
-            .map_err(|e| SqliteBackendInitializationError::Pragma { source: e })?;
+        // This is ok, as conn only is mut to hinder nested transactions on one connection.
+        // See `rusqlite::Transaction` for more info.
+        let mut conn = pool
+            .get()
+            .map_err(|err| SqliteBackendInitializationError::Acquire { source: err })?;
 
         match MIGRATIONS.to_latest(&mut conn) {
             Ok(_) => (),
@@ -91,7 +103,7 @@ impl SqliteBackend {
         }
 
         Ok(Self {
-            conn: Arc::new(Mutex::new(conn)),
+            pool: Arc::new(pool),
         })
     }
 }
@@ -104,9 +116,9 @@ impl fmt::Debug for SqliteBackend {
 
 impl StorageBackend for SqliteBackend {
     fn store(&self, key: ScopedKey, data: &[u8]) -> Result<(), StorageBackendError> {
-        self.conn
-            .lock()
-            .unwrap()
+        self.pool
+            .get()
+            .map_err(|err| SqliteBackendError::Acquire { source: err })?
             .execute(
                 "INSERT INTO keys (id, provider, encryption_key_id, signature_key_id, data_blob) 
                     VALUES (:id, :provider, :encryption_key_id, :signature_key_id, :data_blob)
@@ -128,16 +140,20 @@ impl StorageBackend for SqliteBackend {
         let query =
             "SELECT data_blob FROM keys WHERE id = :id AND provider = :provider AND encryption_key_id = :encryption_key_id AND signature_key_id = :signature_key_id;";
 
-        let result = self.conn.lock().unwrap().query_one(
-            query,
-            named_params! {
-                ":id": key.key_id,
-                ":provider": key.provider_scope,
-                ":encryption_key_id": key.encryption_scope,
-                ":signature_key_id": key.signature_scope,
-            },
-            |row| row.get(0),
-        );
+        let result = self
+            .pool
+            .get()
+            .map_err(|err| SqliteBackendError::Acquire { source: err })?
+            .query_one(
+                query,
+                named_params! {
+                    ":id": key.key_id,
+                    ":provider": key.provider_scope,
+                    ":encryption_key_id": key.encryption_scope,
+                    ":signature_key_id": key.signature_scope,
+                },
+                |row| row.get(0),
+            );
 
         match result {
             Ok(v) => Ok(v),
@@ -152,9 +168,9 @@ impl StorageBackend for SqliteBackend {
         let query =
             "DELETE FROM keys WHERE id = :id AND provider = :provider AND encryption_key_id = :encryption_key_id AND signature_key_id = :signature_key_id;";
 
-        self.conn
-            .lock()
-            .unwrap()
+        self.pool
+            .get()
+            .map_err(|err| SqliteBackendError::Acquire { source: err })?
             .execute(
                 query,
                 named_params! {
@@ -169,7 +185,10 @@ impl StorageBackend for SqliteBackend {
     }
 
     fn keys(&self) -> Vec<Result<ScopedKey, StorageBackendError>> {
-        let conn = self.conn.lock().unwrap();
+        let conn = match self.pool.get() {
+            Ok(c) => c,
+            Err(err) => return vec![Err(SqliteBackendError::Acquire { source: err }.into())],
+        };
 
         let query = "SELECT id, provider, encryption_key_id, signature_key_id FROM keys;";
         let statement = conn.prepare(query);
