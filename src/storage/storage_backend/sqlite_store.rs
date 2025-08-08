@@ -1,11 +1,16 @@
 use core::fmt;
 use std::{
-    path::Path,
-    sync::{Arc, Mutex},
+    fs::create_dir_all,
+    path::{Path, PathBuf},
+    sync::Arc,
 };
 
 use itertools::Itertools;
-use rusqlite::{named_params, Connection};
+use r2d2::{Builder, Pool};
+use r2d2_sqlite::{
+    rusqlite::{self, named_params},
+    SqliteConnectionManager,
+};
 use rusqlite_migration::{Migrations, M};
 use thiserror::Error;
 
@@ -16,17 +21,34 @@ use crate::storage::{
 
 #[derive(Error, Debug)]
 pub enum SqliteBackendError {
-    #[error("Failed to initialize database.")]
-    InitialisationError(String),
-    #[error("Failed to execute query.")]
+    #[error("Failed to execute sql query.")]
     SqlError(#[from] rusqlite::Error),
     #[error("Key not found.")]
     NoKeyError,
+    #[error("Failed to acquire SQLite pooled connection.")]
+    Acquire { source: r2d2::Error },
+}
+
+#[derive(Error, Debug)]
+pub enum SqliteBackendInitializationError {
+    #[error("Failed database migration: {source}")]
+    Migration { source: rusqlite_migration::Error },
+    #[error("Failed creating database dir '{path:?}' with error: {source}")]
+    Mkdir {
+        source: std::io::Error,
+        path: PathBuf,
+    },
+    #[error("Failed to set SQLite pragmas: {source}")]
+    Pragma { source: rusqlite::Error },
+    #[error("Failed opening sqlite database with path '{path:?}' and error: {source}")]
+    Open { source: r2d2::Error, path: PathBuf },
+    #[error("Failed to acquire SQLite pooled connection.")]
+    Acquire { source: r2d2::Error },
 }
 
 #[derive(Clone)]
 pub(in crate::storage) struct SqliteBackend {
-    conn: Arc<Mutex<Connection>>,
+    pool: Arc<Pool<SqliteConnectionManager>>,
 }
 
 const MIGRATIONS_SLICE: &[M<'_>] = &[
@@ -36,25 +58,33 @@ const MIGRATIONS: Migrations<'_> = Migrations::from_slice(MIGRATIONS_SLICE);
 
 impl SqliteBackend {
     pub(super) fn new(path: impl AsRef<Path>) -> Result<Self, StorageBackendInitializationError> {
+        create_dir_all(&path).map_err(|err| SqliteBackendInitializationError::Mkdir {
+            path: path.as_ref().to_path_buf(),
+            source: err,
+        })?;
+
         let path = path.as_ref().join("keys.db");
 
         tracing::trace!("opening sql db: {:?}", path);
 
-        let mut conn = Connection::open(&path).map_err(|_| {
-            StorageBackendInitializationError::Sqlite(SqliteBackendError::InitialisationError(
-                format!("Can't open path: {:?}", path),
-            ))
+        let manager = SqliteConnectionManager::file(&path).with_init(|conn| {
+            conn.pragma_update(None, "journal_mode", "wal")?;
+            conn.pragma_update(None, "synchronous", "normal")?;
+
+            Ok(())
+        });
+        let pool = Builder::new().build(manager).map_err(|err| {
+            SqliteBackendInitializationError::Open {
+                source: err,
+                path: path,
+            }
         })?;
 
-        conn.pragma_update(None, "journal_mode", "wal")
-            .map_err(|e| {
-                StorageBackendInitializationError::Sqlite(SqliteBackendError::SqlError(e))
-            })?;
-
-        conn.pragma_update(None, "synchronous", "normal")
-            .map_err(|e| {
-                StorageBackendInitializationError::Sqlite(SqliteBackendError::SqlError(e))
-            })?;
+        // This is ok, as conn only is mut to hinder nested transactions on one connection.
+        // See `rusqlite::Transaction` for more info.
+        let mut conn = pool
+            .get()
+            .map_err(|err| SqliteBackendInitializationError::Acquire { source: err })?;
 
         match MIGRATIONS.to_latest(&mut conn) {
             Ok(_) => (),
@@ -69,18 +99,11 @@ impl SqliteBackend {
                         _,
                     ),
             }) => tracing::warn!("Cant run sqlite migration: {:?}", e),
-            Err(e) => {
-                return Err(StorageBackendInitializationError::Sqlite(
-                    SqliteBackendError::InitialisationError(format!(
-                        "Can't run sqlite migration: {:?}",
-                        e
-                    )),
-                ))
-            }
+            Err(e) => return Err(SqliteBackendInitializationError::Migration { source: e }.into()),
         }
 
         Ok(Self {
-            conn: Arc::new(Mutex::new(conn)),
+            pool: Arc::new(pool),
         })
     }
 }
@@ -93,9 +116,9 @@ impl fmt::Debug for SqliteBackend {
 
 impl StorageBackend for SqliteBackend {
     fn store(&self, key: ScopedKey, data: &[u8]) -> Result<(), StorageBackendError> {
-        self.conn
-            .lock()
-            .unwrap()
+        self.pool
+            .get()
+            .map_err(|err| SqliteBackendError::Acquire { source: err })?
             .execute(
                 "INSERT INTO keys (id, provider, encryption_key_id, signature_key_id, data_blob) 
                     VALUES (:id, :provider, :encryption_key_id, :signature_key_id, :data_blob)
@@ -117,16 +140,20 @@ impl StorageBackend for SqliteBackend {
         let query =
             "SELECT data_blob FROM keys WHERE id = :id AND provider = :provider AND encryption_key_id = :encryption_key_id AND signature_key_id = :signature_key_id;";
 
-        let result = self.conn.lock().unwrap().query_one(
-            query,
-            named_params! {
-                ":id": key.key_id,
-                ":provider": key.provider_scope,
-                ":encryption_key_id": key.encryption_scope,
-                ":signature_key_id": key.signature_scope,
-            },
-            |row| row.get(0),
-        );
+        let result = self
+            .pool
+            .get()
+            .map_err(|err| SqliteBackendError::Acquire { source: err })?
+            .query_one(
+                query,
+                named_params! {
+                    ":id": key.key_id,
+                    ":provider": key.provider_scope,
+                    ":encryption_key_id": key.encryption_scope,
+                    ":signature_key_id": key.signature_scope,
+                },
+                |row| row.get(0),
+            );
 
         match result {
             Ok(v) => Ok(v),
@@ -141,9 +168,9 @@ impl StorageBackend for SqliteBackend {
         let query =
             "DELETE FROM keys WHERE id = :id AND provider = :provider AND encryption_key_id = :encryption_key_id AND signature_key_id = :signature_key_id;";
 
-        self.conn
-            .lock()
-            .unwrap()
+        self.pool
+            .get()
+            .map_err(|err| SqliteBackendError::Acquire { source: err })?
             .execute(
                 query,
                 named_params! {
@@ -158,7 +185,10 @@ impl StorageBackend for SqliteBackend {
     }
 
     fn keys(&self) -> Vec<Result<ScopedKey, StorageBackendError>> {
-        let conn = self.conn.lock().unwrap();
+        let conn = match self.pool.get() {
+            Ok(c) => c,
+            Err(err) => return vec![Err(SqliteBackendError::Acquire { source: err }.into())],
+        };
 
         let query = "SELECT id, provider, encryption_key_id, signature_key_id FROM keys;";
         let statement = conn.prepare(query);
@@ -196,5 +226,50 @@ fn flatten_res<T, E>(res: Result<Result<T, E>, E>) -> Result<T, E> {
     match res {
         Ok(inner) => inner,
         Err(e) => Err(e),
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use std::sync::LazyLock;
+
+    use nanoid::nanoid;
+    use tempfile::{tempdir_in, TempDir};
+
+    use super::*;
+
+    const TARGET_FOLDER: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/target");
+    static TEST_TMP_DIR: LazyLock<TempDir> = LazyLock::new(|| tempdir_in(TARGET_FOLDER).unwrap());
+
+    #[test]
+    fn test_file_store_creation() {
+        let _storage = SqliteBackend::new(TEST_TMP_DIR.path().join("test_file_store_creation"))
+            .expect("Failed to create a file store");
+    }
+
+    #[test]
+    fn test_multi_file_store_creation_same_file() {
+        let db_dir = TEST_TMP_DIR
+            .path()
+            .join("test_multi_file_store_creation_same_file");
+
+        let store1 = SqliteBackend::new(&db_dir).expect("Failed to create a file store 1");
+
+        let store2 = SqliteBackend::new(db_dir).expect("Failed to create a file store 2");
+
+        let key = ScopedKey {
+            key_id: nanoid!(),
+            provider_scope: nanoid!(),
+            encryption_scope: nanoid!(),
+            signature_scope: nanoid!(),
+        };
+
+        let data = b"Hello";
+
+        store1.store(key.clone(), data).unwrap();
+
+        let fetched_data = store2.get(key).unwrap();
+
+        assert_eq!(&fetched_data, data);
     }
 }
