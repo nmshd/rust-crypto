@@ -3,16 +3,12 @@
 mod provider;
 
 use std::collections::HashMap;
-use std::str::FromStr;
 use std::sync::Once;
 use std::sync::{Arc, RwLock};
 use std::{io, vec};
 
 use color_eyre::install;
 use color_eyre::owo_colors::OwoColorize;
-use tracing::level_filters::LevelFilter;
-use tracing::warn;
-use tracing_subscriber::filter::Directive;
 use tracing_subscriber::{filter::EnvFilter, fmt};
 
 use crate::common::config::{AdditionalConfig, ProviderImplConfig};
