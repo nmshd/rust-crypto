@@ -15,7 +15,7 @@ use crate::{
         key::ScopedKey,
         storage_backend::{
             kv_store::KvStorageBackendError,
-            sqlite_store::{SqliteBackend, SqliteBackendError},
+            sqlite_store::{SqliteBackend, SqliteBackendError, SqliteBackendInitializationError},
         },
         StorageManagerInitializationError,
     },
@@ -32,7 +32,7 @@ pub enum StorageBackendError {
 #[derive(Debug, Error)]
 pub enum StorageBackendInitializationError {
     #[error(transparent)]
-    Sqlite(#[from] SqliteBackendError),
+    Sqlite(#[from] SqliteBackendInitializationError),
 }
 
 #[enum_dispatch]

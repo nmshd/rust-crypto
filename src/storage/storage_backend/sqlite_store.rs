@@ -1,6 +1,7 @@
 use core::fmt;
 use std::{
-    path::Path,
+    fs::create_dir_all,
+    path::{Path, PathBuf},
     sync::{Arc, Mutex},
 };
 
@@ -16,12 +17,28 @@ use crate::storage::{
 
 #[derive(Error, Debug)]
 pub enum SqliteBackendError {
-    #[error("Failed to initialize database.")]
-    InitializationError(String),
-    #[error("Failed to execute query.")]
+    #[error("Failed to execute sql query.")]
     SqlError(#[from] rusqlite::Error),
     #[error("Key not found.")]
     NoKeyError,
+}
+
+#[derive(Error, Debug)]
+pub enum SqliteBackendInitializationError {
+    #[error("Failed database migration: {source}")]
+    Migration { source: rusqlite_migration::Error },
+    #[error("Failed creating database dir '{path:?}' with error: {source}")]
+    Mkdir {
+        source: std::io::Error,
+        path: PathBuf,
+    },
+    #[error("Failed to set SQLite pragmas: {source}")]
+    Pragma { source: rusqlite::Error },
+    #[error("Failed opening sqlite database with path '{path:?}' and error: {source}")]
+    Open {
+        source: rusqlite::Error,
+        path: PathBuf,
+    },
 }
 
 #[derive(Clone)]
@@ -36,25 +53,26 @@ const MIGRATIONS: Migrations<'_> = Migrations::from_slice(MIGRATIONS_SLICE);
 
 impl SqliteBackend {
     pub(super) fn new(path: impl AsRef<Path>) -> Result<Self, StorageBackendInitializationError> {
+        create_dir_all(&path).map_err(|err| SqliteBackendInitializationError::Mkdir {
+            path: path.as_ref().to_path_buf(),
+            source: err,
+        })?;
+
         let path = path.as_ref().join("keys.db");
 
         tracing::trace!("opening sql db: {:?}", path);
 
-        let mut conn = Connection::open(&path).map_err(|_| {
-            StorageBackendInitializationError::Sqlite(SqliteBackendError::InitializationError(
-                format!("Can't open path: {:?}", path),
-            ))
-        })?;
+        let mut conn =
+            Connection::open(&path).map_err(|err| SqliteBackendInitializationError::Open {
+                source: err,
+                path: path,
+            })?;
 
         conn.pragma_update(None, "journal_mode", "wal")
-            .map_err(|e| {
-                StorageBackendInitializationError::Sqlite(SqliteBackendError::SqlError(e))
-            })?;
+            .map_err(|e| SqliteBackendInitializationError::Pragma { source: e })?;
 
         conn.pragma_update(None, "synchronous", "normal")
-            .map_err(|e| {
-                StorageBackendInitializationError::Sqlite(SqliteBackendError::SqlError(e))
-            })?;
+            .map_err(|e| SqliteBackendInitializationError::Pragma { source: e })?;
 
         match MIGRATIONS.to_latest(&mut conn) {
             Ok(_) => (),
@@ -69,14 +87,7 @@ impl SqliteBackend {
                         _,
                     ),
             }) => tracing::warn!("Cant run sqlite migration: {:?}", e),
-            Err(e) => {
-                return Err(StorageBackendInitializationError::Sqlite(
-                    SqliteBackendError::InitializationError(format!(
-                        "Can't run sqlite migration: {:?}",
-                        e
-                    )),
-                ))
-            }
+            Err(e) => return Err(SqliteBackendInitializationError::Migration { source: e }.into()),
         }
 
         Ok(Self {
@@ -196,5 +207,50 @@ fn flatten_res<T, E>(res: Result<Result<T, E>, E>) -> Result<T, E> {
     match res {
         Ok(inner) => inner,
         Err(e) => Err(e),
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use std::sync::LazyLock;
+
+    use nanoid::nanoid;
+    use tempfile::{tempdir_in, TempDir};
+
+    use super::*;
+
+    const TARGET_FOLDER: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/target");
+    static TEST_TMP_DIR: LazyLock<TempDir> = LazyLock::new(|| tempdir_in(TARGET_FOLDER).unwrap());
+
+    #[test]
+    fn test_file_store_creation() {
+        let _storage = SqliteBackend::new(TEST_TMP_DIR.path().join("test_file_store_creation"))
+            .expect("Failed to create a file store");
+    }
+
+    #[test]
+    fn test_multi_file_store_creation_same_file() {
+        let db_dir = TEST_TMP_DIR
+            .path()
+            .join("test_multi_file_store_creation_same_file");
+
+        let store1 = SqliteBackend::new(&db_dir).expect("Failed to create a file store 1");
+
+        let store2 = SqliteBackend::new(db_dir).expect("Failed to create a file store 2");
+
+        let key = ScopedKey {
+            key_id: nanoid!(),
+            provider_scope: nanoid!(),
+            encryption_scope: nanoid!(),
+            signature_scope: nanoid!(),
+        };
+
+        let data = b"Hello";
+
+        store1.store(key.clone(), data).unwrap();
+
+        let fetched_data = store2.get(key).unwrap();
+
+        assert_eq!(&fetched_data, data);
     }
 }
