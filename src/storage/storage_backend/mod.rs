@@ -142,7 +142,6 @@ mod test {
     fn create_file_storage_backend() -> StorageBackendExplicit {
         let mut db_dir = TEST_TMP_DIR.path().to_path_buf();
         db_dir.push(&nanoid!());
-        std::fs::create_dir(&db_dir).expect("should be able to create dir");
         let additional_configs = vec![AdditionalConfig::FileStoreConfig {
             db_dir: db_dir.to_string_lossy().to_string(),
         }];
