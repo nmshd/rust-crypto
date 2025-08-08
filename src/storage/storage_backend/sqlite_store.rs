@@ -68,8 +68,9 @@ impl SqliteBackend {
         tracing::trace!("opening sql db: {:?}", path);
 
         let manager = SqliteConnectionManager::file(&path).with_init(|conn| {
-            conn.pragma_update(None, "journal_mode", "wal")?;
-            conn.pragma_update(None, "synchronous", "normal")?;
+            conn.pragma_update(None, "journal_mode", "WAL")?;
+            conn.pragma_update(None, "synchronous", "NORMAL")?;
+            conn.pragma_update(None, "busy_timeout", "15000")?;
 
             Ok(())
         });
