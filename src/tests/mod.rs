@@ -3,15 +3,17 @@
 mod provider;
 
 use std::collections::HashMap;
+use std::str::FromStr;
 use std::sync::Once;
 use std::sync::{Arc, RwLock};
 use std::{io, vec};
 
 use color_eyre::install;
-use tracing_subscriber::{
-    filter::{EnvFilter, LevelFilter},
-    fmt,
-};
+use color_eyre::owo_colors::OwoColorize;
+use tracing::level_filters::LevelFilter;
+use tracing::warn;
+use tracing_subscriber::filter::Directive;
+use tracing_subscriber::{filter::EnvFilter, fmt};
 
 use crate::common::config::{AdditionalConfig, ProviderImplConfig};
 use crate::common::KeyPairHandle;
@@ -43,6 +45,18 @@ fn setup() {
     SETUP_INITIALIZATION.call_once(|| {
         install().unwrap();
 
+        let env_filter = EnvFilter::builder().try_from_env().unwrap_or_else(|err| {
+            eprintln!(
+                "{} {} | {}",
+                "Failed to parse env-filter directives with:".blue(),
+                err.purple(),
+                "Logging with default directives.".yellow()
+            );
+            EnvFilter::builder()
+                .parse("error,crypto_layer=warn")
+                .unwrap()
+        });
+
         // Please change this subscriber as you see fit.
         fmt()
             // .with_max_level(LevelFilter::DEBUG)
@@ -50,11 +64,7 @@ fn setup() {
             .with_line_number(true)
             // .with_span_events(FmtSpan::ACTIVE)
             .with_writer(io::stderr)
-            .with_env_filter(
-                EnvFilter::builder()
-                    .with_default_directive(LevelFilter::DEBUG.into())
-                    .from_env_lossy(),
-            )
+            .with_env_filter(env_filter)
             .init();
     });
 }
