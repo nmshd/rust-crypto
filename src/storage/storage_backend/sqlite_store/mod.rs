@@ -228,25 +228,28 @@ fn flatten_res<T, E>(res: Result<Result<T, E>, E>) -> Result<T, E> {
 
 #[cfg(test)]
 mod test {
-    use std::sync::LazyLock;
-
     use nanoid::nanoid;
+    use rstest::{fixture, rstest};
     use tempfile::{tempdir_in, TempDir};
 
     use super::*;
 
     const TARGET_FOLDER: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/target");
-    static TEST_TMP_DIR: LazyLock<TempDir> = LazyLock::new(|| tempdir_in(TARGET_FOLDER).unwrap());
 
-    #[test]
-    fn test_file_store_creation() {
-        let _storage = SqliteBackend::new(TEST_TMP_DIR.path().join("test_file_store_creation"))
+    #[fixture]
+    fn temp_folder() -> TempDir {
+        tempdir_in(TARGET_FOLDER).unwrap()
+    }
+
+    #[rstest]
+    fn test_file_store_creation(temp_folder: TempDir) {
+        let _storage = SqliteBackend::new(temp_folder.path().join("test_file_store_creation"))
             .expect("Failed to create a file store");
     }
 
-    #[test]
-    fn test_multi_file_store_creation_same_file() {
-        let db_dir = TEST_TMP_DIR
+    #[rstest]
+    fn test_multi_file_store_creation_same_file(temp_folder: TempDir) {
+        let db_dir = temp_folder
             .path()
             .join("test_multi_file_store_creation_same_file");
 
@@ -268,5 +271,10 @@ mod test {
         let fetched_data = store2.get(key).unwrap();
 
         assert_eq!(&fetched_data, data);
+
+        drop(store1);
+        drop(store2);
+
+        // std::fs::remove_dir_all(TEST_TMP_DIR.path()).unwrap();
     }
 }
