@@ -29,8 +29,5 @@
 	},
 	"dependencies": {
 		"typia": "^8.0.3"
-	},
-	"overrides": {
-		"tmp": "^0.2.4"
 	}
 }
