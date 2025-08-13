@@ -114,6 +114,7 @@ impl StorageBackend for SqliteBackend {
             .lock()
             .map_err(|_| SqliteBackendError::Acquire)?;
 
+        // Extensions like `qufiwefefwoyn.inline-sql-syntax` for vscode are able to highlight sql.
         const QUERY: &'static str = r"--sql
             INSERT INTO keys (id, provider, encryption_key_id, signature_key_id, data_blob)
             VALUES (:id, :provider, :encryption_key_id, :signature_key_id, :data_blob) 
