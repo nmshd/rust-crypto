@@ -111,7 +111,7 @@ mod test {
     // This results in the global db map being ineffective for unit tests.
 
     use crate::tests::TestStore;
-    use rstest::rstest;
+    use rstest::{fixture, rstest};
     use std::sync::LazyLock;
     use tempfile::{tempdir_in, TempDir};
 
@@ -123,7 +123,10 @@ mod test {
 
     const TARGET_FOLDER: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/target");
 
-    static TEST_TMP_DIR: LazyLock<TempDir> = LazyLock::new(|| tempdir_in(TARGET_FOLDER).unwrap());
+    #[fixture]
+    fn temp_folder() -> TempDir {
+        tempdir_in(TARGET_FOLDER).unwrap()
+    }
 
     fn random_scoped_key() -> ScopedKey {
         ScopedKey {
@@ -134,24 +137,34 @@ mod test {
         }
     }
 
-    fn create_kv_storage_backend() -> StorageBackendExplicit {
+    fn create_kv_storage_backend() -> (StorageBackendExplicit, Option<TempDir>) {
         let config = TEST_KV_STORE.impl_config();
-        StorageBackendExplicit::new(&config.additional_config).unwrap()
+        (
+            StorageBackendExplicit::new(&config.additional_config).unwrap(),
+            None,
+        )
     }
 
-    fn create_file_storage_backend() -> StorageBackendExplicit {
-        let mut db_dir = TEST_TMP_DIR.path().to_path_buf();
+    fn create_file_storage_backend() -> (StorageBackendExplicit, Option<TempDir>) {
+        let temp_folder = temp_folder();
+
+        let mut db_dir = temp_folder.path().to_path_buf();
         db_dir.push(&nanoid!());
         let additional_configs = vec![AdditionalConfig::FileStoreConfig {
             db_dir: db_dir.to_string_lossy().to_string(),
         }];
-        StorageBackendExplicit::new(&additional_configs).unwrap()
+        (
+            StorageBackendExplicit::new(&additional_configs).unwrap(),
+            Some(temp_folder),
+        )
     }
 
     #[rstest]
     fn test_create_valid_storage_backend(
-        #[values(create_file_storage_backend, create_kv_storage_backend)]
-        create: impl Fn() -> StorageBackendExplicit,
+        #[values(create_file_storage_backend, create_kv_storage_backend)] create: impl Fn() -> (
+            StorageBackendExplicit,
+            Option<TempDir>,
+        ),
     ) {
         let _ = create();
     }
@@ -164,16 +177,18 @@ mod test {
         assert!(matches!(
             error,
             StorageManagerInitializationError::MissingProviderImplConfigOption { .. }
-        ))
+        ));
     }
 
     #[rstest]
     fn test_invalid_creation_conflicting_config() {
+        let temp_folder = temp_folder();
+
         let mut provider_impl = TEST_KV_STORE.impl_config();
         provider_impl
             .additional_config
             .push(AdditionalConfig::FileStoreConfig {
-                db_dir: TEST_TMP_DIR
+                db_dir: temp_folder
                     .path()
                     .join("test_invalid_creation_conflicting_config")
                     .to_string_lossy()
@@ -185,27 +200,34 @@ mod test {
         assert!(matches!(
             error,
             StorageManagerInitializationError::ConflictingProviderImplConfig { .. }
-        ))
+        ));
     }
 
     #[rstest]
     fn test_insert(
-        #[values(create_file_storage_backend, create_kv_storage_backend)]
-        create: impl Fn() -> StorageBackendExplicit,
+        #[values(create_file_storage_backend, create_kv_storage_backend)] create: impl Fn() -> (
+            StorageBackendExplicit,
+            Option<TempDir>,
+        ),
     ) {
-        let storage = create();
+        let (storage, _temp_dir) = create();
 
         let scoped_key = random_scoped_key();
 
         storage.store(scoped_key, b"TEST_DATA").unwrap();
+
+        drop(storage);
+        _temp_dir.map(|d| d.close());
     }
 
     #[rstest]
     fn test_insert_and_get(
-        #[values(create_file_storage_backend, create_kv_storage_backend)]
-        create: impl Fn() -> StorageBackendExplicit,
+        #[values(create_file_storage_backend, create_kv_storage_backend)] create: impl Fn() -> (
+            StorageBackendExplicit,
+            Option<TempDir>,
+        ),
     ) {
-        let storage = create();
+        let (storage, _temp_dir) = create();
 
         let scoped_key = random_scoped_key();
 
@@ -215,14 +237,19 @@ mod test {
         let loaded_data = storage.get(scoped_key).unwrap();
 
         assert_eq!(data, loaded_data);
+
+        drop(storage);
+        _temp_dir.map(|d| d.close());
     }
 
     #[rstest]
     fn test_overwrite(
-        #[values(create_file_storage_backend, create_kv_storage_backend)]
-        create: impl Fn() -> StorageBackendExplicit,
+        #[values(create_file_storage_backend, create_kv_storage_backend)] create: impl Fn() -> (
+            StorageBackendExplicit,
+            Option<TempDir>,
+        ),
     ) {
-        let storage = create();
+        let (storage, _temp_dir) = create();
 
         let scoped_key = random_scoped_key();
 
@@ -235,14 +262,19 @@ mod test {
         storage.store(scoped_key.clone(), &data2).unwrap();
         let loaded_data_2 = storage.get(scoped_key).unwrap();
         assert_eq!(data2, loaded_data_2);
+
+        drop(storage);
+        _temp_dir.map(|d| d.close());
     }
 
     #[rstest]
     fn test_fail_key_not_exists(
-        #[values(create_file_storage_backend, create_kv_storage_backend)]
-        create: impl Fn() -> StorageBackendExplicit,
+        #[values(create_file_storage_backend, create_kv_storage_backend)] create: impl Fn() -> (
+            StorageBackendExplicit,
+            Option<TempDir>,
+        ),
     ) {
-        let storage = create();
+        let (storage, _temp_dir) = create();
 
         let scoped_key = random_scoped_key();
 
@@ -252,15 +284,20 @@ mod test {
             error,
             StorageBackendError::Sqlite(SqliteBackendError::NoKeyError)
                 | StorageBackendError::KvStore(KvStorageBackendError::Get)
-        ))
+        ));
+
+        drop(storage);
+        _temp_dir.map(|d| d.close());
     }
 
     #[rstest]
     fn test_inserted_key_in_keys(
-        #[values(create_file_storage_backend, create_kv_storage_backend)]
-        create: impl Fn() -> StorageBackendExplicit,
+        #[values(create_file_storage_backend, create_kv_storage_backend)] create: impl Fn() -> (
+            StorageBackendExplicit,
+            Option<TempDir>,
+        ),
     ) {
-        let storage = create();
+        let (storage, _temp_dir) = create();
 
         let scoped_key = random_scoped_key();
 
@@ -271,15 +308,20 @@ mod test {
         assert!(keys
             .into_iter()
             .filter_map(|r| r.ok())
-            .contains(&scoped_key))
+            .contains(&scoped_key));
+
+        drop(storage);
+        _temp_dir.map(|d| d.close());
     }
 
     #[rstest]
     fn test_keys_all_ok(
-        #[values(create_file_storage_backend, create_kv_storage_backend)]
-        create: impl Fn() -> StorageBackendExplicit,
+        #[values(create_file_storage_backend, create_kv_storage_backend)] create: impl Fn() -> (
+            StorageBackendExplicit,
+            Option<TempDir>,
+        ),
     ) {
-        let storage = create();
+        let (storage, _temp_dir) = create();
 
         let scoped_key = random_scoped_key();
 
@@ -287,15 +329,20 @@ mod test {
 
         let keys = storage.keys();
 
-        assert!(keys.into_iter().all(|result| result.is_ok()))
+        assert!(keys.into_iter().all(|result| result.is_ok()));
+
+        drop(storage);
+        _temp_dir.map(|d| d.close());
     }
 
     #[rstest]
     fn test_delete(
-        #[values(create_file_storage_backend, create_kv_storage_backend)]
-        create: impl Fn() -> StorageBackendExplicit,
+        #[values(create_file_storage_backend, create_kv_storage_backend)] create: impl Fn() -> (
+            StorageBackendExplicit,
+            Option<TempDir>,
+        ),
     ) {
-        let storage = create();
+        let (storage, _temp_dir) = create();
 
         let scoped_key = random_scoped_key();
 
@@ -314,5 +361,8 @@ mod test {
             StorageBackendError::Sqlite(SqliteBackendError::NoKeyError)
                 | StorageBackendError::KvStore(KvStorageBackendError::Get)
         ));
+
+        drop(storage);
+        _temp_dir.map(|d| d.close());
     }
 }
