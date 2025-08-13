@@ -114,8 +114,16 @@ impl StorageBackend for SqliteBackend {
             .lock()
             .map_err(|_| SqliteBackendError::Acquire)?;
 
+        const QUERY: &'static str = r"--sql
+            INSERT INTO keys (id, provider, encryption_key_id, signature_key_id, data_blob)
+            VALUES (:id, :provider, :encryption_key_id, :signature_key_id, :data_blob) 
+            ON CONFLICT(id) DO
+            UPDATE
+            SET data_blob = excluded.data_blob;
+        ";
+
         let mut statement = conn
-            .prepare_cached(include_str!("queries/store.sql"))
+            .prepare_cached(QUERY)
             .map_err(|err| SqliteBackendError::SqlError(err))?;
 
         statement
@@ -137,8 +145,17 @@ impl StorageBackend for SqliteBackend {
             .lock()
             .map_err(|_| SqliteBackendError::Acquire)?;
 
+        const QUERY: &'static str = r"--sql
+            SELECT data_blob
+            FROM keys
+            WHERE id = :id
+                AND provider = :provider
+                AND encryption_key_id = :encryption_key_id
+                AND signature_key_id = :signature_key_id;
+        ";
+
         let mut statement = conn
-            .prepare_cached(include_str!("queries/get.sql"))
+            .prepare_cached(QUERY)
             .map_err(|err| SqliteBackendError::SqlError(err))?;
 
         let result = statement.query_one(
@@ -166,8 +183,16 @@ impl StorageBackend for SqliteBackend {
             .lock()
             .map_err(|_| SqliteBackendError::Acquire)?;
 
+        const QUERY: &'static str = r"--sql
+            DELETE FROM keys
+            WHERE id = :id
+                AND provider = :provider
+                AND encryption_key_id = :encryption_key_id
+                AND signature_key_id = :signature_key_id;
+        ";
+
         let mut statement = conn
-            .prepare_cached(include_str!("queries/delete.sql"))
+            .prepare_cached(QUERY)
             .map_err(|err| SqliteBackendError::SqlError(err))?;
 
         statement
@@ -187,7 +212,15 @@ impl StorageBackend for SqliteBackend {
             Err(_) => return vec![Err(SqliteBackendError::Acquire.into())],
         };
 
-        let statement = conn.prepare_cached(include_str!("queries/keys.sql"));
+        const QUERY: &'static str = r"--sql
+            SELECT id,
+                provider,
+                encryption_key_id,
+                signature_key_id
+            FROM keys;
+        ";
+
+        let statement = conn.prepare_cached(QUERY);
 
         match statement {
             Err(e) => {
