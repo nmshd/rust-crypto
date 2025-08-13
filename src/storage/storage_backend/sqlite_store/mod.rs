@@ -8,7 +8,7 @@ use std::{
 use include_dir::{include_dir, Dir};
 use itertools::Itertools;
 use rusqlite::{named_params, Connection};
-use rusqlite_migration::{Migrations, M};
+use rusqlite_migration::Migrations;
 use thiserror::Error;
 
 use crate::storage::{
