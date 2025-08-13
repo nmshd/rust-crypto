@@ -109,38 +109,47 @@ impl fmt::Debug for SqliteBackend {
 
 impl StorageBackend for SqliteBackend {
     fn store(&self, key: ScopedKey, data: &[u8]) -> Result<(), StorageBackendError> {
-        self.connection
+        let conn = self
+            .connection
             .lock()
-            .map_err(|_| SqliteBackendError::Acquire)?
-            .execute(
-                include_str!("queries/store.sql"),
-                named_params! {
-                    ":id": key.key_id,
-                    ":provider": key.provider_scope,
-                    ":encryption_key_id": key.encryption_scope,
-                    ":signature_key_id": key.signature_scope,
-                    ":data_blob": data,
-                },
-            )
+            .map_err(|_| SqliteBackendError::Acquire)?;
+
+        let mut statement = conn
+            .prepare_cached(include_str!("queries/store.sql"))
+            .map_err(|err| SqliteBackendError::SqlError(err))?;
+
+        statement
+            .execute(named_params! {
+                ":id": key.key_id,
+                ":provider": key.provider_scope,
+                ":encryption_key_id": key.encryption_scope,
+                ":signature_key_id": key.signature_scope,
+                ":data_blob": data,
+            })
             .map_err(|e| StorageBackendError::Sqlite(e.into()))?;
+
         Ok(())
     }
 
     fn get(&self, key: ScopedKey) -> Result<Vec<u8>, StorageBackendError> {
-        let result = self
+        let conn = self
             .connection
             .lock()
-            .map_err(|_| SqliteBackendError::Acquire)?
-            .query_one(
-                include_str!("queries/get.sql"),
-                named_params! {
-                    ":id": key.key_id,
-                    ":provider": key.provider_scope,
-                    ":encryption_key_id": key.encryption_scope,
-                    ":signature_key_id": key.signature_scope,
-                },
-                |row| row.get(0),
-            );
+            .map_err(|_| SqliteBackendError::Acquire)?;
+
+        let mut statement = conn
+            .prepare_cached(include_str!("queries/get.sql"))
+            .map_err(|err| SqliteBackendError::SqlError(err))?;
+
+        let result = statement.query_one(
+            named_params! {
+                ":id": key.key_id,
+                ":provider": key.provider_scope,
+                ":encryption_key_id": key.encryption_scope,
+                ":signature_key_id": key.signature_scope,
+            },
+            |row| row.get(0),
+        );
 
         match result {
             Ok(v) => Ok(v),
@@ -152,18 +161,22 @@ impl StorageBackend for SqliteBackend {
     }
 
     fn delete(&self, key: ScopedKey) -> Result<(), StorageBackendError> {
-        self.connection
+        let conn = self
+            .connection
             .lock()
-            .map_err(|_| SqliteBackendError::Acquire)?
-            .execute(
-                include_str!("queries/delete.sql"),
-                named_params! {
-                    ":id": key.key_id,
-                    ":provider": key.provider_scope,
-                    ":encryption_key_id": key.encryption_scope,
-                    ":signature_key_id": key.signature_scope,
-                },
-            )
+            .map_err(|_| SqliteBackendError::Acquire)?;
+
+        let mut statement = conn
+            .prepare_cached(include_str!("queries/delete.sql"))
+            .map_err(|err| SqliteBackendError::SqlError(err))?;
+
+        statement
+            .execute(named_params! {
+                ":id": key.key_id,
+                ":provider": key.provider_scope,
+                ":encryption_key_id": key.encryption_scope,
+                ":signature_key_id": key.signature_scope,
+            })
             .map_err(|e| StorageBackendError::Sqlite(SqliteBackendError::SqlError(e)))?;
         Ok(())
     }
@@ -174,11 +187,11 @@ impl StorageBackend for SqliteBackend {
             Err(_) => return vec![Err(SqliteBackendError::Acquire.into())],
         };
 
-        let statement = conn.prepare(include_str!("queries/keys.sql"));
+        let statement = conn.prepare_cached(include_str!("queries/keys.sql"));
 
         match statement {
             Err(e) => {
-                return vec![Err(StorageBackendError::Sqlite(
+                vec![Err(StorageBackendError::Sqlite(
                     SqliteBackendError::SqlError(e),
                 ))]
             }
