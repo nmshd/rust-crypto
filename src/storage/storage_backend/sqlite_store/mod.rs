@@ -2,9 +2,10 @@ use core::fmt;
 use std::{
     fs::create_dir_all,
     path::{Path, PathBuf},
-    sync::{Arc, Mutex},
+    sync::{Arc, LazyLock, Mutex},
 };
 
+use include_dir::{include_dir, Dir};
 use itertools::Itertools;
 use rusqlite::{named_params, Connection};
 use rusqlite_migration::{Migrations, M};
@@ -48,10 +49,11 @@ pub(in crate::storage) struct SqliteBackend {
     connection: Arc<Mutex<Connection>>,
 }
 
-const MIGRATIONS_SLICE: &[M<'_>] = &[
-    M::up("CREATE TABLE keys (id TEXT PRIMARY KEY, provider TEXT, encryption_key_id TEXT, signature_key_id TEXT, data_blob BLOB);"),
-];
-const MIGRATIONS: Migrations<'_> = Migrations::from_slice(MIGRATIONS_SLICE);
+static MIGRATIONS: LazyLock<Migrations<'_>> = LazyLock::new(|| {
+    static MIGRATION_DIR: Dir =
+        include_dir!("$CARGO_MANIFEST_DIR/src/storage/storage_backend/sqlite_store/migrations");
+    Migrations::from_directory(&MIGRATION_DIR).expect("Failed to parse migrations.")
+});
 
 impl SqliteBackend {
     pub(super) fn new(path: impl AsRef<Path>) -> Result<Self, StorageBackendInitializationError> {
@@ -111,10 +113,7 @@ impl StorageBackend for SqliteBackend {
             .lock()
             .map_err(|_| SqliteBackendError::Acquire)?
             .execute(
-                "INSERT INTO keys (id, provider, encryption_key_id, signature_key_id, data_blob) 
-                    VALUES (:id, :provider, :encryption_key_id, :signature_key_id, :data_blob)
-                    ON CONFLICT(id) DO UPDATE
-                    SET data_blob=excluded.data_blob;",
+                include_str!("queries/store.sql"),
                 named_params! {
                     ":id": key.key_id,
                     ":provider": key.provider_scope,
@@ -128,15 +127,12 @@ impl StorageBackend for SqliteBackend {
     }
 
     fn get(&self, key: ScopedKey) -> Result<Vec<u8>, StorageBackendError> {
-        let query =
-            "SELECT data_blob FROM keys WHERE id = :id AND provider = :provider AND encryption_key_id = :encryption_key_id AND signature_key_id = :signature_key_id;";
-
         let result = self
             .connection
             .lock()
             .map_err(|_| SqliteBackendError::Acquire)?
             .query_one(
-                query,
+                include_str!("queries/get.sql"),
                 named_params! {
                     ":id": key.key_id,
                     ":provider": key.provider_scope,
@@ -156,14 +152,11 @@ impl StorageBackend for SqliteBackend {
     }
 
     fn delete(&self, key: ScopedKey) -> Result<(), StorageBackendError> {
-        let query =
-            "DELETE FROM keys WHERE id = :id AND provider = :provider AND encryption_key_id = :encryption_key_id AND signature_key_id = :signature_key_id;";
-
         self.connection
             .lock()
             .map_err(|_| SqliteBackendError::Acquire)?
             .execute(
-                query,
+                include_str!("queries/delete.sql"),
                 named_params! {
                     ":id": key.key_id,
                     ":provider": key.provider_scope,
@@ -181,8 +174,8 @@ impl StorageBackend for SqliteBackend {
             Err(_) => return vec![Err(SqliteBackendError::Acquire.into())],
         };
 
-        let query = "SELECT id, provider, encryption_key_id, signature_key_id FROM keys;";
-        let statement = conn.prepare(query);
+        let statement = conn.prepare(include_str!("queries/keys.sql"));
+
         match statement {
             Err(e) => {
                 return vec![Err(StorageBackendError::Sqlite(
