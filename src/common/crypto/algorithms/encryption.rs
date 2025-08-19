@@ -111,6 +111,7 @@ impl Cipher {
         }
     }
 
+    #[allow(dead_code)] // is used in tests
     pub(crate) fn iv_len(&self) -> usize {
         match self {
             Self::AesCbc128
