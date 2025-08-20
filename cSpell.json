@@ -1,5 +1,7 @@
 {
     "words": [
+        "androideabi",
+        "armv",
         "arrayref",
         "asym",
         "blake",
@@ -10,6 +12,7 @@
         "ciphertext",
         "codegen",
         "dalek",
+        "DEVICEID",
         "Diffie",
         "ecdh",
         "Ecdsa",
@@ -38,6 +41,7 @@
         "rstest",
         "rusqlite",
         "rustup",
+        "sdkmanager",
         "securestore",
         "serde",
         "simctl",
