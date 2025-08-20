@@ -131,6 +131,19 @@ Examples for the rust crate can be found in the [example folder](./examples/).
 
 ### [Usage NodeJS Plugin](https://github.com/nmshd/crypto-layer-node)
 
+## Documentation
+
+### Build Documentation
+
+To build the documentation run:
+```sh
+RUSTDOCFLAGS="--cfg docsrs" cargo +nightly doc  --open
+```
+Or in Powershell:
+```sh
+$env:RUSTDOCFLAGS="--cfg docsrs"
+cargo +nightly doc  --open
+```
 
 ## Contributing
 
