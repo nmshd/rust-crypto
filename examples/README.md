@@ -8,11 +8,8 @@ cd rust-crypto
 
 ## Sign Data Example
 
-> [!WARNING]
-> There might be some issues compiling the software provider with gnu windows toolchain.
+Example showing how to create a software provider, create a key pair, sign and verify data.
 
 ```
 cargo run -F software --example sign_data
 ```
-
-Example showing how to create a software provider, create a key pair, sign and verify data.
