@@ -1,25 +1,39 @@
-# cal_flutter_plugin
+# `cal_flutter_plugin`
 
-A new Flutter FFI plugin project.
-
-## Getting Started
-
-This project is a starting point for a Flutter
-[FFI plugin](https://flutter.dev/to/ffi-package),
-a specialized package that includes native code directly invoked with Dart FFI.
+Flutter FFI plugin for the crypto layer project.
 
 ## Project structure
 
-This template uses the following structure:
-
-* `src`: Contains the native source code, and a CmakeFile.txt file for building
-  that source code into a dynamic library.
+This project has the following structure:
 
 * `lib`: Contains the Dart code that defines the API of the plugin, and which
   calls into the native code using `dart:ffi`.
 
 * platform folders (`android`, `ios`, `windows`, etc.): Contains the build files
   for building and bundling the native code library with the platform application.
+
+
+## Binding to native code
+
+To use the native code, bindings in Dart are needed.
+To avoid writing these by hand, they are generated from the header file
+(`src/cal_flutter_plugin.h`) by `package:ffigen`.
+Regenerate the bindings by running `dart run ffigen --config ffigen.yaml`.
+
+
+## Reading logs
+
+Crypto-layer uses structured logging. See the [tracing documentation](https://docs.rs/tracing/latest/tracing/#spans).
+
+### IOS Emulator
+
+On apple platforms spans are logged as activities.
+
+To read logs and activities from the command line, you may use `xcrun` with `grep`:
+```sh
+xcrun simctl spawn booted log stream -level debug | grep -E "cal\_flutter\_plugin|eu\.nmshd\.crypto\-layer"
+```
+
 
 ## Building and bundling native code
 
@@ -67,13 +81,6 @@ The native build systems that are invoked by FFI (and method channel) plugins ar
 * For Linux and Windows: CMake.
   * See the documentation in linux/CMakeLists.txt.
   * See the documentation in windows/CMakeLists.txt.
-
-## Binding to native code
-
-To use the native code, bindings in Dart are needed.
-To avoid writing these by hand, they are generated from the header file
-(`src/cal_flutter_plugin.h`) by `package:ffigen`.
-Regenerate the bindings by running `dart run ffigen --config ffigen.yaml`.
 
 ## Invoking native code
 
