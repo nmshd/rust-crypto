@@ -6,11 +6,8 @@
 
 </div>
 
-> [!WARNING]
+> [!CAUTION]
 > Work in Progress
-
-> [!WARNING]
-> Might not compile on `x86_64-pc-windows-gnu`.
 
 Crypto Layer is a comprehensive and flexible cryptographic library designed to provide a unified interface for various cryptographic operations and algorithms.
 It offers a wide range of functionalities, including encryption, decryption, signing, signature verification, and hashing, while supporting both symmetric and asymmetric cryptography.
@@ -18,24 +15,25 @@ It offers a wide range of functionalities, including encryption, decryption, sig
 
 ## Features
 
+> [!NOTE]
+> Support for specific algorithms and features is dependent on the target platform.
+
 - **Encryption Algorithms**: Supports a variety of encryption algorithms, including:
 
   - Asymmetric Encryption: RSA, ECC (Elliptic Curve Cryptography) with various curve types (P-256, P-384, P-521, secp256k1, Brainpool curves, Curve25519, Curve448, FRP256v1)
   - Symmetric Block Ciphers: AES (GCM, CBC)
   - Stream Ciphers: ChaCha20, XChaCha20
 
-
 - **Hashing Algorithms**: Supports a wide range of hashing algorithms, including:
 
   - SHA-2 (SHA-224, SHA-256, SHA-384, SHA-512, SHA-512/224, SHA-512/256)
   - SHA-3 (SHA3-224, SHA3-256, SHA3-384, SHA3-512)
 
-
 - **Key Management**: Provides a unified interface for creating, loading, and managing cryptographic keys, supporting various key usages and algorithms.
 
 - **Cross-Platform Support**: Designed to work seamlessly across multiple platforms, including Android, Apple, Linux and Windows, with platform-specific implementations for key handling and security module integration.
 
-- **Security Module Integration**: Integrates with Hardware Security Modules (HSMs) and Trusted Platform Modules (TPMs) for secure key storage and cryptographic operations, ensuring enhanced security and compliance with industry standards.
+- **Security Module Integration**: Integrates with ~~Hardware Security Modules (HSMs) and~~ Trusted Platform Modules (TPMs) for secure key storage and cryptographic operations, ensuring enhanced security and compliance with industry standards.
 
 - **Extensibility**: The modular design of the Crypto Layer allows for easy extension and integration of additional cryptographic algorithms and security modules in the future.
 
@@ -57,7 +55,6 @@ classDiagram
     Provider "1" --> "0..*" KeyHandle : manages
     Provider "1" --> "0..*" KeyPairHandle : manages
     Provider "1" --> "0..*" DHExchange : creates ephemeral
-    KeyPairHandle "1" --> "1" DHExchange : creates
     DHExchange "1" --> "1" KeyHandle : results in
 
     class Provider {
@@ -130,7 +127,7 @@ Examples for the rust crate can be found in the [example folder](./examples/).
 
 ### [Usage Flutter Plugin](./flutter_plugin/README.md)
 
-### [Example Flutter App integration](./flutter_app/README.md)
+### [Example Flutter App](./flutter_app/README.md)
 
 ### [Usage NodeJS Plugin](https://github.com/nmshd/crypto-layer-node)
 
