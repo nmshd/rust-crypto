@@ -81,7 +81,7 @@ pub enum SecurityLevel {
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
-// flutter_rust_bridge:non_opaque
+/// flutter_rust_bridge:non_opaque
 pub enum Spec {
     KeySpec(KeySpec),
     KeyPairSpec(KeyPairSpec),
@@ -93,7 +93,7 @@ pub enum Spec {
 /// A key cannot be reconfigured.
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, Zeroize, PartialEq)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
-// flutter_rust_bridge:non_opaque
+/// flutter_rust_bridge:non_opaque
 pub struct KeySpec {
     /// Cipher used for symmetric encryption.
     pub cipher: Cipher,
@@ -116,7 +116,7 @@ pub struct KeySpec {
 /// A key cannot be reconfigured.
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, PartialEq)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
-// flutter_rust_bridge:non_opaque
+/// flutter_rust_bridge:non_opaque
 pub struct KeyPairSpec {
     /// Asymmetric algorithm to be used.
     pub asym_spec: AsymmetricKeySpec,
@@ -192,7 +192,7 @@ pub struct KeyPairSpec {
 /// As the requested capabilities are a subset of the provided capabilities above,
 /// this requestor might be assigned the apple secure enclave provider on apple platforms.
 ///
-// flutter_rust_bridge:non_opaque
+/// flutter_rust_bridge:non_opaque
 #[derive(Clone, Debug)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub struct ProviderConfig {
@@ -268,7 +268,7 @@ pub struct ProviderConfig {
 /// [`create_provider()`]: crate::prelude::create_provider
 /// [`create_provider_from_name()`]: crate::prelude::create_provider_from_name
 ///
-// flutter_rust_bridge:non_opaque
+/// flutter_rust_bridge:non_opaque
 #[derive(Clone)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 pub struct ProviderImplConfig {
@@ -276,7 +276,7 @@ pub struct ProviderImplConfig {
 }
 
 /// Key metadata store configuration enumeration.
-// flutter_rust_bridge:non_opaque
+/// flutter_rust_bridge:non_opaque
 #[derive(Clone, EnumDiscriminants)]
 #[strum_discriminants(derive(EnumString, IntoStaticStr))]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]

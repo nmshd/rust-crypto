@@ -26,7 +26,7 @@ pub struct CalError {
 }
 
 /// Enumeration of classifications of error sources.
-// flutter_rust_bridge:non_opaque
+//// flutter_rust_bridge:non_opaque
 #[derive(thiserror::Error, Debug, Clone)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 #[repr(C)]
