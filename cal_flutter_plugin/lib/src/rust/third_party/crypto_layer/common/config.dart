@@ -13,7 +13,7 @@ import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'config.freezed.dart';
 
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `AdditionalConfigDiscriminants`, `SecurityLevelIter`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_receiver_is_total_eq`, `assert_receiver_is_total_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `cmp`, `eq`, `eq`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `from_str`, `from_str`, `from`, `from`, `from`, `from`, `from`, `from`, `iter`, `len`, `next_back`, `next`, `nth`, `partial_cmp`, `size_hint`, `try_from`, `try_from`, `zeroize`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_receiver_is_total_eq`, `assert_receiver_is_total_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `cmp`, `discriminant`, `eq`, `eq`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `from_str`, `from_str`, `from`, `from`, `from`, `from`, `from`, `from`, `iter`, `len`, `next_back`, `next`, `nth`, `partial_cmp`, `size_hint`, `try_from`, `try_from`, `zeroize`
 
 @freezed
 sealed class AdditionalConfig with _$AdditionalConfig {
@@ -69,6 +69,9 @@ sealed class AdditionalConfig with _$AdditionalConfig {
 }
 
 /// Struct used to configure key pairs.
+///
+/// It is important to note, that the configuration of a key can only happen at the point of its creation.
+/// A key cannot be reconfigured.
 /// flutter_rust_bridge:non_opaque
 class KeyPairSpec {
   /// Asymmetric algorithm to be used.
@@ -118,6 +121,9 @@ class KeyPairSpec {
 }
 
 /// Struct used to configure keys.
+///
+/// It is important to note, that the configuration of a key can only happen at the point of its creation.
+/// A key cannot be reconfigured.
 /// flutter_rust_bridge:non_opaque
 class KeySpec {
   /// Cipher used for symmetric encryption.
@@ -126,10 +132,12 @@ class KeySpec {
   /// Hash function used with HMAC.
   final CryptoHash signingHash;
 
-  /// If set to `true`, the key is going to be deleted when the handle is dropped.
+  /// If set to `true`, metadata of the key is not stored and the key is going to be deleted when the handle is dropped.
   final bool ephemeral;
 
   /// If set to `true`, the key cannot be exported.
+  ///
+  /// Some providers do not allow exporting keys at all, even if set to `false`.
   final bool nonExportable;
 
   const KeySpec({
@@ -161,12 +169,100 @@ class KeySpec {
 }
 
 /// Capabilities of a Provider
+///
+/// This configuration struct has multiple uses:
+/// * Act as capabilities of a provider.
+/// * Act as requirement for [`create_provider`](crate::prelude::create_provider).
+///
+/// Depending on the use some properties have different meanings:
+/// * Currently a provider may only have one security level.
+/// * The requester may ask for a provider that has at a minimum one security level or at a maximum another security level.
+/// * A provider has certain algorithm he at least in some form supports.
+/// * A requester may ask for minimum requirements regarding these algorithms.
+///
+/// ### Example
+///
+/// A provider might return capabilities like:
+/// ```
+/// # use crypto_layer::prelude::*;
+/// # use std::collections::HashSet;
+///
+/// let apple_provider_capabilities = ProviderConfig {
+///     max_security_level: SecurityLevel::Hardware,
+///     min_security_level: SecurityLevel::Hardware,
+///     supported_ciphers: HashSet::from([Cipher::AesGcm128, Cipher::AesGcm256]),
+///     supported_asym_spec: HashSet::from([AsymmetricKeySpec::P256]),
+///     supported_hashes: HashSet::from([
+///         CryptoHash::Sha2_224,
+///         CryptoHash::Sha2_256,
+///         CryptoHash::Sha2_384,
+///         CryptoHash::Sha2_512,
+///     ]),
+/// };
+///
+/// ```
+/// Such provider then is ought to use a secure element (apart from the `ANDROID_PROVIDER`)
+/// and at least support these algorithms **in one form or another** .
+///
+/// Please be aware, that `supported_ciphers` does not imply support for symmetric cryptography!
+///
+/// A requestor might ask for a provider with capabilities like:
+/// ```
+/// # use crypto_layer::prelude::*;
+/// # use std::collections::HashSet;
+///
+/// let requested_capabilities = ProviderConfig {
+///     max_security_level: SecurityLevel::Hardware,
+///     min_security_level: SecurityLevel::Software,
+///     supported_ciphers: HashSet::from([Cipher::AesGcm256]),
+///     supported_asym_spec: HashSet::from([AsymmetricKeySpec::P256]),
+///     supported_hashes: HashSet::from([
+///         CryptoHash::Sha2_256,
+///         CryptoHash::Sha2_512,
+///     ]),
+/// };
+/// ```
+///
+/// As the requested capabilities are a subset of the provided capabilities above,
+/// this requestor might be assigned the apple secure enclave provider on apple platforms.
+///
 /// flutter_rust_bridge:non_opaque
 class ProviderConfig {
+  /// Highest security supported or maximum security requested.
+  ///
+  /// As an example, the software fallback provider has a maximum security level of [`SecurityLevel::Software`].
   final SecurityLevel maxSecurityLevel;
+
+  /// Minimum security level supported or security level required.
+  ///
+  /// As an example:
+  /// If one wishes to use provider that is based on a secure element, one would require [`SecurityLevel::Hardware`].
   final SecurityLevel minSecurityLevel;
+
+  /// Cipher algorithms supported in one fashion or another or cipher algorithms required.
+  ///
+  /// A provider might support cipher algorithms returned as capabilities in following ways:
+  /// * Supports symmetric encryption with said cipher.
+  /// * Supports asymmetric hybrid encryption with said cipher. (What standard is used for the hybrid encryption is not set.)
   final Set<Cipher> supportedCiphers;
+
+  /// Hashing algorithm supported for either the use with signing (symmetric or asymmetric) operations or encryption operations (symmetric or asymmetric),
+  /// or hashing algorithm required for the same purpose.
+  ///
+  /// A provider that supports a hash algorithm **may or may not** support following operations in combination with said hashing algorithm:
+  /// * [`KeyHandle::hmac()`](crate::prelude::KeyHandle::hmac)
+  /// * [`KeyHandle::verify_hmac()`](crate::prelude::KeyHandle::verify_hmac)
+  /// * [`KeyHandle::encrypt()`](crate::prelude::KeyHandle::encrypt())
+  /// * [`KeyHandle::decrypt_data()`](crate::prelude::KeyHandle::decrypt_data())
+  /// * [`KeyPairHandle::sign_data`](crate::prelude::KeyPairHandle::sign_data)
+  /// * [`KeyPairHandle::verify_signature`](crate::prelude::KeyPairHandle::verify_signature)
+  /// * [`KeyPairHandle::encrypt_data()`](crate::prelude::KeyPairHandle::encrypt_data)
+  /// * [`KeyPairHandle::decrypt_data()`](crate::prelude::KeyPairHandle::decrypt_data)
   final Set<CryptoHash> supportedHashes;
+
+  /// Asymmetric cryptographic algorithms supported or required.
+  ///
+  /// A provider supporting an asymmetric cryptographic algorithm **may or may not** support said algorithm for signing or encryption operations.
   final Set<AsymmetricKeySpec> supportedAsymSpec;
 
   const ProviderConfig({
@@ -197,23 +293,28 @@ class ProviderConfig {
           supportedAsymSpec == other.supportedAsymSpec;
 }
 
-/// Configuration needed for using or initializing providers.
+/// Key metadata store configuration
 ///
-/// Either
-/// * [AdditionalConfig::KVStoreConfig]
-/// * [AdditionalConfig::FileStoreConfig]
+/// Due to an accident, this configuration became a vector.
 ///
-/// and either
-/// * [AdditionalConfig::StorageConfigHMAC]
-/// * [AdditionalConfig::StorageConfigDSA]
-/// * [AdditionalConfig::StorageConfigPass]
+/// If neither [`AdditionalConfig::KVStoreConfig`] nor [`AdditionalConfig::FileStoreConfig`] are supplied
+/// to [`create_provider()`] or to [`create_provider_from_name()`],
+/// a provider will be created that is only capable of creating ephemeral keys!
 ///
-/// need to be supplied.
+/// To protect key metadata against unauthorized change, it is recommended to make use of
+/// [`AdditionalConfig::StorageConfigHMAC`] or [`AdditionalConfig::StorageConfigDSA`].
+/// (This may only apply if you use multiple providers and one is of [`SecurityLevel::Hardware`] or above.)
+///
+/// If the fallback software provider is used with [AdditionalConfig::StorageConfigSymmetricEncryption]
+/// or [AdditionalConfig::StorageConfigAsymmetricEncryption], the stored secret keys are secured by
+/// the provided key, which in turn makes such construct a hybrid provider (as the keys at rest have hardware security protection).
+///
 ///
 /// ## Example
 ///
 /// ```rust
-/// use crypto_layer::prelude::*;
+/// # use crypto_layer::prelude::*;
+///
 /// let implementation_config = ProviderImplConfig {
 ///       additional_config: vec![
 ///          AdditionalConfig::FileStoreConfig {
@@ -222,6 +323,10 @@ class ProviderConfig {
 ///      ],
 /// };
 /// ```
+///
+/// [`create_provider()`]: crate::prelude::create_provider
+/// [`create_provider_from_name()`]: crate::prelude::create_provider_from_name
+///
 /// flutter_rust_bridge:non_opaque
 class ProviderImplConfig {
   final List<AdditionalConfig> additionalConfig;
@@ -259,7 +364,7 @@ class ProviderImplConfig {
 ///
 /// * [SecurityLevel::Hardware]: Provider is hardware backed (tpm, other security chips, StrongBox KeyStore).
 /// * [SecurityLevel::Software]: Provider uses the systems software keystore.
-/// * [SecurityLevel::Network]: Provider uses a network key store (Hashicorp).
+/// * [SecurityLevel::Network]: Provider uses a network key store (HashiCorp).
 /// * [SecurityLevel::Unsafe]: Provider uses software fallback.
 enum SecurityLevel {
   /// Highest security level.

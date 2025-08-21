@@ -11,21 +11,18 @@ import 'crypto/algorithms/encryption.dart';
 import 'crypto/algorithms/hashes.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-/// Returns a provider which supports the given requierements.
+/// Returns a provider which supports the given requirements and is initializable.
 ///
-/// This function returns the first provider, which supports the given requirements and has a [`ProviderImplConfig`].
+/// This function returns the first provider, which supports the given requirements (see [`ProviderConfig`])
+/// and can be initialized on the target platform with the given [`ProviderImplConfig`].
 ///
-/// * `conf` - A provider config that the provider must at least contain.
-/// * `impl_conf_vec` - A `Vec` of [`ProviderImplConfig`]. Only providers, which have [`ProviderImplConfig`] are returned.
-///
-/// # Example
+/// ### Example
 /// ```
-/// use std::collections::HashSet;
+/// # use std::collections::HashSet;
+/// # use crypto_layer::prelude::*;
 ///
-/// use crypto_layer::prelude::*;
-///
-/// let specific_provider_config = ProviderImplConfig{additional_config: vec![]};
-/// let provider_config = ProviderConfig {
+/// let platform_specific_provider_config = ProviderImplConfig{additional_config: vec![]};
+/// let required_capabilities = ProviderConfig {
 ///     min_security_level: SecurityLevel::Software,
 ///     max_security_level: SecurityLevel::Hardware,
 ///     supported_asym_spec: HashSet::new(),
@@ -33,7 +30,7 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 ///     supported_hashes: HashSet::new(),
 /// };
 ///
-/// let provider_option: Option<Provider> = create_provider(&provider_config, specific_provider_config);
+/// let provider_option: Option<Provider> = create_provider(&required_capabilities, platform_specific_provider_config);
 /// ```
 Future<Provider?> createProvider({
   required ProviderConfig conf,
@@ -45,8 +42,10 @@ Future<Provider?> createProvider({
 
 /// Returns the provider matching the given name.
 ///
-/// * `name` - Name of the provider. See `get_name()`.
-/// * `impl_config` - Specif configuration for said provider.
+/// Returns `None` if the provider requested is not available on the target platform or it is not initializable.
+///
+/// A providers name is a hardcoded string unique to a provider (see [`Provider::provider_name()`](crate::prelude::Provider::provider_name)
+/// and [`get_all_providers()`](crate::prelude::get_all_providers)).
 Future<Provider?> createProviderFromName({
   required String name,
   required ProviderImplConfig implConf,
@@ -56,10 +55,12 @@ Future<Provider?> createProviderFromName({
 );
 
 /// Returns the names of all available providers.
+///
+/// A provider is available if it is initializable on the target platform.
 Future<List<String>> getAllProviders() =>
     RustLib.instance.api.cryptoLayerCommonFactoryGetAllProviders();
 
-/// Returns the names and capabilities of all providers that can be initialized with the given [ProviderImplConfig].
+/// Returns the names and capabilities of all providers that can be initialized with the given [ProviderImplConfig] on the target platform.
 Future<List<(String, ProviderConfig)>> getProviderCapabilities({
   required ProviderImplConfig implConfig,
 }) => RustLib.instance.api.cryptoLayerCommonFactoryGetProviderCapabilities(

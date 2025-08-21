@@ -413,6 +413,14 @@ abstract class RustLibApi extends BaseApi {
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_CalErrorPtr;
 
   RustArcIncrementStrongCountFnType
+  get rust_arc_increment_strong_count_CalErrorKind;
+
+  RustArcDecrementStrongCountFnType
+  get rust_arc_decrement_strong_count_CalErrorKind;
+
+  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_CalErrorKindPtr;
+
+  RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_DhExchange;
 
   RustArcDecrementStrongCountFnType
@@ -507,7 +515,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_cal_error_kind,
+          decodeSuccessData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalErrorKind,
           decodeErrorData: null,
         ),
         constMeta: kCryptoLayerCommonErrorCalErrorErrorKindConstMeta,
@@ -2945,6 +2954,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalError;
 
   RustArcIncrementStrongCountFnType
+  get rust_arc_increment_strong_count_CalErrorKind => wire
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalErrorKind;
+
+  RustArcDecrementStrongCountFnType
+  get rust_arc_decrement_strong_count_CalErrorKind => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalErrorKind;
+
+  RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_DhExchange => wire
       .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHExchange;
 
@@ -3033,6 +3050,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return CalErrorImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  CalErrorKind
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalErrorKind(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return CalErrorKindImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -3223,6 +3249,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return CalErrorImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  CalErrorKind
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalErrorKind(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return CalErrorKindImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -3426,50 +3461,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  CalErrorKind dco_decode_cal_error_kind(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    switch (raw[0]) {
-      case 0:
-        return CalErrorKind_NotImplemented();
-      case 1:
-        return CalErrorKind_BadParameter(
-          description: dco_decode_String(raw[1]),
-          internal: dco_decode_bool(raw[2]),
-        );
-      case 2:
-        return CalErrorKind_MissingKey(
-          keyId: dco_decode_String(raw[1]),
-          keyType: dco_decode_key_type(raw[2]),
-        );
-      case 3:
-        return CalErrorKind_MissingValue(
-          description: dco_decode_String(raw[1]),
-          internal: dco_decode_bool(raw[2]),
-        );
-      case 4:
-        return CalErrorKind_FailedOperation(
-          description: dco_decode_String(raw[1]),
-          internal: dco_decode_bool(raw[2]),
-        );
-      case 5:
-        return CalErrorKind_InitializationError(
-          description: dco_decode_String(raw[1]),
-          internal: dco_decode_bool(raw[2]),
-        );
-      case 6:
-        return CalErrorKind_NonExportable();
-      case 7:
-        return CalErrorKind_UnsupportedAlgorithm(dco_decode_String(raw[1]));
-      case 8:
-        return CalErrorKind_EphemeralKeyError();
-      case 9:
-        return CalErrorKind_Other();
-      default:
-        throw Exception("unreachable");
-    }
-  }
-
-  @protected
   Cipher dco_decode_cipher(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return Cipher.values[raw as int];
@@ -3535,12 +3526,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       ephemeral: dco_decode_bool(arr[2]),
       nonExportable: dco_decode_bool(arr[3]),
     );
-  }
-
-  @protected
-  KeyType dco_decode_key_type(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return KeyType.values[raw as int];
   }
 
   @protected
@@ -3846,6 +3831,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  CalErrorKind
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalErrorKind(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return CalErrorKindImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
   DhExchange
   sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHExchange(
     SseDeserializer deserializer,
@@ -4039,6 +4036,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return CalErrorImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
+  CalErrorKind
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalErrorKind(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return CalErrorKindImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -4275,60 +4284,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  CalErrorKind sse_decode_cal_error_kind(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    var tag_ = sse_decode_i_32(deserializer);
-    switch (tag_) {
-      case 0:
-        return CalErrorKind_NotImplemented();
-      case 1:
-        var var_description = sse_decode_String(deserializer);
-        var var_internal = sse_decode_bool(deserializer);
-        return CalErrorKind_BadParameter(
-          description: var_description,
-          internal: var_internal,
-        );
-      case 2:
-        var var_keyId = sse_decode_String(deserializer);
-        var var_keyType = sse_decode_key_type(deserializer);
-        return CalErrorKind_MissingKey(keyId: var_keyId, keyType: var_keyType);
-      case 3:
-        var var_description = sse_decode_String(deserializer);
-        var var_internal = sse_decode_bool(deserializer);
-        return CalErrorKind_MissingValue(
-          description: var_description,
-          internal: var_internal,
-        );
-      case 4:
-        var var_description = sse_decode_String(deserializer);
-        var var_internal = sse_decode_bool(deserializer);
-        return CalErrorKind_FailedOperation(
-          description: var_description,
-          internal: var_internal,
-        );
-      case 5:
-        var var_description = sse_decode_String(deserializer);
-        var var_internal = sse_decode_bool(deserializer);
-        return CalErrorKind_InitializationError(
-          description: var_description,
-          internal: var_internal,
-        );
-      case 6:
-        return CalErrorKind_NonExportable();
-      case 7:
-        var var_field0 = sse_decode_String(deserializer);
-        return CalErrorKind_UnsupportedAlgorithm(var_field0);
-      case 8:
-        return CalErrorKind_EphemeralKeyError();
-      case 9:
-        return CalErrorKind_Other();
-      default:
-        throw UnimplementedError('');
-    }
-  }
-
-  @protected
   Cipher sse_decode_cipher(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var inner = sse_decode_i_32(deserializer);
@@ -4404,13 +4359,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       ephemeral: var_ephemeral,
       nonExportable: var_nonExportable,
     );
-  }
-
-  @protected
-  KeyType sse_decode_key_type(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var inner = sse_decode_i_32(deserializer);
-    return KeyType.values[inner];
   }
 
   @protected
@@ -4792,6 +4740,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalErrorKind(
+    CalErrorKind self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as CalErrorKindImpl).frbInternalSseEncode(move: true),
+      serializer,
+    );
+  }
+
+  @protected
+  void
   sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHExchange(
     DhExchange self,
     SseSerializer serializer,
@@ -5075,6 +5036,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalErrorKind(
+    CalErrorKind self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as CalErrorKindImpl).frbInternalSseEncode(move: null),
+      serializer,
+    );
+  }
+
+  @protected
+  void
   sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHExchange(
     DhExchange self,
     SseSerializer serializer,
@@ -5313,56 +5287,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_cal_error_kind(CalErrorKind self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    switch (self) {
-      case CalErrorKind_NotImplemented():
-        sse_encode_i_32(0, serializer);
-      case CalErrorKind_BadParameter(
-        description: final description,
-        internal: final internal,
-      ):
-        sse_encode_i_32(1, serializer);
-        sse_encode_String(description, serializer);
-        sse_encode_bool(internal, serializer);
-      case CalErrorKind_MissingKey(keyId: final keyId, keyType: final keyType):
-        sse_encode_i_32(2, serializer);
-        sse_encode_String(keyId, serializer);
-        sse_encode_key_type(keyType, serializer);
-      case CalErrorKind_MissingValue(
-        description: final description,
-        internal: final internal,
-      ):
-        sse_encode_i_32(3, serializer);
-        sse_encode_String(description, serializer);
-        sse_encode_bool(internal, serializer);
-      case CalErrorKind_FailedOperation(
-        description: final description,
-        internal: final internal,
-      ):
-        sse_encode_i_32(4, serializer);
-        sse_encode_String(description, serializer);
-        sse_encode_bool(internal, serializer);
-      case CalErrorKind_InitializationError(
-        description: final description,
-        internal: final internal,
-      ):
-        sse_encode_i_32(5, serializer);
-        sse_encode_String(description, serializer);
-        sse_encode_bool(internal, serializer);
-      case CalErrorKind_NonExportable():
-        sse_encode_i_32(6, serializer);
-      case CalErrorKind_UnsupportedAlgorithm(field0: final field0):
-        sse_encode_i_32(7, serializer);
-        sse_encode_String(field0, serializer);
-      case CalErrorKind_EphemeralKeyError():
-        sse_encode_i_32(8, serializer);
-      case CalErrorKind_Other():
-        sse_encode_i_32(9, serializer);
-    }
-  }
-
-  @protected
   void sse_encode_cipher(Cipher self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.index, serializer);
@@ -5419,12 +5343,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_crypto_hash(self.signingHash, serializer);
     sse_encode_bool(self.ephemeral, serializer);
     sse_encode_bool(self.nonExportable, serializer);
-  }
-
-  @protected
-  void sse_encode_key_type(KeyType self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_32(self.index, serializer);
   }
 
   @protected
@@ -5855,6 +5773,26 @@ class CalErrorImpl extends RustOpaque implements CalError {
 }
 
 @sealed
+class CalErrorKindImpl extends RustOpaque implements CalErrorKind {
+  // Not to be used by end users
+  CalErrorKindImpl.frbInternalDcoDecode(List<dynamic> wire)
+    : super.frbInternalDcoDecode(wire, _kStaticData);
+
+  // Not to be used by end users
+  CalErrorKindImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
+    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
+
+  static final _kStaticData = RustArcStaticData(
+    rustArcIncrementStrongCount:
+        RustLib.instance.api.rust_arc_increment_strong_count_CalErrorKind,
+    rustArcDecrementStrongCount:
+        RustLib.instance.api.rust_arc_decrement_strong_count_CalErrorKind,
+    rustArcDecrementStrongCountPtr:
+        RustLib.instance.api.rust_arc_decrement_strong_count_CalErrorKindPtr,
+  );
+}
+
+@sealed
 class DhExchangeImpl extends RustOpaque implements DhExchange {
   // Not to be used by end users
   DhExchangeImpl.frbInternalDcoDecode(List<dynamic> wire)
@@ -5873,6 +5811,7 @@ class DhExchangeImpl extends RustOpaque implements DhExchange {
         RustLib.instance.api.rust_arc_decrement_strong_count_DhExchangePtr,
   );
 
+  /// Derives client session keys and returns them as key handles.
   Future<(KeyHandle, KeyHandle)> deriveClientKeyHandles({
     required List<int> serverPk,
   }) => RustLib.instance.api.cryptoLayerCommonDhExchangeDeriveClientKeyHandles(
@@ -5880,6 +5819,7 @@ class DhExchangeImpl extends RustOpaque implements DhExchange {
     serverPk: serverPk,
   );
 
+  /// Derive client session keys (rx, tx) - client is the templator in your code.
   Future<(Uint8List, Uint8List)> deriveClientSessionKeys({
     required List<int> serverPk,
   }) => RustLib.instance.api.cryptoLayerCommonDhExchangeDeriveClientSessionKeys(
@@ -5887,6 +5827,7 @@ class DhExchangeImpl extends RustOpaque implements DhExchange {
     serverPk: serverPk,
   );
 
+  /// Derives server session keys and returns them as key handles.
   Future<(KeyHandle, KeyHandle)> deriveServerKeyHandles({
     required List<int> clientPk,
   }) => RustLib.instance.api.cryptoLayerCommonDhExchangeDeriveServerKeyHandles(
@@ -5894,6 +5835,7 @@ class DhExchangeImpl extends RustOpaque implements DhExchange {
     clientPk: clientPk,
   );
 
+  /// Derive server session keys (rx, tx) - server is the requestor in your code.
   Future<(Uint8List, Uint8List)> deriveServerSessionKeys({
     required List<int> clientPk,
   }) => RustLib.instance.api.cryptoLayerCommonDhExchangeDeriveServerSessionKeys(
@@ -5901,9 +5843,11 @@ class DhExchangeImpl extends RustOpaque implements DhExchange {
     clientPk: clientPk,
   );
 
+  /// Get the public key of the internal key pair to use for the other party.
   Future<Uint8List> getPublicKey() =>
       RustLib.instance.api.cryptoLayerCommonDhExchangeGetPublicKey(that: this);
 
+  /// Returns the id of the key pair, which can be used with `load_key_pair`.
   Future<String> id() =>
       RustLib.instance.api.cryptoLayerCommonDhExchangeId(that: this);
 }
@@ -5927,6 +5871,7 @@ class KeyHandleImpl extends RustOpaque implements KeyHandle {
         RustLib.instance.api.rust_arc_decrement_strong_count_KeyHandlePtr,
   );
 
+  /// Decrypts the given encrypted data using the cryptographic key.
   Future<Uint8List> decryptData({
     required List<int> encryptedData,
     required List<int> iv,
@@ -5936,14 +5881,25 @@ class KeyHandleImpl extends RustOpaque implements KeyHandle {
     iv: iv,
   );
 
+  /// Delete this key.
   Future<void> delete() =>
       RustLib.instance.api.cryptoLayerCommonKeyHandleDelete(that: this);
 
+  /// Derives an ephemeral key from this key as base with the same spec as the base key.
+  ///
+  /// A derived key is exportable if the base key (self) is exportable.
+  ///
+  /// This operation is deterministic, meaning the same nonce and key are always going to result in the same [KeyHandle].
   Future<KeyHandle> deriveKey({required List<int> nonce}) => RustLib
       .instance
       .api
       .cryptoLayerCommonKeyHandleDeriveKey(that: this, nonce: nonce);
 
+  /// Encrypt data.
+  ///
+  /// The iv is randomly generated.
+  ///
+  /// The resulting output is a pair of cipher text and generated iv: `(cipher_text, iv)`
   Future<(Uint8List, Uint8List)> encrypt({required List<int> data}) => RustLib
       .instance
       .api
@@ -5958,6 +5914,9 @@ class KeyHandleImpl extends RustOpaque implements KeyHandle {
     iv: iv,
   );
 
+  /// Encrypt data with the given iv.
+  ///
+  /// Some providers panic, if the iv is not the correct length.
   Future<Uint8List> encryptWithIv({
     required List<int> data,
     required List<int> iv,
@@ -5967,18 +5926,26 @@ class KeyHandleImpl extends RustOpaque implements KeyHandle {
     iv: iv,
   );
 
+  /// Returns the raw key as binary.
+  ///
+  /// Most hardware based providers will return [CalError]
+  /// with [CalErrorKind::NotImplemented](super::CalErrorKind::NotImplemented).
   Future<Uint8List> extractKey() =>
       RustLib.instance.api.cryptoLayerCommonKeyHandleExtractKey(that: this);
 
+  /// Calculates HMAC of the given data.
   Future<Uint8List> hmac({required List<int> data}) => RustLib.instance.api
       .cryptoLayerCommonKeyHandleHmac(that: this, data: data);
 
+  /// Returns the id of the key, which can be used with `load_key`.
   Future<String> id() =>
       RustLib.instance.api.cryptoLayerCommonKeyHandleId(that: this);
 
+  /// Returns the [KeySpec] the key was generated with.
   Future<KeySpec> spec() =>
       RustLib.instance.api.cryptoLayerCommonKeyHandleSpec(that: this);
 
+  /// Verifies data with the given signature.
   Future<bool> verifyHmac({required List<int> data, required List<int> hmac}) =>
       RustLib.instance.api.cryptoLayerCommonKeyHandleVerifyHmac(
         that: this,
@@ -6006,38 +5973,49 @@ class KeyPairHandleImpl extends RustOpaque implements KeyPairHandle {
         RustLib.instance.api.rust_arc_decrement_strong_count_KeyPairHandlePtr,
   );
 
+  /// Decrypts the given encrypted data using the cryptographic key.
   /// Abstraction of asymmetric key pair handles.
   Future<Uint8List> decryptData({required List<int> data}) => RustLib
       .instance
       .api
       .cryptoLayerCommonKeyPairHandleDecryptData(that: this, data: data);
 
+  /// Delete this key pair.
   /// Abstraction of asymmetric key pair handles.
   Future<void> delete() =>
       RustLib.instance.api.cryptoLayerCommonKeyPairHandleDelete(that: this);
 
+  /// Encrypts the given data using the cryptographic key.
   /// Abstraction of asymmetric key pair handles.
   Future<Uint8List> encryptData({required List<int> data}) => RustLib
       .instance
       .api
       .cryptoLayerCommonKeyPairHandleEncryptData(that: this, data: data);
 
+  /// Returns the raw private key as binary.
+  ///
+  /// Most hardware based providers will return [CalError]
+  /// with [CalErrorKind::NotImplemented](super::CalErrorKind::NotImplemented).
   /// Abstraction of asymmetric key pair handles.
   Future<Uint8List> extractKey() =>
       RustLib.instance.api.cryptoLayerCommonKeyPairHandleExtractKey(that: this);
 
+  /// Returns the raw public key as binary.
   /// Abstraction of asymmetric key pair handles.
   Future<Uint8List> getPublicKey() => RustLib.instance.api
       .cryptoLayerCommonKeyPairHandleGetPublicKey(that: this);
 
+  /// Returns the id of the key pair, which can be used with `load_key_pair`.
   /// Abstraction of asymmetric key pair handles.
   Future<String> id() =>
       RustLib.instance.api.cryptoLayerCommonKeyPairHandleId(that: this);
 
+  /// Signs the given data using the cryptographic key.
   /// Abstraction of asymmetric key pair handles.
   Future<Uint8List> signData({required List<int> data}) => RustLib.instance.api
       .cryptoLayerCommonKeyPairHandleSignData(that: this, data: data);
 
+  /// Returns the [KeyPairSpec] the key was generated with.
   /// Abstraction of asymmetric key pair handles.
   Future<KeyPairSpec> spec() =>
       RustLib.instance.api.cryptoLayerCommonKeyPairHandleSpec(that: this);
@@ -6046,6 +6024,7 @@ class KeyPairHandleImpl extends RustOpaque implements KeyPairHandle {
   Future<DhExchange> startDhExchange() => RustLib.instance.api
       .cryptoLayerCommonKeyPairHandleStartDhExchange(that: this);
 
+  /// Verifies the signature of the given data using the cryptographic key.
   /// Abstraction of asymmetric key pair handles.
   Future<bool> verifySignature({
     required List<int> data,
@@ -6076,9 +6055,11 @@ class ProviderImpl extends RustOpaque implements Provider {
         RustLib.instance.api.rust_arc_decrement_strong_count_ProviderPtr,
   );
 
+  /// Creates a new symmetric key.
   Future<KeyHandle> createKey({required KeySpec spec}) => RustLib.instance.api
       .cryptoLayerCommonProviderCreateKey(that: this, spec: spec);
 
+  /// Creates a new asymmetric key pair.
   Future<KeyPairHandle> createKeyPair({required KeyPairSpec spec}) => RustLib
       .instance
       .api
@@ -6097,6 +6078,7 @@ class ProviderImpl extends RustOpaque implements Provider {
     spec: spec,
   );
 
+  /// Derives a high-entropy key from a low-entropy password and a unique salt.
   Future<KeyHandle> deriveKeyFromPassword({
     required String password,
     required List<int> salt,
@@ -6121,15 +6103,19 @@ class ProviderImpl extends RustOpaque implements Provider {
     spec: spec,
   );
 
+  /// Returns all keys stored in this provider.
   Future<List<(String, Spec)>> getAllKeys() =>
       RustLib.instance.api.cryptoLayerCommonProviderGetAllKeys(that: this);
 
+  /// Returns the capabilities of this provider.
   Future<ProviderConfig?> getCapabilities() =>
       RustLib.instance.api.cryptoLayerCommonProviderGetCapabilities(that: this);
 
+  /// Generates random bytes.
   Future<Uint8List> getRandom({required BigInt len}) => RustLib.instance.api
       .cryptoLayerCommonProviderGetRandom(that: this, len: len);
 
+  /// Hashes the input using the specified hash algorithm.
   Future<Uint8List> hash({
     required List<int> input,
     required CryptoHash hash,
@@ -6139,6 +6125,7 @@ class ProviderImpl extends RustOpaque implements Provider {
     hash: hash,
   );
 
+  /// Imports a symmetric key from raw data.
   Future<KeyHandle> importKey({
     required KeySpec spec,
     required List<int> data,
@@ -6148,6 +6135,7 @@ class ProviderImpl extends RustOpaque implements Provider {
     data: data,
   );
 
+  /// Imports an asymmetric key pair from raw data.
   Future<KeyPairHandle> importKeyPair({
     required KeyPairSpec spec,
     required List<int> publicKey,
@@ -6159,6 +6147,7 @@ class ProviderImpl extends RustOpaque implements Provider {
     privateKey: privateKey,
   );
 
+  /// Imports a public key only.
   Future<KeyPairHandle> importPublicKey({
     required KeyPairSpec spec,
     required List<int> publicKey,
@@ -6168,17 +6157,21 @@ class ProviderImpl extends RustOpaque implements Provider {
     publicKey: publicKey,
   );
 
+  /// Loads an existing symmetric key identified by `key_id`.
   Future<KeyHandle> loadKey({required String id}) =>
       RustLib.instance.api.cryptoLayerCommonProviderLoadKey(that: this, id: id);
 
+  /// Loads an existing asymmetric keypair identified by `key_id`.
   Future<KeyPairHandle> loadKeyPair({required String id}) => RustLib
       .instance
       .api
       .cryptoLayerCommonProviderLoadKeyPair(that: this, id: id);
 
+  /// Returns the name of this provider.
   Future<String> providerName() =>
       RustLib.instance.api.cryptoLayerCommonProviderProviderName(that: this);
 
+  /// Generates a key pair suited for a Diffie-Hellman Key Exchange.
   Future<DhExchange> startEphemeralDhExchange({required KeyPairSpec spec}) =>
       RustLib.instance.api.cryptoLayerCommonProviderStartEphemeralDhExchange(
         that: this,
