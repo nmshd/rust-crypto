@@ -155,6 +155,32 @@ task build-documentation
 Contributions to the Crypto Layer are welcome!
 If you find any issues or have suggestions for improvements, please open an issue or submit a pull request on the project's GitHub repository.
 
+## Development
+
+### Taskfile
+
+Many of the necessary workflows are automated with [task](https://taskfile.dev/).
+See the [Taskfile](./Taskfile.yml).
+
+Useful commands are:
+```sh
+# Test crypto layer with the software provider:
+task testrs
+
+# Install TS and dart dependencies:
+task pre
+
+# Generate ts types.
+task gents tests
+
+# Generate dart bindings
+task gendt testdt
+
+# Generate docs
+task bdoc
+```
+
+
 
 ## License
 
