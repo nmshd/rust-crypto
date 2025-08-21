@@ -88,33 +88,48 @@ pub enum Spec {
 }
 
 /// Struct used to configure keys.
+///
+/// It is important to note, that the configuration of a key can only happen at the point of its creation.
+/// A key cannot be reconfigured.
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, Zeroize, PartialEq)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 // flutter_rust_bridge:non_opaque
 pub struct KeySpec {
     /// Cipher used for symmetric encryption.
     pub cipher: Cipher,
+
     /// Hash function used with HMAC.
     pub signing_hash: CryptoHash,
-    /// If set to `true`, the key is going to be deleted when the handle is dropped.
+
+    /// If set to `true`, metadata of the key is not stored and the key is going to be deleted when the handle is dropped.
     pub ephemeral: bool,
+
     /// If set to `true`, the key cannot be exported.
+    ///
+    /// Some providers do not allow exporting keys at all, even if set to `false`.
     pub non_exportable: bool,
 }
 
 /// Struct used to configure key pairs.
+///
+/// It is important to note, that the configuration of a key can only happen at the point of its creation.
+/// A key cannot be reconfigured.
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, PartialEq)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 // flutter_rust_bridge:non_opaque
 pub struct KeyPairSpec {
     /// Asymmetric algorithm to be used.
     pub asym_spec: AsymmetricKeySpec,
+
     /// Cipher used for hybrid encryption. If set to None, no hybrid encryption will be used.
     pub cipher: Option<Cipher>,
+
     /// Hash function used for signing and encrypting.
     pub signing_hash: CryptoHash,
+
     /// If set to true, the key pair will be discarded after the handle is dropped.
     pub ephemeral: bool,
+
     /// If set to true, the key can't be exported (also software keys)
     pub non_exportable: bool,
 }
@@ -219,22 +234,28 @@ pub struct ProviderConfig {
     pub supported_asym_spec: HashSet<AsymmetricKeySpec>,
 }
 
-/// Configuration needed for using or initializing providers.
+/// Key metadata store configuration
 ///
-/// Either
-/// * [AdditionalConfig::KVStoreConfig]
-/// * [AdditionalConfig::FileStoreConfig]
+/// Due to an accident, this configuration became a vector.
 ///
-/// and either
-/// * [AdditionalConfig::StorageConfigHMAC]
-/// * [AdditionalConfig::StorageConfigDSA]
+/// If neither [`AdditionalConfig::KVStoreConfig`] nor [`AdditionalConfig::FileStoreConfig`] are supplied
+/// to [`create_provider()`] or to [`create_provider_from_name()`],
+/// a provider will be created that is only capable of creating ephemeral keys!
 ///
-/// need to be supplied.
+/// To protect key metadata against unauthorized change, it is recommended to make use of
+/// [`AdditionalConfig::StorageConfigHMAC`] or [`AdditionalConfig::StorageConfigDSA`].
+/// (This may only apply if you use multiple providers and one is of [`SecurityLevel::Hardware`] or above.)
+///
+/// If the fallback software provider is used with [AdditionalConfig::StorageConfigSymmetricEncryption]
+/// or [AdditionalConfig::StorageConfigAsymmetricEncryption], the stored secret keys are secured by
+/// the provided key, which in turn makes such construct a hybrid provider (as the keys at rest have hardware security protection).
+///
 ///
 /// ## Example
 ///
 /// ```rust
-/// use crypto_layer::prelude::*;
+/// # use crypto_layer::prelude::*;
+///
 /// let implementation_config = ProviderImplConfig {
 ///       additional_config: vec![
 ///          AdditionalConfig::FileStoreConfig {
@@ -243,6 +264,10 @@ pub struct ProviderConfig {
 ///      ],
 /// };
 /// ```
+///
+/// [`create_provider()`]: crate::prelude::create_provider
+/// [`create_provider_from_name()`]: crate::prelude::create_provider_from_name
+///
 // flutter_rust_bridge:non_opaque
 #[derive(Clone)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
@@ -250,7 +275,7 @@ pub struct ProviderImplConfig {
     pub additional_config: Vec<AdditionalConfig>,
 }
 
-/// Configuration needed for using or initializing providers.
+/// Key metadata store configuration enumeration.
 // flutter_rust_bridge:non_opaque
 #[derive(Clone, EnumDiscriminants)]
 #[strum_discriminants(derive(EnumString, IntoStaticStr))]
@@ -274,6 +299,7 @@ pub enum AdditionalConfig {
         delete_fn: DeleteFn,
         all_keys_fn: AllKeysFn,
     },
+
     /// Configuration for the usage of the metadata file database.
     ///
     /// Mutually exclusive with [AdditionalConfig::KVStoreConfig].
@@ -281,20 +307,24 @@ pub enum AdditionalConfig {
         /// Path to a directory where the database holding key metadata will be saved.
         db_dir: String,
     },
+
     /// Enables integrity verification of key metadata.
     ///
     /// Mutually exclusive with [AdditionalConfig::StorageConfigDSA].
     StorageConfigHMAC(KeyHandle),
+
     /// Enables integrity verification of key metadata.
     ///
     /// Mutually exclusive with [AdditionalConfig::StorageConfigHMAC].
     StorageConfigDSA(KeyPairHandle),
+
     /// Enables encryption of sensitive key metadata.
     ///
     /// In case of the software provider, this enables encryption of secret keys.
     ///
     /// Mutually exclusive with [AdditionalConfig::StorageConfigAsymmetricEncryption].
     StorageConfigSymmetricEncryption(KeyHandle),
+
     /// Enables encryption of sensitive key metadata.
     ///
     /// In case of the software provider, this enables encryption of secret keys.
@@ -311,6 +341,7 @@ impl std::fmt::Debug for ProviderImplConfig {
 
 impl ProviderImplConfig {
     /// Creates a new `ProviderImplConfig` instance.
+    #[doc(hidden)]
     pub fn new(
         get_fn: GetFn,
         store_fn: StoreFn,
