@@ -74,8 +74,10 @@ pub(crate) trait KeyHandleImpl: Send + Sync {
     /// A `Result` containing the decrypted data as a `Vec<u8>` on success, or a `CalError` on failure.
     fn decrypt_data(&self, encrypted_data: &[u8], iv: &[u8]) -> Result<Vec<u8>, CalError>;
 
+    /// Calculates HMAC of the given data.
     fn hmac(&self, data: &[u8]) -> Result<Vec<u8>, CalError>;
 
+    /// Verifies data with the given signature.
     fn verify_hmac(&self, data: &[u8], hmac: &[u8]) -> Result<bool, CalError>;
 
     /// Derives an ephemeral key from this key as base with the same spec as the base key.
