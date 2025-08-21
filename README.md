@@ -145,6 +145,11 @@ $env:RUSTDOCFLAGS="--cfg docsrs"
 cargo +nightly doc  --open
 ```
 
+Or if you have [task](https://taskfile.dev/) installed, run:
+```sh
+task build-documentation
+```
+
 ## Contributing
 
 Contributions to the Crypto Layer are welcome!

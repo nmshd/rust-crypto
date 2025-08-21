@@ -18,11 +18,11 @@ tasks:
       - npm run prepare
 
   prerequisites-dt:
-      aliases: [predt]
-      desc: Installs dart dependencies.
-      dir: ./cal_flutter_plugin/
-      cmds:
-        - dart pub get
+    aliases: [predt]
+    desc: Installs dart dependencies.
+    dir: ./cal_flutter_plugin/
+    cmds:
+      - dart pub get
 
   generate:
     desc: Generates ts types and dart bindings.
@@ -44,7 +44,7 @@ tasks:
     dir: ./cal_flutter_plugin/
     cmds:
       - flutter_rust_bridge_codegen generate --rust-preamble "use std::future::Future; use std::pin::Pin; use crypto_layer::common::config::DynFuture;"
-     # - flutter pub run build_runner build
+      # - flutter pub run build_runner build
 
   test:
     desc: Execute non interactive tests.
@@ -87,3 +87,11 @@ tasks:
     dir: ./flutter_app/
     cmds:
       - flutter test integration_test/cal_test.dart
+
+  build-documentation:
+    desc: Build the documentation of crypto-layer and open it in the browser
+    aliases: [bdoc]
+    env:
+      RUSTDOCFLAGS: --cfg docsrs
+    cmds:
+      - cargo +nightly doc  --open
