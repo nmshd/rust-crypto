@@ -8,13 +8,12 @@ use crate::storage::{StorageManagerError, StorageManagerInitializationError};
 
 // Feel free to add more items to error.
 
-/// Error wrapping native errors.
+/// Crypto-layer error representation.
 ///
-/// The native libraries used large lists of errors that might occur.
-/// This struct exists to dumb down said errors.
-/// The provider implementation should map errors from native libraries to this enum.
-/// Most if not all errors should have a source for backtraces.
-/// If other fields are useful for understanding the error, they should also exist.
+/// Every provider is built for a different native backend or purpose in mind.
+/// Moreover crypto-layer must be ffi compatible.
+/// For these reasons this error is not an enum, but rather a struct containing a non nested enum
+/// and a source, that does not need to be parsed by ffi.
 #[derive(thiserror::Error, Debug)]
 #[error("{error_kind}: {source}")]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
@@ -26,8 +25,8 @@ pub struct CalError {
     source: anyhow::Error,
 }
 
-/// Enumeration differentiating between the causes and the severity of the error.
-/// flutter_rust_bridge:non_opaque
+/// Enumeration of classifications of error sources.
+// flutter_rust_bridge:non_opaque
 #[derive(thiserror::Error, Debug, Clone)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
 #[repr(C)]

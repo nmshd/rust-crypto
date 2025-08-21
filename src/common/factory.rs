@@ -1,3 +1,18 @@
+//!
+//! There are essentially two ways of getting your first provider:
+//! 1. Create a [`ProviderConfig`] that represents your needs
+//!     and then use [`create_provider`] to get assigned a provider automatically.
+//! 2. Use [`get_all_providers`] and [`get_provider_capabilities`]
+//!     to find a suitable provider and use [`create_provider_from_name`] to create said provider.
+//!
+//! As keys are bound to their respective provider, it is advisable
+//! to store the used providers and recreate them with [`create_provider_from_name`].
+//!
+//! [`create_provider`]: crate::common::factory::create_provider
+//! [`get_all_providers`]: crate::common::factory::get_all_providers
+//! [`get_provider_capabilities`]: crate::common::factory::get_provider_capabilities
+//! [`create_provider_from_name`]: crate::common::factory::create_provider_from_name
+
 use std::sync::LazyLock;
 
 use tracing::{trace, warn};

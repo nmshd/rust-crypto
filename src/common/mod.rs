@@ -9,18 +9,18 @@ use traits::key_handle::{
 };
 use traits::module_provider::{ProviderImpl, ProviderImplEnum};
 
-/// Structs and enumerations used for configuring providers, key and key pairs.
+/// Configuration for providers, key and key pairs.
 pub mod config;
-/// Structs and enumerations representing cryptographic algorithms or standards.
+/// Cryptographic algorithms or standards.
 pub mod crypto;
-/// Struct for error handling.
+/// Error representations.
 pub mod error;
 /// Functions used for creating providers.
 pub mod factory;
 pub(crate) mod traits;
 
 // Do not delete this struct, it is a workaround for a bug in the code generation
-/// ¯\_(ツ)_/¯
+#[doc(hidden)]
 pub struct T {}
 
 macro_rules! delegate_enum {

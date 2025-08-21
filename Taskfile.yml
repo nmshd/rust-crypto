@@ -89,9 +89,9 @@ tasks:
       - flutter test integration_test/cal_test.dart
 
   build-documentation:
-    desc: Build the documentation of crypto-layer and open it in the browser
+    desc: Build the documentation of crypto-layer
     aliases: [bdoc]
     env:
       RUSTDOCFLAGS: --cfg docsrs
     cmds:
-      - cargo +nightly doc  --open
+      - cargo +nightly doc
