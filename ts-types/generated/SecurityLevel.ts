@@ -5,7 +5,7 @@
  *
  * * [SecurityLevel::Hardware]: Provider is hardware backed (tpm, other security chips, StrongBox KeyStore).
  * * [SecurityLevel::Software]: Provider uses the systems software keystore.
- * * [SecurityLevel::Network]: Provider uses a network key store (Hashicorp).
+ * * [SecurityLevel::Network]: Provider uses a network key store (HashiCorp).
  * * [SecurityLevel::Unsafe]: Provider uses software fallback.
  */
 export type SecurityLevel = "Hardware" | "Software" | "Network" | "Unsafe";

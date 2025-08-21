@@ -3,8 +3,7 @@ import type { KeyHandle } from "./KeyHandle";
 import type { KeyPairHandle } from "./KeyPairHandle";
 
 /**
- * Configuration needed for using or initializing providers.
- * flutter_rust_bridge:non_opaque
+ * Key metadata store configuration enumeration.
  */
 export type AdditionalConfig =
   | {

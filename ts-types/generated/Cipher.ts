@@ -13,7 +13,6 @@
  *
  * Marked with `#[repr(C)]` to ensure it has the same memory layout as a C enum,
  * facilitating ABI compatibility and interfacing with C code.
- * flutter_rust_bridge:non_opaque
  */
 export type Cipher =
   | "AesGcm128"

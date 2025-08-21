@@ -12,7 +12,6 @@
  *
  * This enum uses `#[repr(C)]` to ensure that it has the same memory layout as a C enum,
  * facilitating interfacing with C code or when ABI compatibility is required.
- * flutter_rust_bridge:non_opaque
  */
 export type AsymmetricKeySpec =
   | "RSA1024"

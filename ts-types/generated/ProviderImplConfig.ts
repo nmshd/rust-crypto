@@ -2,23 +2,27 @@
 import type { AdditionalConfig } from "./AdditionalConfig";
 
 /**
- * Configuration needed for using or initializing providers.
+ * Key metadata store configuration
  *
- * Either
- * * [AdditionalConfig::KVStoreConfig]
- * * [AdditionalConfig::FileStoreConfig]
+ * Due to an accident, this configuration became a vector.
  *
- * and either
- * * [AdditionalConfig::StorageConfigHMAC]
- * * [AdditionalConfig::StorageConfigDSA]
- * * [AdditionalConfig::StorageConfigPass]
+ * If neither [`AdditionalConfig::KVStoreConfig`] nor [`AdditionalConfig::FileStoreConfig`] are supplied
+ * to [`create_provider()`] or to [`create_provider_from_name()`],
+ * a provider will be created that is only capable of creating ephemeral keys!
  *
- * need to be supplied.
+ * To protect key metadata against unauthorized change, it is recommended to make use of
+ * [`AdditionalConfig::StorageConfigHMAC`] or [`AdditionalConfig::StorageConfigDSA`].
+ * (This may only apply if you use multiple providers and one is of [`SecurityLevel::Hardware`] or above.)
+ *
+ * If the fallback software provider is used with [AdditionalConfig::StorageConfigSymmetricEncryption]
+ * or [AdditionalConfig::StorageConfigAsymmetricEncryption], the stored secret keys are secured by
+ * the provided key, which in turn makes such construct a hybrid provider (as the keys at rest have hardware security protection).
  *
  * ## Example
  *
  * ```rust
- * use crypto_layer::prelude::*;
+ * # use crypto_layer::prelude::*;
+ *
  * let implementation_config = ProviderImplConfig {
  *       additional_config: vec![
  *          AdditionalConfig::FileStoreConfig {
@@ -27,6 +31,8 @@ import type { AdditionalConfig } from "./AdditionalConfig";
  *      ],
  * };
  * ```
- * flutter_rust_bridge:non_opaque
+ *
+ * [`create_provider()`]: crate::prelude::create_provider
+ * [`create_provider_from_name()`]: crate::prelude::create_provider_from_name
  */
 export type ProviderImplConfig = { additional_config: Array<AdditionalConfig> };
