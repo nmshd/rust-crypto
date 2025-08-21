@@ -17,26 +17,7 @@ Import the types
 import { type EccCurve } from "crypto-layer-ts-types";
 ```
 
-## Build Package
+## Development Documentation
 
-1. You need to have rust installed.
-2. You need to have npm or similar installed.
-
-### Generate the Types
-
-```pwsh
-.\Generate-Types.ps1
-```
-
-Or if you have [task](https://taskfile.dev/) installed, run:
-```sh
-task gents testts
-```
-
-### Build the Package
-
-```
-npm i
-npm run build
-```
+See [`DEVELOPMENT.md`](./DEVELOPMENT.md).
 
