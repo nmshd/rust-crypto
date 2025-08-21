@@ -15,38 +15,56 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DHExchange>>
 abstract class DhExchange implements RustOpaqueInterface {
+  /// Derives client session keys and returns them as key handles.
   Future<(KeyHandle, KeyHandle)> deriveClientKeyHandles({
     required List<int> serverPk,
   });
 
+  /// Derive client session keys (rx, tx) - client is the templator in your code.
   Future<(Uint8List, Uint8List)> deriveClientSessionKeys({
     required List<int> serverPk,
   });
 
+  /// Derives server session keys and returns them as key handles.
   Future<(KeyHandle, KeyHandle)> deriveServerKeyHandles({
     required List<int> clientPk,
   });
 
+  /// Derive server session keys (rx, tx) - server is the requestor in your code.
   Future<(Uint8List, Uint8List)> deriveServerSessionKeys({
     required List<int> clientPk,
   });
 
+  /// Get the public key of the internal key pair to use for the other party.
   Future<Uint8List> getPublicKey();
 
+  /// Returns the id of the key pair, which can be used with `load_key_pair`.
   Future<String> id();
 }
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<KeyHandle>>
 abstract class KeyHandle implements RustOpaqueInterface {
+  /// Decrypts the given encrypted data using the cryptographic key.
   Future<Uint8List> decryptData({
     required List<int> encryptedData,
     required List<int> iv,
   });
 
+  /// Delete this key.
   Future<void> delete();
 
+  /// Derives an ephemeral key from this key as base with the same spec as the base key.
+  ///
+  /// A derived key is exportable if the base key (self) is exportable.
+  ///
+  /// This operation is deterministic, meaning the same nonce and key are always going to result in the same [KeyHandle].
   Future<KeyHandle> deriveKey({required List<int> nonce});
 
+  /// Encrypt data.
+  ///
+  /// The iv is randomly generated.
+  ///
+  /// The resulting output is a pair of cipher text and generated iv: `(cipher_text, iv)`
   Future<(Uint8List, Uint8List)> encrypt({required List<int> data});
 
   Future<(Uint8List, Uint8List)> encryptData({
@@ -54,51 +72,74 @@ abstract class KeyHandle implements RustOpaqueInterface {
     required List<int> iv,
   });
 
+  /// Encrypt data with the given iv.
+  ///
+  /// Some providers panic, if the iv is not the correct length.
   Future<Uint8List> encryptWithIv({
     required List<int> data,
     required List<int> iv,
   });
 
+  /// Returns the raw key as binary.
+  ///
+  /// Most hardware based providers will return [CalError]
+  /// with [CalErrorKind::NotImplemented](super::CalErrorKind::NotImplemented).
   Future<Uint8List> extractKey();
 
+  /// Calculates HMAC of the given data.
   Future<Uint8List> hmac({required List<int> data});
 
+  /// Returns the id of the key, which can be used with `load_key`.
   Future<String> id();
 
+  /// Returns the [KeySpec] the key was generated with.
   Future<KeySpec> spec();
 
+  /// Verifies data with the given signature.
   Future<bool> verifyHmac({required List<int> data, required List<int> hmac});
 }
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<KeyPairHandle>>
 abstract class KeyPairHandle implements RustOpaqueInterface {
+  /// Decrypts the given encrypted data using the cryptographic key.
   /// Abstraction of asymmetric key pair handles.
   Future<Uint8List> decryptData({required List<int> data});
 
+  /// Delete this key pair.
   /// Abstraction of asymmetric key pair handles.
   Future<void> delete();
 
+  /// Encrypts the given data using the cryptographic key.
   /// Abstraction of asymmetric key pair handles.
   Future<Uint8List> encryptData({required List<int> data});
 
+  /// Returns the raw private key as binary.
+  ///
+  /// Most hardware based providers will return [CalError]
+  /// with [CalErrorKind::NotImplemented](super::CalErrorKind::NotImplemented).
   /// Abstraction of asymmetric key pair handles.
   Future<Uint8List> extractKey();
 
+  /// Returns the raw public key as binary.
   /// Abstraction of asymmetric key pair handles.
   Future<Uint8List> getPublicKey();
 
+  /// Returns the id of the key pair, which can be used with `load_key_pair`.
   /// Abstraction of asymmetric key pair handles.
   Future<String> id();
 
+  /// Signs the given data using the cryptographic key.
   /// Abstraction of asymmetric key pair handles.
   Future<Uint8List> signData({required List<int> data});
 
+  /// Returns the [KeyPairSpec] the key was generated with.
   /// Abstraction of asymmetric key pair handles.
   Future<KeyPairSpec> spec();
 
   /// Abstraction of asymmetric key pair handles.
   Future<DhExchange> startDhExchange();
 
+  /// Verifies the signature of the given data using the cryptographic key.
   /// Abstraction of asymmetric key pair handles.
   Future<bool> verifySignature({
     required List<int> data,
@@ -108,8 +149,10 @@ abstract class KeyPairHandle implements RustOpaqueInterface {
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Provider>>
 abstract class Provider implements RustOpaqueInterface {
+  /// Creates a new symmetric key.
   Future<KeyHandle> createKey({required KeySpec spec});
 
+  /// Creates a new asymmetric key pair.
   Future<KeyPairHandle> createKeyPair({required KeyPairSpec spec});
 
   Future<KeyHandle> deriveKeyFromBase({
@@ -119,6 +162,7 @@ abstract class Provider implements RustOpaqueInterface {
     required KeySpec spec,
   });
 
+  /// Derives a high-entropy key from a low-entropy password and a unique salt.
   Future<KeyHandle> deriveKeyFromPassword({
     required String password,
     required List<int> salt,
@@ -132,37 +176,47 @@ abstract class Provider implements RustOpaqueInterface {
     required KeyPairSpec spec,
   });
 
+  /// Returns all keys stored in this provider.
   Future<List<(String, Spec)>> getAllKeys();
 
+  /// Returns the capabilities of this provider.
   Future<ProviderConfig?> getCapabilities();
 
+  /// Generates random bytes.
   Future<Uint8List> getRandom({required BigInt len});
 
+  /// Hashes the input using the specified hash algorithm.
   Future<Uint8List> hash({required List<int> input, required CryptoHash hash});
 
+  /// Imports a symmetric key from raw data.
   Future<KeyHandle> importKey({required KeySpec spec, required List<int> data});
 
+  /// Imports an asymmetric key pair from raw data.
   Future<KeyPairHandle> importKeyPair({
     required KeyPairSpec spec,
     required List<int> publicKey,
     required List<int> privateKey,
   });
 
+  /// Imports a public key only.
   Future<KeyPairHandle> importPublicKey({
     required KeyPairSpec spec,
     required List<int> publicKey,
   });
 
+  /// Loads an existing symmetric key identified by `key_id`.
   Future<KeyHandle> loadKey({required String id});
 
+  /// Loads an existing asymmetric keypair identified by `key_id`.
   Future<KeyPairHandle> loadKeyPair({required String id});
 
+  /// Returns the name of this provider.
   Future<String> providerName();
 
+  /// Generates a key pair suited for a Diffie-Hellman Key Exchange.
   Future<DhExchange> startEphemeralDhExchange({required KeyPairSpec spec});
 }
 
-/// ¯\_(ツ)_/¯
 class T {
   const T();
 

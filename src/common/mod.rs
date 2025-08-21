@@ -2,98 +2,25 @@ use crate::common::traits::key_handle::DHKeyExchangeImpl;
 use crate::prelude::{CryptoHash, KDF};
 use config::{KeyPairSpec, KeySpec, ProviderConfig, Spec};
 use error::CalError;
-use tracing::error;
 use traits::key_handle::DHKeyExchangeImplEnum;
 use traits::key_handle::{
     KeyHandleImpl, KeyHandleImplEnum, KeyPairHandleImpl, KeyPairHandleImplEnum,
 };
 use traits::module_provider::{ProviderImpl, ProviderImplEnum};
 
-/// Structs and enumerations used for configuring providers, key and key pairs.
+/// Configuration for providers, key and key pairs.
 pub mod config;
-/// Structs and enumerations representing cryptographic algorithms or standards.
+/// Cryptographic algorithms or standards.
 pub mod crypto;
-/// Struct for error handling.
+/// Error representations.
 pub mod error;
 /// Functions used for creating providers.
 pub mod factory;
 pub(crate) mod traits;
 
 // Do not delete this struct, it is a workaround for a bug in the code generation
-/// ¯\_(ツ)_/¯
+#[doc(hidden)]
 pub struct T {}
-
-macro_rules! delegate_enum {
-    ($(pub fn $method:ident(self $(,$arg:ident: $type:ty)* $(,)?) $(-> $ret:ty)?;)+) => {
-        $(
-            pub fn $method(self $(,$arg: $type)*) $(-> $ret)? {
-                match self.implementation.$method($($arg),*) {
-                    Ok(v) => Ok(v),
-                    Err(e) => {
-                        error!("Error in {}: {}", stringify!($method), e);
-                        Err(e)
-                    }
-                }
-            }
-        )+
-    };
-    ($(pub fn $method:ident(&self $(,$arg:ident: $type:ty)* $(,)?) $(-> $ret:ty)?;)+) => {
-        $(
-            pub fn $method(&self $(,$arg: $type)*) $(-> $ret)? {
-                match self.implementation.$method($($arg),*) {
-                    Ok(v) => Ok(v),
-                    Err(e) => {
-                        error!("Error in {}: {}", stringify!($method), e);
-                        Err(e)
-                    }
-                }
-            }
-        )+
-    };
-    ($(pub fn $method:ident(&mut self $(,$arg:ident: $type:ty)* $(,)?) $(-> $ret:ty)?;)+) => {
-        $(
-            pub fn $method(&mut self $(,$arg: $type)*) $(-> $ret)? {
-                match self.implementation.$method($($arg),*) {
-                    Ok(v) => Ok(v),
-                    Err(e) => {
-                        error!("Error in {}: {}", stringify!($method), e);
-                        Err(e)
-                    }
-                }
-            }
-        )+
-    };
-    ($(pub fn $method:ident(self $(,$arg:ident: $type:ty)* $(,)?) $(-> $ret:ty)?;)+) => {
-        $(
-            pub fn $method(self $(,$arg: $type)*) $(-> $ret)? {
-                match self.implementation.$method($($arg),*) {
-                    Ok(v) => Ok(v),
-                    Err(e) => {
-                        error!("Error in {}: {}", stringify!($method), e);
-                        Err(e)
-                    }
-                }
-            }
-        )+
-    };
-}
-
-macro_rules! delegate_enum_bare {
-    ($(pub fn $method:ident(&self $(,$arg:ident: $type:ty)* $(,)?) $(-> $ret:ty)?;)+) => {
-        $(
-            #[must_use] pub fn $method(&self $(,$arg: $type)*) $(-> $ret)? {
-                self.implementation.$method($($arg),*)
-            }
-        )+
-    };
-    ($(pub fn $method:ident(&mut self $(,$arg:ident: $type:ty)* $(,)?) $(-> $ret:ty)?;)+) => {
-        $(
-            pub fn $method(&mut self $(,$arg: $type)*) $(-> $ret)? {
-                self.implementation.$method($($arg),*)
-            }
-        )+
-    };
-}
 
 /// Abstraction of cryptographic providers.
 ///
@@ -105,52 +32,74 @@ pub struct Provider {
 }
 
 impl Provider {
-    delegate_enum! {
-        pub fn create_key(&mut self, spec: KeySpec) -> Result<KeyHandle, CalError>;
+    /// Creates a new symmetric key.
+    pub fn create_key(&mut self, spec: KeySpec) -> Result<KeyHandle, CalError> {
+        self.implementation
+            .create_key(spec)
+            .inspect_err(|error| tracing::error!(error = %error, "Failed to create key"))
     }
 
-    delegate_enum! {
-        pub fn load_key(&mut self, id: String) -> Result<KeyHandle, CalError>;
+    /// Loads an existing symmetric key identified by `key_id`.
+    pub fn load_key(&mut self, id: String) -> Result<KeyHandle, CalError> {
+        self.implementation
+            .load_key(id)
+            .inspect_err(|error| tracing::error!(error = %error, "Failed to load key"))
     }
 
-    delegate_enum! {
-        pub fn import_key(
-            &mut self,
-            spec: KeySpec,
-            data: &[u8],
-        ) -> Result<KeyHandle, CalError>;
+    /// Imports a symmetric key from raw data.
+    pub fn import_key(&mut self, spec: KeySpec, data: &[u8]) -> Result<KeyHandle, CalError> {
+        self.implementation
+            .import_key(spec, data)
+            .inspect_err(|error| tracing::error!(error = %error, "Failed to import key"))
     }
 
-    delegate_enum! {
-        pub fn create_key_pair(&mut self, spec: KeyPairSpec) -> Result<KeyPairHandle, CalError>;
+    /// Creates a new asymmetric key pair.
+    pub fn create_key_pair(&mut self, spec: KeyPairSpec) -> Result<KeyPairHandle, CalError> {
+        self.implementation
+            .create_key_pair(spec)
+            .inspect_err(|error| tracing::error!(error = %error, "Failed to create key pair"))
     }
 
-    delegate_enum! {
-        pub fn load_key_pair(&mut self, id: String) -> Result<KeyPairHandle, CalError>;
+    /// Loads an existing asymmetric keypair identified by `key_id`.
+    pub fn load_key_pair(&mut self, id: String) -> Result<KeyPairHandle, CalError> {
+        self.implementation
+            .load_key_pair(id)
+            .inspect_err(|error| tracing::error!(error = %error, "Failed to load key pair"))
     }
 
-    delegate_enum! {
-        pub fn import_key_pair(
-            &mut self,
-            spec: KeyPairSpec,
-            public_key: &[u8],
-            private_key: &[u8],
-        ) -> Result<KeyPairHandle, CalError>;
+    /// Imports an asymmetric key pair from raw data.
+    pub fn import_key_pair(
+        &mut self,
+        spec: KeyPairSpec,
+        public_key: &[u8],
+        private_key: &[u8],
+    ) -> Result<KeyPairHandle, CalError> {
+        self.implementation
+            .import_key_pair(spec, public_key, private_key)
+            .inspect_err(|error| tracing::error!(error = %error, "Failed to import key pair"))
     }
 
-    delegate_enum! {
-        pub fn import_public_key(
-            &mut self,
-            spec: KeyPairSpec,
-            public_key: &[u8],
-        ) -> Result<KeyPairHandle, CalError>;
+    /// Imports a public key only.
+    pub fn import_public_key(
+        &mut self,
+        spec: KeyPairSpec,
+        public_key: &[u8],
+    ) -> Result<KeyPairHandle, CalError> {
+        self.implementation
+            .import_public_key(spec, public_key)
+            .inspect_err(|error| tracing::error!(error = %error, "Failed to import public key"))
     }
 
-    delegate_enum! {
-        pub fn start_ephemeral_dh_exchange(
-            &mut self,
-            spec: KeyPairSpec,
-        ) -> Result<DHExchange, CalError>;
+    /// Generates a key pair suited for a Diffie-Hellman Key Exchange.
+    pub fn start_ephemeral_dh_exchange(
+        &mut self,
+        spec: KeyPairSpec,
+    ) -> Result<DHExchange, CalError> {
+        self.implementation
+            .start_ephemeral_dh_exchange(spec)
+            .inspect_err(
+                |error| tracing::error!(error = %error, "Failed to start ephemeral DH exchange"),
+            )
     }
 
     #[deprecated(note = "Non ephemeral dh exchanges are possibly insecure.")]
@@ -165,26 +114,38 @@ impl Provider {
             .dh_exchange_from_keys(public_key, private_key, spec)
     }
 
-    delegate_enum! {
-        pub fn get_all_keys(&self) -> Result<Vec<(String, Spec)>, CalError>;
+    /// Returns all keys stored in this provider.
+    pub fn get_all_keys(&self) -> Result<Vec<(String, Spec)>, CalError> {
+        self.implementation
+            .get_all_keys()
+            .inspect_err(|error| tracing::error!(error = %error, "Failed to get all keys"))
     }
 
-    delegate_enum_bare! {
-        pub fn provider_name(&self) -> String;
+    /// Returns the name of this provider.
+    #[must_use]
+    pub fn provider_name(&self) -> String {
+        self.implementation.provider_name()
     }
 
-    delegate_enum_bare! {
-        pub fn get_capabilities(&self) -> Option<ProviderConfig>;
+    /// Returns the capabilities of this provider.
+    #[must_use]
+    pub fn get_capabilities(&self) -> Option<ProviderConfig> {
+        self.implementation.get_capabilities()
     }
 
-    delegate_enum! {
-        pub fn derive_key_from_password(
-            &self,
-            password: &str,
-            salt: &[u8],
-            algorithm: KeySpec,
-            kdf: KDF,
-        ) -> Result<KeyHandle, CalError>;
+    /// Derives a high-entropy key from a low-entropy password and a unique salt.
+    pub fn derive_key_from_password(
+        &self,
+        password: &str,
+        salt: &[u8],
+        algorithm: KeySpec,
+        kdf: KDF,
+    ) -> Result<KeyHandle, CalError> {
+        self.implementation
+            .derive_key_from_password(password, salt, algorithm, kdf)
+            .inspect_err(
+                |error| tracing::error!(error = %error, "Failed to derive key from password"),
+            )
     }
 
     #[deprecated(
@@ -201,12 +162,17 @@ impl Provider {
             .derive_key_from_base(base_key, key_id, context, spec)
     }
 
-    delegate_enum_bare! {
-        pub fn get_random(&self, len: usize) -> Vec<u8>;
+    /// Generates random bytes.
+    #[must_use]
+    pub fn get_random(&self, len: usize) -> Vec<u8> {
+        self.implementation.get_random(len)
     }
 
-    delegate_enum! {
-        pub fn hash(&self, input: &[u8], hash: CryptoHash) -> Result<Vec<u8>, CalError> ;
+    /// Hashes the input using the specified hash algorithm.
+    pub fn hash(&self, input: &[u8], hash: CryptoHash) -> Result<Vec<u8>, CalError> {
+        self.implementation
+            .hash(input, hash)
+            .inspect_err(|error| tracing::error!(error = %error, "Failed to hash input"))
     }
 }
 
@@ -219,32 +185,49 @@ pub struct KeyPairHandle {
 
 /// Abstraction of asymmetric key pair handles.
 impl KeyPairHandle {
-    delegate_enum! {
-        pub fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError>;
+    /// Encrypts the given data using the cryptographic key.
+    pub fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
+        self.implementation.encrypt_data(data).inspect_err(
+            |error| tracing::error!(error = %error, "Failed to encrypt data with key pair"),
+        )
     }
 
-    delegate_enum! {
-        pub fn decrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError>;
+    /// Decrypts the given encrypted data using the cryptographic key.
+    pub fn decrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
+        self.implementation.decrypt_data(data).inspect_err(
+            |error| tracing::error!(error = %error, "Failed to decrypt data with key pair"),
+        )
     }
 
-    delegate_enum! {
-        pub fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError>;
+    /// Signs the given data using the cryptographic key.
+    pub fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
+        self.implementation
+            .sign_data(data)
+            .inspect_err(|error| tracing::error!(error = %error, "Failed to sign data"))
     }
 
-    delegate_enum! {
-        pub fn verify_signature(
-            &self,
-            data: &[u8],
-            signature: &[u8],
-        ) -> Result<bool, CalError>;
+    /// Verifies the signature of the given data using the cryptographic key.
+    pub fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, CalError> {
+        self.implementation
+            .verify_signature(data, signature)
+            .inspect_err(|error| tracing::error!(error = %error, "Failed to verify signature"))
     }
 
-    delegate_enum! {
-        pub fn get_public_key(&self) -> Result<Vec<u8>, CalError>;
+    /// Returns the raw public key as binary.
+    pub fn get_public_key(&self) -> Result<Vec<u8>, CalError> {
+        self.implementation
+            .get_public_key()
+            .inspect_err(|error| tracing::error!(error = %error, "Failed to get public key"))
     }
 
-    delegate_enum! {
-        pub fn extract_key(&self) -> Result<Vec<u8>, CalError>;
+    /// Returns the raw private key as binary.
+    ///
+    /// Most hardware based providers will return [CalError]
+    /// with [CalErrorKind::NotImplemented](super::CalErrorKind::NotImplemented).
+    pub fn extract_key(&self) -> Result<Vec<u8>, CalError> {
+        self.implementation
+            .extract_key()
+            .inspect_err(|error| tracing::error!(error = %error, "Failed to extract private key"))
     }
 
     #[deprecated(note = "Non ephemeral dh exchanges are possibly insecure.")]
@@ -253,16 +236,24 @@ impl KeyPairHandle {
         self.implementation.start_dh_exchange()
     }
 
-    delegate_enum! {
-        pub fn id(&self) -> Result<String, CalError>;
+    /// Returns the id of the key pair, which can be used with `load_key_pair`.
+    pub fn id(&self) -> Result<String, CalError> {
+        self.implementation
+            .id()
+            .inspect_err(|error| tracing::error!(error = %error, "Failed to get key pair ID"))
     }
 
-    delegate_enum! {
-        pub fn delete(self) -> Result<(), CalError>;
+    /// Delete this key pair.
+    pub fn delete(self) -> Result<(), CalError> {
+        self.implementation
+            .delete()
+            .inspect_err(|error| tracing::error!(error = %error, "Failed to delete key pair"))
     }
 
-    delegate_enum_bare! {
-        pub fn spec(&self) -> KeyPairSpec;
+    /// Returns the [KeyPairSpec] the key was generated with.
+    #[must_use]
+    pub fn spec(&self) -> KeyPairSpec {
+        self.implementation.spec()
     }
 }
 
@@ -274,8 +265,14 @@ pub struct KeyHandle {
 }
 
 impl KeyHandle {
-    delegate_enum! {
-        pub fn extract_key(&self) -> Result<Vec<u8>, CalError>;
+    /// Returns the raw key as binary.
+    ///
+    /// Most hardware based providers will return [CalError]
+    /// with [CalErrorKind::NotImplemented](super::CalErrorKind::NotImplemented).
+    pub fn extract_key(&self) -> Result<Vec<u8>, CalError> {
+        self.implementation
+            .extract_key()
+            .inspect_err(|error| tracing::error!(error = %error, "Failed to extract key"))
     }
 
     #[deprecated(
@@ -285,43 +282,76 @@ impl KeyHandle {
         self.implementation.encrypt_data(data, iv)
     }
 
-    delegate_enum! {
-        pub fn encrypt(&self, data: &[u8]) -> Result<(Vec<u8>, Vec<u8>), CalError>;
+    /// Encrypt data.
+    ///
+    /// The iv is randomly generated.
+    ///
+    /// The resulting output is a pair of cipher text and generated iv: `(cipher_text, iv)`
+    pub fn encrypt(&self, data: &[u8]) -> Result<(Vec<u8>, Vec<u8>), CalError> {
+        self.implementation
+            .encrypt(data)
+            .inspect_err(|error| tracing::error!(error = %error, "Failed to encrypt data"))
     }
 
-    delegate_enum! {
-        pub fn encrypt_with_iv(&self, data: &[u8], iv: &[u8]) -> Result<Vec<u8>, CalError>;
+    /// Encrypt data with the given iv.
+    ///
+    /// Some providers panic, if the iv is not the correct length.
+    pub fn encrypt_with_iv(&self, data: &[u8], iv: &[u8]) -> Result<Vec<u8>, CalError> {
+        self.implementation
+            .encrypt_with_iv(data, iv)
+            .inspect_err(|error| tracing::error!(error = %error, "Failed to encrypt data with IV"))
     }
 
-    delegate_enum! {
-        pub fn decrypt_data(
-            &self,
-            encrypted_data: &[u8],
-            iv: &[u8],
-        ) -> Result<Vec<u8>, CalError>;
+    /// Decrypts the given encrypted data using the cryptographic key.
+    pub fn decrypt_data(&self, encrypted_data: &[u8], iv: &[u8]) -> Result<Vec<u8>, CalError> {
+        self.implementation
+            .decrypt_data(encrypted_data, iv)
+            .inspect_err(|error| tracing::error!(error = %error, "Failed to decrypt data"))
     }
 
-    delegate_enum! {
-        pub fn hmac(&self, data: &[u8]) -> Result<Vec<u8>, CalError>;
-    }
-    delegate_enum! {
-        pub fn verify_hmac(&self, data: &[u8], hmac: &[u8]) -> Result<bool, CalError>;
-    }
-
-    delegate_enum! {
-        pub fn derive_key(&self, nonce: &[u8]) -> Result<KeyHandle, CalError>;
+    /// Calculates HMAC of the given data.
+    pub fn hmac(&self, data: &[u8]) -> Result<Vec<u8>, CalError> {
+        self.implementation
+            .hmac(data)
+            .inspect_err(|error| tracing::error!(error = %error, "Failed to calculate HMAC"))
     }
 
-    delegate_enum! {
-        pub fn id(&self) -> Result<String, CalError>;
+    /// Verifies data with the given signature.
+    pub fn verify_hmac(&self, data: &[u8], hmac: &[u8]) -> Result<bool, CalError> {
+        self.implementation
+            .verify_hmac(data, hmac)
+            .inspect_err(|error| tracing::error!(error = %error, "Failed to verify HMAC"))
     }
 
-    delegate_enum! {
-        pub fn delete(self) -> Result<(), CalError>;
+    /// Derives an ephemeral key from this key as base with the same spec as the base key.
+    ///
+    /// A derived key is exportable if the base key (self) is exportable.
+    ///
+    /// This operation is deterministic, meaning the same nonce and key are always going to result in the same [KeyHandle].
+    pub fn derive_key(&self, nonce: &[u8]) -> Result<KeyHandle, CalError> {
+        self.implementation
+            .derive_key(nonce)
+            .inspect_err(|error| tracing::error!(error = %error, "Failed to derive key"))
     }
 
-    delegate_enum_bare! {
-        pub fn spec(&self) -> KeySpec;
+    /// Returns the id of the key, which can be used with `load_key`.
+    pub fn id(&self) -> Result<String, CalError> {
+        self.implementation
+            .id()
+            .inspect_err(|error| tracing::error!(error = %error, "Failed to get key ID"))
+    }
+
+    /// Delete this key.
+    pub fn delete(self) -> Result<(), CalError> {
+        self.implementation
+            .delete()
+            .inspect_err(|error| tracing::error!(error = %error, "Failed to delete key"))
+    }
+
+    /// Returns the [KeySpec] the key was generated with.
+    #[must_use]
+    pub fn spec(&self) -> KeySpec {
+        self.implementation.spec()
     }
 }
 
@@ -334,40 +364,66 @@ pub struct DHExchange {
 }
 
 impl DHExchange {
-    delegate_enum! {
-        pub fn id(&self) -> Result<String, CalError>;
+    /// Returns the id of the key pair, which can be used with `load_key_pair`.
+    pub fn id(&self) -> Result<String, CalError> {
+        self.implementation
+            .id()
+            .inspect_err(|error| tracing::error!(error = %error, "Failed to get DH exchange ID"))
     }
 
-    delegate_enum! {
-        pub fn get_public_key(&self) -> Result<Vec<u8>, CalError>;
+    /// Get the public key of the internal key pair to use for the other party.
+    pub fn get_public_key(&self) -> Result<Vec<u8>, CalError> {
+        self.implementation.get_public_key().inspect_err(
+            |error| tracing::error!(error = %error, "Failed to get DH exchange public key"),
+        )
     }
 
-    delegate_enum! {
-        pub fn derive_client_session_keys(
-            &mut self,
-            server_pk: &[u8],
-        ) -> Result<(Vec<u8>, Vec<u8>), CalError>;
+    /// Derive client session keys (rx, tx) - client is the templator in your code.
+    pub fn derive_client_session_keys(
+        &mut self,
+        server_pk: &[u8],
+    ) -> Result<(Vec<u8>, Vec<u8>), CalError> {
+        self.implementation
+            .derive_client_session_keys(server_pk)
+            .inspect_err(
+                |error| tracing::error!(error = %error, "Failed to derive client session keys"),
+            )
     }
 
-    delegate_enum! {
-        pub fn derive_server_session_keys(
-            &mut self,
-            client_pk: &[u8],
-        ) -> Result<(Vec<u8>, Vec<u8>), CalError>;
+    /// Derive server session keys (rx, tx) - server is the requestor in your code.
+    pub fn derive_server_session_keys(
+        &mut self,
+        client_pk: &[u8],
+    ) -> Result<(Vec<u8>, Vec<u8>), CalError> {
+        self.implementation
+            .derive_server_session_keys(client_pk)
+            .inspect_err(
+                |error| tracing::error!(error = %error, "Failed to derive server session keys"),
+            )
     }
 
-    delegate_enum! {
-        pub fn derive_client_key_handles(
-            &mut self,
-            server_pk: &[u8],
-        ) -> Result<(KeyHandle, KeyHandle), CalError>;
+    /// Derives client session keys and returns them as key handles.
+    pub fn derive_client_key_handles(
+        &mut self,
+        server_pk: &[u8],
+    ) -> Result<(KeyHandle, KeyHandle), CalError> {
+        self.implementation
+            .derive_client_key_handles(server_pk)
+            .inspect_err(
+                |error| tracing::error!(error = %error, "Failed to derive client key handles"),
+            )
     }
 
-    delegate_enum! {
-        pub fn derive_server_key_handles(
-            &mut self,
-            client_pk: &[u8],
-        ) -> Result<(KeyHandle, KeyHandle), CalError>;
+    /// Derives server session keys and returns them as key handles.
+    pub fn derive_server_key_handles(
+        &mut self,
+        client_pk: &[u8],
+    ) -> Result<(KeyHandle, KeyHandle), CalError> {
+        self.implementation
+            .derive_server_key_handles(client_pk)
+            .inspect_err(
+                |error| tracing::error!(error = %error, "Failed to derive server key handles"),
+            )
     }
 }
 

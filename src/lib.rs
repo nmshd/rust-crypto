@@ -1,17 +1,5 @@
-//! `cryptolayer` is meant as a library interfacing with secure elements of different operating systems.
-//!
-//! # Providers
-//!
-//! | Provider Name                   | Sign and Verify       | Encrypt and Decrypt       | DH Exchange | Import Key | Import Key Pair | Import Public Key | Export Key | Export Private Key | Export Public Key |
-//! | ------------------------------- | --------------------- | ------------------------- | ----------- | ---------- | --------------- | ----------------- | ---------- | ------------------ | ----------------- |
-//! | STUB_PROVIDER                   | ⬜                    | ⬜                        | ⬜          | ⬜         | ⬜              | ⬜                | ⬜         | ⬜                 | ⬜                |
-//! | ANDROID_PROVIDER                | ✅                    | ✅                        | ✅          | ⬜         | ⬜              | ⬜                | ⬜         | ⬜                 | ✅                |
-//! | ANDROID_PROVIDER_SECURE_ELEMENT | ✅                    | ✅                        | ✅          | ⬜         | ⬜              | ⬜                | ⬜         | ⬜                 | ✅                |
-//! | APPLE_SECURE_ENCLAVE            | ✅                    | ⬜                        | ⬜          | ⬜         | ⬜              | ⬜                | ⬜         | ⬜                 | ✅                |
-//! | SoftwareProvider                | ✅                    | ✅                        | ✅          | ✅         | ✅              | ✅                | ⬜         | ✅                 | ✅                |
-//!
-//!
-
+#![doc = include_str!("./README.md")]
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
 #![warn(
     rust_2024_incompatible_pat,
     rust_2024_prelude_collisions,

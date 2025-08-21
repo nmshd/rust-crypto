@@ -3030,47 +3030,6 @@ const _: fn() = || {
         let _: u32 = Argon2Options.iterations;
         let _: u32 = Argon2Options.parallelism;
     }
-    match None::<crypto_layer::common::error::CalErrorKind>.unwrap() {
-        crypto_layer::common::error::CalErrorKind::NotImplemented => {}
-        crypto_layer::common::error::CalErrorKind::BadParameter {
-            description,
-            internal,
-        } => {
-            let _: String = description;
-            let _: bool = internal;
-        }
-        crypto_layer::common::error::CalErrorKind::MissingKey { key_id, key_type } => {
-            let _: String = key_id;
-            let _: crypto_layer::common::error::KeyType = key_type;
-        }
-        crypto_layer::common::error::CalErrorKind::MissingValue {
-            description,
-            internal,
-        } => {
-            let _: String = description;
-            let _: bool = internal;
-        }
-        crypto_layer::common::error::CalErrorKind::FailedOperation {
-            description,
-            internal,
-        } => {
-            let _: String = description;
-            let _: bool = internal;
-        }
-        crypto_layer::common::error::CalErrorKind::InitializationError {
-            description,
-            internal,
-        } => {
-            let _: String = description;
-            let _: bool = internal;
-        }
-        crypto_layer::common::error::CalErrorKind::NonExportable => {}
-        crypto_layer::common::error::CalErrorKind::UnsupportedAlgorithm(field0) => {
-            let _: String = field0;
-        }
-        crypto_layer::common::error::CalErrorKind::EphemeralKeyError => {}
-        crypto_layer::common::error::CalErrorKind::Other => {}
-    }
     match None::<crypto_layer::common::crypto::algorithms::key_derivation::KDF>.unwrap() {
         crypto_layer::common::crypto::algorithms::key_derivation::KDF::Argon2d(field0) => {
             let _: crypto_layer::common::crypto::algorithms::key_derivation::Argon2Options = field0;
@@ -3291,6 +3250,9 @@ flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
     flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CalError>
 );
 flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
+    flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CalErrorKind>
+);
+flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
     flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DHExchange>
 );
 flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
@@ -3366,6 +3328,16 @@ impl SseDecode for CalError {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <RustOpaqueMoi<
             flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CalError>,
+        >>::sse_decode(deserializer);
+        return flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(inner);
+    }
+}
+
+impl SseDecode for CalErrorKind {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <RustOpaqueMoi<
+            flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CalErrorKind>,
         >>::sse_decode(deserializer);
         return flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(inner);
     }
@@ -3477,6 +3449,16 @@ impl SseDecode
 
 impl SseDecode
     for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CalError>>
+{
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <usize>::sse_decode(deserializer);
+        return decode_rust_opaque_moi(inner);
+    }
+}
+
+impl SseDecode
+    for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CalErrorKind>>
 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3681,75 +3663,6 @@ impl SseDecode for bool {
     }
 }
 
-impl SseDecode for crypto_layer::common::error::CalErrorKind {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut tag_ = <i32>::sse_decode(deserializer);
-        match tag_ {
-            0 => {
-                return crypto_layer::common::error::CalErrorKind::NotImplemented;
-            }
-            1 => {
-                let mut var_description = <String>::sse_decode(deserializer);
-                let mut var_internal = <bool>::sse_decode(deserializer);
-                return crypto_layer::common::error::CalErrorKind::BadParameter {
-                    description: var_description,
-                    internal: var_internal,
-                };
-            }
-            2 => {
-                let mut var_keyId = <String>::sse_decode(deserializer);
-                let mut var_keyType =
-                    <crypto_layer::common::error::KeyType>::sse_decode(deserializer);
-                return crypto_layer::common::error::CalErrorKind::MissingKey {
-                    key_id: var_keyId,
-                    key_type: var_keyType,
-                };
-            }
-            3 => {
-                let mut var_description = <String>::sse_decode(deserializer);
-                let mut var_internal = <bool>::sse_decode(deserializer);
-                return crypto_layer::common::error::CalErrorKind::MissingValue {
-                    description: var_description,
-                    internal: var_internal,
-                };
-            }
-            4 => {
-                let mut var_description = <String>::sse_decode(deserializer);
-                let mut var_internal = <bool>::sse_decode(deserializer);
-                return crypto_layer::common::error::CalErrorKind::FailedOperation {
-                    description: var_description,
-                    internal: var_internal,
-                };
-            }
-            5 => {
-                let mut var_description = <String>::sse_decode(deserializer);
-                let mut var_internal = <bool>::sse_decode(deserializer);
-                return crypto_layer::common::error::CalErrorKind::InitializationError {
-                    description: var_description,
-                    internal: var_internal,
-                };
-            }
-            6 => {
-                return crypto_layer::common::error::CalErrorKind::NonExportable;
-            }
-            7 => {
-                let mut var_field0 = <String>::sse_decode(deserializer);
-                return crypto_layer::common::error::CalErrorKind::UnsupportedAlgorithm(var_field0);
-            }
-            8 => {
-                return crypto_layer::common::error::CalErrorKind::EphemeralKeyError;
-            }
-            9 => {
-                return crypto_layer::common::error::CalErrorKind::Other;
-            }
-            _ => {
-                unimplemented!("");
-            }
-        }
-    }
-}
-
 impl SseDecode for crypto_layer::common::crypto::algorithms::encryption::Cipher {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3876,20 +3789,6 @@ impl SseDecode for crypto_layer::common::config::KeySpec {
             signing_hash: var_signingHash,
             ephemeral: var_ephemeral,
             non_exportable: var_nonExportable,
-        };
-    }
-}
-
-impl SseDecode for crypto_layer::common::error::KeyType {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <i32>::sse_decode(deserializer);
-        return match inner {
-            0 => crypto_layer::common::error::KeyType::Public,
-            1 => crypto_layer::common::error::KeyType::Private,
-            2 => crypto_layer::common::error::KeyType::PublicAndPrivate,
-            3 => crypto_layer::common::error::KeyType::Symmetric,
-            _ => unreachable!("Invalid variant for KeyType: {}", inner),
         };
     }
 }
@@ -4469,6 +4368,21 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<CalError>> for CalError {
 }
 
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<CalErrorKind> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self.0)
+            .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<CalErrorKind> {}
+
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<CalErrorKind>> for CalErrorKind {
+    fn into_into_dart(self) -> FrbWrapper<CalErrorKind> {
+        self.into()
+    }
+}
+
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for FrbWrapper<DHExchange> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self.0)
@@ -4647,80 +4561,6 @@ impl
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<crypto_layer::common::error::CalErrorKind> {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        match self.0 {
-            crypto_layer::common::error::CalErrorKind::NotImplemented => {
-                [0.into_dart()].into_dart()
-            }
-            crypto_layer::common::error::CalErrorKind::BadParameter {
-                description,
-                internal,
-            } => [
-                1.into_dart(),
-                description.into_into_dart().into_dart(),
-                internal.into_into_dart().into_dart(),
-            ]
-            .into_dart(),
-            crypto_layer::common::error::CalErrorKind::MissingKey { key_id, key_type } => [
-                2.into_dart(),
-                key_id.into_into_dart().into_dart(),
-                key_type.into_into_dart().into_dart(),
-            ]
-            .into_dart(),
-            crypto_layer::common::error::CalErrorKind::MissingValue {
-                description,
-                internal,
-            } => [
-                3.into_dart(),
-                description.into_into_dart().into_dart(),
-                internal.into_into_dart().into_dart(),
-            ]
-            .into_dart(),
-            crypto_layer::common::error::CalErrorKind::FailedOperation {
-                description,
-                internal,
-            } => [
-                4.into_dart(),
-                description.into_into_dart().into_dart(),
-                internal.into_into_dart().into_dart(),
-            ]
-            .into_dart(),
-            crypto_layer::common::error::CalErrorKind::InitializationError {
-                description,
-                internal,
-            } => [
-                5.into_dart(),
-                description.into_into_dart().into_dart(),
-                internal.into_into_dart().into_dart(),
-            ]
-            .into_dart(),
-            crypto_layer::common::error::CalErrorKind::NonExportable => [6.into_dart()].into_dart(),
-            crypto_layer::common::error::CalErrorKind::UnsupportedAlgorithm(field0) => {
-                [7.into_dart(), field0.into_into_dart().into_dart()].into_dart()
-            }
-            crypto_layer::common::error::CalErrorKind::EphemeralKeyError => {
-                [8.into_dart()].into_dart()
-            }
-            crypto_layer::common::error::CalErrorKind::Other => [9.into_dart()].into_dart(),
-            _ => {
-                unimplemented!("");
-            }
-        }
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for FrbWrapper<crypto_layer::common::error::CalErrorKind>
-{
-}
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crypto_layer::common::error::CalErrorKind>>
-    for crypto_layer::common::error::CalErrorKind
-{
-    fn into_into_dart(self) -> FrbWrapper<crypto_layer::common::error::CalErrorKind> {
-        self.into()
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart
     for FrbWrapper<crypto_layer::common::crypto::algorithms::encryption::Cipher>
 {
@@ -4883,29 +4723,6 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crypto_layer::common::config::
     for crypto_layer::common::config::KeySpec
 {
     fn into_into_dart(self) -> FrbWrapper<crypto_layer::common::config::KeySpec> {
-        self.into()
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<crypto_layer::common::error::KeyType> {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        match self.0 {
-            crypto_layer::common::error::KeyType::Public => 0.into_dart(),
-            crypto_layer::common::error::KeyType::Private => 1.into_dart(),
-            crypto_layer::common::error::KeyType::PublicAndPrivate => 2.into_dart(),
-            crypto_layer::common::error::KeyType::Symmetric => 3.into_dart(),
-            _ => unreachable!(),
-        }
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for FrbWrapper<crypto_layer::common::error::KeyType>
-{
-}
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crypto_layer::common::error::KeyType>>
-    for crypto_layer::common::error::KeyType
-{
-    fn into_into_dart(self) -> FrbWrapper<crypto_layer::common::error::KeyType> {
         self.into()
     }
 }
@@ -5213,6 +5030,13 @@ impl SseEncode for CalError {
     }
 }
 
+impl SseEncode for CalErrorKind {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CalErrorKind>>>::sse_encode(flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self), serializer);
+    }
+}
+
 impl SseEncode for DHExchange {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -5310,6 +5134,17 @@ impl SseEncode
 
 impl SseEncode
     for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CalError>>
+{
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        let (ptr, size) = self.sse_encode_raw();
+        <usize>::sse_encode(ptr, serializer);
+        <i32>::sse_encode(size, serializer);
+    }
+}
+
+impl SseEncode
+    for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CalErrorKind>>
 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -5501,70 +5336,6 @@ impl SseEncode for bool {
     }
 }
 
-impl SseEncode for crypto_layer::common::error::CalErrorKind {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        match self {
-            crypto_layer::common::error::CalErrorKind::NotImplemented => {
-                <i32>::sse_encode(0, serializer);
-            }
-            crypto_layer::common::error::CalErrorKind::BadParameter {
-                description,
-                internal,
-            } => {
-                <i32>::sse_encode(1, serializer);
-                <String>::sse_encode(description, serializer);
-                <bool>::sse_encode(internal, serializer);
-            }
-            crypto_layer::common::error::CalErrorKind::MissingKey { key_id, key_type } => {
-                <i32>::sse_encode(2, serializer);
-                <String>::sse_encode(key_id, serializer);
-                <crypto_layer::common::error::KeyType>::sse_encode(key_type, serializer);
-            }
-            crypto_layer::common::error::CalErrorKind::MissingValue {
-                description,
-                internal,
-            } => {
-                <i32>::sse_encode(3, serializer);
-                <String>::sse_encode(description, serializer);
-                <bool>::sse_encode(internal, serializer);
-            }
-            crypto_layer::common::error::CalErrorKind::FailedOperation {
-                description,
-                internal,
-            } => {
-                <i32>::sse_encode(4, serializer);
-                <String>::sse_encode(description, serializer);
-                <bool>::sse_encode(internal, serializer);
-            }
-            crypto_layer::common::error::CalErrorKind::InitializationError {
-                description,
-                internal,
-            } => {
-                <i32>::sse_encode(5, serializer);
-                <String>::sse_encode(description, serializer);
-                <bool>::sse_encode(internal, serializer);
-            }
-            crypto_layer::common::error::CalErrorKind::NonExportable => {
-                <i32>::sse_encode(6, serializer);
-            }
-            crypto_layer::common::error::CalErrorKind::UnsupportedAlgorithm(field0) => {
-                <i32>::sse_encode(7, serializer);
-                <String>::sse_encode(field0, serializer);
-            }
-            crypto_layer::common::error::CalErrorKind::EphemeralKeyError => {
-                <i32>::sse_encode(8, serializer);
-            }
-            crypto_layer::common::error::CalErrorKind::Other => {
-                <i32>::sse_encode(9, serializer);
-            }
-            _ => {
-                unimplemented!("");
-            }
-        }
-    }
-}
-
 impl SseEncode for crypto_layer::common::crypto::algorithms::encryption::Cipher {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -5685,24 +5456,6 @@ impl SseEncode for crypto_layer::common::config::KeySpec {
         );
         <bool>::sse_encode(self.ephemeral, serializer);
         <bool>::sse_encode(self.non_exportable, serializer);
-    }
-}
-
-impl SseEncode for crypto_layer::common::error::KeyType {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <i32>::sse_encode(
-            match self {
-                crypto_layer::common::error::KeyType::Public => 0,
-                crypto_layer::common::error::KeyType::Private => 1,
-                crypto_layer::common::error::KeyType::PublicAndPrivate => 2,
-                crypto_layer::common::error::KeyType::Symmetric => 3,
-                _ => {
-                    unimplemented!("");
-                }
-            },
-            serializer,
-        );
     }
 }
 
@@ -6156,6 +5909,20 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
+    pub extern "C" fn frbgen_cal_flutter_plugin_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalErrorKind(
+        ptr: *const std::ffi::c_void,
+    ) {
+        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CalErrorKind>>::increment_strong_count(ptr as _);
+    }
+
+    #[unsafe(no_mangle)]
+    pub extern "C" fn frbgen_cal_flutter_plugin_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalErrorKind(
+        ptr: *const std::ffi::c_void,
+    ) {
+        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CalErrorKind>>::decrement_strong_count(ptr as _);
+    }
+
+    #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_cal_flutter_plugin_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDHExchange(
         ptr: *const std::ffi::c_void,
     ) {
@@ -6342,6 +6109,20 @@ mod web {
         ptr: *const std::ffi::c_void,
     ) {
         MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CalError>>::decrement_strong_count(ptr as _);
+    }
+
+    #[wasm_bindgen]
+    pub fn rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalErrorKind(
+        ptr: *const std::ffi::c_void,
+    ) {
+        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CalErrorKind>>::increment_strong_count(ptr as _);
+    }
+
+    #[wasm_bindgen]
+    pub fn rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCalErrorKind(
+        ptr: *const std::ffi::c_void,
+    ) {
+        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<CalErrorKind>>::decrement_strong_count(ptr as _);
     }
 
     #[wasm_bindgen]

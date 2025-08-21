@@ -49,13 +49,13 @@ impl ProviderFactory for AndroidProviderFactory {
     }
 
     fn get_capabilities(&self, _impl_config: ProviderImplConfig) -> Option<ProviderConfig> {
-        // check if android context is initialised
+        // check if android context is initialized
         if !wrapper::context::is_initialized() {
             info!("Android Context is not initialized, no android provider");
             return None;
         }
 
-        // only check for Stronbox if secure element is enabled
+        // only check for Strongbox if secure element is enabled
         if self.secure_element && !wrapper::context::has_strong_box().ok()? {
             return None;
         }

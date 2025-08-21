@@ -2,8 +2,7 @@
 import type { KeyType } from "./KeyType";
 
 /**
- * Enumeration differentiating between the causes and the severity of the error.
- * flutter_rust_bridge:non_opaque
+ * Enumeration of classifications of error sources.
  */
 export type CalErrorKind =
   | "NotImplemented"

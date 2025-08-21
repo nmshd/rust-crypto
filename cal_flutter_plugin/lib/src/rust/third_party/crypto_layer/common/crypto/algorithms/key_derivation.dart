@@ -10,6 +10,9 @@ part 'key_derivation.freezed.dart';
 
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `fmt`, `fmt`
 
+/// Configuration for KDF with Argon2
+///
+/// When in doubt use the default.
 /// flutter_rust_bridge:non_opaque
 class Argon2Options {
   /// Memory cost in kibibytes
@@ -27,6 +30,9 @@ class Argon2Options {
     required this.parallelism,
   });
 
+  /// Defaults for servers.
+  /// Taken from Password Storage Cheat Sheet (12.03.2025)
+  /// <https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html>
   static Future<Argon2Options> default_() => RustLib.instance.api
       .cryptoLayerCommonCryptoAlgorithmsKeyDerivationArgon2OptionsDefault();
 
@@ -55,6 +61,9 @@ sealed class KDF with _$KDF {
   const factory KDF.argon2Id(Argon2Options field0) = KDF_Argon2id;
   const factory KDF.argon2I(Argon2Options field0) = KDF_Argon2i;
 
+  /// Defaults for servers.
+  /// Taken from Password Storage Cheat Sheet (12.03.2025)
+  /// <https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html>
   static Future<KDF> default_() => RustLib.instance.api
       .cryptoLayerCommonCryptoAlgorithmsKeyDerivationKdfDefault();
 }

@@ -36,6 +36,9 @@ pub enum KDF {
     Argon2i(Argon2Options),
 }
 
+/// Configuration for KDF with Argon2
+///
+/// When in doubt use the default.
 /// flutter_rust_bridge:non_opaque
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts-interface", derive(ts_rs::TS), ts(export))]
@@ -48,10 +51,10 @@ pub struct Argon2Options {
     pub parallelism: u32,
 }
 
-// Defaults for servers.
-// Taken from Password Storage Cheat Sheet (12.03.2025)
-// https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
 impl Default for Argon2Options {
+    /// Defaults for servers.
+    /// Taken from Password Storage Cheat Sheet (12.03.2025)
+    /// <https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html>
     fn default() -> Self {
         Argon2Options {
             memory: 19456,
@@ -61,10 +64,10 @@ impl Default for Argon2Options {
     }
 }
 
-// Defaults for servers.
-// Taken from Password Storage Cheat Sheet (12.03.2025)
-// https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
 impl Default for KDF {
+    /// Defaults for servers.
+    /// Taken from Password Storage Cheat Sheet (12.03.2025)
+    /// <https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html>
     fn default() -> Self {
         KDF::Argon2id(Argon2Options::default())
     }

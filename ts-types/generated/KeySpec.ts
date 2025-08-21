@@ -4,7 +4,9 @@ import type { CryptoHash } from "./CryptoHash";
 
 /**
  * Struct used to configure keys.
- * flutter_rust_bridge:non_opaque
+ *
+ * It is important to note, that the configuration of a key can only happen at the point of its creation.
+ * A key cannot be reconfigured.
  */
 export type KeySpec = {
   /**
@@ -16,11 +18,13 @@ export type KeySpec = {
    */
   signing_hash: CryptoHash;
   /**
-   * If set to `true`, the key is going to be deleted when the handle is dropped.
+   * If set to `true`, metadata of the key is not stored and the key is going to be deleted when the handle is dropped.
    */
   ephemeral: boolean;
   /**
    * If set to `true`, the key cannot be exported.
+   *
+   * Some providers do not allow exporting keys at all, even if set to `false`.
    */
   non_exportable: boolean;
 };

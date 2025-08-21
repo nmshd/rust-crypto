@@ -16,8 +16,9 @@ use tracing_subscriber::Registry;
 
 pub(super) fn set_up_logging() {
     #[cfg(target_os = "android")]
-    let subscriber = Registry::default()
-        .with(tracing_android::layer("RUST").expect("could not create android logger"));
+    let subscriber = Registry::default().with(
+        tracing_android::layer("eu.nmshd.crypto-layer").expect("could not create android logger"),
+    );
 
     #[cfg(any(target_os = "macos", target_os = "ios"))]
     let subscriber = Registry::default().with(

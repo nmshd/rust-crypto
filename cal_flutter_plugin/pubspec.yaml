@@ -1,7 +1,7 @@
 name: cal_flutter_plugin
-description: "A new Flutter FFI plugin project."
+description: "Flutter FFI plugin for the crypto layer project."
 version: 0.0.1
-homepage:
+repository: https://github.com/nmshd/rust-crypto
 
 environment:
   sdk: ^3.8.0

@@ -1,3 +1,18 @@
+//!
+//! There are essentially two ways of getting your first provider:
+//! 1. Create a [`ProviderConfig`] that represents your needs
+//!     and then use [`create_provider`] to get assigned a provider automatically.
+//! 2. Use [`get_all_providers`] and [`get_provider_capabilities`]
+//!     to find a suitable provider and use [`create_provider_from_name`] to create said provider.
+//!
+//! As keys are bound to their respective provider, it is advisable
+//! to store the used providers and recreate them with [`create_provider_from_name`].
+//!
+//! [`create_provider`]: crate::common::factory::create_provider
+//! [`get_all_providers`]: crate::common::factory::get_all_providers
+//! [`get_provider_capabilities`]: crate::common::factory::get_provider_capabilities
+//! [`create_provider_from_name`]: crate::common::factory::create_provider_from_name
+
 use std::sync::LazyLock;
 
 use tracing::{trace, warn};
@@ -48,21 +63,18 @@ fn provider_supports_capabilities(
             .is_subset(&provider_capabilities.supported_hashes)
 }
 
-/// Returns a provider which supports the given requirements.
+/// Returns a provider which supports the given requirements and is initializable.
 ///
-/// This function returns the first provider, which supports the given requirements and has a [`ProviderImplConfig`].
+/// This function returns the first provider, which supports the given requirements (see [`ProviderConfig`])
+/// and can be initialized on the target platform with the given [`ProviderImplConfig`].
 ///
-/// * `conf` - A provider config that the provider must at least contain.
-/// * `impl_conf_vec` - A `Vec` of [`ProviderImplConfig`]. Only providers, which have [`ProviderImplConfig`] are returned.
-///
-/// # Example
+/// ### Example
 /// ```
-/// use std::collections::HashSet;
+/// # use std::collections::HashSet;
+/// # use crypto_layer::prelude::*;
 ///
-/// use crypto_layer::prelude::*;
-///
-/// let specific_provider_config = ProviderImplConfig{additional_config: vec![]};
-/// let provider_config = ProviderConfig {
+/// let platform_specific_provider_config = ProviderImplConfig{additional_config: vec![]};
+/// let required_capabilities = ProviderConfig {
 ///     min_security_level: SecurityLevel::Software,
 ///     max_security_level: SecurityLevel::Hardware,
 ///     supported_asym_spec: HashSet::new(),
@@ -70,7 +82,7 @@ fn provider_supports_capabilities(
 ///     supported_hashes: HashSet::new(),
 /// };
 ///
-/// let provider_option: Option<Provider> = create_provider(&provider_config, specific_provider_config);
+/// let provider_option: Option<Provider> = create_provider(&required_capabilities, platform_specific_provider_config);
 /// ```
 pub fn create_provider(conf: &ProviderConfig, impl_conf: ProviderImplConfig) -> Option<Provider> {
     for provider in ALL_PROVIDERS.iter() {
@@ -93,8 +105,10 @@ pub fn create_provider(conf: &ProviderConfig, impl_conf: ProviderImplConfig) -> 
 
 /// Returns the provider matching the given name.
 ///
-/// * `name` - Name of the provider. See `get_name()`.
-/// * `impl_config` - Specif configuration for said provider.
+/// Returns `None` if the provider requested is not available on the target platform or it is not initializable.
+///
+/// A providers name is a hardcoded string unique to a provider (see [`Provider::provider_name()`](crate::prelude::Provider::provider_name)
+/// and [`get_all_providers()`](crate::prelude::get_all_providers)).
 #[tracing::instrument]
 pub fn create_provider_from_name(name: &str, impl_conf: ProviderImplConfig) -> Option<Provider> {
     trace!("create_provider_from_name: {}", name);
@@ -118,6 +132,8 @@ pub fn create_provider_from_name(name: &str, impl_conf: ProviderImplConfig) -> O
 }
 
 /// Returns the names of all available providers.
+///
+/// A provider is available if it is initializable on the target platform.
 pub fn get_all_providers() -> Vec<String> {
     ALL_PROVIDERS
         .iter()
@@ -125,7 +141,7 @@ pub fn get_all_providers() -> Vec<String> {
         .collect()
 }
 
-/// Returns the names and capabilities of all providers that can be initialized with the given [ProviderImplConfig].
+/// Returns the names and capabilities of all providers that can be initialized with the given [ProviderImplConfig] on the target platform.
 pub fn get_provider_capabilities(impl_config: ProviderImplConfig) -> Vec<(String, ProviderConfig)> {
     ALL_PROVIDERS
         .iter()
