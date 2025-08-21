@@ -12,7 +12,7 @@ use zeroize::Zeroize;
 /// Algorithms like SHA-1, MD2, MD4, and MD5 are considered insecure for most cryptographic
 /// purposes due to practical collision attacks and should be avoided for new applications.
 /// Prefer using more secure algorithms like SHA-2 or SHA-3 for cryptographic purposes.
-/// flutter_rust_bridge:non_opaque
+// flutter_rust_bridge:non_opaque
 #[repr(C)]
 #[derive(
     Clone,

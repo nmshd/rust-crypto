@@ -16,7 +16,7 @@ use strum::{EnumString, IntoStaticStr};
 ///
 /// This enum uses `#[repr(C)]` to ensure that it has the same memory layout as a C enum,
 /// facilitating interfacing with C code or when ABI compatibility is required.
-/// flutter_rust_bridge:non_opaque
+// flutter_rust_bridge:non_opaque
 #[repr(C)]
 #[derive(
     Clone,
@@ -72,7 +72,7 @@ pub enum AsymmetricKeySpec {
 ///
 /// Marked with `#[repr(C)]` to ensure it has the same memory layout as a C enum,
 /// facilitating ABI compatibility and interfacing with C code.
-/// flutter_rust_bridge:non_opaque
+// flutter_rust_bridge:non_opaque
 #[repr(C)]
 #[derive(
     Clone,
