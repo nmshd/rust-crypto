@@ -15,7 +15,7 @@ There are following providers:
 -   `ANDROID_PROVIDER` and `ANDROID_PROVIDER_SECURE_ELEMENT` (Android)
     -   These two providers differ in the security they minimally provide.
         `ANDROID_PROVIDER_SECURE_ELEMENT` always uses a [Strongbox](https://source.android.com/docs/compatibility/15/android-15-cdd#9112_strongbox),
-        while `ANDROID_PROVIDER` may use secure elements that are not certified.
+        while `ANDROID_PROVIDER` may use secure elements that are not certified **or non at all!**
 -   `APPLE_SECURE_ENCLAVE` (IOS and MacOS)
     -   Is only usable, when the application using `crypto-layer` is code signed!
     -   Supports asymmetric cryptography including asymmetric hybrid encryption schemes.

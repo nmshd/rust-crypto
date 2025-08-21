@@ -63,21 +63,18 @@ fn provider_supports_capabilities(
             .is_subset(&provider_capabilities.supported_hashes)
 }
 
-/// Returns a provider which supports the given requirements.
+/// Returns a provider which supports the given requirements and is initializable.
 ///
-/// This function returns the first provider, which supports the given requirements and has a [`ProviderImplConfig`].
+/// This function returns the first provider, which supports the given requirements (see [`ProviderConfig`])
+/// and can be initialized on the target platform with the given [`ProviderImplConfig`].
 ///
-/// * `conf` - A provider config that the provider must at least contain.
-/// * `impl_conf_vec` - A `Vec` of [`ProviderImplConfig`]. Only providers, which have [`ProviderImplConfig`] are returned.
-///
-/// # Example
+/// ### Example
 /// ```
-/// use std::collections::HashSet;
+/// # use std::collections::HashSet;
+/// # use crypto_layer::prelude::*;
 ///
-/// use crypto_layer::prelude::*;
-///
-/// let specific_provider_config = ProviderImplConfig{additional_config: vec![]};
-/// let provider_config = ProviderConfig {
+/// let platform_specific_provider_config = ProviderImplConfig{additional_config: vec![]};
+/// let required_capabilities = ProviderConfig {
 ///     min_security_level: SecurityLevel::Software,
 ///     max_security_level: SecurityLevel::Hardware,
 ///     supported_asym_spec: HashSet::new(),
@@ -85,7 +82,7 @@ fn provider_supports_capabilities(
 ///     supported_hashes: HashSet::new(),
 /// };
 ///
-/// let provider_option: Option<Provider> = create_provider(&provider_config, specific_provider_config);
+/// let provider_option: Option<Provider> = create_provider(&required_capabilities, platform_specific_provider_config);
 /// ```
 pub fn create_provider(conf: &ProviderConfig, impl_conf: ProviderImplConfig) -> Option<Provider> {
     for provider in ALL_PROVIDERS.iter() {
