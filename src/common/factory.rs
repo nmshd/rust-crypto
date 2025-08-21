@@ -105,8 +105,10 @@ pub fn create_provider(conf: &ProviderConfig, impl_conf: ProviderImplConfig) -> 
 
 /// Returns the provider matching the given name.
 ///
-/// * `name` - Name of the provider. See `get_name()`.
-/// * `impl_config` - Specif configuration for said provider.
+/// Returns `None` if the provider requested is not available on the target platform or it is not initializable.
+///
+/// A providers name is a hardcoded string unique to a provider (see [`Provider::provider_name()`](crate::prelude::Provider::provider_name)
+/// and [`get_all_providers()`](crate::prelude::get_all_providers)).
 #[tracing::instrument]
 pub fn create_provider_from_name(name: &str, impl_conf: ProviderImplConfig) -> Option<Provider> {
     trace!("create_provider_from_name: {}", name);
@@ -130,6 +132,8 @@ pub fn create_provider_from_name(name: &str, impl_conf: ProviderImplConfig) -> O
 }
 
 /// Returns the names of all available providers.
+///
+/// A provider is available if it is initializable on the target platform.
 pub fn get_all_providers() -> Vec<String> {
     ALL_PROVIDERS
         .iter()
@@ -137,7 +141,7 @@ pub fn get_all_providers() -> Vec<String> {
         .collect()
 }
 
-/// Returns the names and capabilities of all providers that can be initialized with the given [ProviderImplConfig].
+/// Returns the names and capabilities of all providers that can be initialized with the given [ProviderImplConfig] on the target platform.
 pub fn get_provider_capabilities(impl_config: ProviderImplConfig) -> Vec<(String, ProviderConfig)> {
     ALL_PROVIDERS
         .iter()
