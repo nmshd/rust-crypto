@@ -27,5 +27,3 @@ jobs:
       - name: Publish
         working-directory: ./ts-types
         run: npx enhanced-publish --if-possible --use-preid-as-tag
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
