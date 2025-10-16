@@ -14,7 +14,7 @@ jobs:
     name: Test Rust-Code
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: Swatinem/rust-cache@v2
         # with:
         #   save-if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
@@ -22,12 +22,12 @@ jobs:
         run: cargo check -F software,android
       - name: Unit Test Rust Code
         run: cargo test -F software
-    
+
   test-pr-rs-apple:
     name: Test Rust-Code (Apple)
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: Swatinem/rust-cache@v2
         # with:
         #   save-if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
@@ -38,11 +38,11 @@ jobs:
     name: Test TS-Types
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
         with:
           # node-version: 23
-          cache: 'npm'
+          cache: "npm"
       - name: Install Taskfile
         run: npm install -g @go-task/cli
       - name: Test TS Types
